@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.repository.inbound;
 
+import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,5 +16,15 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     @Override
     public UserAccount save(UserAccount userAccount) {
         return null;
+    }
+
+    @Override
+    public EmailConfirmationToken completelySave(EmailConfirmationToken emailConfirmationToken) {
+        return null;
+    }
+
+    @Override
+    public void deleteEmptyUserAccount(UserAccount userAccount) {
+
     }
 }

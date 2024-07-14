@@ -229,7 +229,7 @@ public class UserAccount implements UserDetails {
                     this.id, this.username, this.email,
                     this.password, this.passwordConfirm,
                     Objects.requireNonNullElse(this.rating, new Rating(defaultRating)),
-                    Objects.requireNonNullElse(this.isEnable, Boolean.TRUE),
+                    Objects.requireNonNullElse(this.isEnable, Boolean.FALSE),
                     Objects.requireNonNullElse(this.eventsOfAccount, EventsOfAccount.defaultEvents()),
                     new HashSet<>(), new HashSet<>()
             );

@@ -1,22 +1,26 @@
 package core.project.chess.application.controller;
 
 import core.project.chess.application.model.RegistrationForm;
+import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
+import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-@Component
+@Controller
 @RequiredArgsConstructor
 public class UserController {
 
@@ -24,33 +28,22 @@ public class UserController {
 
     private final InboundUserRepository inboundUserRepository;
 
-    @GetMapping("/home")
-    final String home() {
-        return "home";
-    }
-
-    @GetMapping("/registration")
-    final String registrationForm() {
-        return "registration";
-    }
-
-    @GetMapping("/login")
-    final String loginForm() {
-        return "login";
-    }
-
-    @GetMapping("/logout")
-    final String logout() {return "logout";}
-
-    @GetMapping("/login?expired")
-    final String loginExpired() {return "login_expired";}
+    private final OutboundUserRepository outboundUserRepository;
 
     @PostMapping("/registration")
     final String registration(@RequestBody RegistrationForm registrationForm) {
-        if (!Objects.equals(registrationForm.password(), registrationForm.passwordConfirmation())) {
-            // TODO
+        if (!Objects.equals(
+                registrationForm.password(), registrationForm.passwordConfirmation())
+        ) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
         }
 
+        Username username = new Username(
+                registrationForm.username()
+        );
+        Email email = new Email(
+                registrationForm.email()
+        );
         Password password = new Password(
                 passwordEncoder.encode(registrationForm.password())
         );
@@ -58,15 +51,31 @@ public class UserController {
                 passwordEncoder.encode(registrationForm.passwordConfirmation())
         );
 
+        if (outboundUserRepository.isUsernameExists(username)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+        }
+        if (outboundUserRepository.isEmailExists(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
+
         UserAccount userAccount = UserAccount.builder()
                 .id(UUID.randomUUID())
-                .username(new Username(registrationForm.username()))
-                .email(new Email(registrationForm.email()))
+                .username(username)
+                .email(email)
                 .password(password)
                 .passwordConfirm(passwordConfirmation)
                 .build();
 
         inboundUserRepository.save(userAccount);
+
+        EmailConfirmationToken token = new EmailConfirmationToken(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                LocalDateTime.now(),
+                userAccount
+        );
+        
+
         return "redirect:/login";
     }
 }
