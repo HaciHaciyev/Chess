@@ -27,8 +27,4 @@ public record Email(String email) {
             throw new IllegalArgumentException("Email format error");
         }
     }
-
-    public String getEmailAddress() {
-        return email;
-    }
 }
