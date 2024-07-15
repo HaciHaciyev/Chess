@@ -96,7 +96,7 @@ public class UserController {
         );
 
         // TODO for Ilham & Nicat : Send token to the user email
-        emailInteractionService.sendToEmail(email);
+        emailInteractionService.sendToEmail(email, token);
 
         return "redirect:/login";
     }
