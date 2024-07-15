@@ -8,17 +8,17 @@ public record Username(String username) {
 
     public Username {
         if (Objects.isNull(username)) {
-            // TODO
+            throw new IllegalArgumentException("Username cannot be null");
         }
         if (username.isBlank()) {
-            // TODO
+            throw new IllegalArgumentException("Username cannot be blank");
         }
 
         String usernameRegex = "^[a-zA-Z0-9]*$";
         Pattern pattern = Pattern.compile(usernameRegex);
         Matcher matcher = pattern.matcher(username);
         if (!matcher.matches()) {
-            // TODO
+            throw new IllegalArgumentException("Username contains invalid characters");
         }
     }
 }

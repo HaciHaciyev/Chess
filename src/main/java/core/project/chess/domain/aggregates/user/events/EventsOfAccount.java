@@ -8,7 +8,7 @@ public record EventsOfAccount(LocalDateTime creationDate,
 
     public EventsOfAccount {
         if (Objects.isNull(creationDate) || Objects.isNull(lastUpdateDate)) {
-            // TODO
+            throw new IllegalArgumentException("The creationDate and lastUpdateDate must not be null");
         }
     }
 

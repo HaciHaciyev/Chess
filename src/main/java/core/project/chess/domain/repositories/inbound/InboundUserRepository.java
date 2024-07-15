@@ -9,5 +9,7 @@ public interface InboundUserRepository {
 
     EmailConfirmationToken completelySave(EmailConfirmationToken emailConfirmationToken);
 
-    void deleteEmptyUserAccount(UserAccount userAccount);
+    void deleteUserAccountIfEmailIsNotVerified(UserAccount userAccount);
+
+    void enableAccountAfterEmailVerification(UserAccount userAccount);
 }

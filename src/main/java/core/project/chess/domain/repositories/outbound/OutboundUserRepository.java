@@ -13,4 +13,6 @@ public interface OutboundUserRepository {
     boolean isUsernameExists(Username username);
 
     Optional<UserAccount> findByUsername(Username username);
+
+    Optional<UserAccount> findByEmail(Email email);
 }

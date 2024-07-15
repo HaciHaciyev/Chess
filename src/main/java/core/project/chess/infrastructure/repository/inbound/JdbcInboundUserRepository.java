@@ -24,7 +24,12 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void deleteEmptyUserAccount(UserAccount userAccount) {
+    public void deleteUserAccountIfEmailIsNotVerified(UserAccount userAccount) {
+
+    }
+
+    @Override
+    public void enableAccountAfterEmailVerification(UserAccount userAccount) {
 
     }
 }

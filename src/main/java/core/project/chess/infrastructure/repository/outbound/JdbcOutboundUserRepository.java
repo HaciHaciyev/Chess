@@ -30,4 +30,9 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     public Optional<UserAccount> findByUsername(Username username) {
         return Optional.empty();
     }
+
+    @Override
+    public Optional<UserAccount> findByEmail(Email email) {
+        return Optional.empty();
+    }
 }

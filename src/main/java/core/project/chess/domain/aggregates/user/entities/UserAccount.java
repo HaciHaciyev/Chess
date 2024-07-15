@@ -221,6 +221,7 @@ public class UserAccount implements UserDetails {
                                                 .build();
                         """;
 
+                log.info(infoAboutUserAccountCreation);
                 throw new IllegalArgumentException(infoAboutUserAccountCreation);
             }
 
