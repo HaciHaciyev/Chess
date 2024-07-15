@@ -95,7 +95,7 @@ public class UserController {
                 userAccount
         );
 
-        // TODO for Ilham & Nicat : Send token to the user email
+        inboundUserRepository.saveUserToken(token);
         emailInteractionService.sendToEmail(email, token);
 
         return "redirect:/login";
@@ -103,6 +103,10 @@ public class UserController {
 
     @PutMapping("/token/verification")
     final String tokenVerification() {
+
+        /** This method used to make account enable and completely
+         * registrar user account.
+         * inboundUserRepository.enable(...);*/
 
         return "redirect:/home";
     }

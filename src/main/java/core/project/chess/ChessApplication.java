@@ -22,11 +22,11 @@ public class ChessApplication {
 
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
+        mailSender.setHost("");
+        mailSender.setPort(6969);
 
-        mailSender.setUsername("im615142@gmail.com");
-        mailSender.setPassword("dntxaogsqeapcpsg");
+        mailSender.setUsername("");
+        mailSender.setPassword("");
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");

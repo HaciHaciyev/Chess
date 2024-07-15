@@ -3,13 +3,13 @@ package core.project.chess.domain.repositories.inbound;
 import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 
+import java.util.UUID;
+
 public interface InboundUserRepository {
 
-    UserAccount save(UserAccount userAccount);
+    void save(UserAccount userAccount);
 
-    EmailConfirmationToken completelySave(EmailConfirmationToken emailConfirmationToken);
+    void saveUserToken(EmailConfirmationToken token);
 
-    void deleteUserAccountIfEmailIsNotVerified(UserAccount userAccount);
-
-    void enableAccountAfterEmailVerification(UserAccount userAccount);
+    void enable(UUID userId);
 }

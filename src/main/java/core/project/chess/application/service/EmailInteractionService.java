@@ -2,17 +2,22 @@ package core.project.chess.application.service;
 
 import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class EmailInteractionService {
     // TODO for Ilham & Nicat
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
+
+    public EmailInteractionService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     /** You can change signature if you need*/
     public void sendToEmail(
@@ -33,7 +38,7 @@ public class EmailInteractionService {
 
         mailSender.send(message);
 
-        System.out.println("Mail sent to " + userEmail.email());
+        log.info("Mail sent to : {}", userEmail.email());
     }
 }
 

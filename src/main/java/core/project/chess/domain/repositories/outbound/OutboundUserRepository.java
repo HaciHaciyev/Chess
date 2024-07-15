@@ -8,9 +8,9 @@ import java.util.Optional;
 
 public interface OutboundUserRepository {
 
-    boolean isEmailExists(Email email);
+    boolean isEmailExists(Email verifiableEmail);
 
-    boolean isUsernameExists(Username username);
+    boolean isUsernameExists(Username verifiableUsername);
 
     Optional<UserAccount> findByUsername(Username username);
 

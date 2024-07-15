@@ -9,5 +9,5 @@ public record EmailConfirmationToken(
         @NotNull UUID tokenId,
         @NotNull UUID token,
         @NotNull LocalDateTime creationDate,
-        @NotNull/**OneToOne*/UserAccount userAccount
+        @NotNull /**OneToOne*/ UserAccount userAccount
 ) {}
