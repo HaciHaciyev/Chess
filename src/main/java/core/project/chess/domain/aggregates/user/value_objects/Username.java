@@ -14,7 +14,7 @@ public record Username(String username) {
             throw new IllegalArgumentException("Username cannot be blank");
         }
 
-        String usernameRegex = "^[a-zA-Z0-9]*$";
+        String usernameRegex = "^[a-zA-Z0-9 ]*$";
         Pattern pattern = Pattern.compile(usernameRegex);
         Matcher matcher = pattern.matcher(username);
         if (!matcher.matches()) {

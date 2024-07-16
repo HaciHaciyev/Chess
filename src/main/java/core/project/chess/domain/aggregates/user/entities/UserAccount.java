@@ -1,7 +1,7 @@
 package core.project.chess.domain.aggregates.user.entities;
 
 import core.project.chess.domain.aggregates.chess.entities.GameOfChess;
-import core.project.chess.domain.aggregates.user.events.EventsOfAccount;
+import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
@@ -9,7 +9,6 @@ import core.project.chess.domain.aggregates.user.value_objects.Username;
 import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,35 +19,40 @@ import java.util.*;
 @Slf4j
 @Getter
 @AllArgsConstructor
-public class UserAccount implements UserDetails {
-    private final transient @NonNull UUID id;
-    private final transient @NonNull Username username;
-    private final transient @NonNull Email email;
-    private transient @NonNull Password password;
-    private transient @NonNull Password passwordConfirm;
-    private transient @NonNull Rating rating;
-    private transient @NonNull Boolean isEnable;
-    private final transient @NonNull EventsOfAccount eventsOfAccount;
-    private final transient @NonNull /**@ManyToMany*/ Set<UserAccount> partners;
-    private final transient @NonNull /**@ManyToMany*/ Set<GameOfChess> games;
+public class UserAccount
+        implements UserDetails {
+    private final UUID id;
+    private final Username username;
+    private final Email email;
+    private Password password;
+    private Password passwordConfirm;
+    private Rating rating;
+    private Boolean isEnable;
+    private final AccountEvents accountEvents;
+    private final /**@ManyToMany*/ Set<UserAccount> partners;
+    private final /**@ManyToMany*/ Set<GameOfChess> games;
 
     public static Builder builder() {
         return new Builder();
     }
 
     public void addPartner(UserAccount partner) {
+        Objects.requireNonNull(partner);
         partners.add(partner);
     }
 
     public void removePartner(UserAccount partner) {
+        Objects.requireNonNull(partner);
         partners.remove(partner);
     }
 
     public void addGame(GameOfChess game) {
+        Objects.requireNonNull(game);
         games.add(game);
     }
 
     public void removeGame(GameOfChess game) {
+        Objects.requireNonNull(game);
         games.remove(game);
     }
 
@@ -85,7 +89,7 @@ public class UserAccount implements UserDetails {
                Objects.equals(rating, that.rating) &&
                Objects.equals(password, that.password) &&
                Objects.equals(passwordConfirm, that.passwordConfirm) &&
-               Objects.equals(eventsOfAccount, that.eventsOfAccount);
+               Objects.equals(accountEvents, that.accountEvents);
     }
 
     @Override
@@ -96,7 +100,7 @@ public class UserAccount implements UserDetails {
         result = 31 * result + Objects.hashCode(rating);
         result = 31 * result + Objects.hashCode(password);
         result = 31 * result + Objects.hashCode(passwordConfirm);
-        result = 31 * result + Objects.hashCode(eventsOfAccount);
+        result = 31 * result + Objects.hashCode(accountEvents);
         return result;
     }
 
@@ -124,8 +128,8 @@ public class UserAccount implements UserDetails {
                 email.email(),
                 rating.rating(),
                 enables,
-                eventsOfAccount.creationDate().toString(),
-                eventsOfAccount.lastUpdateDate().toString());
+                accountEvents.creationDate().toString(),
+                accountEvents.lastUpdateDate().toString());
     }
 
     public static class Builder {
@@ -136,36 +140,42 @@ public class UserAccount implements UserDetails {
         private Password passwordConfirm;
         private /**Optional*/ Rating rating;
         private /**Optional*/ Boolean isEnable;
-        private /**Optional*/ EventsOfAccount eventsOfAccount;
+        private /**Optional*/ AccountEvents accountEvents;
 
         private Builder() {}
 
-        public Builder id(final @NonNull UUID id) {
+        public Builder id(final UUID id) {
+            Objects.requireNonNull(id);
             this.id = id;
             return this;
         }
 
-        public Builder username(final @NonNull Username username) {
+        public Builder username(final Username username) {
+            Objects.requireNonNull(username);
             this.username = username;
             return this;
         }
 
-        public Builder email(final @NonNull Email email) {
+        public Builder email(final Email email) {
+            Objects.requireNonNull(email);
             this.email = email;
             return this;
         }
 
-        public Builder password(final @NonNull Password password) {
+        public Builder password(final Password password) {
+            Objects.requireNonNull(password);
             this.password = password;
             return this;
         }
 
-        public Builder passwordConfirm(final @NonNull Password passwordConfirm) {
+        public Builder passwordConfirm(final Password passwordConfirm) {
+            Objects.requireNonNull(passwordConfirm);
             this.passwordConfirm = passwordConfirm;
             return this;
         }
 
-        public Builder rating(final @Nullable Rating rating) {
+        public Builder rating(final Rating rating) {
+            Objects.requireNonNull(rating);
             this.rating = rating;
             return this;
         }
@@ -175,16 +185,16 @@ public class UserAccount implements UserDetails {
             return this;
         }
 
-        public Builder eventsOfAccount(final @Nullable EventsOfAccount eventsOfAccount) {
-            this.eventsOfAccount = eventsOfAccount;
+        public Builder accountEvents(final @Nullable AccountEvents accountEvents) {
+            this.accountEvents = accountEvents;
             return this;
         }
 
         public UserAccount build() {
-            boolean defaultAccount = rating == null && isEnable == null && eventsOfAccount == null;
+            boolean defaultAccount = rating == null && isEnable == null && accountEvents == null;
             if (defaultAccount) log.info("New account created.");
 
-            boolean allOptionalValuesNotNull = rating != null && isEnable != null && eventsOfAccount != null;
+            boolean allOptionalValuesNotNull = rating != null && isEnable != null && accountEvents != null;
             if (allOptionalValuesNotNull) log.info("An existing account is used.");
 
             if (!defaultAccount && !allOptionalValuesNotNull) {
@@ -217,7 +227,7 @@ public class UserAccount implements UserDetails {
                                                 .passwordConfirm(new Password(password))
                                                 .rating(new Rating(rating))
                                                 .enable(true)
-                                                .eventsOfAccount(EventsOfAccount.defaultEvents())
+                                                .accountEvents(EventsOfAccount.defaultEvents())
                                                 .build();
                         """;
 
@@ -231,7 +241,7 @@ public class UserAccount implements UserDetails {
                     this.password, this.passwordConfirm,
                     Objects.requireNonNullElse(this.rating, new Rating(defaultRating)),
                     Objects.requireNonNullElse(this.isEnable, Boolean.FALSE),
-                    Objects.requireNonNullElse(this.eventsOfAccount, EventsOfAccount.defaultEvents()),
+                    Objects.requireNonNullElse(this.accountEvents, AccountEvents.defaultEvents()),
                     new HashSet<>(), new HashSet<>()
             );
         }

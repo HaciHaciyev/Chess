@@ -10,35 +10,29 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class EmailInteractionService {
-    // TODO for Ilham & Nicat
 
-    private final JavaMailSender mailSender;
+    private static final String BUSINESS_EMAIL = "";
 
-    public EmailInteractionService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    private final JavaMailSender emailSender;
+
+    public EmailInteractionService(JavaMailSender emailSender) {
+        this.emailSender = emailSender;
     }
 
-    /** You can change signature if you need*/
-    public void sendToEmail(
-            Email userEmail,
-            EmailConfirmationToken token
-    ) {
-
-        SimpleMailMessage message = new SimpleMailMessage();
-
+    public void sendToEmail(Email userEmail, EmailConfirmationToken token) {
         String subject = "Email confirmation";
-        String body = "This is your verification token:\n" + token + "\n\nBe careful! Don't send it to anyone.";
+        String body = String.format(
+                "This is your verification token: \n %s \nBe careful! Don't send it to anyone.", token.token()
+        );
 
-
-        message.setFrom("");
-        // TODO: Change the email address to another business address. It's also have to be done in application.properties
+        var message = new SimpleMailMessage();
+        message.setFrom(BUSINESS_EMAIL);
         message.setTo(userEmail.email());
         message.setSubject(subject);
         message.setText(body);
 
-        mailSender.send(message);
-
-        log.info("Mail sent to : {}", userEmail.email());
+        emailSender.send(message);
+        log.info("Token sent to : {}", userEmail.email());
     }
 }
 

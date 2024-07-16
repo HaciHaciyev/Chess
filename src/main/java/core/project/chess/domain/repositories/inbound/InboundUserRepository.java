@@ -12,4 +12,6 @@ public interface InboundUserRepository {
     void saveUserToken(EmailConfirmationToken token);
 
     void enable(UUID userId);
+
+    void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException;
 }

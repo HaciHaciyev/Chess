@@ -1,7 +1,7 @@
 package core.project.chess.infrastructure.repository.outbound;
 
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
-import core.project.chess.domain.aggregates.user.events.EventsOfAccount;
+import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     private final JdbcTemplate jdbcTemplate;
@@ -88,7 +90,11 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     private UserAccount userAccountMapper(ResultSet rs, int rowNum)
             throws SQLException {
-        var events = new EventsOfAccount(
+        log.info(
+                String.format("The user account %s was taken from the database", rs.getString("username"))
+        );
+
+        var events = new AccountEvents(
                 rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("last_updated_date", Timestamp.class).toLocalDateTime()
         );
@@ -101,7 +107,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 .passwordConfirm(new Password(rs.getString("password")))
                 .rating(new Rating(rs.getShort("rating")))
                 .enable(rs.getBoolean("is_enable"))
-                .eventsOfAccount(events)
+                .accountEvents(events)
                 .build();
     }
 }

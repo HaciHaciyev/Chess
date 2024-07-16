@@ -1,6 +1,6 @@
 package core.project.chess.domain.aggregates.user.entities;
 
-import core.project.chess.domain.aggregates.user.events.EventsOfAccount;
+import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 @Slf4j
@@ -35,7 +36,7 @@ class UserAccountTest {
                 .passwordConfirm(new Password("password"))
                 .rating(new Rating(rating))
                 .enable(true)
-                .eventsOfAccount(EventsOfAccount.defaultEvents())
+                .accountEvents(AccountEvents.defaultEvents())
                 .build();
 
         log.info(userAccount.toString());
@@ -61,10 +62,16 @@ class UserAccountTest {
                     .passwordConfirm(new Password("password"))
                     /*Forgot a rating*/
                     .enable(true)
-                    .eventsOfAccount(EventsOfAccount.defaultEvents())
+                    .accountEvents(AccountEvents.defaultEvents())
                     .build();
         } catch (IllegalArgumentException e) {
             log.info(e.getMessage());
         }
+
+        Password password = new Password(
+                String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000))
+        );
+
+        System.out.println(password);
     }
 }
