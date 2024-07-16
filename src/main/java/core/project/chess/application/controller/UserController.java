@@ -102,8 +102,8 @@ public class UserController {
     }
 
     @PutMapping("/token/verification")
-    final String tokenVerification() {
-
+    final String tokenVerification(EmailConfirmationToken token) {
+        // TODO for Nicat & Ilham
         /** This method used to make account enable and completely
          * registrar user account.
          * inboundUserRepository.enable(...);*/
