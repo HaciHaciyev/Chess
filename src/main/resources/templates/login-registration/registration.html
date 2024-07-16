@@ -8,6 +8,7 @@
     <h1>Registration</h1>
 
     <form id="registrationForm" th:action="@{/registration}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         <div>
             <label for="username">Username:</label>
             <p></p>
@@ -51,10 +52,13 @@
                 passwordConfirmation: document.getElementById('passwordConfirmation').value
             };
 
+            var csrfToken = document.querySelector('input[name="_csrf"]').value;
+
             fetch('/registration', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify(formData)
             })
