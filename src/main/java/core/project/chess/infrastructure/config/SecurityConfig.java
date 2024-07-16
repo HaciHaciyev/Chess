@@ -30,7 +30,10 @@ public class SecurityConfig {
                 .csrf(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
-                                .requestMatchers("/home", "/registration", "/login").permitAll()
+                                .requestMatchers(
+                                        "/home", "/registration",
+                                        "/login", "/logout", "/login?expired"
+                                ).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .formLogin(formLogin ->
