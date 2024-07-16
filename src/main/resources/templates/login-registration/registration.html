@@ -7,7 +7,7 @@
 <body>
     <h1>Registration</h1>
 
-    <form th:action="@{/registration}" method="post">
+    <form id="registrationForm" th:action="@{/registration}" method="post">
         <div>
             <label for="username">Username:</label>
             <p></p>
@@ -37,5 +37,42 @@
     <div th:if="${param.error}">
         <p th:text="${param.error}" style="color: red;"></p>
     </div>
+
+    <div id="errorMessage" style="color: red;"></div>
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                passwordConfirmation: document.getElementById('passwordConfirmation').value
+            };
+
+            fetch('/registration', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    window.location.href = '/login'; //Redirect to login page if success
+                })
+                .catch(error => {
+                    document.getElementById('errorMessage').textContent = error.message || 'Error! Something went wrong.';
+                });
+        });
+    </script>
+
+
 </body>
 </html>
