@@ -10,19 +10,23 @@
     <form th:action="@{/registration}" method="post">
         <div>
             <label for="username">Username:</label>
+            <p></p>
             <input type="text" id="username" name="username" required>
         </div>
         <div>
             <label for="email">Email:</label>
+            <p></p>
             <input type="email" id="email" name="email" required>
         </div>
 
         <div>
             <label for="password">Password:</label>
+            <p></p>
             <input type="password" id="password" name="password" required>
         </div>
         <div>
             <label for="passwordConfirmation">Confirm password:</label>
+            <p></p>
             <input type="password" id="passwordConfirmation" name="passwordConfirmation" required>
         </div>
         <div>
@@ -30,8 +34,8 @@
         </div>
     </form>
 
-<div th:if="${param.error}">
-    <p th:text="${param.error}" style="color: red;"></p>
-</div>
+    <div th:if="${param.error}">
+        <p th:text="${param.error}" style="color: red;"></p>
+    </div>
 </body>
 </html>
