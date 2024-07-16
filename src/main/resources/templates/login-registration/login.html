@@ -32,12 +32,12 @@
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      var formData = {
+      const formData = {
         username: document.getElementById('username').value,
         password: document.getElementById('password').value
       };
 
-      fetch('/registration', {
+      fetch('/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -46,15 +46,18 @@
       })
               .then(response => {
                 if (!response.ok) {
-                  return response.json().then(err => { throw err; });
+                  return response.text().then(text => {
+                    throw new Error(text || response.statusText);
+                  });
                 }
-                return response.json();
+                return response.text();
               })
               .then(data => {
-                window.location.href = '/home'; //Redirect to home page if success
+                window.location.href = '/home'; // Redirect to home page if success
               })
               .catch(error => {
-                document.getElementById('errorMessage').textContent = error.message || 'Error! Something went wrong.';
+                console.error('Error:', error);
+                document.getElementById('errorMessage').textContent = error.message || 'Wrong username or password.';
               });
     });
   </script>
