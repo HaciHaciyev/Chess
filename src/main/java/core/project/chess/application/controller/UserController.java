@@ -87,11 +87,12 @@ public class UserController {
         inboundUserRepository.save(userAccount);
 
         var token = EmailConfirmationToken.builder()
-                .setTokenId(UUID.randomUUID())
-                .setUserAccount(userAccount)
+                .tokenId(UUID.randomUUID())
+                .userAccount(userAccount)
                 .build();
 
         inboundUserRepository.saveUserToken(token);
+        // TODO
         emailInteractionService.sendToEmail(email, token);
 
         return "redirect:/token/checking";
@@ -102,13 +103,23 @@ public class UserController {
         return "login-registration/token_check";
     }
 
-    @PatchMapping("/token/verification/{tokenId}")
-    // TODO
-    final String tokenVerification(EmailConfirmationToken token)
+    @PatchMapping("/inboundToken/verification/{tokenId}")
+    final String tokenVerification(@RequestParam("tokenId") UUID tokenId,
+                                   @RequestBody int inboundToken)
             throws IllegalAccessException {
+        var token = outboundUserRepository
+                .findTokenById(tokenId)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "This inboundToken is not exists")
+                );
+
+        if (token.getToken().getToken() != inboundToken) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token");
+        }
+
         if (token.isExpired()) {
             inboundUserRepository.deleteByToken(token);
-            throw new IllegalAccessException("Token was expired.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token was expired.");
         }
 
         token.confirm();

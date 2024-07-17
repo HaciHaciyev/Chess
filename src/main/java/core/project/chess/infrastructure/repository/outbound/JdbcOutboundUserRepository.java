@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.repository.outbound;
 
+import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -57,6 +59,33 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
         } catch (EmptyResultDataAccessException e) {
             log.info(e.getMessage());
             return false;
+        }
+    }
+
+    @Override
+    public Optional<UserAccount> findById(UUID userId) {
+        try {
+            String selectByUsername = "Select * from UserAccount where id = ?";
+
+            return Optional.ofNullable(
+                    jdbcTemplate.queryForObject(selectByUsername, this::userAccountMapper, userId.toString())
+            );
+        } catch (EmptyResultDataAccessException e) {
+            log.info(e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    // TODO for Nicat
+    public Optional<EmailConfirmationToken> findTokenById(UUID tokenId) {
+        try {
+
+            // TODO for Nicat
+            return Optional.empty();
+        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
+            log.info(e.getMessage());
+            return Optional.empty();
         }
     }
 

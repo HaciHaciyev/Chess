@@ -1,13 +1,12 @@
 package core.project.chess.domain.aggregates.user.entities;
 
 import core.project.chess.domain.aggregates.user.events.AccountEvents;
-import core.project.chess.domain.aggregates.user.value_objects.Email;
-import core.project.chess.domain.aggregates.user.value_objects.Password;
-import core.project.chess.domain.aggregates.user.value_objects.Rating;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.domain.aggregates.user.events.TokenEvents;
+import core.project.chess.domain.aggregates.user.value_objects.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -73,5 +72,22 @@ class UserAccountTest {
         );
 
         System.out.println(password);
+
+
+        EmailConfirmationToken emailConfirmationToken = EmailConfirmationToken.builder()
+                .tokenId(UUID.randomUUID())
+                .userAccount(userAccount)
+                .build();
+
+        TokenEvents tokenEvents = new TokenEvents(LocalDateTime.now());
+
+        EmailConfirmationToken emailConfirmationTokenSecond = EmailConfirmationToken.builder()
+                .tokenId(UUID.randomUUID())
+                .userAccount(userAccount)
+                .token(Token.createToken())
+                .tokenEvents(tokenEvents)
+                .confirmed(true)
+                .build();
+
     }
 }
