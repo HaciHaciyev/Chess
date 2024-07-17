@@ -22,7 +22,7 @@ public class EmailInteractionService {
     public void sendToEmail(Email userEmail, EmailConfirmationToken token) {
         String subject = "Email confirmation";
         String body = String.format(
-                "This is your verification token: \n %s \nBe careful! Don't send it to anyone.", token.token()
+                "This is your verification token: \n %s \nBe careful! Don't send it to anyone.", token.getToken()
         );
 
         var message = new SimpleMailMessage();

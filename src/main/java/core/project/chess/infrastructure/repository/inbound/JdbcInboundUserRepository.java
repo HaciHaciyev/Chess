@@ -10,8 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 @Slf4j
 @Repository
 @RequiredArgsConstructor
@@ -31,7 +29,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                     """,
                 userAccount.getId().toString(), userAccount.getUsername(),
                 userAccount.getEmail().email(), userAccount.getPassword(),
-                userAccount.getRating().rating(), userAccount.getIsEnable(),
+                userAccount.getRating().rating(), userAccount.isEnabled(),
                 userAccount.getAccountEvents().creationDate(),
                 userAccount.getAccountEvents().lastUpdateDate()
         );
@@ -44,13 +42,13 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     public void saveUserToken(EmailConfirmationToken token) {
         jdbcTemplate.update("""
                     INSERT INTO UserToken
-                        (id, user_id, token,
+                        (id, user_id, token, is_confirmed
                         creation_date, expiration_date)
                         VALUES (?,?,?,?,?)
                     """,
-                token.tokenId().toString(),
-                token.userAccount().getId().toString(), token.token().toString(),
-                token.tokenEvents().getCreationDate(), token.tokenEvents().getExpirationDate()
+                token.getTokenId().toString(), token.getUserAccount().getId().toString(),
+                token.getToken().toString(), Boolean.FALSE,
+                token.getTokenEvents().getCreationDate(), token.getTokenEvents().getExpirationDate()
         );
 
         log.info("Email verification token was saved");
@@ -58,18 +56,30 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     @Transactional
-    public void enable(UUID userId) {
+    public void enable(EmailConfirmationToken token) {
         try {
+            if (!token.isConfirmed() || !token.getUserAccount().isEnabled()) {
+                throw new IllegalAccessException("Token need to be confirmed & UserAccount need to be enabled");
+            }
+
+            jdbcTemplate.update("""
+                            UPDATE UserToken SET
+                                is_confirmed = ?
+                            Where id = ?
+                            """,
+                    token.getUserAccount().isEnabled(), token.getUserAccount().getId()
+            );
+
             jdbcTemplate.update("""
                             UPDATE UserAccount SET
                                is_enable = ?
                             WHERE id = ?
                             """,
-                    Boolean.TRUE, userId.toString()
+                    token.isConfirmed(), token.getTokenId()
             );
 
-            log.info(String.format("User account %s has became available", userId));
-        } catch (EmptyResultDataAccessException e) {
+            log.info("User account {} has became available", token);
+        } catch (EmptyResultDataAccessException | IllegalAccessException e) {
             log.info(e.getMessage());
         }
     }
@@ -79,20 +89,20 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     public void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException {
         Boolean isEnable = jdbcTemplate.queryForObject(
                 "SELECT is_enable FROM UserAccount WHERE id = ?",
-                Boolean.class,
-                token.userAccount().getId().toString()
+                (rs, _) -> rs.getBoolean("is_enable"),
+                token.getUserAccount().getId().toString()
         );
 
-        if (Boolean.TRUE.equals(isEnable)) {
+        if (Boolean.TRUE.equals(isEnable) || token.isConfirmed()) {
             throw new IllegalAccessException("It is prohibited to delete an accessible account");
         }
 
         jdbcTemplate.update(
-                "DELETE FROM UserToken WHERE id = ?", token.tokenId().toString()
+                "DELETE FROM UserToken WHERE id = ?", token.getTokenId().toString()
         );
 
         jdbcTemplate.update(
-                "DELETE FROM UserAccount WHERE id = ?", token.userAccount().getId().toString()
+                "DELETE FROM UserAccount WHERE id = ?", token.getUserAccount().getId().toString()
         );
     }
 }

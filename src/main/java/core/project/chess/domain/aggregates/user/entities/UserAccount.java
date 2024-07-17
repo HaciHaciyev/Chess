@@ -7,6 +7,7 @@ import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import jakarta.annotation.Nullable;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,7 @@ import java.util.*;
 
 @Slf4j
 @Getter
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserAccount
         implements UserDetails {
     private final UUID id;
@@ -27,7 +28,7 @@ public class UserAccount
     private Password password;
     private Password passwordConfirm;
     private Rating rating;
-    private Boolean isEnable;
+    private @Getter(AccessLevel.PRIVATE) Boolean isEnable;
     private final AccountEvents accountEvents;
     private final /**@ManyToMany*/ Set<UserAccount> partners;
     private final /**@ManyToMany*/ Set<GameOfChess> games;
@@ -54,6 +55,10 @@ public class UserAccount
     public void removeGame(GameOfChess game) {
         Objects.requireNonNull(game);
         games.remove(game);
+    }
+
+    public void enable() {
+        this.isEnable = true;
     }
 
     @Override

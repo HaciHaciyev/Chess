@@ -4,10 +4,8 @@ import core.project.chess.application.model.RegistrationForm;
 import core.project.chess.application.service.EmailInteractionService;
 import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
-import core.project.chess.domain.aggregates.user.events.TokenEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
-import core.project.chess.domain.aggregates.user.value_objects.Token;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
@@ -19,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -89,20 +86,24 @@ public class UserController {
 
         inboundUserRepository.save(userAccount);
 
-        var events = new TokenEvents(LocalDateTime.now());
-        var token = new EmailConfirmationToken(
-                UUID.randomUUID(),
-                Token.createToken(),
-                events, userAccount
-        );
+        var token = EmailConfirmationToken.builder()
+                .setTokenId(UUID.randomUUID())
+                .setUserAccount(userAccount)
+                .build();
 
         inboundUserRepository.saveUserToken(token);
         emailInteractionService.sendToEmail(email, token);
 
-        return "redirect:/login";
+        return "redirect:/token/checking";
     }
 
-    @PatchMapping("/token/verification")
+    @GetMapping("/token/checking")
+    final String tokenCheckingPage() {
+        return "login-registration/token_check";
+    }
+
+    @PatchMapping("/token/verification/{tokenId}")
+    // TODO
     final String tokenVerification(EmailConfirmationToken token)
             throws IllegalAccessException {
         if (token.isExpired()) {
@@ -110,8 +111,10 @@ public class UserController {
             throw new IllegalAccessException("Token was expired.");
         }
 
-        inboundUserRepository.enable(token.userAccount().getId());
+        token.confirm();
+        token.getUserAccount().enable();
+        inboundUserRepository.enable(token);
 
-        return "redirect:/home";
+        return "redirect:/login";
     }
 }
