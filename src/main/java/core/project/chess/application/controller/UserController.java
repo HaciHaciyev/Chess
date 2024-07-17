@@ -44,26 +44,26 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
         }
 
-        Username username = Result.success(
-                new Username(registrationForm.username())
+        Username username = Result.ofThrowable(
+                () -> new Username(registrationForm.username())
         ).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username")
         );
 
-        Email email = Result.success(
-                new Email(registrationForm.email())
+        Email email = Result.ofThrowable(
+                () -> new Email(registrationForm.email())
         ).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email")
         );
 
-        Password password = Result.success(
-                new Password(passwordEncoder.encode(registrationForm.password()))
+        Password password = Result.ofThrowable(
+                () -> new Password(passwordEncoder.encode(registrationForm.password()))
         ).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password")
         );
 
-        Password passwordConfirmation = Result.success(
-                new Password(passwordEncoder.encode(registrationForm.passwordConfirmation()))
+        Password passwordConfirmation = Result.ofThrowable(
+                () -> new Password(passwordEncoder.encode(registrationForm.passwordConfirmation()))
         ).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password confirmation")
         );
@@ -75,7 +75,7 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
         }
 
-        UserAccount userAccount = Result.success(
+        UserAccount userAccount = Result.ofThrowable(() ->
                 UserAccount.builder()
                 .id(UUID.randomUUID())
                 .username(username)

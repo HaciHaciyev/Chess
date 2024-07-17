@@ -34,9 +34,9 @@ public record Result<V, E extends Throwable>(V value,
 
     public static <V, E extends Throwable> Result<V, E> ofThrowable(Supplier<? extends V> supplier) {
         try {
-            return new Result<>(supplier.get(), null, true);
+            return success(supplier.get());
         } catch (Exception e) {
-            return new Result<>(null, (E) e, false);
+            return failure((E) e);
         }
     }
 
