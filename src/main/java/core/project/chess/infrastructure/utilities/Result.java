@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.utilities;
 
+import javax.xml.validation.Validator;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -27,8 +28,16 @@ public record Result<V, E extends Throwable>(V value,
     /**
      * @return returns new Result encapsulating Exception that is thrown by an operation
      */
-    public static <V, E extends Exception> Result<V, E> failure(E throwable) {
+    public static <V, E extends Throwable> Result<V, E> failure(E throwable) {
         return new Result<>(null, throwable, false);
+    }
+
+    public static <V, E extends Throwable> Result<V, E> ofThrowable(Supplier<? extends V> supplier) {
+        try {
+            return new Result<>(supplier.get(), null, true);
+        } catch (Exception e) {
+            return new Result<>(null, (E) e, false);
+        }
     }
 
     /**
