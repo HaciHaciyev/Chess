@@ -1,16 +1,12 @@
 package core.project.chess.domain.aggregates.user.value_objects;
 
-import lombok.Getter;
-
+import java.util.Objects;
 import java.util.UUID;
 
-@Getter
-public final class Token {
+public record Token(UUID token) {
 
-    private final UUID token;
-
-    public Token(UUID token) {
-        this.token = token;
+    public Token {
+        Objects.requireNonNull(token);
     }
 
     public static Token createToken() {

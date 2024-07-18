@@ -85,9 +85,14 @@ public class EmailConfirmationToken {
                 log.info("EmailConfirmation token was recreated.");
             }
 
-            if (!allUsed) {
+            boolean notUsed = token == null && tokenEvents == null && isConfirmed == null;
+            if (notUsed) {
+                log.info("A new token has been created.");
+            }
+
+            if (!allUsed && !notUsed) {
                 String doc = """
-                        You have to different ways for create this entity:
+                        You have 2 different ways for create this entity:
                        
                         EmailConfirmationToken emailConfirmationToken = EmailConfirmationToken.builder()
                                         .tokenId(...)

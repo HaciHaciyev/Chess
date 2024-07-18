@@ -19,7 +19,7 @@ Create Unique Index
 Create table UserToken(
     id char(36) not null,
     user_id char(36) not null,
-    token char(6) not null,
+    token char(36) not null,
     is_confirmed boolean not null,
     creation_date timestamp not null,
     expiration_date timestamp not null,

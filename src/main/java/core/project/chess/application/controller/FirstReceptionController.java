@@ -11,7 +11,7 @@ public class FirstReceptionController {
         return "home/home";
     }
 
-    @GetMapping("/registration")
+    @GetMapping("/registration_form")
     final String registrationForm() {
         return "login-registration/registration";
     }

@@ -6,7 +6,6 @@ import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
-import core.project.chess.domain.aggregates.user.value_objects.Token;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
@@ -97,12 +96,7 @@ public class UserController {
         String link = String.format("/token/verification?%s", token.getTokenId());
         emailInteractionService.sendToEmail(email, link);
 
-        return "redirect:/token/checking";
-    }
-
-    @GetMapping("/token/checking")
-    final String tokenCheckingPage() {
-        return "login-registration/token_check";
+        return "redirect:/login";
     }
 
     @PatchMapping("/token/verification")

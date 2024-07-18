@@ -42,12 +42,12 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     public void saveUserToken(EmailConfirmationToken token) {
         jdbcTemplate.update("""
                     INSERT INTO UserToken
-                        (id, user_id, token, is_confirmed
+                        (id, user_id, token, is_confirmed,
                         creation_date, expiration_date)
-                        VALUES (?,?,?,?,?)
+                        VALUES (?,?,?,?,?,?)
                     """,
                 token.getTokenId().toString(), token.getUserAccount().getId().toString(),
-                token.getToken().toString(), Boolean.FALSE,
+                token.getToken().token().toString(), Boolean.FALSE,
                 token.getTokenEvents().getCreationDate(), token.getTokenEvents().getExpirationDate()
         );
 

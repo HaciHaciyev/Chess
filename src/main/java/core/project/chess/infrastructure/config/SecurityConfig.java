@@ -31,9 +31,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
                                 .requestMatchers(
-                                        "/home", "/registration",
-                                        "/login", "/logout", "/login?expired",
-                                        "/token/checking"
+                                        "/home", "/registration_form", "registration",
+                                        "token/verification","/login", "/logout", "/login?expired"
                                 ).permitAll()
                                 .anyRequest().authenticated()
                 )
