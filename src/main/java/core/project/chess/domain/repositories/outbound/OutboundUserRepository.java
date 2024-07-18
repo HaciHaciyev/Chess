@@ -20,5 +20,5 @@ public interface OutboundUserRepository {
 
     Optional<UserAccount> findByEmail(Email email);
 
-    Optional<EmailConfirmationToken> findTokenById(UUID tokenId);
+    Optional<EmailConfirmationToken> findToken(UUID token);
 }

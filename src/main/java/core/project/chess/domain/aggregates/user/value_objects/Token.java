@@ -2,14 +2,14 @@ package core.project.chess.domain.aggregates.user.value_objects;
 
 import lombok.Getter;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.UUID;
 
 @Getter
 public final class Token {
 
-    private final int token;
+    private final UUID token;
 
-    private Token(int token) {
+    public Token(UUID token) {
         this.token = token;
     }
 
@@ -17,7 +17,7 @@ public final class Token {
         return new Token(randomToken());
     }
 
-    private static int randomToken() {
-        return ThreadLocalRandom.current().nextInt(100000, 1000000);
+    private static UUID randomToken() {
+        return UUID.randomUUID();
     }
 }

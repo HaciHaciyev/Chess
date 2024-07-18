@@ -1,6 +1,5 @@
 package core.project.chess.application.service;
 
-import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
@@ -19,14 +18,16 @@ public class EmailInteractionService {
         this.emailSender = emailSender;
     }
 
-    // TODO
-    public void sendToEmail(Email userEmail, EmailConfirmationToken token) {
+    public void sendToEmail(Email userEmail, String link) {
         String subject = "Email confirmation";
-        String body = """
-                You must follow this link to verify your email to create an account.
+        String body = String.format(
+                """
+                You must follow this link %s to verify your email to create an account.
                 If you are not the one who used this email address, then simply ignore this link.
                 The link will be available within 6 minutes.
-                """;
+                """,
+                link
+        );
 
         var message = new SimpleMailMessage();
         message.setFrom(BUSINESS_EMAIL);

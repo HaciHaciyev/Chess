@@ -6,6 +6,7 @@ import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
+import core.project.chess.domain.aggregates.user.value_objects.Token;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
@@ -92,8 +93,9 @@ public class UserController {
                 .build();
 
         inboundUserRepository.saveUserToken(token);
-        // TODO
-        emailInteractionService.sendToEmail(email, token);
+
+        String link = String.format("/token/verification?%s", token.getTokenId());
+        emailInteractionService.sendToEmail(email, link);
 
         return "redirect:/token/checking";
     }
@@ -103,28 +105,23 @@ public class UserController {
         return "login-registration/token_check";
     }
 
-    @PatchMapping("/inboundToken/verification/{tokenId}")
-    final String tokenVerification(@RequestParam("tokenId") UUID tokenId,
-                                   @RequestBody int inboundToken)
+    @PatchMapping("/token/verification")
+    final String tokenVerification(@RequestParam("token") UUID token)
             throws IllegalAccessException {
-        var token = outboundUserRepository
-                .findTokenById(tokenId)
+        var foundToken = outboundUserRepository
+                .findToken(token)
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "This inboundToken is not exists")
                 );
 
-        if (token.getToken().getToken() != inboundToken) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token");
-        }
-
-        if (token.isExpired()) {
-            inboundUserRepository.deleteByToken(token);
+        if (foundToken.isExpired()) {
+            inboundUserRepository.deleteByToken(foundToken);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token was expired.");
         }
 
-        token.confirm();
-        token.getUserAccount().enable();
-        inboundUserRepository.enable(token);
+        foundToken.confirm();
+        foundToken.getUserAccount().enable();
+        inboundUserRepository.enable(foundToken);
 
         return "redirect:/login";
     }
