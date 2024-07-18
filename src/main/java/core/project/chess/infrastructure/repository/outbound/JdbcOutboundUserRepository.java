@@ -92,7 +92,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                     u.is_enable AS is_enable,
                     u.creation_date AS creation_date,
                     u.last_updated_date AS last_updated_date
-                    FROM UserToken u
+                    FROM UserToken t
                     INNER JOIN UserAccount u ON t.user_id = u.id
                     WHERE t.token = ?
                     """;
