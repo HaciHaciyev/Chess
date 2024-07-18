@@ -77,25 +77,26 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     @Override
     public Optional<EmailConfirmationToken> findToken(UUID token) {
         try {
-            String selectUserToken = """
-                    SELECT
-                    t.id AS token_id,
-                    t.token AS token,
-                    t.is_confirmed AS token_confirmation,
-                    t.creation_date AS token_creation_date,
-                    
-                    u.id AS id,
-                    u.username AS username,
-                    u.email AS email,
-                    u.password AS password,
-                    u.rating AS rating,
-                    u.is_enable AS is_enable,
-                    u.creation_date AS creation_date,
-                    u.last_updated_date AS last_updated_date
-                    FROM UserToken t
-                    INNER JOIN UserAccount u ON t.user_id = u.id
-                    WHERE t.token = ?
-                    """;
+            String selectUserToken =
+                """
+                SELECT
+                t.id AS token_id,
+                t.token AS token,
+                t.is_confirmed AS token_confirmation,
+                t.creation_date AS token_creation_date,
+                
+                u.id AS id,
+                u.username AS username,
+                u.email AS email,
+                u.password AS password,
+                u.rating AS rating,
+                u.is_enable AS is_enable,
+                u.creation_date AS creation_date,
+                u.last_updated_date AS last_updated_date
+                FROM UserToken t
+                INNER JOIN UserAccount u ON t.user_id = u.id
+                WHERE t.token = ?
+                """;
 
             return Optional.ofNullable(
                     jdbcTemplate.queryForObject(selectUserToken, this::userTokenMapper, token.toString())

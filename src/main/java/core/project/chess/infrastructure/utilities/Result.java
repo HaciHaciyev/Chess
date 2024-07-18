@@ -1,6 +1,5 @@
 package core.project.chess.infrastructure.utilities;
 
-import javax.xml.validation.Validator;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;

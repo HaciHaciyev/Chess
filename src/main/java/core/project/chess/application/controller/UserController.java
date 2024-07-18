@@ -93,7 +93,7 @@ public class UserController {
 
         inboundUserRepository.saveUserToken(token);
 
-        String link = String.format("/token/verification?%s", token.getTokenId());
+        String link = String.format("/token/verification?%s", token.getToken());
         emailInteractionService.sendToEmail(email, link);
 
         return "redirect:/login";
@@ -105,7 +105,7 @@ public class UserController {
         var foundToken = outboundUserRepository
                 .findToken(token)
                 .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "This inboundToken is not exists")
+                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "This token is not exists")
                 );
 
         if (foundToken.isExpired()) {

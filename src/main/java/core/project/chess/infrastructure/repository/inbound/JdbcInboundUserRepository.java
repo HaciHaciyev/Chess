@@ -67,7 +67,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                                 is_confirmed = ?
                             Where id = ?
                             """,
-                    token.getUserAccount().isEnabled(), token.getUserAccount().getId()
+                    token.getUserAccount().isEnabled(),
+                    token.getUserAccount().getId().toString()
             );
 
             jdbcTemplate.update("""
@@ -75,7 +76,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                                is_enable = ?
                             WHERE id = ?
                             """,
-                    token.isConfirmed(), token.getTokenId()
+                    token.isConfirmed(),
+                    token.getTokenId().toString()
             );
 
             log.info("User account {} has became available", token);
@@ -87,11 +89,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     @Override
     @Transactional
     public void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException {
-        Boolean isEnable = jdbcTemplate.queryForObject(
-                "SELECT is_enable FROM UserAccount WHERE id = ?",
-                (rs, _) -> rs.getBoolean("is_enable"),
-                token.getUserAccount().getId().toString()
-        );
+        Boolean isEnable = token.getUserAccount().isEnabled();
 
         if (Boolean.TRUE.equals(isEnable) || token.isConfirmed()) {
             throw new IllegalAccessException("It is prohibited to delete an accessible account");
