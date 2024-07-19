@@ -88,7 +88,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     @Transactional
-    public void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException {
+    public void deleteByToken(EmailConfirmationToken token)
+            throws IllegalAccessException {
         Boolean isEnable = token.getUserAccount().isEnabled();
 
         if (Boolean.TRUE.equals(isEnable) || token.isConfirmed()) {
