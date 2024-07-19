@@ -1,5 +1,8 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
-public sealed interface Figure permits Pawn, Knight, Bishop, Rook, Queen, King {
+public sealed interface Figure
+        permits Knight, Bishop, Rook, Queen, King {
 
+    boolean isValidMove(Coordinate start, Coordinate end);
 }
+
