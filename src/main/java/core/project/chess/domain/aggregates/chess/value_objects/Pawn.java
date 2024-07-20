@@ -9,13 +9,13 @@ public record Pawn(Color color)
 
     @Override
     public boolean isValidMove(
-            ChessBoard chessBoard, Field currentField, Field fieldToMove
+            ChessBoard chessBoard, Coordinate from, Coordinate to
     ) {
         Objects.requireNonNull(chessBoard);
-        Objects.requireNonNull(currentField);
-        Objects.requireNonNull(fieldToMove);
+        Objects.requireNonNull(from);
+        Objects.requireNonNull(to);
 
-        Piece piece = currentField
+        /**Piece piece = from
                 .piece()
                 .orElseThrow(
                         () -> new IllegalArgumentException("Invalid move")
@@ -25,13 +25,13 @@ public record Pawn(Color color)
             throw new IllegalArgumentException("Invalid value object usage");
         }
 
-        Pawn pawn = (Pawn) currentField.piece().get();
+        Pawn pawn = (Pawn) from.piece().get();
 
         if (pawn.color().equals(Color.BLACK)) {
             validateBlack();
         } else {
             validateWhite();
-        }
+        } */
 
         return true;
     }

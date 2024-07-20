@@ -5,6 +5,6 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 public sealed interface Piece
         permits Bishop, King, Knight, Pawn, Queen, Rook {
 
-    boolean isValidMove(ChessBoard chessBoard, Field currentField, Field fieldToMove);
+    boolean isValidMove(ChessBoard chessBoard, Coordinate from, Coordinate to);
 }
 

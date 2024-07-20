@@ -6,7 +6,7 @@ public record Knight(Color color)
         implements Piece {
 
     @Override
-    public boolean isValidMove(ChessBoard chessBoard, Field currentField, Field fieldToMove) {
+    public boolean isValidMove(ChessBoard chessBoard, Coordinate from, Coordinate to) {
         return false;
     }
 }
