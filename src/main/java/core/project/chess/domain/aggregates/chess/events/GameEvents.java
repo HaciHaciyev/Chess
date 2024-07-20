@@ -10,15 +10,8 @@ public record GameEvents(LocalDateTime creationDate,
                          LocalDateTime lastUpdateDate) {
 
     public GameEvents {
-        creationDate = Objects.requireNonNullElseGet(creationDate, () -> {
-            log.error("creationDate is null, falling back to default value");
-            return LocalDateTime.now();
-        });
-
-        lastUpdateDate = Objects.requireNonNullElseGet(lastUpdateDate, () -> {
-            log.error("lastUpdateDate is null, falling back to default value");
-            return LocalDateTime.now();
-        });
+        Objects.requireNonNull(creationDate);
+        Objects.requireNonNull(lastUpdateDate);
     }
 
     public static GameEvents defaultEvents() {
