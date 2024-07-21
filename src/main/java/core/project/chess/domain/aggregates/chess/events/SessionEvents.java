@@ -6,15 +6,15 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Slf4j
-public record GameEvents(LocalDateTime creationDate,
-                         LocalDateTime lastUpdateDate) {
+public record SessionEvents(LocalDateTime creationDate,
+                            LocalDateTime lastUpdateDate) {
 
-    public GameEvents {
+    public SessionEvents {
         Objects.requireNonNull(creationDate);
         Objects.requireNonNull(lastUpdateDate);
     }
 
-    public static GameEvents defaultEvents() {
-        return new GameEvents(LocalDateTime.now(), LocalDateTime.now());
+    public static SessionEvents defaultEvents() {
+        return new SessionEvents(LocalDateTime.now(), LocalDateTime.now());
     }
 }

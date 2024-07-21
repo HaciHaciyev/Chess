@@ -1,6 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
-import core.project.chess.domain.aggregates.chess.events.GameEvents;
+import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import lombok.AccessLevel;
@@ -9,13 +9,11 @@ import lombok.RequiredArgsConstructor;
 import java.util.Objects;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class GameOfChess {
-    private final ChessBoard chessBoard;
-    private final UserAccount playerForWhite;
-    private final UserAccount playerForBlack;
+public class Session {
+    private final ChessGame chessGame;
     private final Rating whitePlayerRating;
     private final Rating blackPlayerRating;
-    private final GameEvents gameEvents;
+    private final SessionEvents sessionEvents;
 
     public static Builder builder() {
         return new Builder();
@@ -26,22 +24,19 @@ public class GameOfChess {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        GameOfChess that = (GameOfChess) o;
-        return Objects.equals(chessBoard, that.chessBoard) &&
-                Objects.equals(playerForWhite.getId(), that.playerForBlack.getId()) &&
+        Session that = (Session) o;
+        return Objects.equals(chessGame, that.chessGame) &&
                 Objects.equals(whitePlayerRating, that.whitePlayerRating) &&
                 Objects.equals(blackPlayerRating, that.blackPlayerRating) &&
-                Objects.equals(gameEvents, that.gameEvents);
+                Objects.equals(sessionEvents, that.sessionEvents);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(chessBoard);
-        result = 31 * result + Objects.hashCode(playerForWhite.getId());
-        result = 31 * result + Objects.hashCode(playerForBlack.getId());
+        int result = Objects.hashCode(chessGame);
         result = 31 * result + Objects.hashCode(whitePlayerRating);
         result = 31 * result + Objects.hashCode(blackPlayerRating);
-        result = 31 * result + Objects.hashCode(gameEvents);
+        result = 31 * result + Objects.hashCode(sessionEvents);
         return result;
     }
 
@@ -51,7 +46,7 @@ public class GameOfChess {
         private UserAccount playerForBlack;
         private Rating whitePlayerRating;
         private Rating blackPlayerRating;
-        private GameEvents gameEvents;
+        private SessionEvents sessionEvents;
 
         private Builder() {}
 
@@ -80,20 +75,20 @@ public class GameOfChess {
             return this;
         }
 
-        public Builder gameEvents(GameEvents gameEvents) {
-            this.gameEvents = gameEvents;
+        public Builder gameEvents(SessionEvents sessionEvents) {
+            this.sessionEvents = sessionEvents;
             return this;
         }
 
-        public GameOfChess build() {
+        public Session build() {
             Objects.requireNonNull(playerForWhite);
             Objects.requireNonNull(playerForBlack);
 
-            return new GameOfChess(
-                    Objects.requireNonNullElse(chessBoard, ChessBoard.initialPosition()), playerForWhite, playerForBlack,
+            return new Session(
+                    Objects.requireNonNullElse(chessBoard, ChessBoard.initialPosition()),
                     Objects.requireNonNullElse(whitePlayerRating, playerForWhite.getRating()),
                     Objects.requireNonNullElse(blackPlayerRating, playerForBlack.getRating()),
-                    Objects.requireNonNullElse(gameEvents, GameEvents.defaultEvents())
+                    Objects.requireNonNullElse(sessionEvents, SessionEvents.defaultEvents())
             );
         }
     }

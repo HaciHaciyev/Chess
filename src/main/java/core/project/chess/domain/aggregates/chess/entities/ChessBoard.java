@@ -2,11 +2,8 @@ package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.value_objects.*;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.*;
 
-@Slf4j
 public class ChessBoard {
     private final Map<Coordinate, Field> fieldMap = new HashMap<>();
     private final List<AlgebraicNotation> listOfAlgebraicNotations = new ArrayList<>();
@@ -22,7 +19,7 @@ public class ChessBoard {
         return new ChessBoard(InitializationTYPE.STANDARD);
     }
 
-    public void reposition(AlgebraicNotation algebraicNotation) {
+    void reposition(AlgebraicNotation algebraicNotation) {
         Objects.requireNonNull(algebraicNotation);
 
         Coordinate startPosition = algebraicNotation.from();
@@ -46,8 +43,6 @@ public class ChessBoard {
 
         listOfAlgebraicNotations.add(algebraicNotation);
     }
-
-    /** Utilities*/
 
     private enum InitializationTYPE {
         STANDARD, DURING_THE_GAME
