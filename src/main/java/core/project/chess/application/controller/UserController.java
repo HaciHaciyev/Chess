@@ -117,6 +117,6 @@ public class UserController {
         foundToken.getUserAccount().enable();
         inboundUserRepository.enable(foundToken);
 
-        return "redirect:/login";
+        return "token-verification";
     }
 }
