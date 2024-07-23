@@ -14,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Objects;
@@ -117,6 +119,30 @@ public class UserController {
         foundToken.getUserAccount().enable();
         inboundUserRepository.enable(foundToken);
 
+        return "token-verification";
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public String handleIllegalArgumentException(IllegalArgumentException e, Model model) {
+        model.addAttribute("error", "Invalid token format");
+        return "token-verification";
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public String handleResponseStatusException(ResponseStatusException e, Model model) {
+        model.addAttribute("error", e.getReason());
+        return "token-verification";
+    }
+
+    @ExceptionHandler(Exception.class)
+    public String handleGenericException(Exception e, Model model) {
+        model.addAttribute("error", "An unexpected error occurred: " + e.getMessage());
+        return "token-verification";
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public String handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, Model model) {
+        model.addAttribute("error", "Invalid token format");
         return "token-verification";
     }
 }

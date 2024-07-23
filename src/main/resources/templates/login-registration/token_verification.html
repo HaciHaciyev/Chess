@@ -7,8 +7,12 @@
 <body>
     <h1>Token Verification Result</h1>
 
-    <div style="color: green;">
-        <p>Account verified successfully!</p>
+    <div th:if="${success}" style="color: green;">
+        <p th:text="${success}"></p>
+    </div>
+
+    <div th:if="${error}" style="color: red;">
+        <p th:text="${error}"></p>
     </div>
 
     <a href="/login">Proceed to Login</a>
