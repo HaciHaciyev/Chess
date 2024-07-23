@@ -1,12 +1,15 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
+import core.project.chess.infrastructure.utilities.StatusPair;
+
+import static core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.Operations;
 
 public record Bishop(Color color)
         implements Piece {
 
     @Override
-    public boolean isValidMove(ChessBoard chessBoard, Coordinate from, Coordinate to) {
-        return false;
+    public StatusPair<Operations> isValidMove(ChessBoard chessBoard, Coordinate from, Coordinate to) {
+        return StatusPair.ofFalse();
     }
 }

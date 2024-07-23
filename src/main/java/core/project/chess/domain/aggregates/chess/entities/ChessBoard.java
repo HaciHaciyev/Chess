@@ -1,12 +1,15 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.value_objects.*;
+import core.project.chess.infrastructure.utilities.StatusPair;
 import lombok.Getter;
 import java.util.*;
 
+import static core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.*;
+
 public class ChessBoard {
     private final Map<Coordinate, Field> fieldMap = new HashMap<>();
-    private final List<AlgebraicNotation> listOfAlgebraicNotations = new ArrayList<>();
+    private final List<AlgebraicNotation> listOfAlgebraicNotations = new LinkedList<>();
 
     private ChessBoard(InitializationTYPE initializationTYPE) {
         final boolean standardInit = initializationTYPE.equals(InitializationTYPE.STANDARD);
@@ -19,29 +22,104 @@ public class ChessBoard {
         return new ChessBoard(InitializationTYPE.STANDARD);
     }
 
-    void reposition(AlgebraicNotation algebraicNotation) {
-        Objects.requireNonNull(algebraicNotation);
+    public List<AlgebraicNotation> getListOfAlgebraicNotations() {
+        return List.copyOf(listOfAlgebraicNotations);
+    }
 
-        Coordinate startPosition = algebraicNotation.from();
-        Coordinate endPosition = algebraicNotation.to();
+    public Optional<Color> pieceColor(Coordinate from) {
+        return Optional.ofNullable(
+                fieldMap.get(from).piece.color()
+        );
+    }
 
-        if (startPosition.equals(endPosition)) {
+    void reposition(final PieceTYPE pieceTYPE, final Coordinate from, final Coordinate to) {
+        Objects.requireNonNull(pieceTYPE);
+        Objects.requireNonNull(from);
+        Objects.requireNonNull(to);
+
+        if (from.equals(to)) {
             throw new IllegalArgumentException("Invalid move.");
         }
 
-        Field field = fieldMap.get(startPosition);
+        if (AlgebraicNotation.isCastle(pieceTYPE, from, to)) {
+            castling(pieceTYPE, from, to);
+            return;
+        }
 
-        Piece piece = field.getPiece()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Field field = fieldMap.get(from);
+        Piece piece = field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
-        /** TODO Complete validation*/
-        piece.isValidMove(this, startPosition, endPosition);
+        StatusPair<Operations> statusPair = piece.isValidMove(this, from, to);
+        final boolean isValidMove = statusPair.status();
+        if (!isValidMove) {
+            throw new IllegalArgumentException("Invalid move.");
+        }
 
         field.removeFigure();
+        fieldMap.get(to).addFigure(piece);
 
-        fieldMap.get(endPosition).addFigure(piece);
+        /** TODO add a pair to algebraic notation which will be contains Operations*/
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(pieceTYPE, from, to));
+    }
 
-        listOfAlgebraicNotations.add(algebraicNotation);
+    private void castling(final PieceTYPE pieceTYPE, final Coordinate from, final Coordinate to) {
+        Field field = fieldMap.get(from);
+        King king = (King) field.getPiece()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+        StatusPair<Operations> statusPair = king.isValidMove(this, from, to);
+        final boolean isValidMove = statusPair.status();
+        if (!isValidMove) {
+            throw new IllegalArgumentException("Invalid move.");
+        }
+
+        field.removeFigure();
+        fieldMap.get(to).addFigure(king);
+
+        final boolean shortCasting = Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
+        if (shortCasting) {
+            moveRookInShortCasting(to);
+        } else {
+            moveRookInLongCasting(to);
+        }
+
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(pieceTYPE, from, to));
+    }
+
+    private void moveRookInShortCasting(Coordinate to) {
+        if (to.getRow() == 1) {
+            Field field = fieldMap.get(Coordinate.H1);
+            Rook rook = (Rook) field.getPiece()
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+            field.removeFigure();
+            fieldMap.get(Coordinate.F1).addFigure(rook);
+        } else {
+            Field field = fieldMap.get(Coordinate.H8);
+            Rook rook = (Rook) field.getPiece()
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+            field.removeFigure();
+            fieldMap.get(Coordinate.F8).addFigure(rook);
+        }
+    }
+
+    private void moveRookInLongCasting(Coordinate to) {
+        if (to.getRow() == 1) {
+            Field field = fieldMap.get(Coordinate.A1);
+            Rook rook = (Rook) field.getPiece()
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+            field.removeFigure();
+            fieldMap.get(Coordinate.D1).addFigure(rook);
+        } else {
+            Field field = fieldMap.get(Coordinate.A8);
+            Rook rook = (Rook) field.getPiece()
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+            field.removeFigure();
+            fieldMap.get(Coordinate.D8).addFigure(rook);
+        }
     }
 
     private enum InitializationTYPE {
@@ -57,10 +135,6 @@ public class ChessBoard {
             Objects.requireNonNull(coordinate);
             this.coordinate = coordinate;
             this.piece = piece;
-        }
-
-        public boolean isEmpty() {
-            return piece == null;
         }
 
         public Optional<Piece> getPiece() {

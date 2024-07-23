@@ -1,5 +1,5 @@
 package core.project.chess.domain.factories;
 
-// TODO
+/** TODO create factory for chess aggregate*/
 public class SessionFactory {
 }

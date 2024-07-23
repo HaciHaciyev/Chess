@@ -41,7 +41,7 @@ public class Session {
     }
 
     public static class Builder {
-        private ChessBoard chessBoard;
+        private ChessGame chessGame;
         private UserAccount playerForWhite;
         private UserAccount playerForBlack;
         private Rating whitePlayerRating;
@@ -50,8 +50,8 @@ public class Session {
 
         private Builder() {}
 
-        public Builder chessBoard(ChessBoard chessBoard) {
-            this.chessBoard = chessBoard;
+        public Builder chessBoard(ChessGame chessGame) {
+            this.chessGame = chessGame;
             return this;
         }
 
@@ -85,8 +85,7 @@ public class Session {
             Objects.requireNonNull(playerForBlack);
 
             return new Session(
-                    Objects.requireNonNullElse(chessBoard, ChessBoard.initialPosition()),
-                    Objects.requireNonNullElse(whitePlayerRating, playerForWhite.getRating()),
+                    chessGame, Objects.requireNonNullElse(whitePlayerRating, playerForWhite.getRating()),
                     Objects.requireNonNullElse(blackPlayerRating, playerForBlack.getRating()),
                     Objects.requireNonNullElse(sessionEvents, SessionEvents.defaultEvents())
             );
