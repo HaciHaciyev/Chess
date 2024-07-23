@@ -122,21 +122,9 @@ public class UserController {
         return "token-verification";
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public String handleIllegalArgumentException(IllegalArgumentException e, Model model) {
-        model.addAttribute("error", "Invalid token format");
-        return "token-verification";
-    }
-
     @ExceptionHandler(ResponseStatusException.class)
     public String handleResponseStatusException(ResponseStatusException e, Model model) {
         model.addAttribute("error", e.getReason());
-        return "token-verification";
-    }
-
-    @ExceptionHandler(Exception.class)
-    public String handleGenericException(Exception e, Model model) {
-        model.addAttribute("error", "An unexpected error occurred: " + e.getMessage());
         return "token-verification";
     }
 

@@ -58,7 +58,7 @@ public class ChessBoard {
         field.removeFigure();
         fieldMap.get(to).addFigure(piece);
 
-        /** TODO add a pair to algebraic notation which will be contains Operations*/
+        /** TODO add a tail to algebraic notation which will be contains Operations*/
         listOfAlgebraicNotations.add(AlgebraicNotation.of(pieceTYPE, from, to));
     }
 
