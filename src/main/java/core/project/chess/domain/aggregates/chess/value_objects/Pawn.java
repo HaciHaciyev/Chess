@@ -5,7 +5,7 @@ import core.project.chess.infrastructure.utilities.StatusPair;
 
 import java.util.Objects;
 
-import static core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.Operations;
+import static core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.Operations;
 
 public record Pawn(Color color)
         implements Piece {

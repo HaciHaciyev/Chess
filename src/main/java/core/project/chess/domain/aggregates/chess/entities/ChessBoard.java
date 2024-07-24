@@ -5,7 +5,7 @@ import core.project.chess.infrastructure.utilities.StatusPair;
 import lombok.Getter;
 import java.util.*;
 
-import static core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.*;
+import static core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.*;
 
 public class ChessBoard {
     private final @Getter UUID chessBoardId;

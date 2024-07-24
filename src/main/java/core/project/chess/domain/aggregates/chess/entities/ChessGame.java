@@ -9,7 +9,7 @@ import lombok.Getter;
 
 import java.util.Objects;
 
-import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.Operations;
+import core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.Operations;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChessGame {

@@ -1,6 +1,5 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
-import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import org.junit.jupiter.api.Test;
 
 class AlgebraicNotationTest {

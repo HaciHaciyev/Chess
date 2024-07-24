@@ -1,6 +1,5 @@
-package core.project.chess.domain.aggregates.chess.entities;
+package core.project.chess.domain.aggregates.chess.value_objects;
 
-import core.project.chess.domain.aggregates.chess.value_objects.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
