@@ -2,7 +2,10 @@ package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.value_objects.Color;
 import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
+import core.project.chess.domain.aggregates.chess.value_objects.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
+import core.project.chess.infrastructure.utilities.StatusPair;
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,26 +22,31 @@ public class ChessGame {
     private final boolean isTimeControlEnable;
     private final TimeControllingTYPE timeControllingTYPE;
     private Color currentPlayer;
-    private boolean isGameOver;
+    private StatusPair<Operations> isGameOver;
 
     public static Builder builder() {
         return new Builder();
     }
 
-    private void gameOver() {
-        isGameOver = true;
+    private void gameOver(Operations operation) {
+        if (isGameOver.status()) {
+            throw new IllegalArgumentException("Game was over.");
+        }
+        isGameOver = StatusPair.ofTrue(operation);
     }
 
-    public void makeMovement(final Coordinate from, final Coordinate to) throws IllegalAccessException {
+    public void makeMovement(
+            final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
+    ) throws IllegalAccessException {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
         validatePlayerTurn(from);
-        Operations operation = chessBoard.reposition(from, to);
+        Operations operation = chessBoard.reposition(from, to, inCaseOfPromotion);
 
         final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
         if (gameOver) {
-            gameOver();
+            gameOver(operation);
         }
 
         switchPlayer();
@@ -109,11 +117,11 @@ public class ChessGame {
 
             if (isTimeControlEnable) {
                 return new ChessGame(
-                        chessBoard, playerForWhite, playerForBlack, true, timeControllingTYPE, Color.WHITE, false
+                        chessBoard, playerForWhite, playerForBlack, true, timeControllingTYPE, Color.WHITE, StatusPair.ofFalse()
                 );
             } else {
                 return new ChessGame(
-                        chessBoard, playerForWhite, playerForBlack, false, null, Color.WHITE, false
+                        chessBoard, playerForWhite, playerForBlack, false, null, Color.WHITE, StatusPair.ofFalse()
                 );
             }
         }

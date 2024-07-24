@@ -1,5 +1,6 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,10 @@ public class AlgebraicNotation {
     private final Coordinate to;
 
     public static AlgebraicNotation of(
-            Piece piece, Operations operation, Coordinate from, Coordinate to
+            Piece piece, Operations operation, Coordinate from, Coordinate to, @Nullable Piece inCaseOfPromotion
     ) {
         Objects.requireNonNull(piece);
+        Objects.requireNonNull(operation);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
@@ -26,7 +28,28 @@ public class AlgebraicNotation {
             return new AlgebraicNotation(castle(to).getAlgebraicNotation(), Operations.EMPTY, from, to);
         }
 
+        if (operation.equals(Operations.PROMOTION)) {
+            Objects.requireNonNull(inCaseOfPromotion);
+
+            if (!(piece instanceof Pawn)) {
+                throw new IllegalStateException("Only pawn available for promotion.");
+            }
+
+            final boolean legalPromotion = !(inCaseOfPromotion instanceof Pawn) && !(inCaseOfPromotion instanceof King);
+            if (!legalPromotion) {
+                throw new IllegalStateException("Pawns can`t be promoted to king or pawn.");
+            }
+
+            String algebraicNotation = String.format("%s-%s=%s", from, to, pieceToType(inCaseOfPromotion));
+            return new AlgebraicNotation(algebraicNotation, operation, from, to);
+        }
+
         if (operation.equals(Operations.EMPTY)) {
+            if (piece instanceof Pawn) {
+                String algebraicNotation = String.format("%s-%s", from, to);
+                return new AlgebraicNotation(algebraicNotation, operation, from, to);
+            }
+
             String algebraicNotation = String.format("%s %s-%s", pieceToType(piece), from, to);
             return new AlgebraicNotation(algebraicNotation, operation, from, to);
         }
@@ -47,8 +70,7 @@ public class AlgebraicNotation {
     }
 
     public static Castle castle(Coordinate to) {
-        final boolean isShortCasting = to.equals(Coordinate.G1) || to.equals(Coordinate.G8) ||
-                to.equals(Coordinate.H1) || to.equals(Coordinate.H8);
+        final boolean isShortCasting = to.equals(Coordinate.G1) || to.equals(Coordinate.G8);
         if (isShortCasting) {
             return Castle.SHORT_CASTLING;
         }
@@ -69,10 +91,8 @@ public class AlgebraicNotation {
             return false;
         }
 
-        final boolean isCastle = to.equals(Coordinate.A1) || to.equals(Coordinate.C1) ||
-                to.equals(Coordinate.G1) || to.equals(Coordinate.H1) ||
-                to.equals(Coordinate.A8) || to.equals(Coordinate.C8) ||
-                to.equals(Coordinate.G8) || to.equals(Coordinate.H8);
+        final boolean isCastle = to.equals(Coordinate.C1) || to.equals(Coordinate.G1) ||
+                                 to.equals(Coordinate.C8) || to.equals(Coordinate.G8);
         if (!isCastle) {
             return false;
         }
@@ -101,9 +121,10 @@ public class AlgebraicNotation {
 
     @Getter
     public enum Operations {
+        PROMOTION("="),
         CAPTURE("X"),
         CHECK("+"),
-        STALEMATE("$"),
+        STALEMATE("."),
         CHECKMATE("#"),
         EMPTY("");
 

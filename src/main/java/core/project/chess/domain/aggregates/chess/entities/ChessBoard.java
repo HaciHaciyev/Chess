@@ -2,6 +2,7 @@ package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.value_objects.*;
 import core.project.chess.infrastructure.utilities.StatusPair;
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import java.util.*;
 
@@ -38,7 +39,9 @@ public class ChessBoard {
         );
     }
 
-    Operations reposition(final Coordinate from, final Coordinate to) {
+    Operations reposition(
+            final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
+    ) {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
@@ -47,6 +50,7 @@ public class ChessBoard {
         }
 
         Field startField = fieldMap.get(from);
+        Field endField = fieldMap.get(to);
         Piece piece = startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
         if (AlgebraicNotation.isCastling(piece, from, to)) {
@@ -64,34 +68,29 @@ public class ChessBoard {
 
         Operations operation = statusPair.valueOrElse();
 
-        if (operation.equals(Operations.CAPTURE)) {
-            /** TODO capture operation*/
-            return operation;
-        }
-
-        if (operation.equals(Operations.CHECK)) {
-            /** TODO check operation*/
-            return operation;
-        }
-
-        if (operation.equals(Operations.STALEMATE)) {
-            /** TODO stalemate operation*/
-            return operation;
-        }
-
-        if (operation.equals(Operations.CHECKMATE)) {
-            /** TODO checkmate operation*/
-            return operation;
-        }
-
         startField.removeFigure();
-        fieldMap.get(to).addFigure(piece);
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.EMPTY, from, to));
+        if (!endField.isEmpty()) {
+            endField.removeFigure();
+        }
+
+        if (operation.equals(Operations.PROMOTION)) {
+            endField.addFigure(inCaseOfPromotion);
+        } else {
+            endField.addFigure(piece);
+        }
+
+        listOfAlgebraicNotations.add(
+                AlgebraicNotation.of(piece, operation, from, to, null)
+        );
+
         return operation;
     }
 
     private void castling(final Coordinate from, final Coordinate to) {
+        final boolean shortCasting = Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
+
         Field kingStartedField = fieldMap.get(from);
+        Field kingEndField = fieldMap.get(to);
         Piece piece = kingStartedField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
         if (!(piece instanceof King king)) {
@@ -105,52 +104,55 @@ public class ChessBoard {
         }
 
         kingStartedField.removeFigure();
-        fieldMap.get(to).addFigure(king);
+        kingEndField.addFigure(king);
 
-        final boolean shortCasting = Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
         if (shortCasting) {
             moveRookInShortCastling(to);
         } else {
             moveRookInLongCastling(to);
         }
 
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.EMPTY, from, to));
+        listOfAlgebraicNotations.add(
+                AlgebraicNotation.of(piece, Operations.EMPTY, from, to, null)
+        );
     }
 
     private void moveRookInShortCastling(final Coordinate to) {
-        if (to.getRow() == 1) {
+        final boolean isRookWhite = to.getRow() == 1;
+
+        if (isRookWhite) {
             Field field = fieldMap.get(Coordinate.H1);
-            Rook rook = (Rook) field.getPiece()
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
             field.removeFigure();
             fieldMap.get(Coordinate.F1).addFigure(rook);
-        } else {
-            Field field = fieldMap.get(Coordinate.H8);
-            Rook rook = (Rook) field.getPiece()
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
-
-            field.removeFigure();
-            fieldMap.get(Coordinate.F8).addFigure(rook);
+            return;
         }
+
+        Field field = fieldMap.get(Coordinate.H8);
+        Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+        field.removeFigure();
+        fieldMap.get(Coordinate.F8).addFigure(rook);
     }
 
     private void moveRookInLongCastling(final Coordinate to) {
-        if (to.getRow() == 1) {
+        final boolean isRookWhite = to.getRow() == 1;
+
+        if (isRookWhite) {
             Field field = fieldMap.get(Coordinate.A1);
-            Rook rook = (Rook) field.getPiece()
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
             field.removeFigure();
             fieldMap.get(Coordinate.D1).addFigure(rook);
-        } else {
-            Field field = fieldMap.get(Coordinate.A8);
-            Rook rook = (Rook) field.getPiece()
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid move."));
-
-            field.removeFigure();
-            fieldMap.get(Coordinate.D8).addFigure(rook);
+            return;
         }
+
+        Field field = fieldMap.get(Coordinate.A8);
+        Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+        field.removeFigure();
+        fieldMap.get(Coordinate.D8).addFigure(rook);
     }
 
     private enum InitializationTYPE {
@@ -166,6 +168,10 @@ public class ChessBoard {
             Objects.requireNonNull(coordinate);
             this.coordinate = coordinate;
             this.piece = piece;
+        }
+
+        public boolean isEmpty() {
+            return piece == null;
         }
 
         public Optional<Piece> getPiece() {
