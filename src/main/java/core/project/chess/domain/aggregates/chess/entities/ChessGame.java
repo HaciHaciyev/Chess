@@ -2,13 +2,14 @@ package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.value_objects.Color;
 import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
-import core.project.chess.domain.aggregates.chess.value_objects.PieceTYPE;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Objects;
+
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.Operations;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChessGame {
@@ -24,15 +25,22 @@ public class ChessGame {
         return new Builder();
     }
 
-    public void makeMovement(
-            final PieceTYPE pieceTYPE, final Coordinate from, final Coordinate to
-    ) throws IllegalAccessException {
-        Objects.requireNonNull(pieceTYPE);
+    private void gameOver() {
+        isGameOver = true;
+    }
+
+    public void makeMovement(final Coordinate from, final Coordinate to) throws IllegalAccessException {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
         validatePlayerTurn(from);
-        chessBoard.reposition(pieceTYPE, from, to);
+        Operations operation = chessBoard.reposition(from, to);
+
+        final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
+        if (gameOver) {
+            gameOver();
+        }
+
         switchPlayer();
     }
 
@@ -47,8 +55,8 @@ public class ChessGame {
     /** This is not a complete validation of which player should play at this point.
      * This validation rather checks what color pieces should be moved.
      * Finally, validation of the question of who should walk can only be carried out in the controller.*/
-    private void validatePlayerTurn(final Coordinate from) throws IllegalAccessException {
-        Color activePlayer = chessBoard.pieceColor(from).orElseThrow();
+    private void validatePlayerTurn(final Coordinate coordinate) throws IllegalAccessException {
+        Color activePlayer = chessBoard.pieceColor(coordinate).orElseThrow();
         if (currentPlayer != activePlayer) {
             throw new IllegalAccessException(
                     String.format("At the moment, the player for %s must move and not the player for %s", currentPlayer, activePlayer)
