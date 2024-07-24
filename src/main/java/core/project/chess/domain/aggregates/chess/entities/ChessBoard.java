@@ -103,6 +103,8 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move.");
         }
 
+        /**Process operations from StatusPair. All validation need to be processed before that.*/
+
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
 

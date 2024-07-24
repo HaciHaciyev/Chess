@@ -54,6 +54,11 @@ public class AlgebraicNotation {
             return new AlgebraicNotation(algebraicNotation, operation, from, to);
         }
 
+        if (piece instanceof Pawn) {
+            String algebraicNotation = String.format("%s %s %s", from, operation, to);
+            return new AlgebraicNotation(algebraicNotation, operation, from, to);
+        }
+
         String algebraicNotation = String.format("%s %s %s %s", pieceToType(piece), from, operation, to);
         return new AlgebraicNotation(algebraicNotation, operation, from, to);
     }
