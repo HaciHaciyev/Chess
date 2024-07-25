@@ -69,8 +69,12 @@ public class ChessBoard {
         Operations operation = statusPair.valueOrElse();
 
         startField.removeFigure();
-        if (!endField.isEmpty()) {
+        if (!endField.isEmpty() && operation.equals(Operations.CAPTURE)) {
             endField.removeFigure();
+        }
+
+        if (!endField.isEmpty()) {
+            throw new IllegalArgumentException("Invalid move.");
         }
 
         if (operation.equals(Operations.PROMOTION)) {
@@ -123,38 +127,42 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            Field field = fieldMap.get(Coordinate.H1);
-            Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Field startField = fieldMap.get(Coordinate.H1);
+            Field endField = fieldMap.get(Coordinate.F1);
+            Rook rook = (Rook) startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
-            field.removeFigure();
-            fieldMap.get(Coordinate.F1).addFigure(rook);
+            startField.removeFigure();
+            endField.addFigure(rook);
             return;
         }
 
-        Field field = fieldMap.get(Coordinate.H8);
-        Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Field startField = fieldMap.get(Coordinate.H8);
+        Field endField = fieldMap.get(Coordinate.F8);
+        Rook rook = (Rook) startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
-        field.removeFigure();
-        fieldMap.get(Coordinate.F8).addFigure(rook);
+        startField.removeFigure();
+        endField.addFigure(rook);
     }
 
     private void moveRookInLongCastling(final Coordinate to) {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            Field field = fieldMap.get(Coordinate.A1);
-            Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Field startField = fieldMap.get(Coordinate.A1);
+            Field endField = fieldMap.get(Coordinate.D1);
+            Rook rook = (Rook) startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
-            field.removeFigure();
-            fieldMap.get(Coordinate.D1).addFigure(rook);
+            startField.removeFigure();
+            endField.addFigure(rook);
             return;
         }
 
-        Field field = fieldMap.get(Coordinate.A8);
-        Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Field startField = fieldMap.get(Coordinate.A8);
+        Field endField = fieldMap.get(Coordinate.D8);
+        Rook rook = (Rook) startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
-        field.removeFigure();
-        fieldMap.get(Coordinate.D8).addFigure(rook);
+        startField.removeFigure();
+        endField.addFigure(rook);
     }
 
     private enum InitializationTYPE {
