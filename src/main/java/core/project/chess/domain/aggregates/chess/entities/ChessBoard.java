@@ -120,9 +120,9 @@ public class ChessBoard {
     }
 
     private void moveRookInShortCastling(final Coordinate to) {
-        final boolean isRookWhite = to.getRow() == 1;
+        final boolean isWhiteCastling = to.getRow() == 1;
 
-        if (isRookWhite) {
+        if (isWhiteCastling) {
             Field field = fieldMap.get(Coordinate.H1);
             Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
@@ -139,9 +139,9 @@ public class ChessBoard {
     }
 
     private void moveRookInLongCastling(final Coordinate to) {
-        final boolean isRookWhite = to.getRow() == 1;
+        final boolean isWhiteCastling = to.getRow() == 1;
 
-        if (isRookWhite) {
+        if (isWhiteCastling) {
             Field field = fieldMap.get(Coordinate.A1);
             Rook rook = (Rook) field.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
@@ -244,24 +244,21 @@ public class ChessBoard {
 
         for (Coordinate coordinate : Coordinate.values()) {
             final boolean fieldForWhitePawn = coordinate.getRow() == 2;
-            final boolean fieldForBlackPawn = coordinate.getRow() == 7;
-            final boolean fieldMustBeEmpty = coordinate.getRow() != 1 &&
-                    coordinate.getRow() != 2 &&
-                    coordinate.getRow() != 7 &&
-                    coordinate.getRow() != 8;
-
             if (fieldForWhitePawn) {
                 fieldMap.put(
                         coordinate, new Field(coordinate, new Pawn(Color.WHITE))
                 );
             }
 
+            final boolean fieldForBlackPawn = coordinate.getRow() == 7;
             if (fieldForBlackPawn) {
                 fieldMap.put(
                         coordinate, new Field(coordinate, new Pawn(Color.BLACK))
                 );
             }
 
+            final boolean fieldMustBeEmpty = coordinate.getRow() != 1 && coordinate.getRow() != 2 &&
+                    coordinate.getRow() != 7 && coordinate.getRow() != 8;
             if (fieldMustBeEmpty) {
                 fieldMap.put(
                         coordinate, new Field(coordinate, null)

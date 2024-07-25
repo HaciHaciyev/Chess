@@ -19,8 +19,7 @@ public class ChessApplication {
 
     @Bean
     public JavaMailSender javaMailSender() {
-
-        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        var mailSender = new JavaMailSenderImpl();
 
         mailSender.setHost("");
         mailSender.setPort(6969);
