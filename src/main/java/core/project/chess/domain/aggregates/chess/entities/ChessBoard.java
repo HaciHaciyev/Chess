@@ -119,10 +119,6 @@ public class ChessBoard {
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
-        final boolean pawnDoubleMove = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
-        if (piece instanceof Pawn && pawnDoubleMove) {
-
-        }
 
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
