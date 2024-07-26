@@ -52,7 +52,8 @@ public record Pawn(Color color)
         final int endRow = endField.getCoordinate().getRow();
 
         final boolean endFieldEmpty = endField.isEmpty();
-        final boolean endFieldOccupiedBySameColorPiece = !endFieldEmpty && endField.pieceOptional().orElseThrow().color().equals(Color.BLACK);
+        final boolean endFieldOccupiedBySameColorPiece = !endFieldEmpty &&
+                endField.pieceOptional().orElseThrow().color().equals(Color.BLACK);
         if (endFieldOccupiedBySameColorPiece) {
             return StatusPair.ofFalse();
         }
@@ -65,9 +66,8 @@ public record Pawn(Color color)
             return blackPawnStraightMovementValidation(startRow, endRow);
         }
 
-        final int startColumnInt = columnToInt(startColumn);
-        final int endColumnInt = columnToInt(endColumn);
-        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 && Math.abs(startColumnInt - endColumnInt) == 1;
+        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 &&
+                Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1;
         if (diagonalCapture) {
             if (captureOnPassageForBlack(chessBoard, endColumn, endRow)) {
                 if (!endFieldEmpty) {
@@ -95,7 +95,8 @@ public record Pawn(Color color)
         final int endRow = endField.getCoordinate().getRow();
 
         final boolean endFieldEmpty = endField.isEmpty();
-        final boolean endFieldOccupiedBySameColorFigure = !endFieldEmpty && endField.pieceOptional().orElseThrow().color().equals(Color.WHITE);
+        final boolean endFieldOccupiedBySameColorFigure = !endFieldEmpty &&
+                endField.pieceOptional().orElseThrow().color().equals(Color.WHITE);
         if (endFieldOccupiedBySameColorFigure) {
             return StatusPair.ofFalse();
         }
@@ -108,9 +109,8 @@ public record Pawn(Color color)
             return whitePawnStraightMovementValidation(startRow, endRow);
         }
 
-        final int startColumnInt = columnToInt(startColumn);
-        final int endColumnInt = columnToInt(endColumn);
-        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 && Math.abs(startColumnInt - endColumnInt) == 1;
+        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 &&
+                Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1;
         if (diagonalCapture) {
             if (captureOnPassageForWhite(chessBoard, endColumn, endRow)) {
                 if (!endFieldEmpty) {
