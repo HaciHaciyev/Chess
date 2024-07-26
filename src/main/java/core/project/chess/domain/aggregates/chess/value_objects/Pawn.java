@@ -18,23 +18,7 @@ public record Pawn(Color color)
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        /**Piece piece = from
-                .piece()
-                .orElseThrow(
-                        () -> new IllegalArgumentException("Invalid move")
-                );
 
-        if (!(piece instanceof Pawn)) {
-            throw new IllegalArgumentException("Invalid value object usage");
-        }
-
-        Pawn pawn = (Pawn) from.piece().get();
-
-        if (pawn.color().equals(Color.BLACK)) {
-            validateBlack();
-        } else {
-            validateWhite();
-        } */
 
         return StatusPair.ofFalse();
     }

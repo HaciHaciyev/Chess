@@ -33,6 +33,11 @@ public class ChessBoard {
         return List.copyOf(listOfAlgebraicNotations);
     }
 
+    public Field getField(Coordinate coordinate) {
+        Field field = fieldMap.get(coordinate);
+        return new Field(field.getCoordinate(), field.pieceOptional().orElse(null));
+    }
+
     public Optional<Color> pieceColor(Coordinate from) {
         return Optional.ofNullable(
                 fieldMap.get(from).piece.color()
@@ -51,7 +56,7 @@ public class ChessBoard {
 
         Field startField = fieldMap.get(from);
         Field endField = fieldMap.get(to);
-        Piece piece = startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Piece piece = startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
         if (AlgebraicNotation.isCastling(piece, from, to)) {
             castling(from, to);
@@ -95,7 +100,7 @@ public class ChessBoard {
 
         Field kingStartedField = fieldMap.get(from);
         Field kingEndField = fieldMap.get(to);
-        Piece piece = kingStartedField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Piece piece = kingStartedField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
         if (!(piece instanceof King king)) {
             throw new IllegalArgumentException("Invalid move.");
@@ -129,7 +134,7 @@ public class ChessBoard {
         if (isWhiteCastling) {
             Field startField = fieldMap.get(Coordinate.H1);
             Field endField = fieldMap.get(Coordinate.F1);
-            Rook rook = (Rook) startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Rook rook = (Rook) startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
             startField.removeFigure();
             endField.addFigure(rook);
@@ -138,7 +143,7 @@ public class ChessBoard {
 
         Field startField = fieldMap.get(Coordinate.H8);
         Field endField = fieldMap.get(Coordinate.F8);
-        Rook rook = (Rook) startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Rook rook = (Rook) startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
         startField.removeFigure();
         endField.addFigure(rook);
@@ -150,7 +155,7 @@ public class ChessBoard {
         if (isWhiteCastling) {
             Field startField = fieldMap.get(Coordinate.A1);
             Field endField = fieldMap.get(Coordinate.D1);
-            Rook rook = (Rook) startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Rook rook = (Rook) startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
             startField.removeFigure();
             endField.addFigure(rook);
@@ -159,7 +164,7 @@ public class ChessBoard {
 
         Field startField = fieldMap.get(Coordinate.A8);
         Field endField = fieldMap.get(Coordinate.D8);
-        Rook rook = (Rook) startField.getPiece().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Rook rook = (Rook) startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
         startField.removeFigure();
         endField.addFigure(rook);
@@ -169,10 +174,9 @@ public class ChessBoard {
         STANDARD, DURING_THE_GAME
     }
 
-    @Getter
-    private static class Field {
+    public static class Field {
         private Piece piece;
-        private final Coordinate coordinate;
+        private final @Getter Coordinate coordinate;
 
         public Field(Coordinate coordinate, Piece piece) {
             Objects.requireNonNull(coordinate);
@@ -184,16 +188,27 @@ public class ChessBoard {
             return piece == null;
         }
 
-        public Optional<Piece> getPiece() {
-            Piece returnedType = piece;
-            return Optional.ofNullable(returnedType);
+        public Optional<Piece> pieceOptional() {
+            if (piece == null) {
+                return Optional.empty();
+            }
+
+            Color color = piece.color();
+            return switch (piece) {
+                case King _ -> Optional.of(new King(color));
+                case Queen _ -> Optional.of(new Queen(color));
+                case Rook _ -> Optional.of(new Rook(color));
+                case Bishop _ -> Optional.of(new Bishop(color));
+                case Knight _ -> Optional.of(new Knight(color));
+                default -> Optional.of(new Pawn(color));
+            };
         }
 
-        public void removeFigure() {
+        private void removeFigure() {
             this.piece = null;
         }
 
-        public void addFigure(final Piece piece) {
+        private void addFigure(final Piece piece) {
             if (this.piece == null) {
                 this.piece = piece;
             }
