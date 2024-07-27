@@ -77,7 +77,7 @@ public class ChessBoard {
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
 
-        Operations operation = statusPair.valueOrElse();
+        Operations operation = statusPair.valueOrElseThrow();
 
         startField.removeFigure();
         if (!endField.isEmpty() && operation.equals(Operations.CAPTURE)) {
