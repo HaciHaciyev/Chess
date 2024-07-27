@@ -10,6 +10,8 @@ import static core.project.chess.domain.aggregates.chess.value_objects.Algebraic
 
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
+    private boolean isWhiteKingMoved;
+    private boolean isBlackKingMoved;
     private final Map<Coordinate, Field> fieldMap = new HashMap<>();
     private final List<AlgebraicNotation> listOfAlgebraicNotations = new LinkedList<>();
 
@@ -50,6 +52,28 @@ public class ChessBoard {
         );
     }
 
+    public boolean isWhiteKingMoved() {
+        if (isWhiteKingMoved) {
+            return true;
+        }
+        return false;
+    }
+
+    private void whiteKingMoved() {
+        isWhiteKingMoved = true;
+    }
+
+    public boolean isBlackKingMoved() {
+        if (isBlackKingMoved) {
+            return true;
+        }
+        return false;
+    }
+
+    private void blackKingMoved() {
+        isBlackKingMoved = true;
+    }
+
     Operations reposition(
             final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
     ) {
@@ -76,6 +100,14 @@ public class ChessBoard {
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
+
+        if (piece instanceof King) {
+            if (piece.color().equals(Color.WHITE)) {
+                whiteKingMoved();
+            } else {
+                blackKingMoved();
+            }
+        }
 
         Operations operation = statusPair.valueOrElseThrow();
 
@@ -119,6 +151,12 @@ public class ChessBoard {
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
+
+        if (piece.color().equals(Color.WHITE)) {
+            whiteKingMoved();
+        } else {
+            blackKingMoved();
+        }
 
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
