@@ -74,9 +74,26 @@ public class ChessBoard {
         isBlackKingMoved = true;
     }
 
+    private boolean kingSafetyAfterMove() {
+        return false;
+    }
+
+    private boolean stalemate() {
+        return false;
+    }
+
+    private boolean check() {
+        return false;
+    }
+
+    private boolean checkMate() {
+        return false;
+    }
+
     Operations reposition(
             final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
     ) {
+        /** Preparation of necessary data and validation.*/
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
@@ -88,70 +105,102 @@ public class ChessBoard {
         Field endField = fieldMap.get(to);
         Piece piece = startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
+        /** Delegate the operation to another method if necessary.*/
         if (AlgebraicNotation.isCastling(piece, from, to)) {
-            castling(from, to);
-            return Operations.EMPTY;
+            return castling(from, to);
         }
 
+        /** Validation.*/
         StatusPair<Operations> statusPair = piece.isValidMove(this, from, to);
-        final boolean isValidMove = statusPair.status();
-        if (!isValidMove) {
+        if (!statusPair.status() || !kingSafetyAfterMove()) {
             throw new IllegalArgumentException("Invalid move.");
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
-
-        if (piece instanceof King) {
-            if (piece.color().equals(Color.WHITE)) {
-                whiteKingMoved();
-            } else {
-                blackKingMoved();
-            }
-        }
-
         Operations operation = statusPair.valueOrElseThrow();
 
         startField.removeFigure();
-        if (!endField.isEmpty() && operation.equals(Operations.CAPTURE)) {
+
+        if (operation.equals(Operations.CAPTURE)) {
             endField.removeFigure();
         }
 
-        if (!endField.isEmpty()) {
-            throw new IllegalArgumentException("Invalid move.");
+        if (operation.equals(Operations.PROMOTION)) {
+            if (!endField.isEmpty()) {
+                endField.removeFigure();
+            }
+
+            endField.addFigure(inCaseOfPromotion);
         }
 
-        if (operation.equals(Operations.PROMOTION)) {
-            endField.addFigure(inCaseOfPromotion);
-        } else {
-            endField.addFigure(piece);
+        endField.addFigure(piece);
+
+        /** Recording the move made in algebraic notation and return used Operation.*/
+        if (checkMate()) {
+            if (operation.equals(Operations.PROMOTION)) {
+                listOfAlgebraicNotations.add(
+                        AlgebraicNotation.of(piece, operation, from, to, inCaseOfPromotion, Operations.CHECKMATE)
+                );
+                return Operations.CHECKMATE;
+            }
+
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null)
+            );
+            return Operations.CHECKMATE;
+        }
+
+        if (stalemate()) {
+            if (operation.equals(Operations.PROMOTION)) {
+                listOfAlgebraicNotations.add(
+                        AlgebraicNotation.of(piece, operation, from, to, inCaseOfPromotion, Operations.STALEMATE)
+                );
+                return Operations.STALEMATE;
+            }
+
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null)
+            );
+            return Operations.STALEMATE;
+        }
+
+        if (check()) {
+            if (operation.equals(Operations.PROMOTION)) {
+                listOfAlgebraicNotations.add(
+                        AlgebraicNotation.of(piece, operation, from, to, inCaseOfPromotion, Operations.CHECK)
+                );
+                return Operations.CHECK;
+            }
+
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null)
+            );
+            return Operations.CHECK;
         }
 
         listOfAlgebraicNotations.add(
-                AlgebraicNotation.of(piece, operation, from, to, null)
+                AlgebraicNotation.of(piece, operation, from, to, null, null)
         );
 
         return operation;
     }
 
-    private void castling(final Coordinate from, final Coordinate to) {
-        final boolean shortCasting = Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
-
+    private Operations castling(final Coordinate from, final Coordinate to) {
+        /** Preparation of necessary data and validation.*/
         Field kingStartedField = fieldMap.get(from);
         Field kingEndField = fieldMap.get(to);
         Piece piece = kingStartedField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
         if (!(piece instanceof King king)) {
-            throw new IllegalArgumentException("Invalid move.");
+            throw new IllegalStateException("Invalid method usage, check the documentation.");
         }
 
-        StatusPair<Operations> statusPair = king.isValidMove(this, from, to);
-        final boolean isValidMove = statusPair.status();
-        if (!isValidMove) {
+        StatusPair<Operations> statusPair = king.canCastle(this, kingStartedField, kingEndField);
+        if (!statusPair.status() || !kingSafetyAfterMove()) {
             throw new IllegalArgumentException("Invalid move.");
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
-
         if (piece.color().equals(Color.WHITE)) {
             whiteKingMoved();
         } else {
@@ -161,15 +210,42 @@ public class ChessBoard {
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
 
+        final boolean shortCasting = Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
         if (shortCasting) {
             moveRookInShortCastling(to);
         } else {
             moveRookInLongCastling(to);
         }
 
+        /** Recording the move made in algebraic notation.*/
+        Operations operation = statusPair.valueOrElseThrow();
+
+        if (checkMate()) {
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null)
+            );
+            return Operations.CHECKMATE;
+        }
+
+        if (stalemate()) {
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null)
+            );
+            return Operations.STALEMATE;
+        }
+
+        if (check()) {
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null)
+            );
+            return Operations.CHECK;
+        }
+
         listOfAlgebraicNotations.add(
-                AlgebraicNotation.of(piece, Operations.EMPTY, from, to, null)
+                AlgebraicNotation.of(piece, operation, from, to, null, null)
         );
+
+        return operation;
     }
 
     private void moveRookInShortCastling(final Coordinate to) {

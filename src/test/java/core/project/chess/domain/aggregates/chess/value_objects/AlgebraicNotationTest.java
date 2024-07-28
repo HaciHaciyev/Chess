@@ -7,7 +7,7 @@ class AlgebraicNotationTest {
     @Test
     void of() {
         AlgebraicNotation algebraicNotation = AlgebraicNotation.of(
-                new Pawn(Color.WHITE), AlgebraicNotation.Operations.EMPTY, Coordinate.D2, Coordinate.D4, null
+                new Pawn(Color.WHITE), AlgebraicNotation.Operations.EMPTY, Coordinate.D2, Coordinate.D4, null, null
         );
         System.out.println(algebraicNotation);
     }

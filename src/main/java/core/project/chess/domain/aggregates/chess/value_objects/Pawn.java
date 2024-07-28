@@ -73,6 +73,10 @@ public record Pawn(Color color)
                 if (!endFieldEmpty) {
                     return StatusPair.ofFalse();
                 }
+
+                if (endRow == 1) {
+                    return StatusPair.ofTrue(Operations.PROMOTION);
+                }
                 return StatusPair.ofTrue(Operations.CAPTURE);
             }
 
@@ -80,6 +84,9 @@ public record Pawn(Color color)
                 return StatusPair.ofFalse();
             }
 
+            if (endRow == 1) {
+                return StatusPair.ofTrue(Operations.PROMOTION);
+            }
             return StatusPair.ofTrue(Operations.CAPTURE);
         }
 
@@ -116,6 +123,10 @@ public record Pawn(Color color)
                 if (!endFieldEmpty) {
                     return StatusPair.ofFalse();
                 }
+
+                if (endRow == 8) {
+                    return StatusPair.ofTrue(Operations.PROMOTION);
+                }
                 return StatusPair.ofTrue(Operations.CAPTURE);
             }
 
@@ -123,6 +134,9 @@ public record Pawn(Color color)
                 return StatusPair.ofFalse();
             }
 
+            if (endRow == 8) {
+                return StatusPair.ofTrue(Operations.PROMOTION);
+            }
             return StatusPair.ofTrue(Operations.CAPTURE);
         }
 

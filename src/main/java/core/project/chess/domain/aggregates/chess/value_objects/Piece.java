@@ -9,7 +9,8 @@ public sealed interface Piece
         permits Bishop, King, Knight, Pawn, Queen, Rook {
 
     Color color();
-    
+
+    /** Can return only operations like EMPTY, CAPTURE, PROMOTION(in case of Pawn)*/
     StatusPair<Operations> isValidMove(ChessBoard chessBoard, Coordinate from, Coordinate to);
 }
 

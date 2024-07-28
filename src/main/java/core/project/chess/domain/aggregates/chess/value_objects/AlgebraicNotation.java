@@ -9,14 +9,18 @@ import java.util.Objects;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+/** Not always valid. Only ChessBoard can can guarantee the validity of a given value object.
+ * This class should be used only in ChessBoard.*/
 public class AlgebraicNotation {
     private final String algebraicNotation;
     private final Operations operation;
     private final Coordinate from;
     private final Coordinate to;
+    private final Operations afterPromotion;
 
     public static AlgebraicNotation of(
-            Piece piece, Operations operation, Coordinate from, Coordinate to, @Nullable Piece inCaseOfPromotion
+            Piece piece, Operations operation, Coordinate from, Coordinate to,
+            @Nullable Piece inCaseOfPromotion, @Nullable Operations afterPromotion
     ) {
         Objects.requireNonNull(piece);
         Objects.requireNonNull(operation);
@@ -25,7 +29,9 @@ public class AlgebraicNotation {
 
         final boolean isCastle = isCastling(piece, from, to);
         if (isCastle) {
-            return new AlgebraicNotation(castle(to).getAlgebraicNotation(), Operations.EMPTY, from, to);
+            return new AlgebraicNotation(
+                    String.format(castle(to).getAlgebraicNotation(), operation), operation, from, to, Operations.EMPTY
+            );
         }
 
         if (operation.equals(Operations.PROMOTION)) {
@@ -35,41 +41,45 @@ public class AlgebraicNotation {
                 throw new IllegalStateException("Only pawn available for promotion.");
             }
 
-            final boolean legalPromotion = !(inCaseOfPromotion instanceof Pawn) && !(inCaseOfPromotion instanceof King);
-            if (!legalPromotion) {
-                throw new IllegalStateException("Pawns can`t be promoted to king or pawn.");
+            if (!Objects.isNull(afterPromotion)) {
+                String algebraicNotation = String.format("%s-%s=%s%s", from, to, pieceToType(inCaseOfPromotion), afterPromotion);
+                return new AlgebraicNotation(algebraicNotation, operation, from, to, afterPromotion);
             }
 
             String algebraicNotation = String.format("%s-%s=%s", from, to, pieceToType(inCaseOfPromotion));
-            return new AlgebraicNotation(algebraicNotation, operation, from, to);
+            return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+        }
+
+        if (!Objects.isNull(afterPromotion) || !Objects.isNull(inCaseOfPromotion)) {
+            throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
         if (operation.equals(Operations.EMPTY)) {
             if (piece instanceof Pawn) {
                 String algebraicNotation = String.format("%s-%s", from, to);
-                return new AlgebraicNotation(algebraicNotation, operation, from, to);
+                return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
             }
 
             String algebraicNotation = String.format("%s %s-%s", pieceToType(piece), from, to);
-            return new AlgebraicNotation(algebraicNotation, operation, from, to);
+            return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
         }
 
         if (piece instanceof Pawn) {
             String algebraicNotation = String.format("%s %s %s", from, operation, to);
-            return new AlgebraicNotation(algebraicNotation, operation, from, to);
+            return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
         }
 
         String algebraicNotation = String.format("%s %s %s %s", pieceToType(piece), from, operation, to);
-        return new AlgebraicNotation(algebraicNotation, operation, from, to);
+        return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
     }
 
     private static String pieceToType(Piece piece) {
         return switch (piece) {
-            case King k -> "K";
-            case Queen q -> "Q";
-            case Rook r -> "R";
-            case Bishop b -> "B";
-            case Knight n -> "N";
+            case King _ -> "K";
+            case Queen _ -> "Q";
+            case Rook _ -> "R";
+            case Bishop _ -> "B";
+            case Knight _ -> "N";
             default -> "";
         };
     }
