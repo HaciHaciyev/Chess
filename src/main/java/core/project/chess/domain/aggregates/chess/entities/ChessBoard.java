@@ -136,6 +136,12 @@ public class ChessBoard {
         endField.addFigure(piece);
 
         /** Recording the move made in algebraic notation and return used Operation.*/
+        return recordingMoveMade(piece, from, to, operation, inCaseOfPromotion);
+    }
+
+    private Operations recordingMoveMade(
+            Piece piece, Coordinate from, Coordinate to, Operations operation, Piece inCaseOfPromotion
+    ) {
         if (checkMate()) {
             if (operation.equals(Operations.PROMOTION)) {
                 listOfAlgebraicNotations.add(
