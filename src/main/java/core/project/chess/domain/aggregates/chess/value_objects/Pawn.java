@@ -3,11 +3,12 @@ package core.project.chess.domain.aggregates.chess.value_objects;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.infrastructure.utilities.StatusPair;
+import org.springframework.data.util.Pair;
 
 import java.util.Objects;
 import java.util.Optional;
 
-import static core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.Operations;
+import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
 public record Pawn(Color color)
         implements Piece {
@@ -209,9 +210,9 @@ public record Pawn(Color color)
         if (chessBoard.getLastMove().isEmpty()) {
             return false;
         }
-        AlgebraicNotation algebraicNotation = chessBoard.getLastMove().get();
-        Coordinate from = algebraicNotation.getFrom();
-        Coordinate to = algebraicNotation.getTo();
+        Pair<Coordinate, Coordinate> lastMovement = chessBoard.getLastMove().get();
+        Coordinate from = lastMovement.getFirst();
+        Coordinate to = lastMovement.getSecond();
 
         final boolean pawnDoubleMove = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && from.getRow() == 5);
         if (pawnDoubleMove) {
@@ -222,7 +223,7 @@ public record Pawn(Color color)
 
     private Optional<Coordinate> previousMoveCoordinate(ChessBoard chessBoard) {
         return Optional.ofNullable(
-                chessBoard.getLastMove().isPresent() ? chessBoard.getLastMove().get().getTo() : null
+                chessBoard.getLastMove().isPresent() ? chessBoard.getLastMove().get().getSecond() : null
         );
     }
 }

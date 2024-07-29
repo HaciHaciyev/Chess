@@ -4,9 +4,9 @@ import core.project.chess.domain.aggregates.chess.value_objects.*;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
-import java.util.*;
+import org.springframework.data.util.Pair;
 
-import static core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.*;
+import java.util.*;
 
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
@@ -31,13 +31,18 @@ public class ChessBoard {
         return new ChessBoard(chessBoardId, InitializationTYPE.STANDARD);
     }
 
-    public List<AlgebraicNotation> getListOfAlgebraicNotations() {
-        return List.copyOf(listOfAlgebraicNotations);
+    public List<String> getListOfAlgebraicNotations() {
+        return listOfAlgebraicNotations.stream().map(AlgebraicNotation::algebraicNotation).toList();
     }
 
-    public Optional<AlgebraicNotation> getLastMove() {
-        return Optional.ofNullable(
-                listOfAlgebraicNotations.getLast()
+    public Optional<Pair<Coordinate, Coordinate>> getLastMove() {
+        AlgebraicNotation algebraicNotation = Objects.requireNonNullElse(listOfAlgebraicNotations.getLast(), null);
+
+        if (algebraicNotation == null) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                Pair.of(algebraicNotation.from, algebraicNotation.to)
         );
     }
 
@@ -216,7 +221,7 @@ public class ChessBoard {
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
 
-        final boolean shortCasting = Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
+        final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
         if (shortCasting) {
             moveRookInShortCastling(to);
         } else {
@@ -337,6 +342,154 @@ public class ChessBoard {
         private void addFigure(final Piece piece) {
             if (this.piece == null) {
                 this.piece = piece;
+            }
+        }
+    }
+
+    @Getter
+    public enum Operations {
+        PROMOTION("="),
+        CAPTURE("X"),
+        CHECK("+"),
+        STALEMATE("."),
+        CHECKMATE("#"),
+        EMPTY("");
+
+        private final String algebraicNotation;
+
+        Operations(String algebraicNotation) {
+            this.algebraicNotation = algebraicNotation;
+        }
+    }
+
+    /** Not always valid. Only ChessBoard can can guarantee the validity of a given value object.
+     * This class should be used only in ChessBoard.*/
+    private record AlgebraicNotation(String algebraicNotation, Operations operation,
+                                     Coordinate from, Coordinate to,
+                                     Operations afterPromotion) {
+
+        public static AlgebraicNotation of(
+                Piece piece, Operations operation, Coordinate from, Coordinate to,
+                @Nullable Piece inCaseOfPromotion, @Nullable Operations afterPromotion
+        ) {
+            Objects.requireNonNull(piece);
+            Objects.requireNonNull(operation);
+            Objects.requireNonNull(from);
+            Objects.requireNonNull(to);
+
+            final boolean isCastle = isCastling(piece, from, to);
+            if (isCastle) {
+                return new AlgebraicNotation(
+                        String.format(castle(to).getAlgebraicNotation(), operation), operation, from, to, Operations.EMPTY
+                );
+            }
+
+            if (operation.equals(Operations.PROMOTION)) {
+                Objects.requireNonNull(inCaseOfPromotion);
+
+                if (!(piece instanceof Pawn)) {
+                    throw new IllegalStateException("Only pawn available for promotion.");
+                }
+
+                if (!Objects.isNull(afterPromotion)) {
+                    String algebraicNotation = String.format("%s-%s=%s%s", from, to, pieceToType(inCaseOfPromotion), afterPromotion);
+                    return new AlgebraicNotation(algebraicNotation, operation, from, to, afterPromotion);
+                }
+
+                String algebraicNotation = String.format("%s-%s=%s", from, to, pieceToType(inCaseOfPromotion));
+                return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+            }
+
+            if (!Objects.isNull(afterPromotion) || !Objects.isNull(inCaseOfPromotion)) {
+                throw new IllegalStateException("Invalid method usage, check documentation.");
+            }
+
+            if (operation.equals(Operations.EMPTY)) {
+                if (piece instanceof Pawn) {
+                    String algebraicNotation = String.format("%s-%s", from, to);
+                    return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+                }
+
+                String algebraicNotation = String.format("%s %s-%s", pieceToType(piece), from, to);
+                return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+            }
+
+            if (piece instanceof Pawn) {
+                String algebraicNotation = String.format("%s %s %s", from, operation, to);
+                return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+            }
+
+            String algebraicNotation = String.format("%s %s %s %s", pieceToType(piece), from, operation, to);
+            return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+        }
+
+        private static String pieceToType(Piece piece) {
+            return switch (piece) {
+                case King _ -> "K";
+                case Queen _ -> "Q";
+                case Rook _ -> "R";
+                case Bishop _ -> "B";
+                case Knight _ -> "N";
+                default -> "";
+            };
+        }
+
+        public static Castle castle(Coordinate to) {
+            final boolean isShortCasting = to.equals(Coordinate.G1) || to.equals(Coordinate.G8);
+            if (isShortCasting) {
+                return Castle.SHORT_CASTLING;
+            }
+
+            return Castle.LONG_CASTLING;
+        }
+
+        /**
+         * This function can only be used to predetermine the user's intention to make castling,
+         * However, this is by no means a final validation of this operation.
+         */
+        public static boolean isCastling(Piece piece, Coordinate from, Coordinate to) {
+            final boolean isKing = (piece instanceof King);
+            if (!isKing) {
+                return false;
+            }
+
+            final boolean isValidKingPosition = from.equals(Coordinate.E1) || from.equals(Coordinate.E8);
+            if (!isValidKingPosition) {
+                return false;
+            }
+
+            final boolean isCastle = to.equals(Coordinate.C1) || to.equals(Coordinate.G1) ||
+                    to.equals(Coordinate.C8) || to.equals(Coordinate.G8);
+            if (!isCastle) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            AlgebraicNotation that = (AlgebraicNotation) o;
+            return Objects.equals(algebraicNotation, that.algebraicNotation) && operation == that.operation &&
+                    from == that.from && to == that.to && afterPromotion == that.afterPromotion;
+        }
+
+    @Override
+        public String toString() {
+            return algebraicNotation;
+        }
+
+        @Getter
+        public enum Castle {
+            SHORT_CASTLING("O-O"), LONG_CASTLING("O-O-O");
+
+            private final String algebraicNotation;
+
+            Castle(String algebraicNotation) {
+                this.algebraicNotation = algebraicNotation;
             }
         }
     }

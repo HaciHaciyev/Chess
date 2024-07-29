@@ -1,9 +1,11 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
+import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.value_objects.Color;
 import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
 import core.project.chess.domain.aggregates.chess.value_objects.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
+import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
@@ -11,14 +13,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Objects;
-
-import core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.Operations;
+import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChessGame {
     private final ChessBoard chessBoard;
     private final UserAccount playerForWhite;
     private final UserAccount playerForBlack;
+    private final Rating whitePlayerRating;
+    private final Rating blackPlayerRating;
+    private final SessionEvents sessionEvents;
     private final boolean isTimeControlEnable;
     private final TimeControllingTYPE timeControllingTYPE;
     private Color currentPlayer;
@@ -41,7 +45,7 @@ public class ChessGame {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        validatePlayerTurn(from);
+        validateFiguresTurn(from);
         Operations operation = chessBoard.reposition(from, to, inCaseOfPromotion);
 
         final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
@@ -63,7 +67,7 @@ public class ChessGame {
     /** This is not a complete validation of which player should play at this point.
      * This validation rather checks what color pieces should be moved.
      * Finally, validation of the question of who should walk can only be carried out in the controller.*/
-    private void validatePlayerTurn(final Coordinate coordinate) throws IllegalAccessException {
+    private void validateFiguresTurn(final Coordinate coordinate) throws IllegalAccessException {
         Color activePlayer = chessBoard.pieceColor(coordinate).orElseThrow();
         if (currentPlayer != activePlayer) {
             throw new IllegalAccessException(
@@ -76,6 +80,9 @@ public class ChessGame {
         private ChessBoard chessBoard;
         private UserAccount playerForWhite;
         private UserAccount playerForBlack;
+        private Rating whitePlayerRating;
+        private Rating blackPlayerRating;
+        private SessionEvents sessionEvents;
         private boolean isTimeControlEnable;
         private TimeControllingTYPE timeControllingTYPE;
 
@@ -93,6 +100,21 @@ public class ChessGame {
 
         public Builder playerForBlack(UserAccount playerForBlack) {
             this.playerForBlack = playerForBlack;
+            return this;
+        }
+
+        public Builder setWhitePlayerRating(Rating whitePlayerRating) {
+            this.whitePlayerRating = whitePlayerRating;
+            return this;
+        }
+
+        public Builder setBlackPlayerRating(Rating blackPlayerRating) {
+            this.blackPlayerRating = blackPlayerRating;
+            return this;
+        }
+
+        public Builder setSessionEvents(SessionEvents sessionEvents) {
+            this.sessionEvents = sessionEvents;
             return this;
         }
 
@@ -117,11 +139,13 @@ public class ChessGame {
 
             if (isTimeControlEnable) {
                 return new ChessGame(
-                        chessBoard, playerForWhite, playerForBlack, true, timeControllingTYPE, Color.WHITE, StatusPair.ofFalse()
+                        chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating,
+                        sessionEvents, true, timeControllingTYPE, Color.WHITE, StatusPair.ofFalse()
                 );
             } else {
                 return new ChessGame(
-                        chessBoard, playerForWhite, playerForBlack, false, null, Color.WHITE, StatusPair.ofFalse()
+                        chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating,
+                        sessionEvents, false, null, Color.WHITE, StatusPair.ofFalse()
                 );
             }
         }

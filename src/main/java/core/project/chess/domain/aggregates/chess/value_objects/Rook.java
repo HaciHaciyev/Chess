@@ -3,7 +3,7 @@ package core.project.chess.domain.aggregates.chess.value_objects;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
-import static core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.Operations;
+import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
 public record Rook(Color color)
         implements Piece {

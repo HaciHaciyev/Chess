@@ -1,6 +1,6 @@
 package core.project.chess.domain.aggregates.user.entities;
 
-import core.project.chess.domain.aggregates.chess.entities.Session;
+import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
@@ -31,7 +31,7 @@ public class UserAccount
     private @Getter(AccessLevel.PRIVATE) Boolean isEnable;
     private final AccountEvents accountEvents;
     private final /**@ManyToMany*/ Set<UserAccount> partners;
-    private final /**@ManyToMany*/ Set<Session> games;
+    private final /**@ManyToMany*/ Set<ChessGame> games;
 
     public static Builder builder() {
         return new Builder();
@@ -47,12 +47,12 @@ public class UserAccount
         partners.remove(partner);
     }
 
-    public void addGame(Session game) {
+    public void addGame(ChessGame game) {
         Objects.requireNonNull(game);
         games.add(game);
     }
 
-    public void removeGame(Session game) {
+    public void removeGame(ChessGame game) {
         Objects.requireNonNull(game);
         games.remove(game);
     }
