@@ -75,13 +75,7 @@ public class UserController {
         }
 
         UserAccount userAccount = Result.ofThrowable(() ->
-                UserAccount.builder()
-                .id(UUID.randomUUID())
-                .username(username)
-                .email(email)
-                .password(password)
-                .passwordConfirm(passwordConfirmation)
-                .build()
+                UserAccount.newUser(registrationForm)
         ).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.CONFLICT, "Invalid user account")
         );
