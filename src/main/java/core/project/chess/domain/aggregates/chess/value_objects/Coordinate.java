@@ -1,5 +1,6 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
+import core.project.chess.infrastructure.utilities.StatusPair;
 import lombok.Getter;
 
 @Getter
@@ -21,6 +22,36 @@ public enum Coordinate {
     Coordinate(char column, int row) {
         this.column = column;
         this.row = row;
+    }
+
+    public static StatusPair<Coordinate> coordinate(int row, int column) {
+        if (row > 8 || column > 8 || row < 1 || column < 1) {
+            return StatusPair.ofFalse();
+        }
+
+        final char charColumn = intToColumn(column);
+
+        for (Coordinate coordinate : Coordinate.values()) {
+            if (coordinate.row == row && coordinate.column == charColumn) {
+                return StatusPair.ofTrue(coordinate);
+            }
+        }
+
+        return StatusPair.ofFalse();
+    }
+
+    public static char intToColumn(int columnNumber) {
+        return switch (columnNumber) {
+            case 1 -> 'A';
+            case 2 -> 'B';
+            case 3 -> 'C';
+            case 4 -> 'D';
+            case 5 -> 'E';
+            case 6 -> 'F';
+            case 7 -> 'G';
+            case 8 -> 'H';
+            default -> throw new IllegalStateException("Unexpected value: " + columnNumber);
+        };
     }
 
 }

@@ -12,6 +12,8 @@ public class ChessBoard {
     private final @Getter UUID chessBoardId;
     private boolean isWhiteKingMoved;
     private boolean isBlackKingMoved;
+    private @Getter Coordinate currentWhiteKingPosition;
+    private @Getter Coordinate currentBlackKingPosition;
     private final Map<Coordinate, Field> fieldMap = new HashMap<>();
     private final List<AlgebraicNotation> listOfAlgebraicNotations = new LinkedList<>();
 
@@ -27,75 +29,109 @@ public class ChessBoard {
         this.chessBoardId = chessBoardId;
     }
 
-    public static ChessBoard initialPosition(UUID chessBoardId) {
+    public static ChessBoard starndardChessBoard(UUID chessBoardId) {
         return new ChessBoard(chessBoardId, InitializationTYPE.STANDARD);
     }
 
-    public List<String> getListOfAlgebraicNotations() {
+    public List<String> listOfAlgebraicNotations() {
         return listOfAlgebraicNotations.stream().map(AlgebraicNotation::algebraicNotation).toList();
     }
 
-    public Optional<Pair<Coordinate, Coordinate>> getLastMove() {
+    public Optional<Pair<Coordinate, Coordinate>> lastMove() {
         AlgebraicNotation algebraicNotation = Objects.requireNonNullElse(listOfAlgebraicNotations.getLast(), null);
-
         if (algebraicNotation == null) {
             return Optional.empty();
         }
+
         return Optional.of(
                 Pair.of(algebraicNotation.from, algebraicNotation.to)
         );
     }
 
-    public Field getField(Coordinate coordinate) {
+    public Field field(Coordinate coordinate) {
         Field field = fieldMap.get(coordinate);
-        return new Field(field.getCoordinate(), field.pieceOptional().orElse(null));
-    }
-
-    public Optional<Color> pieceColor(Coordinate from) {
-        return Optional.ofNullable(
-                fieldMap.get(from).piece.color()
+        return new Field(
+                field.getCoordinate(), field.pieceOptional().orElse(null)
         );
     }
 
-    public boolean isWhiteKingMoved() {
-        if (isWhiteKingMoved) {
-            return true;
+    public boolean isKingMoved(Color color) {
+        if (color.equals(Color.WHITE)) {
+            if (isWhiteKingMoved) {
+                return true;
+            }
+        } else {
+            if (isBlackKingMoved) {
+                return true;
+            }
         }
         return false;
     }
 
-    private void whiteKingMoved() {
-        isWhiteKingMoved = true;
-    }
-
-    public boolean isBlackKingMoved() {
-        if (isBlackKingMoved) {
-            return true;
+    private void kingMadeMove(King king) {
+        if (king.color().equals(Color.WHITE)) {
+            this.isWhiteKingMoved = true;
+        } else {
+            this.isBlackKingMoved = true;
         }
+    }
+
+    private void newKingPosition(King king, Coordinate coordinate) {
+        kingMadeMove(king);
+        if (king.color().equals(Color.WHITE)) {
+            this.currentWhiteKingPosition = coordinate;
+        } else {
+            this.currentBlackKingPosition = coordinate;
+        }
+    }
+
+    private King getKing(Color kingColor) {
+        final boolean isWhiteFiguresTurn = kingColor.equals(Color.WHITE);
+        if (isWhiteFiguresTurn) {
+            return (King) fieldMap.get(currentWhiteKingPosition).pieceOptional()
+                    .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
+        }
+
+        return (King) fieldMap.get(currentBlackKingPosition).pieceOptional()
+                .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
+    }
+
+    private King getOpponentKing(final Color kingColor) {
+        final boolean isWhiteFiguresTurn = kingColor.equals(Color.WHITE);
+        if (isWhiteFiguresTurn) {
+            return (King) fieldMap.get(currentBlackKingPosition).pieceOptional()
+                    .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
+        }
+
+        return (King) fieldMap.get(currentWhiteKingPosition).pieceOptional()
+                .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
+    }
+
+    /** TODO for Nicat*/
+    public boolean isMoveSafeForTheKing(final Coordinate from, final Coordinate to) {
+        King king = getKing(fieldMap.get(from).pieceOptional().orElseThrow().color());
         return false;
     }
 
-    private void blackKingMoved() {
-        isBlackKingMoved = true;
-    }
-
-    private boolean kingSafetyAfterMove() {
+    /** TODO for Nicat*/
+    public boolean isMoveForStalemate(final Coordinate from, final Coordinate to) {
+        King king = getOpponentKing(fieldMap.get(from).pieceOptional().orElseThrow().color());
         return false;
     }
 
-    private boolean stalemate() {
+    /** TODO for Nicat*/
+    public boolean isMoveForCheckMate(final Coordinate from, final Coordinate to) {
+        King king = getOpponentKing(fieldMap.get(from).pieceOptional().orElseThrow().color());
         return false;
     }
 
-    private boolean check() {
+    /** TODO for Nicat*/
+    public boolean isMoveForCheck(final Coordinate from, final Coordinate to) {
+        King king = getOpponentKing(fieldMap.get(from).pieceOptional().orElseThrow().color());
         return false;
     }
 
-    private boolean checkMate() {
-        return false;
-    }
-
-    Operations reposition(
+    protected final Operations reposition(
             final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
     ) {
         /** Preparation of necessary data and validation.*/
@@ -116,84 +152,35 @@ public class ChessBoard {
         }
 
         /** Validation.*/
-        StatusPair<Operations> statusPair = piece.isValidMove(this, from, to);
-        if (!statusPair.status() || !kingSafetyAfterMove()) {
+        StatusPair<LinkedHashSet<Operations>> statusPair = piece.isValidMove(this, from, to);
+        if (!statusPair.status() || !isMoveSafeForTheKing(from, to)) {
             throw new IllegalArgumentException("Invalid move.");
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
-        Operations operation = statusPair.valueOrElseThrow();
+        LinkedHashSet<Operations> operations = statusPair.valueOrElseThrow();
 
         startField.removeFigure();
 
-        if (operation.equals(Operations.CAPTURE)) {
+        if (operations.contains(Operations.CAPTURE)) {
             endField.removeFigure();
         }
 
-        if (operation.equals(Operations.PROMOTION)) {
+        if (operations.contains(Operations.PROMOTION)) {
             if (!endField.isEmpty()) {
                 endField.removeFigure();
             }
 
             endField.addFigure(inCaseOfPromotion);
+        } else {
+            endField.addFigure(piece);
         }
 
-        endField.addFigure(piece);
-
-        /** Recording the move made in algebraic notation and return used Operation.*/
-        return recordingMoveMade(piece, from, to, operation, inCaseOfPromotion);
-    }
-
-    private Operations recordingMoveMade(
-            Piece piece, Coordinate from, Coordinate to, Operations operation, Piece inCaseOfPromotion
-    ) {
-        if (checkMate()) {
-            if (operation.equals(Operations.PROMOTION)) {
-                listOfAlgebraicNotations.add(
-                        AlgebraicNotation.of(piece, operation, from, to, inCaseOfPromotion, Operations.CHECKMATE)
-                );
-                return Operations.CHECKMATE;
-            }
-
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null)
-            );
-            return Operations.CHECKMATE;
+        if (piece instanceof King king) {
+            newKingPosition(king, to);
         }
 
-        if (stalemate()) {
-            if (operation.equals(Operations.PROMOTION)) {
-                listOfAlgebraicNotations.add(
-                        AlgebraicNotation.of(piece, operation, from, to, inCaseOfPromotion, Operations.STALEMATE)
-                );
-                return Operations.STALEMATE;
-            }
-
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null)
-            );
-            return Operations.STALEMATE;
-        }
-
-        if (check()) {
-            if (operation.equals(Operations.PROMOTION)) {
-                listOfAlgebraicNotations.add(
-                        AlgebraicNotation.of(piece, operation, from, to, inCaseOfPromotion, Operations.CHECK)
-                );
-                return Operations.CHECK;
-            }
-
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null)
-            );
-            return Operations.CHECK;
-        }
-
-        listOfAlgebraicNotations.add(
-                AlgebraicNotation.of(piece, operation, from, to, null, null)
-        );
-
-        return operation;
+        return recordingMoveMade(piece, from, to, operations, inCaseOfPromotion);
     }
 
     private Operations castling(final Coordinate from, final Coordinate to) {
@@ -206,20 +193,15 @@ public class ChessBoard {
             throw new IllegalStateException("Invalid method usage, check the documentation.");
         }
 
-        StatusPair<Operations> statusPair = king.canCastle(this, kingStartedField, kingEndField);
-        if (!statusPair.status() || !kingSafetyAfterMove()) {
+        StatusPair<LinkedHashSet<Operations>> statusPair = king.canCastle(this, kingStartedField, kingEndField);
+        if (!statusPair.status() || !isMoveSafeForTheKing(from, to)) {
             throw new IllegalArgumentException("Invalid move.");
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
-        if (piece.color().equals(Color.WHITE)) {
-            whiteKingMoved();
-        } else {
-            blackKingMoved();
-        }
-
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
+        newKingPosition(king, to);
 
         final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
         if (shortCasting) {
@@ -229,34 +211,9 @@ public class ChessBoard {
         }
 
         /** Recording the move made in algebraic notation.*/
-        Operations operation = statusPair.valueOrElseThrow();
+        LinkedHashSet<Operations> operations = statusPair.valueOrElseThrow();
 
-        if (checkMate()) {
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null)
-            );
-            return Operations.CHECKMATE;
-        }
-
-        if (stalemate()) {
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null)
-            );
-            return Operations.STALEMATE;
-        }
-
-        if (check()) {
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null)
-            );
-            return Operations.CHECK;
-        }
-
-        listOfAlgebraicNotations.add(
-                AlgebraicNotation.of(piece, operation, from, to, null, null)
-        );
-
-        return operation;
+        return recordingCastlingMade(piece, from, to, operations);
     }
 
     private void moveRookInShortCastling(final Coordinate to) {
@@ -301,8 +258,105 @@ public class ChessBoard {
         endField.addFigure(rook);
     }
 
+    private Operations recordingMoveMade(
+            Piece piece, Coordinate from, Coordinate to, LinkedHashSet<Operations> operations, Piece inCaseOfPromotion
+    ) {
+        final boolean promotionOperation = operations.contains(Operations.PROMOTION);
+
+        if (operations.contains(Operations.CHECKMATE)) {
+            if (promotionOperation) {
+                return promotionOperationWriter(piece, from, to, inCaseOfPromotion, Operations.CHECKMATE);
+            }
+
+            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null));
+            return Operations.CHECKMATE;
+        }
+
+        if (operations.contains(Operations.STALEMATE)) {
+            if (promotionOperation) {
+                return promotionOperationWriter(piece, from, to, inCaseOfPromotion, Operations.STALEMATE);
+            }
+
+            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null));
+            return Operations.STALEMATE;
+        }
+
+        if (operations.contains(Operations.CHECK)) {
+            if (promotionOperation) {
+                return promotionOperationWriter(piece, from, to, inCaseOfPromotion, Operations.CHECK);
+            }
+
+            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null));
+            return Operations.CHECK;
+        }
+
+        if (promotionOperation) {
+            return promotionOperationWriter(piece, from, to, inCaseOfPromotion, null);
+        }
+
+        if (operations.contains(Operations.CAPTURE)) {
+            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CAPTURE, from, to, null, null));
+            return Operations.CAPTURE;
+        }
+
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.EMPTY, from, to, null, null));
+        return Operations.EMPTY;
+    }
+
+    private Operations recordingCastlingMade(Piece piece, Coordinate from, Coordinate to, LinkedHashSet<Operations> operations) {
+        if (operations.contains(Operations.CHECKMATE)) {
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null)
+            );
+            return Operations.CHECKMATE;
+        }
+
+        if (operations.contains(Operations.STALEMATE)) {
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null)
+            );
+            return Operations.STALEMATE;
+        }
+
+        if (operations.contains(Operations.CHECK)) {
+            listOfAlgebraicNotations.add(
+                    AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null)
+            );
+            return Operations.CHECK;
+        }
+
+        listOfAlgebraicNotations.add(
+                AlgebraicNotation.of(piece, Operations.EMPTY, from, to, null, null)
+        );
+
+        return Operations.EMPTY;
+    }
+
+    private Operations promotionOperationWriter(
+            Piece piece, Coordinate from, Coordinate to, Piece inCaseOfPromotion, @Nullable Operations afterPromotion
+    ) {
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.PROMOTION, from, to, inCaseOfPromotion, afterPromotion));
+        return Operations.CHECKMATE;
+    }
+
     private enum InitializationTYPE {
         STANDARD, DURING_THE_GAME
+    }
+
+    @Getter
+    public enum Operations {
+        PROMOTION("="),
+        CAPTURE("X"),
+        CHECK("+"),
+        STALEMATE("."),
+        CHECKMATE("#"),
+        EMPTY("");
+
+        private final String algebraicNotation;
+
+        Operations(String algebraicNotation) {
+            this.algebraicNotation = algebraicNotation;
+        }
     }
 
     public static class Field {
@@ -346,24 +400,6 @@ public class ChessBoard {
         }
     }
 
-    @Getter
-    public enum Operations {
-        PROMOTION("="),
-        CAPTURE("X"),
-        CHECK("+"),
-        STALEMATE("."),
-        CHECKMATE("#"),
-        EMPTY("");
-
-        private final String algebraicNotation;
-
-        Operations(String algebraicNotation) {
-            this.algebraicNotation = algebraicNotation;
-        }
-    }
-
-    /** Not always valid. Only ChessBoard can can guarantee the validity of a given value object.
-     * This class should be used only in ChessBoard.*/
     private record AlgebraicNotation(String algebraicNotation, Operations operation,
                                      Coordinate from, Coordinate to,
                                      Operations afterPromotion) {
@@ -477,7 +513,7 @@ public class ChessBoard {
                     from == that.from && to == that.to && afterPromotion == that.afterPromotion;
         }
 
-    @Override
+        @Override
         public String toString() {
             return algebraicNotation;
         }
@@ -495,54 +531,22 @@ public class ChessBoard {
     }
 
     private void standardInitializer() {
-        fieldMap.put(
-                Coordinate.A1, new Field(Coordinate.A1, new Rook(Color.WHITE))
-        );
-        fieldMap.put(
-                Coordinate.B1, new Field(Coordinate.B1, new Knight(Color.WHITE))
-        );
-        fieldMap.put(
-                Coordinate.C1, new Field(Coordinate.C1, new Bishop(Color.WHITE))
-        );
-        fieldMap.put(
-                Coordinate.D1, new Field(Coordinate.D1, new Queen(Color.WHITE))
-        );
-        fieldMap.put(
-                Coordinate.E1, new Field(Coordinate.E1, new King(Color.WHITE))
-        );
-        fieldMap.put(
-                Coordinate.F1, new Field(Coordinate.F1, new Bishop(Color.WHITE))
-        );
-        fieldMap.put(
-                Coordinate.G1, new Field(Coordinate.G1, new Knight(Color.WHITE))
-        );
-        fieldMap.put(
-                Coordinate.H1, new Field(Coordinate.H1, new Rook(Color.WHITE))
-        );
-        fieldMap.put(
-                Coordinate.A8, new Field(Coordinate.A8, new Rook(Color.BLACK))
-        );
-        fieldMap.put(
-                Coordinate.B8, new Field(Coordinate.B8, new Knight(Color.BLACK))
-        );
-        fieldMap.put(
-                Coordinate.C8, new Field(Coordinate.C8, new Bishop(Color.BLACK))
-        );
-        fieldMap.put(
-                Coordinate.D8, new Field(Coordinate.D8, new Queen(Color.BLACK))
-        );
-        fieldMap.put(
-                Coordinate.E8, new Field(Coordinate.E8, new King(Color.BLACK))
-        );
-        fieldMap.put(
-                Coordinate.F8, new Field(Coordinate.F8, new Bishop(Color.BLACK))
-        );
-        fieldMap.put(
-                Coordinate.G8, new Field(Coordinate.G8, new Knight(Color.BLACK))
-        );
-        fieldMap.put(
-                Coordinate.H8, new Field(Coordinate.H8, new Rook(Color.BLACK))
-        );
+        fieldMap.put(Coordinate.A1, new Field(Coordinate.A1, new Rook(Color.WHITE)));
+        fieldMap.put(Coordinate.B1, new Field(Coordinate.B1, new Knight(Color.WHITE)));
+        fieldMap.put(Coordinate.C1, new Field(Coordinate.C1, new Bishop(Color.WHITE)));
+        fieldMap.put(Coordinate.D1, new Field(Coordinate.D1, new Queen(Color.WHITE)));
+        fieldMap.put(Coordinate.E1, new Field(Coordinate.E1, new King(Color.WHITE)));
+        fieldMap.put(Coordinate.F1, new Field(Coordinate.F1, new Bishop(Color.WHITE)));
+        fieldMap.put(Coordinate.G1, new Field(Coordinate.G1, new Knight(Color.WHITE)));
+        fieldMap.put(Coordinate.H1, new Field(Coordinate.H1, new Rook(Color.WHITE)));
+        fieldMap.put(Coordinate.A8, new Field(Coordinate.A8, new Rook(Color.BLACK)));
+        fieldMap.put(Coordinate.B8, new Field(Coordinate.B8, new Knight(Color.BLACK)));
+        fieldMap.put(Coordinate.C8, new Field(Coordinate.C8, new Bishop(Color.BLACK)));
+        fieldMap.put(Coordinate.D8, new Field(Coordinate.D8, new Queen(Color.BLACK)));
+        fieldMap.put(Coordinate.E8, new Field(Coordinate.E8, new King(Color.BLACK)));
+        fieldMap.put(Coordinate.F8, new Field(Coordinate.F8, new Bishop(Color.BLACK)));
+        fieldMap.put(Coordinate.G8, new Field(Coordinate.G8, new Knight(Color.BLACK)));
+        fieldMap.put(Coordinate.H8, new Field(Coordinate.H8, new Rook(Color.BLACK)));
 
         for (Coordinate coordinate : Coordinate.values()) {
             final boolean fieldForWhitePawn = coordinate.getRow() == 2;
