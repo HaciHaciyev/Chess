@@ -153,21 +153,16 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     private UserAccount userAccountMapper(ResultSet rs, int rowNum)
             throws SQLException {
         log.info("The user account {} was taken from the database", rs.getString("username"));
-
         var events = new AccountEvents(
                 rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("last_updated_date", Timestamp.class).toLocalDateTime()
         );
 
-        return UserAccount.fromRepo(
-                UUID.fromString(rs.getString("id")),
-                new Username(rs.getString("username")),
-                new Email(rs.getString("email")),
-                new Password(rs.getString("password")),
-                new Password(rs.getString("password")),
-                new Rating(rs.getShort("rating")),
-                rs.getBoolean("is_enable"),
-                events
+        return UserAccount.fromRepository(
+                UUID.fromString(rs.getString("id")), new Username(rs.getString("username")),
+                new Email(rs.getString("email")), new Password(rs.getString("password")),
+                new Password(rs.getString("password")), new Rating(rs.getShort("rating")),
+                rs.getBoolean("is_enable"), events
         );
     }
 }

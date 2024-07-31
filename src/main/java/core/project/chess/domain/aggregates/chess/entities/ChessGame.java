@@ -15,6 +15,7 @@ import lombok.Getter;
 import java.util.Objects;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
+@Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChessGame {
     private final ChessBoard chessBoard;
@@ -25,8 +26,8 @@ public class ChessGame {
     private final SessionEvents sessionEvents;
     private final boolean isTimeControlEnable;
     private final TimeControllingTYPE timeControllingTYPE;
-    private Color currentPlayer;
-    private StatusPair<Operations> isGameOver;
+    private @Getter(AccessLevel.PRIVATE) Color currentPlayer;
+    private @Getter(AccessLevel.PRIVATE) StatusPair<Operations> isGameOver;
 
     public static Builder builder() {
         return new Builder();

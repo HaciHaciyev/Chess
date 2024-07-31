@@ -1,15 +1,12 @@
 package core.project.chess.domain.aggregates.user.entities;
 
-import core.project.chess.application.model.RegistrationForm;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
-import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,8 +21,8 @@ public class UserAccount implements UserDetails {
     private final UUID id;
     private final Username username;
     private final Email email;
-    private Password password;
-    private Password passwordConfirm;
+    private final Password password;
+    private final Password passwordConfirm;
     private Rating rating;
     private @Getter(AccessLevel.PRIVATE) Boolean isEnable;
     private final AccountEvents accountEvents;
@@ -34,9 +31,7 @@ public class UserAccount implements UserDetails {
 
     private UserAccount(UUID id, Username username, Email email, Password password,
                        Password passwordConfirm, Rating rating, Boolean isEnable, AccountEvents accountEvents,
-                       Set<UserAccount> partners,
-                       Set<ChessGame> games) {
-
+                       Set<UserAccount> partners, Set<ChessGame> games) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(username);
         Objects.requireNonNull(email);
@@ -60,42 +55,25 @@ public class UserAccount implements UserDetails {
         this.games = games;
     }
 
-    public static UserAccount newUser(RegistrationForm form) {
+    public static UserAccount inboundUserAccount(
+            Username username, Email email, Password password, Password passwordConfirm
+    ) {
         short defaultRating = 1400;
-        log.info("New account is created");
-
         return new UserAccount(
-                UUID.randomUUID(),
-                new Username(form.username()),
-                new Email(form.email()),
-                new Password(form.password()),
-                new Password(form.passwordConfirmation()),
-                new Rating(defaultRating),
-                Boolean.FALSE,
-                AccountEvents.defaultEvents(),
-                new HashSet<>(),
-                new HashSet<>()
+                UUID.randomUUID(), username, email, password, passwordConfirm, new Rating(defaultRating),
+                Boolean.FALSE, AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
         );
     }
 
     /**
      * this method is used to call from repository
      */
-    public static UserAccount fromRepo(UUID id, Username username, Email email, Password password,
-                                       Password passwordConfirm, Rating rating, boolean enabled, AccountEvents events) {
-        log.info("Existing account is created");
-
+    public static UserAccount fromRepository(
+            UUID id, Username username, Email email, Password password,
+            Password passwordConfirm, Rating rating, boolean enabled, AccountEvents events
+    ) {
         return new UserAccount(
-                id,
-                username,
-                email,
-                password,
-                passwordConfirm,
-                rating,
-                enabled,
-                events,
-                new HashSet<>(),
-                new HashSet<>()
+                id, username, email, password, passwordConfirm, rating, enabled, events, new HashSet<>(), new HashSet<>()
         );
     }
 

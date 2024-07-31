@@ -75,7 +75,7 @@ public class UserController {
         }
 
         UserAccount userAccount = Result.ofThrowable(() ->
-                UserAccount.newUser(registrationForm)
+                UserAccount.inboundUserAccount(username, email, password, passwordConfirmation)
         ).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.CONFLICT, "Invalid user account")
         );
