@@ -1,5 +1,6 @@
 package core.project.chess.domain.aggregates.user.entities;
 
+import core.project.chess.application.model.RegistrationForm;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
@@ -19,9 +20,7 @@ import java.util.*;
 
 @Slf4j
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserAccount
-        implements UserDetails {
+public class UserAccount implements UserDetails {
     private final UUID id;
     private final Username username;
     private final Email email;
@@ -33,8 +32,71 @@ public class UserAccount
     private final /**@ManyToMany*/ Set<UserAccount> partners;
     private final /**@ManyToMany*/ Set<ChessGame> games;
 
-    public static Builder builder() {
-        return new Builder();
+    private UserAccount(UUID id, Username username, Email email, Password password,
+                       Password passwordConfirm, Rating rating, Boolean isEnable, AccountEvents accountEvents,
+                       Set<UserAccount> partners,
+                       Set<ChessGame> games) {
+
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(username);
+        Objects.requireNonNull(email);
+        Objects.requireNonNull(password);
+        Objects.requireNonNull(passwordConfirm);
+        Objects.requireNonNull(rating);
+        Objects.requireNonNull(isEnable);
+        Objects.requireNonNull(accountEvents);
+        Objects.requireNonNull(partners);
+        Objects.requireNonNull(games);
+
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.passwordConfirm = passwordConfirm;
+        this.rating = rating;
+        this.isEnable = isEnable;
+        this.accountEvents = accountEvents;
+        this.partners = partners;
+        this.games = games;
+    }
+
+    public static UserAccount newUser(RegistrationForm form) {
+        short defaultRating = 1400;
+        log.info("New account is created");
+
+        return new UserAccount(
+                UUID.randomUUID(),
+                new Username(form.username()),
+                new Email(form.email()),
+                new Password(form.password()),
+                new Password(form.passwordConfirmation()),
+                new Rating(defaultRating),
+                Boolean.FALSE,
+                AccountEvents.defaultEvents(),
+                new HashSet<>(),
+                new HashSet<>()
+        );
+    }
+
+    /**
+     * this method is used to call from repository
+     */
+    public static UserAccount fromRepo(UUID id, Username username, Email email, Password password,
+                                       Password passwordConfirm, Rating rating, boolean enabled, AccountEvents events) {
+        log.info("Existing account is created");
+
+        return new UserAccount(
+                id,
+                username,
+                email,
+                password,
+                passwordConfirm,
+                rating,
+                enabled,
+                events,
+                new HashSet<>(),
+                new HashSet<>()
+        );
     }
 
     public void addPartner(UserAccount partner) {
@@ -135,120 +197,5 @@ public class UserAccount
                 enables,
                 accountEvents.creationDate().toString(),
                 accountEvents.lastUpdateDate().toString());
-    }
-
-    public static class Builder {
-        private UUID id;
-        private Username username;
-        private Email email;
-        private Password password;
-        private Password passwordConfirm;
-        private /**Optional*/ Rating rating;
-        private /**Optional*/ Boolean isEnable;
-        private /**Optional*/ AccountEvents accountEvents;
-
-        private Builder() {}
-
-        public Builder id(final UUID id) {
-            Objects.requireNonNull(id);
-            this.id = id;
-            return this;
-        }
-
-        public Builder username(final Username username) {
-            Objects.requireNonNull(username);
-            this.username = username;
-            return this;
-        }
-
-        public Builder email(final Email email) {
-            Objects.requireNonNull(email);
-            this.email = email;
-            return this;
-        }
-
-        public Builder password(final Password password) {
-            Objects.requireNonNull(password);
-            this.password = password;
-            return this;
-        }
-
-        public Builder passwordConfirm(final Password passwordConfirm) {
-            Objects.requireNonNull(passwordConfirm);
-            this.passwordConfirm = passwordConfirm;
-            return this;
-        }
-
-        public Builder rating(final Rating rating) {
-            Objects.requireNonNull(rating);
-            this.rating = rating;
-            return this;
-        }
-
-        public Builder enable(final @Nullable Boolean enable) {
-            isEnable = enable;
-            return this;
-        }
-
-        public Builder accountEvents(final @Nullable AccountEvents accountEvents) {
-            this.accountEvents = accountEvents;
-            return this;
-        }
-
-        public UserAccount build() {
-            boolean defaultAccount = rating == null && isEnable == null && accountEvents == null;
-            if (defaultAccount) log.info("New account created.");
-
-            boolean allOptionalValuesNotNull = rating != null && isEnable != null && accountEvents != null;
-            if (allOptionalValuesNotNull) log.info("An existing account is used.");
-
-            if (!defaultAccount && !allOptionalValuesNotNull) {
-                String infoAboutUserAccountCreation = """
-                        There was an attempt to incorrectly create a UserAccount using the Builder.
-                        You have two ways to create account :
-                            First used when account is new and have not
-                            a values that need to be calculated in future
-                            like Rating or values that can be created by default like isEnable or Events
-                            and this way of entity creation need to be used only in Controller layers.
-                            Example :
-                        
-                                UserAccount defaultUserAccount = UserAccount.builder()
-                                                .id(UUID.randomUUID())
-                                                .username(new Username(User))
-                                                .email(new Email(email@gmail.com))
-                                                .password(new Password(password))
-                                                .passwordConfirm(new Password(password))
-                                                .build();
-                        
-                            Second can be used throughout the project
-                            and need to be used for existed account and contains all values.
-                            Example :
-                        
-                                UserAccount userAccount = UserAccount.builder()
-                                                .id(UUID.randomUUID())
-                                                .username(new Username(Older user))
-                                                .email(new Email(email@gmail.com))
-                                                .password(new Password(password))
-                                                .passwordConfirm(new Password(password))
-                                                .rating(new Rating(rating))
-                                                .enable(true)
-                                                .accountEvents(EventsOfAccount.defaultEvents())
-                                                .build();
-                        """;
-
-                log.info(infoAboutUserAccountCreation);
-                throw new IllegalArgumentException(infoAboutUserAccountCreation);
-            }
-
-            short defaultRating = 1400;
-            return new UserAccount(
-                    this.id, this.username, this.email,
-                    this.password, this.passwordConfirm,
-                    Objects.requireNonNullElse(this.rating, new Rating(defaultRating)),
-                    Objects.requireNonNullElse(this.isEnable, Boolean.FALSE),
-                    Objects.requireNonNullElse(this.accountEvents, AccountEvents.defaultEvents()),
-                    new HashSet<>(), new HashSet<>()
-            );
-        }
     }
 }

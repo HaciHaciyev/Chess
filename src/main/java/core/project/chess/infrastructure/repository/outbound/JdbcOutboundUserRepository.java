@@ -159,15 +159,15 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 rs.getObject("last_updated_date", Timestamp.class).toLocalDateTime()
         );
 
-        return UserAccount.builder()
-                .id(UUID.fromString(rs.getString("id")))
-                .username(new Username(rs.getString("username")))
-                .email(new Email(rs.getString("email")))
-                .password(new Password(rs.getString("password")))
-                .passwordConfirm(new Password(rs.getString("password")))
-                .rating(new Rating(rs.getShort("rating")))
-                .enable(rs.getBoolean("is_enable"))
-                .accountEvents(events)
-                .build();
+        return UserAccount.fromRepo(
+                UUID.fromString(rs.getString("id")),
+                new Username(rs.getString("username")),
+                new Email(rs.getString("email")),
+                new Password(rs.getString("password")),
+                new Password(rs.getString("password")),
+                new Rating(rs.getShort("rating")),
+                rs.getBoolean("is_enable"),
+                events
+        );
     }
 }
