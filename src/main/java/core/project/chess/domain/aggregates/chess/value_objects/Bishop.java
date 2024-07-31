@@ -11,11 +11,7 @@ public record Bishop(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<
-            LinkedHashSet<Operations>
-            > isValidMove(
-            final ChessBoard chessBoard, final Coordinate from, final Coordinate to
-    ) {
+    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         return StatusPair.ofFalse();
     }
 }

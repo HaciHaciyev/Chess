@@ -28,8 +28,14 @@ public record Pawn(Color color)
             return StatusPair.ofFalse();
         }
 
-        if (!(startField.pieceOptional().get() instanceof Pawn)) {
+        if (!(startField.pieceOptional().get() instanceof Pawn (var pawnColor))) {
             throw new IllegalStateException("Invalid method usage, check documentation.");
+        }
+
+        final boolean endFieldOccupiedBySameColorPiece =
+                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(pawnColor);
+        if (endFieldOccupiedBySameColorPiece) {
+            return StatusPair.ofFalse();
         }
 
         var setOfOperations = new LinkedHashSet<Operations>();
@@ -102,7 +108,7 @@ public record Pawn(Color color)
     }
 
     private StatusPair<LinkedHashSet<Operations>> isPassageValid(
-            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, int startRow, char endColumn, int endRow
+            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, int startRow, char column, int endRow
     ) {
         int intermediateRow;
         if (startRow < endRow) {
@@ -111,7 +117,7 @@ public record Pawn(Color color)
             intermediateRow = endRow + 1;
         }
 
-        Coordinate intermediateCoordinate = Coordinate.coordinate(intermediateRow, endColumn).valueOrElseThrow();
+        Coordinate intermediateCoordinate = Coordinate.coordinate(intermediateRow, column).valueOrElseThrow();
         Field interMediateField = chessBoard.field(intermediateCoordinate);
         if (!interMediateField.isEmpty()) {
             return StatusPair.ofFalse();
@@ -124,22 +130,11 @@ public record Pawn(Color color)
             ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
             char startColumn, char endColumn, int startRow, int endRow, Field endField
     ) {
-        final boolean invalidColumnDistance =
-                columnToInt(startColumn) - columnToInt(endColumn) != 1 || columnToInt(startColumn) - columnToInt(endColumn) != -1;
-        if (invalidColumnDistance) {
-            return StatusPair.ofFalse();
-        }
-
-        final boolean invalidRowDistance = startRow - endRow != 1 || startRow - endRow != -1;
-        if (invalidRowDistance) {
-            return StatusPair.ofFalse();
+        if (Math.abs(startRow - endRow) == 1 && Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1) {
+            throw new IllegalStateException("Invalid method usage, check the documentation.");
         }
 
         if (captureOnPassage(chessBoard, endColumn, endRow)) {
-            if (endRow == 1 || endRow == 8) {
-                setOfOperations.add(Operations.PROMOTION);
-            }
-
             setOfOperations.add(Operations.CAPTURE);
             return StatusPair.ofTrue(setOfOperations);
         }
@@ -173,7 +168,7 @@ public record Pawn(Color color)
         Coordinate from = lastMovement.getFirst();
         Coordinate to = lastMovement.getSecond();
 
-        final boolean pawnDoubleMove = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && from.getRow() == 5);
+        final boolean pawnDoubleMove = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
         if (pawnDoubleMove) {
             return true;
         }

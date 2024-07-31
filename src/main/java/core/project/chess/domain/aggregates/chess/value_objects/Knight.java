@@ -11,11 +11,7 @@ public record Knight(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<
-            LinkedHashSet<Operations>
-            > isValidMove(
-            final ChessBoard chessBoard, Coordinate from, Coordinate to
-    ) {
+    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, Coordinate from, Coordinate to) {
         return StatusPair.ofFalse();
     }
 }

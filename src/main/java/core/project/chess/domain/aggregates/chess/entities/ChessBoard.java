@@ -125,7 +125,7 @@ public class ChessBoard {
         return king.check(this, from, to);
     }
 
-    private King getKing(Color kingColor) {
+    private King getKing(final Color kingColor) {
         final boolean isWhiteFiguresTurn = kingColor.equals(Color.WHITE);
         if (isWhiteFiguresTurn) {
             return (King) fieldMap.get(currentWhiteKingPosition).pieceOptional()
@@ -321,30 +321,21 @@ public class ChessBoard {
 
     private Operations recordingCastlingMade(Piece piece, Coordinate from, Coordinate to, LinkedHashSet<Operations> operations) {
         if (operations.contains(Operations.CHECKMATE)) {
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null)
-            );
+            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null));
             return Operations.CHECKMATE;
         }
 
         if (operations.contains(Operations.STALEMATE)) {
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null)
-            );
+            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null));
             return Operations.STALEMATE;
         }
 
         if (operations.contains(Operations.CHECK)) {
-            listOfAlgebraicNotations.add(
-                    AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null)
-            );
+            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null));
             return Operations.CHECK;
         }
 
-        listOfAlgebraicNotations.add(
-                AlgebraicNotation.of(piece, Operations.EMPTY, from, to, null, null)
-        );
-
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.EMPTY, from, to, null, null));
         return Operations.EMPTY;
     }
 
