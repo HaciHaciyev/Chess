@@ -93,11 +93,12 @@ public class ChessBoard {
     }
 
     public boolean safeForKing(final Coordinate from, final Coordinate to) {
-        King king = getKing(
-                fieldMap.get(from).pieceOptional().orElseThrow().color()
-        );
+        Color kingColor = fieldMap.get(from).pieceOptional().orElseThrow().color();
+        King king = getKing(kingColor);
 
-        return king.safeForKing(this, from, to);
+        return kingColor == Color.WHITE ?
+                king.safeForKing(this, currentWhiteKingPosition, from, to) :
+                king.safeForKing(this, currentBlackKingPosition, from, to);
     }
 
     public boolean shouldPutStalemate(final Coordinate from, final Coordinate to) {

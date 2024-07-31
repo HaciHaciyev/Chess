@@ -21,7 +21,7 @@ public record King(Color color)
     }
 
     /** TODO for Nicat*/
-    public boolean safeForKing(ChessBoard chessBoard, Coordinate from, Coordinate to) {
+    public boolean safeForKing(ChessBoard chessBoard, Coordinate kingPosition, Coordinate from, Coordinate to) {
         return false;
     }
 
