@@ -5,6 +5,7 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import org.springframework.data.util.Pair;
 
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -14,203 +15,161 @@ public record Pawn(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<Operations> isValidMove(
-            final ChessBoard chessBoard, final Coordinate from, final Coordinate to
-    ) {
+    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        Field startField = chessBoard.getField(from);
-        Field endField = chessBoard.getField(to);
+        Field startField = chessBoard.field(from);
+        Field endField = chessBoard.field(to);
 
         final boolean pieceNotExists = startField.pieceOptional().isEmpty();
         if (pieceNotExists) {
             return StatusPair.ofFalse();
         }
 
-        final boolean isPawn = startField.pieceOptional().get() instanceof Pawn;
-        if (!isPawn) {
+        if (!(startField.pieceOptional().get() instanceof Pawn)) {
+            throw new IllegalStateException("Invalid method usage, check documentation.");
+        }
+
+        var setOfOperations = new LinkedHashSet<Operations>();
+        final boolean isSafeForTheKing = chessBoard.isMoveSafeForTheKing(from, to);
+        if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
+        setOfOperations.add(opponentKingStatus(chessBoard, from, to));
 
-        Pawn pawn = (Pawn) startField.pieceOptional().get();
-
-        final boolean isBlack = pawn.color().equals(Color.BLACK);
-        if (isBlack) {
-            return validateBlack(chessBoard, startField, endField);
-        }
-
-        return validateWhite(chessBoard, startField, endField);
+        return validate(chessBoard, setOfOperations, startField, endField);
     }
 
-    private StatusPair<Operations> validateBlack(
-            final ChessBoard chessBoard, final Field startField, final Field endField
+    private StatusPair<LinkedHashSet<Operations>> validate(
+            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, Field startField, Field endField
     ) {
+        final Color pawnColor = startField.pieceOptional().orElseThrow().color();
         final char startColumn = startField.getCoordinate().getColumn();
         final char endColumn = endField.getCoordinate().getColumn();
         final int startRow = startField.getCoordinate().getRow();
         final int endRow = endField.getCoordinate().getRow();
 
-        final boolean endFieldEmpty = endField.isEmpty();
-        final boolean endFieldOccupiedBySameColorPiece = !endFieldEmpty &&
-                endField.pieceOptional().orElseThrow().color().equals(Color.BLACK);
-        if (endFieldOccupiedBySameColorPiece) {
+        final boolean isRightPawnMovingWay =
+                (pawnColor.equals(Color.WHITE) && startRow < endRow) ||
+                (pawnColor.equals(Color.BLACK) && startRow > endRow);
+        if (!isRightPawnMovingWay) {
             return StatusPair.ofFalse();
         }
 
         final boolean straightMove = endColumn == startColumn;
         if (straightMove) {
-            if (!endFieldEmpty) {
-                return StatusPair.ofFalse();
-            }
-            return blackPawnStraightMovementValidation(startRow, endRow);
+            return straightMove(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow, endField);
         }
 
-        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 &&
-                Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1;
+        final boolean diagonalCapture =
+                Math.abs(startRow - endRow) == 1 && Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1;
         if (diagonalCapture) {
-            if (captureOnPassageForBlack(chessBoard, endColumn, endRow)) {
-                if (!endFieldEmpty) {
-                    return StatusPair.ofFalse();
-                }
-
-                if (endRow == 1) {
-                    return StatusPair.ofTrue(Operations.PROMOTION);
-                }
-                return StatusPair.ofTrue(Operations.CAPTURE);
-            }
-
-            if (endFieldEmpty) {
-                return StatusPair.ofFalse();
-            }
-
-            if (endRow == 1) {
-                return StatusPair.ofTrue(Operations.PROMOTION);
-            }
-            return StatusPair.ofTrue(Operations.CAPTURE);
+            return diagonalCapture(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow, endField);
         }
 
         return StatusPair.ofFalse();
     }
 
-    private StatusPair<Operations> validateWhite(
-            final ChessBoard chessBoard, final Field startField, final Field endField
+    private StatusPair<LinkedHashSet<Operations>> straightMove(
+            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
+            char startColumn, char endColumn, int startRow, int endRow, Field endField
     ) {
-        final char startColumn = startField.getCoordinate().getColumn();
-        final char endColumn = endField.getCoordinate().getColumn();
-        final int startRow = startField.getCoordinate().getRow();
-        final int endRow = endField.getCoordinate().getRow();
+        if (startColumn != endColumn) {
+            throw new IllegalStateException("Invalid method usage, check the documentation.");
+        }
 
-        final boolean endFieldEmpty = endField.isEmpty();
-        final boolean endFieldOccupiedBySameColorFigure = !endFieldEmpty &&
-                endField.pieceOptional().orElseThrow().color().equals(Color.WHITE);
-        if (endFieldOccupiedBySameColorFigure) {
+        final boolean endFieldIsEmpty = endField.isEmpty();
+        if (!endFieldIsEmpty) {
             return StatusPair.ofFalse();
         }
 
-        final boolean straightMove = endColumn == startColumn;
-        if (straightMove) {
-            if (!endFieldEmpty) {
-                return StatusPair.ofFalse();
-            }
-            return whitePawnStraightMovementValidation(startRow, endRow);
+        final boolean passage = (startRow == 7 && endRow == 5) || (startRow == 2 && endRow == 4);
+        if (passage) {
+            return isPassageValid(chessBoard, setOfOperations, startRow, endColumn, endRow);
         }
 
-        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 &&
-                Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1;
-        if (diagonalCapture) {
-            if (captureOnPassageForWhite(chessBoard, endColumn, endRow)) {
-                if (!endFieldEmpty) {
-                    return StatusPair.ofFalse();
-                }
+        final boolean validMoveDistance = (startRow - endRow == 1) || (startRow - endRow == -1);
 
-                if (endRow == 8) {
-                    return StatusPair.ofTrue(Operations.PROMOTION);
-                }
-                return StatusPair.ofTrue(Operations.CAPTURE);
-            }
-
-            if (endFieldEmpty) {
-                return StatusPair.ofFalse();
-            }
-
-            if (endRow == 8) {
-                return StatusPair.ofTrue(Operations.PROMOTION);
-            }
-            return StatusPair.ofTrue(Operations.CAPTURE);
-        }
-
-        return StatusPair.ofFalse();
-    }
-
-    private int columnToInt(char startColumn) {
-        return switch (startColumn) {
-            case 'A' -> 1;
-            case 'B' -> 2;
-            case 'C' -> 3;
-            case 'D' -> 4;
-            case 'E' -> 5;
-            case 'F' -> 6;
-            case 'G' -> 7;
-            case 'H' -> 8;
-            default -> throw new IllegalStateException("Unexpected value: " + startColumn);
-        };
-    }
-
-    private StatusPair<Operations> blackPawnStraightMovementValidation(int startRow, int endRow) {
-        final boolean doubleMove = startRow == 7 && endRow == 5;
-        if (doubleMove) {
-            return StatusPair.ofTrue(Operations.EMPTY);
-        }
-
-        final boolean validMoveDistance = startRow - endRow == 1;
-
-        final boolean fieldForPromotion = endRow == 1;
+        final boolean fieldForPromotion = endRow == 1 || endRow == 8;
         if (fieldForPromotion && validMoveDistance) {
-            return StatusPair.ofTrue(Operations.PROMOTION);
+            setOfOperations.add(Operations.PROMOTION);
+            return StatusPair.ofTrue(setOfOperations);
         }
 
-        return validMoveDistance ? StatusPair.ofTrue(Operations.EMPTY) : StatusPair.ofFalse();
+        return validMoveDistance ? StatusPair.ofTrue(setOfOperations) : StatusPair.ofFalse();
     }
 
-    private StatusPair<Operations> whitePawnStraightMovementValidation(int startRow, int endRow) {
-        final boolean doubleMove = startRow == 2 && endRow == 4;
-        if (doubleMove) {
-            return StatusPair.ofTrue(Operations.EMPTY);
+    private StatusPair<LinkedHashSet<Operations>> isPassageValid(
+            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, int startRow, char endColumn, int endRow
+    ) {
+        int intermediateRow;
+        if (startRow < endRow) {
+            intermediateRow = endRow - 1;
+        } else {
+            intermediateRow = endRow + 1;
         }
 
-        final boolean validMoveDistance = endRow - startRow == 1;
-
-        final boolean fieldForPromotion = endRow == 8;
-        if (fieldForPromotion && validMoveDistance) {
-            return StatusPair.ofTrue(Operations.PROMOTION);
+        Coordinate intermediateCoordinate = Coordinate.coordinate(intermediateRow, endColumn).valueOrElseThrow();
+        Field interMediateField = chessBoard.field(intermediateCoordinate);
+        if (!interMediateField.isEmpty()) {
+            return StatusPair.ofFalse();
         }
 
-        return validMoveDistance ? StatusPair.ofTrue(Operations.EMPTY) : StatusPair.ofFalse();
+        return StatusPair.ofTrue(setOfOperations);
     }
 
-    private boolean captureOnPassageForBlack(ChessBoard chessBoard, char endColumn, int endRow) {
-        final boolean previousMoveWasPassage = previousMoveWasPassage(chessBoard);
+    private StatusPair<LinkedHashSet<Operations>> diagonalCapture(
+            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
+            char startColumn, char endColumn, int startRow, int endRow, Field endField
+    ) {
+        final boolean invalidColumnDistance =
+                columnToInt(startColumn) - columnToInt(endColumn) != 1 || columnToInt(startColumn) - columnToInt(endColumn) != -1;
+        if (invalidColumnDistance) {
+            return StatusPair.ofFalse();
+        }
 
+        final boolean invalidRowDistance = startRow - endRow != 1 || startRow - endRow != -1;
+        if (invalidRowDistance) {
+            return StatusPair.ofFalse();
+        }
+
+        if (captureOnPassage(chessBoard, endColumn, endRow)) {
+            if (endRow == 1 || endRow == 8) {
+                setOfOperations.add(Operations.PROMOTION);
+            }
+
+            setOfOperations.add(Operations.CAPTURE);
+            return StatusPair.ofTrue(setOfOperations);
+        }
+
+        final boolean endFieldIsEmpty = endField.isEmpty();
+        if (!endFieldIsEmpty) {
+            return StatusPair.ofFalse();
+        }
+
+        if (endRow == 1 || endRow == 8) {
+            setOfOperations.add(Operations.PROMOTION);
+        }
+
+        setOfOperations.add(Operations.CAPTURE);
+        return StatusPair.ofTrue(setOfOperations);
+    }
+
+    private boolean captureOnPassage(ChessBoard chessBoard, char endColumn, int endRow) {
         Optional<Coordinate> lastMoveCoordinate = previousMoveCoordinate(chessBoard);
-        return previousMoveWasPassage && lastMoveCoordinate.isPresent() &&
-                lastMoveCoordinate.get().getColumn() == endColumn && lastMoveCoordinate.get().getRow() - endRow == 1;
-    }
-
-    private boolean captureOnPassageForWhite(ChessBoard chessBoard, char endColumn, int endRow) {
-        final boolean previousMoveWasPassage = previousMoveWasPassage(chessBoard);
-
-        Optional<Coordinate> lastMoveCoordinate = previousMoveCoordinate(chessBoard);
-        return previousMoveWasPassage && lastMoveCoordinate.isPresent() &&
-                lastMoveCoordinate.get().getColumn() == endColumn && lastMoveCoordinate.get().getRow() - endRow == -1;
+        return previousMoveWasPassage(chessBoard) &&
+                lastMoveCoordinate.isPresent() &&
+                lastMoveCoordinate.get().getColumn() == endColumn &&
+                (lastMoveCoordinate.get().getRow() - endRow == 1 || lastMoveCoordinate.get().getRow() - endRow == -1);
     }
 
     private boolean previousMoveWasPassage(ChessBoard chessBoard) {
-        if (chessBoard.getLastMove().isEmpty()) {
+        if (chessBoard.lastMove().isEmpty()) {
             return false;
         }
-        Pair<Coordinate, Coordinate> lastMovement = chessBoard.getLastMove().get();
+        Pair<Coordinate, Coordinate> lastMovement = chessBoard.lastMove().get();
         Coordinate from = lastMovement.getFirst();
         Coordinate to = lastMovement.getSecond();
 
@@ -223,7 +182,7 @@ public record Pawn(Color color)
 
     private Optional<Coordinate> previousMoveCoordinate(ChessBoard chessBoard) {
         return Optional.ofNullable(
-                chessBoard.getLastMove().isPresent() ? chessBoard.getLastMove().get().getSecond() : null
+                chessBoard.lastMove().isPresent() ? chessBoard.lastMove().get().getSecond() : null
         );
     }
 }

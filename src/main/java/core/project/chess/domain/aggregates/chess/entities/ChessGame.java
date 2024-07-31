@@ -68,7 +68,7 @@ public class ChessGame {
      * This validation rather checks what color pieces should be moved.
      * Finally, validation of the question of who should walk can only be carried out in the controller.*/
     private void validateFiguresTurn(final Coordinate coordinate) throws IllegalAccessException {
-        Color activePlayer = chessBoard.pieceColor(coordinate).orElseThrow();
+        Color activePlayer = chessBoard.field(coordinate).pieceOptional().orElseThrow().color();
         if (currentPlayer != activePlayer) {
             throw new IllegalAccessException(
                     String.format("At the moment, the player for %s must move and not the player for %s", currentPlayer, activePlayer)

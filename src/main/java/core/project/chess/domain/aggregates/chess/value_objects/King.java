@@ -4,17 +4,19 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
+import java.util.LinkedHashSet;
+
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
 public record King(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<Operations> isValidMove(ChessBoard chessBoard, Coordinate from, Coordinate to) {
+    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         return StatusPair.ofFalse();
     }
 
-    public StatusPair<Operations> canCastle(ChessBoard chessBoard, Field from, Field to) {
+    public StatusPair<LinkedHashSet<Operations>> canCastle(ChessBoard chessBoard, Field from, Field to) {
         return StatusPair.ofFalse();
     }
 }

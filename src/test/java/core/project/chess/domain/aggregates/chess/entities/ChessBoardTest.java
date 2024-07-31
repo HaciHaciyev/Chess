@@ -8,8 +8,8 @@ import java.util.UUID;
 class ChessBoardTest {
 
     @Test
-    void defaultInitialPosition() {
-        ChessBoard chessBoard = ChessBoard.initialPosition(UUID.randomUUID());
+    void defaultStandardChessBoard() {
+        ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
 
         chessBoard.reposition(Coordinate.D2, Coordinate.D4, null);
     }
