@@ -17,7 +17,13 @@ public class ChessBoard {
     private final Map<Coordinate, Field> fieldMap = new HashMap<>();
     private final List<AlgebraicNotation> listOfAlgebraicNotations = new LinkedList<>();
 
-    private ChessBoard(UUID chessBoardId, InitializationTYPE initializationTYPE) {
+    private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
+    private static final Coordinate initialBlackKingPosition = Coordinate.E8;
+
+    private ChessBoard(
+            UUID chessBoardId, Coordinate initialWhiteKingPosition,
+            Coordinate initialBlackKingPosition, InitializationTYPE initializationTYPE
+    ) {
         Objects.requireNonNull(chessBoardId);
         Objects.requireNonNull(initializationTYPE);
 
@@ -27,10 +33,14 @@ public class ChessBoard {
         }
 
         this.chessBoardId = chessBoardId;
+        this.currentWhiteKingPosition = initialWhiteKingPosition;
+        this.currentBlackKingPosition = initialBlackKingPosition;
     }
 
     public static ChessBoard starndardChessBoard(UUID chessBoardId) {
-        return new ChessBoard(chessBoardId, InitializationTYPE.STANDARD);
+        return new ChessBoard(
+                chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD
+        );
     }
 
     public List<String> listOfAlgebraicNotations() {
@@ -56,14 +66,11 @@ public class ChessBoard {
     }
 
     public boolean isKingMoved(Color color) {
-        if (color.equals(Color.WHITE)) {
-            if (isWhiteKingMoved) {
-                return true;
-            }
-        } else {
-            if (isBlackKingMoved) {
-                return true;
-            }
+        if (color.equals(Color.WHITE) && isWhiteKingMoved) {
+            return true;
+        }
+        if (color.equals(Color.BLACK) && isBlackKingMoved) {
+            return true;
         }
         return false;
     }
@@ -83,6 +90,38 @@ public class ChessBoard {
         } else {
             this.currentBlackKingPosition = coordinate;
         }
+    }
+
+    public boolean safeForKing(final Coordinate from, final Coordinate to) {
+        King king = getKing(
+                fieldMap.get(from).pieceOptional().orElseThrow().color()
+        );
+
+        return king.safeForKing(this, from, to);
+    }
+
+    public boolean shouldPutStalemate(final Coordinate from, final Coordinate to) {
+        King king = getOpponentKing(
+                fieldMap.get(from).pieceOptional().orElseThrow().color()
+        );
+
+        return king.stalemate(this, from, to);
+    }
+
+    public boolean shouldPutCheckmate(final Coordinate from, final Coordinate to) {
+        King king = getOpponentKing(
+                fieldMap.get(from).pieceOptional().orElseThrow().color()
+        );
+
+        return king.checkmate(this, from, to);
+    }
+
+    public boolean shouldPutCheck(final Coordinate from, final Coordinate to) {
+        King king = getOpponentKing(
+                fieldMap.get(from).pieceOptional().orElseThrow().color()
+        );
+
+        return king.check(this, from, to);
     }
 
     private King getKing(Color kingColor) {
@@ -107,30 +146,6 @@ public class ChessBoard {
                 .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
     }
 
-    /** TODO for Nicat*/
-    public boolean isMoveSafeForTheKing(final Coordinate from, final Coordinate to) {
-        King king = getKing(fieldMap.get(from).pieceOptional().orElseThrow().color());
-        return false;
-    }
-
-    /** TODO for Nicat*/
-    public boolean isMoveForStalemate(final Coordinate from, final Coordinate to) {
-        King king = getOpponentKing(fieldMap.get(from).pieceOptional().orElseThrow().color());
-        return false;
-    }
-
-    /** TODO for Nicat*/
-    public boolean isMoveForCheckMate(final Coordinate from, final Coordinate to) {
-        King king = getOpponentKing(fieldMap.get(from).pieceOptional().orElseThrow().color());
-        return false;
-    }
-
-    /** TODO for Nicat*/
-    public boolean isMoveForCheck(final Coordinate from, final Coordinate to) {
-        King king = getOpponentKing(fieldMap.get(from).pieceOptional().orElseThrow().color());
-        return false;
-    }
-
     protected final Operations reposition(
             final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
     ) {
@@ -153,7 +168,7 @@ public class ChessBoard {
 
         /** Validation.*/
         StatusPair<LinkedHashSet<Operations>> statusPair = piece.isValidMove(this, from, to);
-        if (!statusPair.status() || !isMoveSafeForTheKing(from, to)) {
+        if (!statusPair.status() || !safeForKing(from, to)) {
             throw new IllegalArgumentException("Invalid move.");
         }
 
@@ -194,7 +209,7 @@ public class ChessBoard {
         }
 
         StatusPair<LinkedHashSet<Operations>> statusPair = king.canCastle(this, kingStartedField, kingEndField);
-        if (!statusPair.status() || !isMoveSafeForTheKing(from, to)) {
+        if (!statusPair.status() || !safeForKing(from, to)) {
             throw new IllegalArgumentException("Invalid move.");
         }
 

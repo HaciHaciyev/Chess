@@ -31,14 +31,14 @@ public sealed interface Piece
         };
     }
 
-    default Operations opponentKingStatus(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        if (chessBoard.isMoveForStalemate(from, to)) {
+    default Operations influenceOnTheOpponentKing(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+        if (chessBoard.shouldPutStalemate(from, to)) {
             return Operations.STALEMATE;
         }
-        if (chessBoard.isMoveForCheckMate(from, to)) {
+        if (chessBoard.shouldPutCheckmate(from, to)) {
             return Operations.CHECKMATE;
         }
-        if (chessBoard.isMoveForCheck(from, to)) {
+        if (chessBoard.shouldPutCheck(from, to)) {
             return Operations.CHECK;
         }
         

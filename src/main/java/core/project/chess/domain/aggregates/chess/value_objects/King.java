@@ -19,4 +19,24 @@ public record King(Color color)
     public StatusPair<LinkedHashSet<Operations>> canCastle(ChessBoard chessBoard, Field from, Field to) {
         return StatusPair.ofFalse();
     }
+
+    /** TODO for Nicat*/
+    public boolean safeForKing(ChessBoard chessBoard, Coordinate from, Coordinate to) {
+        return false;
+    }
+
+    /** TODO for Nicat*/
+    public boolean stalemate(ChessBoard chessBoard, Coordinate from, Coordinate to) {
+        return false;
+    }
+
+    /** TODO for Nicat*/
+    public boolean checkmate(ChessBoard chessBoard, Coordinate from, Coordinate to) {
+        return false;
+    }
+
+    /** TODO for Nicat*/
+    public boolean check(ChessBoard chessBoard, Coordinate from, Coordinate to) {
+        return false;
+    }
 }

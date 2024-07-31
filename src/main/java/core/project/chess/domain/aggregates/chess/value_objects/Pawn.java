@@ -33,11 +33,11 @@ public record Pawn(Color color)
         }
 
         var setOfOperations = new LinkedHashSet<Operations>();
-        final boolean isSafeForTheKing = chessBoard.isMoveSafeForTheKing(from, to);
+        final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
-        setOfOperations.add(opponentKingStatus(chessBoard, from, to));
+        setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         return validate(chessBoard, setOfOperations, startField, endField);
     }
