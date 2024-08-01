@@ -24,6 +24,13 @@ public enum Coordinate {
         this.row = row;
     }
 
+    /**
+     * Finds the Coordinate object corresponding to the given row and column.
+     *
+     * @param row    the row number (1-8)
+     * @param column the column number (1-8)
+     * @return a StatusPair containing the Coordinate object if the row and column are valid, or a StatusPair with a false status if the row or column is out of bounds
+     */
     public static StatusPair<Coordinate> coordinate(int row, int column) {
         if (row > 8 || column > 8 || row < 1 || column < 1) {
             return StatusPair.ofFalse();
@@ -40,6 +47,13 @@ public enum Coordinate {
         return StatusPair.ofFalse();
     }
 
+    /**
+     * Converts a column number (1-8) to the corresponding column letter (A-H).
+     *
+     * @param columnNumber the column number (1-8)
+     * @return the corresponding column letter (A-H)
+     * @throws IllegalStateException if the columnNumber is not between 1 and 8 (inclusive)
+     */
     public static char intToColumn(int columnNumber) {
         return switch (columnNumber) {
             case 1 -> 'A';

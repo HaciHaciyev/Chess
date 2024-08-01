@@ -41,18 +41,18 @@ public record Pawn(Color color)
             return StatusPair.ofFalse();
         }
 
-        var setOfOperations = new LinkedHashSet<Operations>();
         final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
+        var setOfOperations = new LinkedHashSet<Operations>();
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         return validate(chessBoard, setOfOperations, startField, endField);
     }
 
     private StatusPair<LinkedHashSet<Operations>> validate(
-            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, Field startField, Field endField
+            final ChessBoard chessBoard, final LinkedHashSet<Operations> setOfOperations, final Field startField, final Field endField
     ) {
         final Color pawnColor = startField.pieceOptional().orElseThrow().color();
         final char startColumn = startField.getCoordinate().getColumn();

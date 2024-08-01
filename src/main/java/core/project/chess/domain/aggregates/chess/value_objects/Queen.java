@@ -39,11 +39,11 @@ public record Queen(Color color)
             return StatusPair.ofFalse();
         }
 
-        var setOfOperations = new LinkedHashSet<Operations>();
         final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
+        var setOfOperations = new LinkedHashSet<Operations>();
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         final Color opponentPieceColor = queenColor == Color.WHITE ? Color.BLACK : Color.WHITE;

@@ -39,11 +39,11 @@ public record Bishop(Color color)
             return StatusPair.ofFalse();
         }
 
-        var setOfOperations = new LinkedHashSet<Operations>();
         final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
+        var setOfOperations = new LinkedHashSet<Operations>();
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         final Color opponentPieceColor = bishopColor == Color.WHITE ? Color.BLACK : Color.WHITE;
@@ -57,7 +57,7 @@ public record Bishop(Color color)
     }
 
     private StatusPair<LinkedHashSet<Operations>> validate(
-            final ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, Field startField, final Field endField
+            final ChessBoard chessBoard, final LinkedHashSet<Operations> setOfOperations, Field startField, final Field endField
     ) {
         final char startColumn = startField.getCoordinate().getColumn();
         final char endColumn = endField.getCoordinate().getColumn();
