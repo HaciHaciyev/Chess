@@ -17,6 +17,13 @@ public sealed interface Piece
      * in the order in which they should be performed.*/
     StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
 
+    /**
+     * Converts a column letter (A-H) to its corresponding integer value (1-8).
+     *
+     * @param startColumn The column letter to be converted.
+     * @return The integer value corresponding to the input column letter.
+     * @throws IllegalStateException If the input character is not a valid column letter (A-H).
+     */
     default int columnToInt(char startColumn) {
         return switch (startColumn) {
             case 'A' -> 1;
@@ -31,6 +38,18 @@ public sealed interface Piece
         };
     }
 
+    /**
+     * Determines the influence of a move on the opponent's king.
+     *
+     * @param chessBoard The current state of the chess board.
+     * @param from       The coordinate of the piece being moved.
+     * @param to         The coordinate where the piece is being moved to.
+     * @return The operation that the move has on the opponent's king, which can be one of the following:
+     *         - STALEMATE: The move results in a stalemate.
+     *         - CHECKMATE: The move results in a checkmate.
+     *         - CHECK: The move results in a check.
+     *         - EMPTY: The move has no influence on the opponent's king.
+     */
     default Operations influenceOnTheOpponentKing(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         if (chessBoard.shouldPutStalemate(from, to)) {
             return Operations.STALEMATE;
