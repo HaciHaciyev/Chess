@@ -43,6 +43,13 @@ public record Queen(Color color)
         }
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
+        final Color opponentPieceColor = queenColor == Color.WHITE ? Color.BLACK : Color.WHITE;
+        final boolean opponentPieceInEndField =
+                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
+        if (opponentPieceInEndField) {
+            setOfOperations.add(Operations.CAPTURE);
+        }
+
         return validate(chessBoard, setOfOperations, startField, endField);
     }
 
@@ -56,26 +63,25 @@ public record Queen(Color color)
 
         final boolean verticalMove = startColumn == endColumn && startRow != endRow;
         if (verticalMove) {
-            return clearPath(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow);
+            return clearPath
+                    (chessBoard, startField.getCoordinate(), endField.getCoordinate())
+                    ? StatusPair.ofTrue(setOfOperations) : StatusPair.ofFalse();
         }
 
         final boolean horizontalMove = startColumn != endColumn && startRow == endRow;
         if (horizontalMove) {
-            return clearPath(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow);
+            return clearPath
+                    (chessBoard, startField.getCoordinate(), endField.getCoordinate())
+                    ? StatusPair.ofTrue(setOfOperations) : StatusPair.ofFalse();
         }
 
         final boolean diagonalMove = Math.abs(startRow - endRow) == Math.abs(columnToInt(startColumn) - columnToInt(endColumn));
         if (diagonalMove) {
-            return clearPath(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow);
+            return clearPath
+                    (chessBoard, startField.getCoordinate(), endField.getCoordinate())
+                    ? StatusPair.ofTrue(setOfOperations) : StatusPair.ofFalse();
         }
 
-        return StatusPair.ofFalse();
-    }
-
-    /** TODO for me.*/
-    private StatusPair<LinkedHashSet<Operations>> clearPath(
-            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, char startColumn, char endColumn, int startRow, int endRow
-    ) {
         return StatusPair.ofFalse();
     }
 }
