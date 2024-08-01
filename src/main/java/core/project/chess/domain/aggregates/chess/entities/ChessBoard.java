@@ -380,6 +380,10 @@ public class ChessBoard {
             return piece == null;
         }
 
+        public boolean isPresent() {
+            return piece != null;
+        }
+
         public Optional<Piece> pieceOptional() {
             if (piece == null) {
                 return Optional.empty();

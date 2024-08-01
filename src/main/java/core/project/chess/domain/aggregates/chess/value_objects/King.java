@@ -4,11 +4,12 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
@@ -29,51 +30,23 @@ public record King(Color color)
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        return fromDiagonals(chessBoard, kingPosition, to)
-                && fromHorizontalAndVertical(chessBoard, kingPosition, to)
-                && fromKnight(chessBoard, kingPosition, to);
+        return fromKnights(chessBoard, kingPosition, to)
+                && fromPawns(chessBoard, kingPosition, to)
+                && fromAnythingElse(chessBoard, kingPosition, to);
     }
 
-    private boolean fromDiagonals(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
-        var upperLeftCoordinates = getCoordinates(kingPosition, coordinate ->
-                Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn() - 1));
+    private boolean fromKnights(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
+        var occupiedFields = fieldsOccupiedByKnights(chessBoard, kingPosition);
 
-        var upperRightCoordinates = getCoordinates(kingPosition, coordinate ->
-                Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn() + 1));
+        if (occupiedFields.isEmpty()) {
+            return true;
+        }
 
-        var downLeftCoordinates = getCoordinates(kingPosition, coordinate ->
-                Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn() - 1));
-
-        var downRightCoordinates = getCoordinates(kingPosition, coordinate ->
-                Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn() + 1));
-
-
-        return validateCoordinates(chessBoard, upperLeftCoordinates, to)
-                && validateCoordinates(chessBoard, upperRightCoordinates, to)
-                && validateCoordinates(chessBoard, downLeftCoordinates, to)
-                && validateCoordinates(chessBoard, downRightCoordinates, to);
+        return occupiedFields.stream().allMatch(field ->
+                field.getCoordinate().equals(to) || field.pieceOptional().orElseThrow().color().equals(color));
     }
 
-    private boolean fromHorizontalAndVertical(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
-        var leftHorizontalCoordinates = getCoordinates(kingPosition, coordinate ->
-                Coordinate.coordinate(coordinate.getRow(), coordinate.getColumn() - 1));
-
-        var rightHorizontalCoordinates = getCoordinates(kingPosition, coordinate ->
-                Coordinate.coordinate(coordinate.getRow(), coordinate.getColumn() + 1));
-
-        var upperVerticalCoordinates = getCoordinates(kingPosition, coordinate ->
-                Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn()));
-
-        var downVerticalCoordinates = getCoordinates(kingPosition, coordinate ->
-                Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn()));
-
-        return validateCoordinates(chessBoard, leftHorizontalCoordinates, to)
-                && validateCoordinates(chessBoard, rightHorizontalCoordinates, to)
-                && validateCoordinates(chessBoard, upperVerticalCoordinates, to)
-                && validateCoordinates(chessBoard, downVerticalCoordinates, to);
-    }
-
-    private boolean fromKnight(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
+    private List<Field> fieldsOccupiedByKnights(ChessBoard chessBoard, Coordinate kingPosition) {
         int row = kingPosition.getRow();
         char column = kingPosition.getColumn();
 
@@ -86,53 +59,136 @@ public record King(Color color)
         var knightPos7 = Coordinate.coordinate(row - 2, column - 1);
         var knightPos8 = Coordinate.coordinate(row - 1, column - 2);
 
-        var coordinates = List.of(
-                knightPos1,
-                knightPos2,
-                knightPos3,
-                knightPos4,
-                knightPos5,
-                knightPos6,
-                knightPos7,
-                knightPos8
-        );
-
-        return coordinates.stream()
+        return Stream.of(
+                        knightPos1,
+                        knightPos2,
+                        knightPos3,
+                        knightPos4,
+                        knightPos5,
+                        knightPos6,
+                        knightPos7,
+                        knightPos8
+                )
                 .filter(StatusPair::status)
                 .map(StatusPair::valueOrElseThrow)
                 .map(chessBoard::field)
-                .allMatch(field -> field.isEmpty() || field.getCoordinate().equals(to));
+                .filter(Field::isPresent)
+                .toList();
     }
 
-    private boolean validateCoordinates(ChessBoard chessBoard, List<Coordinate> coordinates, Coordinate to) {
-        if (coordinates.isEmpty()) {
+    private boolean fromPawns(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
+        var bottomLeft = Coordinate.coordinate(kingPosition.getRow() - 1, kingPosition.getColumn() - 1);
+        var bottomRight = Coordinate.coordinate(kingPosition.getRow() - 1, kingPosition.getColumn() + 1);
+
+        return safeFromEnemyPawn(chessBoard, bottomLeft, to)
+                && safeFromEnemyPawn(chessBoard, bottomRight, to);
+    }
+
+    private boolean safeFromEnemyPawn(ChessBoard chessBoard,
+                                      StatusPair<Coordinate> possibleCoordinate,
+                                      Coordinate to) {
+        if (!possibleCoordinate.status()) {
             return true;
         }
 
-        return coordinates.stream()
-                .map(chessBoard::field)
-                .allMatch(field -> field.isEmpty() || field.getCoordinate().equals(to));
-    }
+        var coordinate = possibleCoordinate.valueOrElseThrow();
 
-    private List<Coordinate> getCoordinates(Coordinate currentCoordinate,
-                                            Function<Coordinate, StatusPair<Coordinate>> fn) {
-        List<Coordinate> coordinates = new ArrayList<>();
-
-        while (true) {
-            var pair = fn.apply(currentCoordinate);
-
-            if (!pair.status()) {
-                break;
-            }
-
-            coordinates.add(pair.valueOrElseThrow());
-            currentCoordinate = pair.valueOrElseThrow();
+        if (coordinate.equals(to)) {
+            return true;
         }
 
-        return coordinates;
+        var field = chessBoard.field(possibleCoordinate.valueOrElseThrow());
+
+        if (field.isEmpty()) {
+            return true;
+        }
+
+        var pieceColor = field.pieceOptional().orElseThrow().color();
+
+        if (pieceColor.equals(color)) {
+            return true;
+        } else {
+            return !(field.pieceOptional().orElseThrow() instanceof Pawn);
+        }
     }
 
-    private List<Coordinate> getSurroundingCoordinates(Coordinate kingPosition) {
+    private boolean fromAnythingElse(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
+        var topLeftField = occupiedFieldFromDirection(chessBoard, kingPosition, Direction.TOP_LEFT);
+
+        var topField = occupiedFieldFromDirection(chessBoard, kingPosition, Direction.TOP);
+
+        var topRightField = occupiedFieldFromDirection(chessBoard, kingPosition, Direction.TOP_RIGHT);
+
+
+        var leftField = occupiedFieldFromDirection(chessBoard, kingPosition, Direction.LEFT);
+        var rightField = occupiedFieldFromDirection(chessBoard, kingPosition, Direction.RIGHT);
+
+
+        var bottomLeftField = occupiedFieldFromDirection(chessBoard, kingPosition, Direction.BOTTOM_LEFT);
+
+        var bottomField = occupiedFieldFromDirection(chessBoard, kingPosition, Direction.BOTTOM);
+
+        var bottomRightField = occupiedFieldFromDirection(chessBoard, kingPosition, Direction.BOTTOM_RIGHT);
+
+
+        var fields = Stream.of(
+                        topLeftField,
+                        topField,
+                        topRightField,
+                        leftField,
+                        rightField,
+                        bottomLeftField,
+                        bottomField,
+                        bottomRightField
+                ).filter(Optional::isPresent)
+                .map(Optional::orElseThrow)
+                .filter(Field::isPresent)
+                .toList();
+
+
+        return validateFields(fields, to);
+    }
+
+    private boolean validateFields(List<Field> fields, Coordinate to) {
+        if (fields.isEmpty()) {
+            return true;
+        }
+
+        boolean areEnemiesButCantHurt = fields.stream()
+                .map(field -> field.pieceOptional().orElseThrow())
+                .noneMatch(piece -> piece instanceof Bishop || piece instanceof Rook || piece instanceof Queen);
+
+        boolean areFriendly = fields.stream()
+                .allMatch(field -> field.getCoordinate().equals(to)
+                        || field.pieceOptional().orElseThrow().color().equals(color));
+
+        return areEnemiesButCantHurt || areFriendly;
+    }
+
+    private Optional<Field> occupiedFieldFromDirection(ChessBoard chessBoard,
+                                                       Coordinate currentCoordinate,
+                                                       Direction direction) {
+
+        var fn = direction.strategy;
+
+        while (true) {
+            var possibleCoordinate = fn.apply(currentCoordinate);
+
+            if (!possibleCoordinate.status()) {
+                return Optional.empty();
+            }
+
+            Coordinate coordinate = possibleCoordinate.valueOrElseThrow();
+            Field field = chessBoard.field(coordinate);
+
+            if (field.isPresent()) {
+                return Optional.of(field);
+            }
+            currentCoordinate = coordinate;
+        }
+    }
+
+    private List<Coordinate> surroundingCoordinates(Coordinate kingPosition) {
         int row = kingPosition.getRow();
         char column = kingPosition.getColumn();
 
@@ -145,18 +201,16 @@ public record King(Color color)
         var upperLeft = Coordinate.coordinate(row + 1, column - 1);
         var upperRight = Coordinate.coordinate(row + 1, column + 1);
 
-        var coordinates = List.of(
-                up,
-                down,
-                left,
-                right,
-                upperLeft,
-                upperRight,
-                downLeft,
-                downRight
-        );
-
-        return coordinates.stream()
+        return Stream.of(
+                        up,
+                        down,
+                        left,
+                        right,
+                        upperLeft,
+                        upperRight,
+                        downLeft,
+                        downRight
+                )
                 .filter(StatusPair::status)
                 .map(StatusPair::valueOrElseThrow)
                 .toList();
@@ -181,5 +235,38 @@ public record King(Color color)
      */
     public boolean check(ChessBoard chessBoard, Coordinate from, Coordinate to) {
         return false;
+    }
+
+    private enum Direction {
+        TOP_LEFT(coordinate ->
+                Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn() - 1)),
+
+        TOP(coordinate ->
+                Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn())),
+
+        TOP_RIGHT(coordinate ->
+                Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn() + 1)),
+
+        LEFT(coordinate ->
+                Coordinate.coordinate(coordinate.getRow(), coordinate.getColumn() - 1)),
+
+        RIGHT(coordinate ->
+                Coordinate.coordinate(coordinate.getRow(), coordinate.getColumn() + 1)),
+
+        BOTTOM_LEFT(coordinate ->
+                Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn() - 1)),
+
+        BOTTOM(coordinate ->
+                Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn())),
+
+        BOTTOM_RIGHT(coordinate ->
+                Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn() + 1));
+
+
+        final Function<Coordinate, StatusPair<Coordinate>> strategy;
+
+        Direction(Function<Coordinate, StatusPair<Coordinate>> strategy) {
+            this.strategy = strategy;
+        }
     }
 }
