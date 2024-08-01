@@ -17,6 +17,9 @@ public record Queen(Color color)
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
+        if (from.equals(to)) {
+            return StatusPair.ofFalse();
+        }
 
         Field startField = chessBoard.field(from);
         Field endField = chessBoard.field(to);
