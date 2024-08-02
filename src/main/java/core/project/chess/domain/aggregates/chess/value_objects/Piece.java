@@ -51,13 +51,17 @@ public sealed interface Piece
      *         - EMPTY: The move has no influence on the opponent's king.
      */
     default Operations influenceOnTheOpponentKing(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        if (chessBoard.shouldPutStalemate(from, to)) {
+        final Color figuresColor = chessBoard.field(from).pieceOptional().orElseThrow().color();
+        final Color opponentFiguresColor = figuresColor.equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
+        final King opponentKing = new King(opponentFiguresColor);
+
+        if (opponentKing.stalemate(chessBoard, from, to)) {
             return Operations.STALEMATE;
         }
-        if (chessBoard.shouldPutCheckmate(from, to)) {
+        if (opponentKing.checkmate(chessBoard, from, to)) {
             return Operations.CHECKMATE;
         }
-        if (chessBoard.shouldPutCheck(from, to)) {
+        if (opponentKing.checkmate(chessBoard, from, to)) {
             return Operations.CHECK;
         }
         

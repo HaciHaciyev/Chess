@@ -10,36 +10,51 @@ import java.util.*;
 
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
+    private Color figuresTurn;
     private boolean isWhiteKingMoved;
     private boolean isBlackKingMoved;
-    private @Getter Coordinate currentWhiteKingPosition;
-    private @Getter Coordinate currentBlackKingPosition;
-    private final Map<Coordinate, Field> fieldMap = new HashMap<>();
-    private final List<AlgebraicNotation> listOfAlgebraicNotations = new LinkedList<>();
+    private Coordinate currentWhiteKingPosition;
+    private Coordinate currentBlackKingPosition;
+    private final Map<Coordinate, Field> fieldMap;
+    private final List<AlgebraicNotation> listOfAlgebraicNotations;
 
     private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
     private static final Coordinate initialBlackKingPosition = Coordinate.E8;
 
     private ChessBoard(
-            UUID chessBoardId, Coordinate initialWhiteKingPosition,
-            Coordinate initialBlackKingPosition, InitializationTYPE initializationTYPE
+            final UUID chessBoardId, final Coordinate initialWhiteKingPosition,
+            final Coordinate initialBlackKingPosition, final InitializationTYPE initializationTYPE
     ) {
         Objects.requireNonNull(chessBoardId);
+        Objects.requireNonNull(initialWhiteKingPosition);
+        Objects.requireNonNull(initialBlackKingPosition);
         Objects.requireNonNull(initializationTYPE);
+
+        this.chessBoardId = chessBoardId;
+        this.figuresTurn = Color.WHITE;
+        this.isWhiteKingMoved = false;
+        this.isBlackKingMoved = false;
+        this.currentWhiteKingPosition = initialWhiteKingPosition;
+        this.currentBlackKingPosition = initialBlackKingPosition;
+        this.fieldMap = new HashMap<>();
+        this.listOfAlgebraicNotations = new LinkedList<>();
 
         final boolean standardInit = initializationTYPE.equals(InitializationTYPE.STANDARD);
         if (standardInit) {
             standardInitializer();
         }
-
-        this.chessBoardId = chessBoardId;
-        this.currentWhiteKingPosition = initialWhiteKingPosition;
-        this.currentBlackKingPosition = initialBlackKingPosition;
     }
 
-    public static ChessBoard starndardChessBoard(UUID chessBoardId) {
+    public static ChessBoard starndardChessBoard(final UUID chessBoardId) {
         return new ChessBoard(
                 chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD
+        );
+    }
+
+    public Field field(final Coordinate coordinate) {
+        Field field = fieldMap.get(coordinate);
+        return new Field(
+                field.getCoordinate(), field.pieceOptional().orElse(null)
         );
     }
 
@@ -47,25 +62,57 @@ public class ChessBoard {
         return listOfAlgebraicNotations.stream().map(AlgebraicNotation::algebraicNotation).toList();
     }
 
-    public Optional<Pair<Coordinate, Coordinate>> lastMove() {
-        AlgebraicNotation algebraicNotation = Objects.requireNonNullElse(listOfAlgebraicNotations.getLast(), null);
+    public Optional<Pair<Coordinate, Coordinate>> latestMovement() {
+        AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.getLast();
         if (algebraicNotation == null) {
             return Optional.empty();
         }
 
-        return Optional.of(
-                Pair.of(algebraicNotation.from, algebraicNotation.to)
-        );
+        StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(algebraicNotation);
+        if (statusPair.status()) {
+            return Optional.of(castlingCoordinates(statusPair.valueOrElseThrow()));
+        }
+
+        return Optional.of(algebraicNotation.coordinates());
     }
 
-    public Field field(Coordinate coordinate) {
-        Field field = fieldMap.get(coordinate);
-        return new Field(
-                field.getCoordinate(), field.pieceOptional().orElse(null)
-        );
+    private Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle) {
+        final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
+        if (shortCastling) {
+            if (figuresTurn.equals(Color.WHITE)) {
+                return Pair.of(Coordinate.E1, Coordinate.H1);
+            } else {
+                return Pair.of(Coordinate.E8, Coordinate.H8);
+            }
+        }
+
+        if (figuresTurn.equals(Color.WHITE)) {
+            return Pair.of(Coordinate.E1, Coordinate.A1);
+        } else {
+            return Pair.of(Coordinate.E1, Coordinate.A8);
+        }
     }
 
-    public boolean isKingMoved(Color color) {
+    private void switchFiguresTurn() {
+        if (figuresTurn.equals(Color.WHITE)) {
+            figuresTurn = Color.BLACK;
+        } else {
+            figuresTurn = Color.WHITE;
+        }
+    }
+
+    /** This is not a complete validation of which player should play at this point.
+     * This validation rather checks what color pieces should be moved.
+     * Finally, validation of the question of who should walk can only be carried out in the controller.*/
+    private boolean validateFiguresTurn(final Coordinate coordinate) {
+        Color figuresThatTryToMove = this.field(coordinate).pieceOptional().orElseThrow().color();
+        if (figuresThatTryToMove != figuresTurn) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isKingMoved(final Color color) {
         if (color.equals(Color.WHITE) && isWhiteKingMoved) {
             return true;
         }
@@ -75,16 +122,13 @@ public class ChessBoard {
         return false;
     }
 
-    private void kingMadeMove(King king) {
+    private void changedKingPosition(final King king, final Coordinate coordinate) {
         if (king.color().equals(Color.WHITE)) {
             this.isWhiteKingMoved = true;
         } else {
             this.isBlackKingMoved = true;
         }
-    }
 
-    private void newKingPosition(King king, Coordinate coordinate) {
-        kingMadeMove(king);
         if (king.color().equals(Color.WHITE)) {
             this.currentWhiteKingPosition = coordinate;
         } else {
@@ -94,57 +138,28 @@ public class ChessBoard {
 
     public boolean safeForKing(final Coordinate from, final Coordinate to) {
         Color kingColor = fieldMap.get(from).pieceOptional().orElseThrow().color();
-        King king = getKing(kingColor);
+        King king = theKing(kingColor);
 
         return kingColor == Color.WHITE ?
                 king.safeForKing(this, currentWhiteKingPosition, from, to) :
                 king.safeForKing(this, currentBlackKingPosition, from, to);
     }
 
-    public boolean shouldPutStalemate(final Coordinate from, final Coordinate to) {
-        King king = getOpponentKing(
-                fieldMap.get(from).pieceOptional().orElseThrow().color()
-        );
-
-        return king.stalemate(this, from, to);
-    }
-
-    public boolean shouldPutCheckmate(final Coordinate from, final Coordinate to) {
-        King king = getOpponentKing(
-                fieldMap.get(from).pieceOptional().orElseThrow().color()
-        );
-
-        return king.checkmate(this, from, to);
-    }
-
-    public boolean shouldPutCheck(final Coordinate from, final Coordinate to) {
-        King king = getOpponentKing(
-                fieldMap.get(from).pieceOptional().orElseThrow().color()
-        );
-
-        return king.check(this, from, to);
-    }
-
-    private King getKing(final Color kingColor) {
-        final boolean isWhiteFiguresTurn = kingColor.equals(Color.WHITE);
-        if (isWhiteFiguresTurn) {
-            return (King) fieldMap.get(currentWhiteKingPosition).pieceOptional()
-                    .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
-        }
-
-        return (King) fieldMap.get(currentBlackKingPosition).pieceOptional()
-                .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
-    }
-
-    private King getOpponentKing(final Color kingColor) {
-        final boolean isWhiteFiguresTurn = kingColor.equals(Color.WHITE);
-        if (isWhiteFiguresTurn) {
-            return (King) fieldMap.get(currentBlackKingPosition).pieceOptional()
-                    .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
-        }
-
-        return (King) fieldMap.get(currentWhiteKingPosition).pieceOptional()
-                .orElseThrow(() -> new IllegalStateException("Invalid method usage, check documentation."));
+    private King theKing(final Color kingColor) {
+        return kingColor.equals(Color.WHITE) ?
+                (King) fieldMap
+                        .get(currentWhiteKingPosition)
+                        .pieceOptional()
+                        .orElseThrow(
+                                () -> new IllegalStateException("Invalid method usage, check documentation.")
+                        )
+                :
+                (King) fieldMap
+                        .get(currentBlackKingPosition)
+                        .pieceOptional()
+                        .orElseThrow(
+                                () -> new IllegalStateException("Invalid method usage, check documentation.")
+                        );
     }
 
     protected final Operations reposition(
@@ -153,6 +168,12 @@ public class ChessBoard {
         /** Preparation of necessary data and validation.*/
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
+
+        if (!validateFiguresTurn(from)) {
+            throw new IllegalArgumentException(
+                    String.format("At the moment, the player for %s must move and not the opponent", figuresTurn)
+            );
+        }
 
         if (from.equals(to)) {
             throw new IllegalArgumentException("Invalid move.");
@@ -193,10 +214,15 @@ public class ChessBoard {
         }
 
         if (piece instanceof King king) {
-            newKingPosition(king, to);
+            changedKingPosition(king, to);
         }
 
-        return recordingMoveMade(piece, from, to, operations, inCaseOfPromotion);
+        switchFiguresTurn();
+
+        /** Recording the move made in algebraic notation.*/
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, operations, from, to, inCaseOfPromotion));
+
+        return AlgebraicNotation.opponentKingStatus(operations);
     }
 
     private Operations castling(final Coordinate from, final Coordinate to) {
@@ -217,7 +243,7 @@ public class ChessBoard {
         /**Process operations from StatusPair. All validation need to be processed before that.*/
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
-        newKingPosition(king, to);
+        changedKingPosition(king, to);
 
         final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
         if (shortCasting) {
@@ -226,10 +252,13 @@ public class ChessBoard {
             moveRookInLongCastling(to);
         }
 
+        switchFiguresTurn();
+
         /** Recording the move made in algebraic notation.*/
         LinkedHashSet<Operations> operations = statusPair.valueOrElseThrow();
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, operations, from, to, null));
 
-        return recordingCastlingMade(piece, from, to, operations);
+        return AlgebraicNotation.opponentKingStatus(operations);
     }
 
     private void moveRookInShortCastling(final Coordinate to) {
@@ -274,82 +303,14 @@ public class ChessBoard {
         endField.addFigure(rook);
     }
 
-    private Operations recordingMoveMade(
-            Piece piece, Coordinate from, Coordinate to, LinkedHashSet<Operations> operations, Piece inCaseOfPromotion
-    ) {
-        final boolean promotionOperation = operations.contains(Operations.PROMOTION);
-
-        if (operations.contains(Operations.CHECKMATE)) {
-            if (promotionOperation) {
-                return promotionOperationWriter(piece, from, to, inCaseOfPromotion, Operations.CHECKMATE);
-            }
-
-            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null));
-            return Operations.CHECKMATE;
-        }
-
-        if (operations.contains(Operations.STALEMATE)) {
-            if (promotionOperation) {
-                return promotionOperationWriter(piece, from, to, inCaseOfPromotion, Operations.STALEMATE);
-            }
-
-            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null));
-            return Operations.STALEMATE;
-        }
-
-        if (operations.contains(Operations.CHECK)) {
-            if (promotionOperation) {
-                return promotionOperationWriter(piece, from, to, inCaseOfPromotion, Operations.CHECK);
-            }
-
-            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null));
-            return Operations.CHECK;
-        }
-
-        if (promotionOperation) {
-            return promotionOperationWriter(piece, from, to, inCaseOfPromotion, null);
-        }
-
-        if (operations.contains(Operations.CAPTURE)) {
-            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CAPTURE, from, to, null, null));
-            return Operations.CAPTURE;
-        }
-
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.EMPTY, from, to, null, null));
-        return Operations.EMPTY;
-    }
-
-    private Operations recordingCastlingMade(Piece piece, Coordinate from, Coordinate to, LinkedHashSet<Operations> operations) {
-        if (operations.contains(Operations.CHECKMATE)) {
-            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CHECKMATE, from, to, null, null));
-            return Operations.CHECKMATE;
-        }
-
-        if (operations.contains(Operations.STALEMATE)) {
-            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.STALEMATE, from, to, null, null));
-            return Operations.STALEMATE;
-        }
-
-        if (operations.contains(Operations.CHECK)) {
-            listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.CHECK, from, to, null, null));
-            return Operations.CHECK;
-        }
-
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.EMPTY, from, to, null, null));
-        return Operations.EMPTY;
-    }
-
-    private Operations promotionOperationWriter(
-            Piece piece, Coordinate from, Coordinate to, Piece inCaseOfPromotion, @Nullable Operations afterPromotion
-    ) {
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, Operations.PROMOTION, from, to, inCaseOfPromotion, afterPromotion));
-        return Operations.CHECKMATE;
-    }
-
     private enum InitializationTYPE {
         STANDARD, DURING_THE_GAME
     }
 
+    /**
+     * Represents the different operations that can be performed during a chess move,
+     * such as capture, promotion, check, checkmate, and stalemate or empty if operation not exists.
+     */
     @Getter
     public enum Operations {
         PROMOTION("="),
@@ -366,6 +327,10 @@ public class ChessBoard {
         }
     }
 
+    /**
+     * Represents a single field on a chess board.
+     * Each field has a coordinate and can either be empty or contain a chess piece.
+     */
     public static class Field {
         private Piece piece;
         private final @Getter Coordinate coordinate;
@@ -411,65 +376,246 @@ public class ChessBoard {
         }
     }
 
-    private record AlgebraicNotation(String algebraicNotation, Operations operation,
-                                     Coordinate from, Coordinate to,
-                                     Operations afterPromotion) {
+    /**
+     * The `AlgebraicNotation` class is responsible for generating the algebraic notation representation of a chess move.
+     * Algebraic notation is a standard way of recording chess moves, where each square on the chessboard is assigned a unique
+     * coordinate, and the moves are described using these coordinates.
+     * <p>
+     * This class provides a set of static methods that take in various parameters related to a chess move, such as the piece
+     * being moved, the set of operations performed during the move (e.g., capture, promotion), the starting and ending
+     * coordinates of the move, and the piece being promoted to (if applicable), and generates the corresponding algebraic
+     * notation representation.
+     * <p>
+     * The class also includes some helper methods, such as `isCastling()` and `castle()`, which are used to determine
+     * whether a move is a castling move and to get the appropriate algebraic notation for it.
+     */
+    private record AlgebraicNotation(String algebraicNotation) {
+        /**
+         * Represents a simple pawn movement, where the pawn moves forward without capturing any piece.
+         * The last symbol of the notation indicates an operation related to the enemy king or the end of the game as a whole, like
+         * check ('+'), checkmate ('#'), stalemate ('.'), or just an empty string if not operation with opponent king ('').
+         * Examples:
+         * "e2-e4"
+         * "e2-e4+"
+         */
+        private static final String SIMPLE_PAWN_MOVEMENT_FORMAT = "%s%s%s";
 
+        /**
+         * Represents a simple movement of a chess piece (other than a pawn), where the piece moves without capturing any piece.
+         * Examples:
+         * "Nf3-g5"
+         * "Nf3-g5#"
+         */
+        private static final String SIMPLE_FIGURE_MOVEMENT_FORMAT = "%s%s%s%s";
+
+        /**
+         * Represents a pawn capture operation, where a pawn captures an opponent's piece.
+         * Examples:
+         * "e2xd3"
+         * "e2xd3."
+         */
+        private static final String PAWN_CAPTURE_OPERATION_FORMAT = "%s%s%s%s";
+
+        /**
+         * Represents a capture operation by a chess piece (other than a pawn), where the piece captures an opponent's piece.
+         * Examples:
+         * "Nf3xd4"
+         * "Nf3xd4+"
+         */
+        private static final String FIGURE_CAPTURE_OPERATION_FORMAT = "%s%s%s%s%s";
+
+        /**
+         * Represents a castling move, where the king and the rook move together.
+         * Examples:
+         * "O-O" (short castling) or "O-O-O" (long castling)
+         * "O-O+" (short castling) or "O-O-O+" (long castling)
+         */
+        private static final String CASTLE_PLUS_OPERATION_FORMAT = "%s%s";
+
+        /**
+         * Represents a pawn promotion, where a pawn is promoted to a different piece (e.g., queen, rook, bishop, or knight).
+         * Examples:
+         * "a7-a8=Q"
+         * "a7-a8=Q+"
+         */
+        private static final String PROMOTION_FORMAT = "%s%s=%s%s";
+
+        /**
+         * Represents a pawn promotion that also includes a capture operation.
+         * Examples:
+         * "a7xb8=Q"
+         * "a7xb8=Q#"
+         */
+        private static final String PROMOTION_PLUS_OPERATION_FORMAT = "%s%s%s=%s%s";
+
+        /**
+         * Generates the algebraic notation representation of a chess move.
+         *
+         * @param piece The piece being moved.
+         * @param operationsSet The set of operations performed during the move (e.g., capture, promotion, check, checkmate, stalemate).
+         * @param from The starting coordinate of the move.
+         * @param to The ending coordinate of the move.
+         * @param inCaseOfPromotion The piece that the pawn is being promoted to (if applicable).
+         * @return An `AlgebraicNotation` object representing the algebraic notation of the move.
+         * @throws NullPointerException if any of the required parameters are null.
+         */
         public static AlgebraicNotation of(
-                Piece piece, Operations operation, Coordinate from, Coordinate to,
-                @Nullable Piece inCaseOfPromotion, @Nullable Operations afterPromotion
+                Piece piece, Set<Operations> operationsSet, Coordinate from, Coordinate to, @Nullable Piece inCaseOfPromotion
         ) {
             Objects.requireNonNull(piece);
-            Objects.requireNonNull(operation);
+            Objects.requireNonNull(operationsSet);
             Objects.requireNonNull(from);
             Objects.requireNonNull(to);
 
-            final boolean isCastle = isCastling(piece, from, to);
-            if (isCastle) {
-                return new AlgebraicNotation(
-                        String.format(castle(to).getAlgebraicNotation(), operation), operation, from, to, Operations.EMPTY
-                );
+            final boolean castle = isCastling(piece, from, to);
+            if (castle) {
+                return castlingRecording(operationsSet, to);
             }
 
-            if (operation.equals(Operations.PROMOTION)) {
+            final boolean promotion = operationsSet.contains(Operations.PROMOTION);
+            if (promotion) {
                 Objects.requireNonNull(inCaseOfPromotion);
-
-                if (!(piece instanceof Pawn)) {
-                    throw new IllegalStateException("Only pawn available for promotion.");
-                }
-
-                if (!Objects.isNull(afterPromotion)) {
-                    String algebraicNotation = String.format("%s-%s=%s%s", from, to, pieceToType(inCaseOfPromotion), afterPromotion);
-                    return new AlgebraicNotation(algebraicNotation, operation, from, to, afterPromotion);
-                }
-
-                String algebraicNotation = String.format("%s-%s=%s", from, to, pieceToType(inCaseOfPromotion));
-                return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+                return promotionRecording(operationsSet, from, to, inCaseOfPromotion);
             }
 
-            if (!Objects.isNull(afterPromotion) || !Objects.isNull(inCaseOfPromotion)) {
-                throw new IllegalStateException("Invalid method usage, check documentation.");
-            }
-
-            if (operation.equals(Operations.EMPTY)) {
+            final boolean capture = operationsSet.contains(Operations.CAPTURE);
+            if (capture) {
                 if (piece instanceof Pawn) {
-                    String algebraicNotation = String.format("%s-%s", from, to);
-                    return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+                    return pawnCaptureRecording(operationsSet, from, to);
                 }
-
-                String algebraicNotation = String.format("%s %s-%s", pieceToType(piece), from, to);
-                return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+                return figureCaptureRecording(piece, operationsSet, from, to);
             }
 
-            if (piece instanceof Pawn) {
-                String algebraicNotation = String.format("%s %s %s", from, operation, to);
-                return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
-            }
-
-            String algebraicNotation = String.format("%s %s %s %s", pieceToType(piece), from, operation, to);
-            return new AlgebraicNotation(algebraicNotation, operation, from, to, Operations.EMPTY);
+            return simpleMovementRecording(piece, operationsSet,from, to);
         }
 
+        /**
+         * Generates the algebraic notation representation of a castling move.
+         *
+         * @param operationsSet The set of operations performed during the move.
+         * @param finalCoordinate The ending coordinate of the castling move.
+         * @return An `AlgebraicNotation` object representing the algebraic notation of the castling move.
+         */
+        private static AlgebraicNotation castlingRecording(Set<Operations> operationsSet, Coordinate finalCoordinate) {
+            Operations opponentKingStatus = opponentKingStatus(operationsSet);
+            String algebraicNotation = CASTLE_PLUS_OPERATION_FORMAT.formatted(
+                    castle(finalCoordinate).getAlgebraicNotation(), opponentKingStatus.getAlgebraicNotation()
+            );
+            return new AlgebraicNotation(algebraicNotation);
+        }
+
+        /**
+         * Generates the algebraic notation representation of a pawn capture operation.
+         *
+         * @param operationsSet The set of operations performed during the move.
+         * @param from The starting coordinate of the move.
+         * @param to The ending coordinate of the move.
+         * @return An `AlgebraicNotation` object representing the algebraic notation of the pawn capture operation.
+         */
+        private static AlgebraicNotation pawnCaptureRecording(Set<Operations> operationsSet, Coordinate from, Coordinate to) {
+            Operations opponentKingStatus = opponentKingStatus(operationsSet);
+            String algebraicNotation = String.format(
+                    PAWN_CAPTURE_OPERATION_FORMAT, from, Operations.CAPTURE, to, opponentKingStatus.getAlgebraicNotation()
+            );
+            return new AlgebraicNotation(algebraicNotation);
+        }
+
+        /**
+         * Generates the algebraic notation representation of a capture operation by a chess piece (other than a pawn).
+         *
+         * @param piece The piece being moved.
+         * @param operationsSet The set of operations performed during the move.
+         * @param from The starting coordinate of the move.
+         * @param to The ending coordinate of the move.
+         * @return An `AlgebraicNotation` object representing the algebraic notation of the figure capture operation.
+         */
+        private static AlgebraicNotation figureCaptureRecording(
+                Piece piece, Set<Operations> operationsSet, Coordinate from, Coordinate to
+        ) {
+            Operations opponentKingStatus = opponentKingStatus(operationsSet);
+            String algebraicNotation = FIGURE_CAPTURE_OPERATION_FORMAT.formatted(
+                    pieceToType(piece), from, Operations.CAPTURE, to, opponentKingStatus.getAlgebraicNotation()
+            );
+            return new AlgebraicNotation(algebraicNotation);
+        }
+
+        /**
+         * Generates the algebraic notation representation of a simple movement of a chess piece, where the piece moves without capturing any piece.
+         *
+         * @param piece The piece being moved.
+         * @param operationsSet The set of operations performed during the move.
+         * @param from The starting coordinate of the move.
+         * @param to The ending coordinate of the move.
+         * @return An `AlgebraicNotation` object representing the algebraic notation of the simple movement.
+         */
+        private static AlgebraicNotation simpleMovementRecording(
+                Piece piece, Set<Operations> operationsSet, Coordinate from, Coordinate to
+        ) {
+            if (piece instanceof Pawn) {
+                String algebraicNotation = SIMPLE_PAWN_MOVEMENT_FORMAT.formatted(
+                        from, to, opponentKingStatus(operationsSet).getAlgebraicNotation()
+                );
+                return new AlgebraicNotation(algebraicNotation);
+            }
+
+            String algebraicNotation = SIMPLE_FIGURE_MOVEMENT_FORMAT.formatted(
+                    pieceToType(piece), from, to, opponentKingStatus(operationsSet).getAlgebraicNotation()
+            );
+            return new AlgebraicNotation(algebraicNotation);
+        }
+
+        /**
+         * Generates the algebraic notation representation of a pawn promotion, where a pawn is promoted to a different piece (e.g., queen, rook, bishop, or knight).
+         *
+         * @param operationsSet The set of operations performed during the move.
+         * @param from The starting coordinate of the move.
+         * @param to The ending coordinate of the move.
+         * @param inCaseOfPromotion The piece that the pawn is being promoted to.
+         * @return An `AlgebraicNotation` object representing the algebraic notation of the pawn promotion.
+         */
+        private static AlgebraicNotation promotionRecording(
+                Set<Operations> operationsSet, Coordinate from, Coordinate to, Piece inCaseOfPromotion
+        ) {
+            String algebraicNotation;
+            Operations opponentKingStatus = opponentKingStatus(operationsSet);
+
+            if (operationsSet.contains(Operations.CAPTURE)) {
+                algebraicNotation = PROMOTION_PLUS_OPERATION_FORMAT.formatted(
+                        from, Operations.CAPTURE, to, inCaseOfPromotion, opponentKingStatus.getAlgebraicNotation()
+                );
+                return new AlgebraicNotation(algebraicNotation);
+            }
+
+            algebraicNotation = PROMOTION_FORMAT.formatted(from, to, inCaseOfPromotion, opponentKingStatus.getAlgebraicNotation());
+            return new AlgebraicNotation(algebraicNotation);
+        }
+
+        /**
+         * Determines the status of the opponent's king based on the set of operations performed during the move.
+         *
+         * @param operationsSet The set of operations performed during the move.
+         * @return The status of the opponent's king.
+         */
+        private static Operations opponentKingStatus(Set<Operations> operationsSet) {
+            if (operationsSet.contains(Operations.STALEMATE)) {
+                return Operations.STALEMATE;
+            }
+            if (operationsSet.contains(Operations.CHECKMATE)) {
+                return Operations.CHECKMATE;
+            }
+            if (operationsSet.contains(Operations.CHECK)) {
+                return Operations.CHECK;
+            }
+
+            return Operations.EMPTY;
+        }
+
+        /**
+         * Converts a piece to its corresponding algebraic notation type.
+         *
+         * @param piece The piece to be converted.
+         * @return The algebraic notation type of the piece.
+         */
         private static String pieceToType(Piece piece) {
             return switch (piece) {
                 case King _ -> "K";
@@ -481,6 +627,12 @@ public class ChessBoard {
             };
         }
 
+        /**
+         * Determines the type of castling move (short or long) based on the ending coordinate.
+         *
+         * @param to The ending coordinate of the castling move.
+         * @return The type of castling move (short or long).
+         */
         public static Castle castle(Coordinate to) {
             final boolean isShortCasting = to.equals(Coordinate.G1) || to.equals(Coordinate.G8);
             if (isShortCasting) {
@@ -488,6 +640,33 @@ public class ChessBoard {
             }
 
             return Castle.LONG_CASTLING;
+        }
+
+        /**
+         * Checks if the given algebraic notation represents a castling move.
+         *
+         * @param algebraicNotation the algebraic notation to be checked
+         * @return a {@link StatusPair} containing a boolean value indicating whether the
+         *         given algebraic notation represents a castling move, and if so, the
+         *         corresponding {@link Castle} instance (either {@link Castle#SHORT_CASTLING}
+         *         or {@link Castle#LONG_CASTLING}).
+         */
+        public static StatusPair<Castle> isCastling(AlgebraicNotation algebraicNotation) {
+            String algebraicNotationSTR = algebraicNotation.algebraicNotation();
+
+            final boolean shortCasting = algebraicNotationSTR.equals(Castle.SHORT_CASTLING.getAlgebraicNotation()) ||
+                    algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1).equals(Castle.SHORT_CASTLING.getAlgebraicNotation());
+            if (shortCasting) {
+                return StatusPair.ofTrue(Castle.SHORT_CASTLING);
+            }
+
+            final boolean longCasting = algebraicNotationSTR.equals(Castle.LONG_CASTLING.getAlgebraicNotation()) ||
+                    algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1).equals(Castle.LONG_CASTLING.getAlgebraicNotation());
+            if (longCasting) {
+                return StatusPair.ofTrue(Castle.LONG_CASTLING);
+            }
+
+            return StatusPair.ofFalse();
         }
 
         /**
@@ -514,21 +693,58 @@ public class ChessBoard {
             return true;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        /**
+         * Extracts the "from" and "to" coordinates from the algebraic notation of a chess move.
+         *
+         * @return a {@link Pair} containing the "from" and "to" coordinates of the move.
+         * @throws IllegalStateException if the algebraic notation represents a castling move, as the coordinates cannot be extracted in the same way.
+         */
+        public Pair<Coordinate, Coordinate> coordinates() {
+            if (AlgebraicNotation.isCastling(this).status()) {
+                throw new IllegalStateException("Invalid method usage, check the documentation.");
+            }
 
-            AlgebraicNotation that = (AlgebraicNotation) o;
-            return Objects.equals(algebraicNotation, that.algebraicNotation) && operation == that.operation &&
-                    from == that.from && to == that.to && afterPromotion == that.afterPromotion;
+            final Coordinate from;
+            final Coordinate to;
+            String algebraicNotation = this.algebraicNotation();
+
+            final boolean startFromFigureType = Character.isLetter(algebraicNotation.charAt(0)) && Character.isLetter(algebraicNotation.charAt(1));
+            if (startFromFigureType) {
+
+                from = Coordinate.valueOf(algebraicNotation.substring(1, 3));
+
+                final boolean containsCaptureOperation = containsCaptureOperation(algebraicNotation.charAt(3));
+                if (containsCaptureOperation) {
+                    to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
+                } else {
+                    to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
+                }
+            } else  {
+
+                from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
+
+                final boolean containsCaptureOperation = containsCaptureOperation(algebraicNotation.charAt(2));
+                if (containsCaptureOperation) {
+                    to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
+                } else {
+                    to = Coordinate.valueOf(algebraicNotation.substring(2, 4));
+                }
+            }
+
+            return Pair.of(from, to);
         }
 
-        @Override
-        public String toString() {
-            return algebraicNotation;
+        private boolean containsCaptureOperation(char c) {
+            if (c == 'X') {
+                return true;
+            }
+
+            return false;
         }
 
+        /**
+         * Represents the two types of castling moves: short castling and long castling.
+         */
         @Getter
         public enum Castle {
             SHORT_CASTLING("O-O"), LONG_CASTLING("O-O-O");
@@ -541,6 +757,13 @@ public class ChessBoard {
         }
     }
 
+    /**
+     * Initializes the standard chess board setup.
+     * <p>
+     * This method populates the {@code fieldMap} with the initial positions of the chess pieces on the board.
+     * The white pieces are placed on the first and second rows, while the black pieces are placed on the seventh and eighth rows.
+     * The remaining fields are left empty.
+     */
     private void standardInitializer() {
         fieldMap.put(Coordinate.A1, new Field(Coordinate.A1, new Rook(Color.WHITE)));
         fieldMap.put(Coordinate.B1, new Field(Coordinate.B1, new Knight(Color.WHITE)));

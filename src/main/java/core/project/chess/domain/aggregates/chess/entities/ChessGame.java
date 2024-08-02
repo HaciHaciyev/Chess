@@ -1,7 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
-import core.project.chess.domain.aggregates.chess.value_objects.Color;
 import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
 import core.project.chess.domain.aggregates.chess.value_objects.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
@@ -24,10 +23,8 @@ public class ChessGame {
     private final Rating whitePlayerRating;
     private final Rating blackPlayerRating;
     private final SessionEvents sessionEvents;
-    private final boolean isTimeControlEnable;
     private final TimeControllingTYPE timeControllingTYPE;
-    private @Getter(AccessLevel.PRIVATE) Color currentPlayer;
-    private @Getter(AccessLevel.PRIVATE) StatusPair<Operations> isGameOver;
+    private @Getter(AccessLevel.NONE) StatusPair<Operations> isGameOver;
 
     public static Builder builder() {
         return new Builder();
@@ -42,39 +39,45 @@ public class ChessGame {
 
     public void makeMovement(
             final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
-    ) throws IllegalAccessException {
+    ) {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        validateFiguresTurn(from);
         Operations operation = chessBoard.reposition(from, to, inCaseOfPromotion);
 
         final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
         if (gameOver) {
             gameOver(operation);
         }
-
-        switchPlayer();
     }
 
-    private void switchPlayer() {
-        if (currentPlayer.equals(Color.WHITE)) {
-            currentPlayer = Color.BLACK;
-        } else {
-            currentPlayer = Color.WHITE;
-        }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ChessGame chessGame = (ChessGame) o;
+        return Objects.equals(chessBoard, chessGame.chessBoard) &&
+                Objects.equals(playerForWhite, chessGame.playerForWhite) &&
+                Objects.equals(playerForBlack, chessGame.playerForBlack) &&
+                Objects.equals(whitePlayerRating, chessGame.whitePlayerRating) &&
+                Objects.equals(blackPlayerRating, chessGame.blackPlayerRating) &&
+                Objects.equals(sessionEvents, chessGame.sessionEvents) &&
+                timeControllingTYPE == chessGame.timeControllingTYPE &&
+                Objects.equals(isGameOver, chessGame.isGameOver);
     }
 
-    /** This is not a complete validation of which player should play at this point.
-     * This validation rather checks what color pieces should be moved.
-     * Finally, validation of the question of who should walk can only be carried out in the controller.*/
-    private void validateFiguresTurn(final Coordinate coordinate) throws IllegalAccessException {
-        Color activePlayer = chessBoard.field(coordinate).pieceOptional().orElseThrow().color();
-        if (currentPlayer != activePlayer) {
-            throw new IllegalAccessException(
-                    String.format("At the moment, the player for %s must move and not the player for %s", currentPlayer, activePlayer)
-            );
-        }
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(chessBoard);
+        result = 31 * result + Objects.hashCode(playerForWhite);
+        result = 31 * result + Objects.hashCode(playerForBlack);
+        result = 31 * result + Objects.hashCode(whitePlayerRating);
+        result = 31 * result + Objects.hashCode(blackPlayerRating);
+        result = 31 * result + Objects.hashCode(sessionEvents);
+        result = 31 * result + Objects.hashCode(timeControllingTYPE);
+        result = 31 * result + Objects.hashCode(isGameOver);
+        return result;
     }
 
     public static class Builder {
@@ -84,7 +87,6 @@ public class ChessGame {
         private Rating whitePlayerRating;
         private Rating blackPlayerRating;
         private SessionEvents sessionEvents;
-        private boolean isTimeControlEnable;
         private TimeControllingTYPE timeControllingTYPE;
 
         private Builder() {}
@@ -119,11 +121,6 @@ public class ChessGame {
             return this;
         }
 
-        public Builder timeControlDisable() {
-            isTimeControlEnable = false;
-            return this;
-        }
-
         public Builder timeControllingTYPE(TimeControllingTYPE timeControllingTYPE) {
             this.timeControllingTYPE = timeControllingTYPE;
             return this;
@@ -133,22 +130,13 @@ public class ChessGame {
             Objects.requireNonNull(chessBoard);
             Objects.requireNonNull(playerForWhite);
             Objects.requireNonNull(playerForBlack);
+            Objects.requireNonNull(timeControllingTYPE);
 
-            if (!isTimeControlEnable && timeControllingTYPE != null) {
-                throw new IllegalStateException("You could`t set time controlling if it`s disable");
-            }
-
-            if (isTimeControlEnable) {
-                return new ChessGame(
-                        chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating,
-                        sessionEvents, true, timeControllingTYPE, Color.WHITE, StatusPair.ofFalse()
-                );
-            } else {
-                return new ChessGame(
-                        chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating,
-                        sessionEvents, false, null, Color.WHITE, StatusPair.ofFalse()
-                );
-            }
+            return new ChessGame(
+                    chessBoard, playerForWhite, playerForBlack,
+                    whitePlayerRating, blackPlayerRating,
+                    sessionEvents, timeControllingTYPE, StatusPair.ofFalse()
+            );
         }
     }
 
@@ -157,7 +145,8 @@ public class ChessGame {
         BULLET(1),
         BLITZ(5),
         RAPID(10),
-        CLASSIC(30);
+        CLASSIC(30),
+        DEFAULT(180);
 
         private final int minutes;
 

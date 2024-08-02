@@ -164,10 +164,10 @@ public record Pawn(Color color)
     }
 
     private boolean previousMoveWasPassage(ChessBoard chessBoard) {
-        if (chessBoard.lastMove().isEmpty()) {
+        if (chessBoard.latestMovement().isEmpty()) {
             return false;
         }
-        Pair<Coordinate, Coordinate> lastMovement = chessBoard.lastMove().get();
+        Pair<Coordinate, Coordinate> lastMovement = chessBoard.latestMovement().get();
         Coordinate from = lastMovement.getFirst();
         Coordinate to = lastMovement.getSecond();
 
@@ -180,7 +180,7 @@ public record Pawn(Color color)
 
     private Optional<Coordinate> previousMoveCoordinate(ChessBoard chessBoard) {
         return Optional.ofNullable(
-                chessBoard.lastMove().isPresent() ? chessBoard.lastMove().get().getSecond() : null
+                chessBoard.latestMovement().isPresent() ? chessBoard.latestMovement().get().getSecond() : null
         );
     }
 }
