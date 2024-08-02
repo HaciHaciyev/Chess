@@ -8,6 +8,38 @@ import org.springframework.data.util.Pair;
 
 import java.util.*;
 
+/**
+ * The `ChessBoard` class represents the central entity of the Chess Aggregate. It encapsulates the state and behavior of a chess board,
+ * serving as the entry point for all chess-related operations within the domain.
+ * <p>
+ * The `ChessBoard` is responsible for managing the placement and movement of chess pieces, enforcing the rules of the game,
+ * and tracking the history of moves made on the board. It provides a well-defined API for interacting with the chess board,
+ * ensuring that all operations are performed in a consistent and valid manner.
+ * <p>
+ * The `ChessBoard` is the root entity of the Chess Aggregate, meaning that it owns and is responsible for the lifecycle of all
+ * other entities and value objects within the aggregate, such as `Piece`, `Coordinate`, and `AlgebraicNotation`. This ensures
+ * that the aggregate remains in a valid and consistent state at all times, as per the principles of Domain-Driven Design.
+ * <p>
+ * The `ChessBoard` class encapsulates the following key responsibilities:
+ * <p>
+ * 1. **Piece Placement and Movement**: The `reposition()` method allows for the movement of pieces on the board, handling
+ *    various operations such as capturing, promotion, and castling, while ensuring the validity of each move.
+ * 2. **Castling Management**: The `castling()` method handles the specific logic for castling moves, including the movement of the rook.
+ * 3. **Move History Tracking**: The `listOfAlgebraicNotations` property and associated methods allow for the recording and retrieval
+ *    of the move history, represented using algebraic notation.
+ * 4. **King Position Tracking**: The `isKingMoved()` and `changedKingPosition()` methods are used to track the movement of the white and black kings,
+ *    which is crucial for validating the legality of moves and castling.
+ * 5. **King Safety Validation**: The `safeForKing()` method checks if a proposed move is safe for the king, considering the current position
+ *    of the king and the potential threats on the board.
+ * 6. **Piece Validation**: The `ChessBoard` class delegates the validation of piece movements to the individual `Piece` implementations,
+ *    ensuring that each piece type can enforce its own unique movement rules.
+ * 7. **Chess Board Initialization**: The `standardInitializer()` method sets up the initial state of the chess board according to the standard chess rules,
+ *    ensuring a consistent starting point for each game.
+ *
+ *
+ * @author Hadzhyiev Hadzhy
+ * @version 1.0
+ */
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
     private Color figuresTurn;
@@ -21,6 +53,14 @@ public class ChessBoard {
     private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
     private static final Coordinate initialBlackKingPosition = Coordinate.E8;
 
+    /**
+     * Constructs a new `ChessBoard` instance with the given parameters.
+     *
+     * @param chessBoardId                The unique identifier of the chess board.
+     * @param initialWhiteKingPosition   The initial position of the white king.
+     * @param initialBlackKingPosition   The initial position of the black king.
+     * @param initializationTYPE         The type of initialization for the chess board.
+     */
     private ChessBoard(
             final UUID chessBoardId, final Coordinate initialWhiteKingPosition,
             final Coordinate initialBlackKingPosition, final InitializationTYPE initializationTYPE
@@ -39,18 +79,35 @@ public class ChessBoard {
         this.fieldMap = new HashMap<>();
         this.listOfAlgebraicNotations = new LinkedList<>();
 
+        /**
+         * Checks if the initialization type is set to STANDARD.
+         * If true, the `standardInitializer()` method is called to set up the initial state of the chess board.
+         */
         final boolean standardInit = initializationTYPE.equals(InitializationTYPE.STANDARD);
         if (standardInit) {
             standardInitializer();
         }
     }
 
+    /**
+     * Factory method.
+     * Creates a new `ChessBoard` instance with the standard chess board initialization.
+     *
+     * @param chessBoardId The unique identifier of the chess board.
+     * @return A new `ChessBoard` instance with the standard chess board initialization.
+     */
     public static ChessBoard starndardChessBoard(final UUID chessBoardId) {
         return new ChessBoard(
                 chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD
         );
     }
 
+    /**
+     * Retrieves the `Field` object at the specified coordinate on the chess board.
+     *
+     * @param coordinate The coordinate of the field to retrieve.
+     * @return A new `Field` object representing the field at the specified coordinate.
+     */
     public Field field(final Coordinate coordinate) {
         Field field = fieldMap.get(coordinate);
         return new Field(
@@ -58,10 +115,20 @@ public class ChessBoard {
         );
     }
 
+    /**
+     * Retrieves a list of algebraic notations representing the moves made on the chess board.
+     *
+     * @return A list of algebraic notations in type of String.
+     */
     public List<String> listOfAlgebraicNotations() {
         return listOfAlgebraicNotations.stream().map(AlgebraicNotation::algebraicNotation).toList();
     }
 
+    /**
+     * Retrieves the latest movement on the chess board, represented as a pair of coordinates.
+     *
+     * @return An Optional containing the pair of coordinates representing the latest movement, or an empty Optional if no movement has been made.
+     */
     public Optional<Pair<Coordinate, Coordinate>> latestMovement() {
         AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.getLast();
         if (algebraicNotation == null) {
@@ -76,6 +143,12 @@ public class ChessBoard {
         return Optional.of(algebraicNotation.coordinates());
     }
 
+    /**
+     * Retrieves the pair of coordinates representing a castling move.
+     *
+     * @param castle The type of castling move (short or long).
+     * @return A Pair of Coordinates representing the castling move.
+     */
     private Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle) {
         final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
         if (shortCastling) {
@@ -112,6 +185,12 @@ public class ChessBoard {
         return true;
     }
 
+    /**
+     * Checks if the king of the specified color has moved.
+     *
+     * @param color The color of the king to check.
+     * @return True if the king has moved, false otherwise.
+     */
     public boolean isKingMoved(final Color color) {
         if (color.equals(Color.WHITE) && isWhiteKingMoved) {
             return true;
@@ -122,6 +201,12 @@ public class ChessBoard {
         return false;
     }
 
+    /**
+     * Updates the position of the king on the chess board.
+     *
+     * @param king        The king piece that has moved.
+     * @param coordinate  The new coordinate of the king.
+     */
     private void changedKingPosition(final King king, final Coordinate coordinate) {
         if (king.color().equals(Color.WHITE)) {
             this.isWhiteKingMoved = true;
@@ -136,6 +221,13 @@ public class ChessBoard {
         }
     }
 
+    /**
+     * Checks if the move from the specified 'from' coordinate to the 'to' coordinate is safe for the king.
+     *
+     * @param from  The coordinate the piece is moving from.
+     * @param to    The coordinate the piece is moving to.
+     * @return True if the move is safe for the king, false otherwise.
+     */
     public boolean safeForKing(final Coordinate from, final Coordinate to) {
         Color kingColor = fieldMap.get(from).pieceOptional().orElseThrow().color();
         King king = theKing(kingColor);
@@ -145,6 +237,13 @@ public class ChessBoard {
                 king.safeForKing(this, currentBlackKingPosition, from, to);
     }
 
+    /**
+     * Retrieves the king object based on the specified color.
+     *
+     * @param kingColor The color of the king to retrieve.
+     * @return The king object.
+     * @throws IllegalStateException If the king object cannot be found.
+     */
     private King theKing(final Color kingColor) {
         return kingColor.equals(Color.WHITE) ?
                 (King) fieldMap
@@ -162,6 +261,15 @@ public class ChessBoard {
                         );
     }
 
+    /**
+     * Processes a piece repositioning on the chess board.
+     *
+     * @param from                  The coordinate the piece is moving from.
+     * @param to                    The coordinate the piece is moving to.
+     * @param inCaseOfPromotion     The piece to promote to in case of a pawn promotion, or null if no promotion.
+     * @return The operations performed during the repositioning.
+     * @throws IllegalArgumentException If the move is invalid.
+     */
     protected final Operations reposition(
             final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
     ) {
@@ -225,6 +333,15 @@ public class ChessBoard {
         return AlgebraicNotation.opponentKingStatus(operations);
     }
 
+    /**
+     * Processes a castling move on the chess board.
+     *
+     * @param from The coordinate the king is moving from.
+     * @param to   The coordinate the king is moving to.
+     * @return The operations performed during the castling.
+     * @throws IllegalArgumentException If the castling move is invalid.
+     * @throws IllegalStateException    If the method is used incorrectly.
+     */
     private Operations castling(final Coordinate from, final Coordinate to) {
         /** Preparation of necessary data and validation.*/
         Field kingStartedField = fieldMap.get(from);
@@ -261,6 +378,11 @@ public class ChessBoard {
         return AlgebraicNotation.opponentKingStatus(operations);
     }
 
+    /**
+     * Processes the movement of the rook during a short castling.
+     *
+     * @param to The coordinate the king is moving to during the castling.
+     */
     private void moveRookInShortCastling(final Coordinate to) {
         final boolean isWhiteCastling = to.getRow() == 1;
 
@@ -282,6 +404,11 @@ public class ChessBoard {
         endField.addFigure(rook);
     }
 
+    /**
+     * Processes the movement of the rook during a long castling.
+     *
+     * @param to The coordinate the king is moving to during the castling.
+     */
     private void moveRookInLongCastling(final Coordinate to) {
         final boolean isWhiteCastling = to.getRow() == 1;
 
@@ -303,6 +430,9 @@ public class ChessBoard {
         endField.addFigure(rook);
     }
 
+    /**
+     * Represents the different types of initialization for a chess board.
+     */
     private enum InitializationTYPE {
         STANDARD, DURING_THE_GAME
     }
