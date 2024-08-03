@@ -23,9 +23,11 @@ import java.util.*;
  * The `ChessBoard` class encapsulates the following key responsibilities:
  * <p>
  * 1. **Piece Placement and Movement**: The `reposition()` method allows for the movement of pieces on the board, handling
- *    various operations such as capturing, promotion, and castling, while ensuring the validity of each move.
+ *    various operations such as capturing, promotion, and castling, while ensuring the validity of each move,
+ *    also allow to revert last made move by using 'returnOfTheMovement()'.
  * <p>
- * 2. **Castling Management**: The `castling()` method handles the specific logic for castling moves, including the movement of the rook.
+ * 2. **Castling Management**: The `castling()` method handles the specific logic for castling moves, including the movement of the rook
+ *    also allow to revert last made move by using 'revertCastling()'.
  * <p>
  * 3. **Move History Tracking**: The `listOfAlgebraicNotations` property and associated methods allow for the recording and retrieval
  *    of the move history, represented using algebraic notation.
@@ -44,7 +46,7 @@ import java.util.*;
  *
  *
  * @author Hadzhyiev Hadzhy
- * @version 1.0
+ * @version 1.1
  */
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
@@ -147,29 +149,6 @@ public class ChessBoard {
         }
 
         return Optional.of(algebraicNotation.coordinates());
-    }
-
-    /**
-     * Retrieves the pair of coordinates representing a castling move.
-     *
-     * @param castle The type of castling move (short or long).
-     * @return A Pair of Coordinates representing the castling move.
-     */
-    private Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle) {
-        final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
-        if (shortCastling) {
-            if (figuresTurn.equals(Color.WHITE)) {
-                return Pair.of(Coordinate.E1, Coordinate.H1);
-            } else {
-                return Pair.of(Coordinate.E8, Coordinate.H8);
-            }
-        }
-
-        if (figuresTurn.equals(Color.WHITE)) {
-            return Pair.of(Coordinate.E1, Coordinate.A1);
-        } else {
-            return Pair.of(Coordinate.E1, Coordinate.A8);
-        }
     }
 
     private void switchFiguresTurn() {
@@ -341,6 +320,38 @@ public class ChessBoard {
     }
 
     /**
+     * Reverts the last move made in the game.
+     *
+     * @return `true` if the last move was successfully reverted, `false` otherwise.
+     */
+    protected final boolean returnOfTheMovement() {
+        if (listOfAlgebraicNotations.isEmpty()) {
+            return false;
+        }
+
+        AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
+        StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(lastMovement);
+        if (statusPair.status()) {
+            revertCastling(statusPair.valueOrElseThrow());
+            return true;
+        }
+
+        var movementPair = lastMovement.coordinates();
+        Coordinate from = movementPair.getFirst();
+        Coordinate to = movementPair.getSecond();
+
+        Field startedField = fieldMap.get(from);
+        Field endedField = fieldMap.get(to);
+        Piece piece = endedField.pieceOptional().orElseThrow();
+
+        endedField.removeFigure();
+        startedField.addFigure(piece);
+
+        switchFiguresTurn();
+        return true;
+    }
+
+    /**
      * Processes a castling move on the chess board.
      *
      * @param from The coordinate the king is moving from.
@@ -435,6 +446,108 @@ public class ChessBoard {
 
         startField.removeFigure();
         endField.addFigure(rook);
+    }
+
+    /**
+     * Reverts a castling move.
+     *
+     * @param castle the castling information
+     */
+    private void revertCastling(final AlgebraicNotation.Castle castle) {
+        var movementPair = castlingCoordinates(castle);
+        Coordinate from = movementPair.getFirst();
+        Coordinate to = movementPair.getSecond();
+
+        Field kingStartedField = fieldMap.get(from);
+        Field kingEndedField = fieldMap.get(to);
+        King king = (King) kingEndedField.pieceOptional().orElseThrow();
+
+        kingEndedField.removeFigure();
+        kingStartedField.addFigure(king);
+
+        final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(castle);
+        if (shortCasting) {
+            revertRookInShortCastling(to);
+        } else {
+            revertRookInLongCastling(to);
+        }
+
+        switchFiguresTurn();
+    }
+
+    /**
+     * Reverts the rook's move in a short castling.
+     *
+     * @param to the coordinate where the rook ended up after the castling
+     */
+    private void revertRookInShortCastling(Coordinate to) {
+        final boolean isWhiteCastling = to.getRow() == 1;
+
+        if (isWhiteCastling) {
+            Field startField = fieldMap.get(Coordinate.H1);
+            Field endField = fieldMap.get(Coordinate.F1);
+            Rook rook = (Rook) endField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+            endField.removeFigure();
+            startField.addFigure(rook);
+            return;
+        }
+
+        Field startField = fieldMap.get(Coordinate.H8);
+        Field endField = fieldMap.get(Coordinate.F8);
+        Rook rook = (Rook) endField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+        endField.removeFigure();
+        startField.addFigure(rook);
+    }
+
+    /**
+     * Reverts the rook's move in a long castling.
+     *
+     * @param to the coordinate where the rook ended up after the castling
+     */
+    private void revertRookInLongCastling(Coordinate to) {
+        final boolean isWhiteCastling = to.getRow() == 1;
+
+        if (isWhiteCastling) {
+            Field startField = fieldMap.get(Coordinate.A1);
+            Field endField = fieldMap.get(Coordinate.D1);
+            Rook rook = (Rook) endField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+            endField.removeFigure();
+            startField.addFigure(rook);
+            return;
+        }
+
+        Field startField = fieldMap.get(Coordinate.A8);
+        Field endField = fieldMap.get(Coordinate.D8);
+        Rook rook = (Rook) endField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+
+        endField.removeFigure();
+        startField.addFigure(rook);
+    }
+
+    /**
+     * Retrieves the pair of coordinates representing a castling move.
+     *
+     * @param castle The type of castling move (short or long).
+     * @return A Pair of Coordinates representing the castling move.
+     */
+    private Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle) {
+        final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
+        if (shortCastling) {
+            if (figuresTurn.equals(Color.WHITE)) {
+                return Pair.of(Coordinate.E1, Coordinate.H1);
+            } else {
+                return Pair.of(Coordinate.E8, Coordinate.H8);
+            }
+        }
+
+        if (figuresTurn.equals(Color.WHITE)) {
+            return Pair.of(Coordinate.E1, Coordinate.A1);
+        } else {
+            return Pair.of(Coordinate.E1, Coordinate.A8);
+        }
     }
 
     /**
