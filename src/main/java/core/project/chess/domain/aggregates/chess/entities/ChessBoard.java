@@ -24,15 +24,21 @@ import java.util.*;
  * <p>
  * 1. **Piece Placement and Movement**: The `reposition()` method allows for the movement of pieces on the board, handling
  *    various operations such as capturing, promotion, and castling, while ensuring the validity of each move.
+ * <p>
  * 2. **Castling Management**: The `castling()` method handles the specific logic for castling moves, including the movement of the rook.
+ * <p>
  * 3. **Move History Tracking**: The `listOfAlgebraicNotations` property and associated methods allow for the recording and retrieval
  *    of the move history, represented using algebraic notation.
+ * <p>
  * 4. **King Position Tracking**: The `isKingMoved()` and `changedKingPosition()` methods are used to track the movement of the white and black kings,
  *    which is crucial for validating the legality of moves and castling.
+ * <p>
  * 5. **King Safety Validation**: The `safeForKing()` method checks if a proposed move is safe for the king, considering the current position
  *    of the king and the potential threats on the board.
+ * <p>
  * 6. **Piece Validation**: The `ChessBoard` class delegates the validation of piece movements to the individual `Piece` implementations,
  *    ensuring that each piece type can enforce its own unique movement rules.
+ * <p>
  * 7. **Chess Board Initialization**: The `standardInitializer()` method sets up the initial state of the chess board according to the standard chess rules,
  *    ensuring a consistent starting point for each game.
  *
