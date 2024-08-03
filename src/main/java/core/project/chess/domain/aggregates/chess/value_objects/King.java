@@ -36,34 +36,8 @@ public record King(Color color)
      * Returns true if king is safe from knights
      */
     private boolean fromKnights(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
-        var coordinates = knightsThreateningCoordinates(kingPosition);
-
-        // get occupied fields from coordinates
-        var knights = coordinates.stream()
-                .map(chessBoard::field)
-                .filter(Field::isPresent)
-                .toList();
-
-        if (knights.isEmpty()) {
-            return true;
-        }
-
-        boolean isNotKnight = knights.stream().noneMatch(field -> field.pieceOptional().orElseThrow() instanceof Knight);
-
-        boolean isEaten = knights.stream().allMatch(field -> field.getCoordinate().equals(to));
-
-        boolean isFriendly = knights.stream().allMatch(field -> field.pieceOptional().orElseThrow().color().equals(color));
-
-        return isNotKnight || isEaten || isFriendly;
-    }
-
-    /**
-     * returns an immutable list of coordinates from which knight can threaten pivot
-     */
-    private List<Coordinate> knightsThreateningCoordinates(Coordinate pivot) {
-        int row = pivot.getRow();
-        char col = pivot.getColumn();
-
+        int row = kingPosition.getRow();
+        char col = kingPosition.getColumn();
         var knightPos1 = Coordinate.coordinate(row + 1, col - 2);
         var knightPos2 = Coordinate.coordinate(row + 2, col - 1);
         var knightPos3 = Coordinate.coordinate(row + 2, col + 1);
@@ -73,19 +47,31 @@ public record King(Color color)
         var knightPos7 = Coordinate.coordinate(row - 2, col - 1);
         var knightPos8 = Coordinate.coordinate(row - 1, col - 2);
 
-        return Stream.of(
-                        knightPos1,
-                        knightPos2,
-                        knightPos3,
-                        knightPos4,
-                        knightPos5,
-                        knightPos6,
-                        knightPos7,
-                        knightPos8
-                )
-                .filter(StatusPair::status)
-                .map(StatusPair::valueOrElseThrow)
-                .toList();
+        var listOfKnightCoordinates =
+                List.of(knightPos1, knightPos2, knightPos3, knightPos4, knightPos5, knightPos6, knightPos7, knightPos8);
+
+        for (StatusPair<Coordinate> statusPair : listOfKnightCoordinates) {
+            if (!statusPair.status()) {
+                continue;
+            }
+            Coordinate coordinate = statusPair.valueOrElseThrow();
+
+            Field field = chessBoard.field(coordinate);
+            if (field.isEmpty()) {
+                continue;
+            }
+
+            Piece piece = field.pieceOptional().orElseThrow();
+            final Color oponentFiguresColor = color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
+
+            final boolean opponentKnightWouldEaten = coordinate.equals(to);
+            final boolean opponentKnight = piece instanceof Knight (Color knightColor) && knightColor.equals(oponentFiguresColor);
+            if (opponentKnight && opponentKnightWouldEaten) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
