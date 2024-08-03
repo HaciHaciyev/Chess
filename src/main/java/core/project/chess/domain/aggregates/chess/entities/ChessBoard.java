@@ -347,6 +347,7 @@ public class ChessBoard {
         endedField.removeFigure();
         startedField.addFigure(piece);
 
+        listOfAlgebraicNotations.removeLast();
         switchFiguresTurn();
         return true;
     }
@@ -472,6 +473,7 @@ public class ChessBoard {
             revertRookInLongCastling(to);
         }
 
+        listOfAlgebraicNotations.removeLast();
         switchFiguresTurn();
     }
 
