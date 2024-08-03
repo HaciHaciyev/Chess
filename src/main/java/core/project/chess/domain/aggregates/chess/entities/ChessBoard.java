@@ -18,7 +18,7 @@ import java.util.*;
  * <p>
  * The `ChessBoard` is the root entity of the Chess Aggregate, meaning that it owns and is responsible for the lifecycle of all
  * other entities and value objects within the aggregate, such as `Piece`, `Coordinate`, and `AlgebraicNotation`. This ensures
- * that the aggregate remains in a valid and consistent state at all times, as per the principles of Domain-Driven Design.
+ * that the aggregate remains in a valid and consistent state at all times.
  * <p>
  * The `ChessBoard` class encapsulates the following key responsibilities:
  * <p>
@@ -56,7 +56,7 @@ public class ChessBoard {
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
      *
-     * @param chessBoardId                The unique identifier of the chess board.
+     * @param chessBoardId               The unique identifier of the chess board.
      * @param initialWhiteKingPosition   The initial position of the white king.
      * @param initialBlackKingPosition   The initial position of the black king.
      * @param initializationTYPE         The type of initialization for the chess board.
@@ -246,6 +246,7 @@ public class ChessBoard {
      */
     private King theKing(final Color kingColor) {
         return kingColor.equals(Color.WHITE) ?
+
                 (King) fieldMap
                         .get(currentWhiteKingPosition)
                         .pieceOptional()

@@ -21,7 +21,7 @@ public record King(Color color)
     public StatusPair<LinkedHashSet<Operations>> canCastle(ChessBoard chessBoard, Field from, Field to) {
         return StatusPair.ofFalse();
     }
-
+  
     public boolean safeForKing(ChessBoard chessBoard, Coordinate kingPosition, Coordinate from, Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
@@ -36,7 +36,7 @@ public record King(Color color)
      * Returns true if king is safe from knights
      */
     private boolean fromKnights(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
-        var coordinates = knightsThreateningCoordinate(kingPosition);
+        var coordinates = knightsThreateningCoordinates(kingPosition);
 
         // get occupied fields from coordinates
         var knights = coordinates.stream()
@@ -60,7 +60,7 @@ public record King(Color color)
     /**
      * returns an immutable list of coordinates from which knight can threaten pivot
      */
-    private List<Coordinate> knightsThreateningCoordinate(Coordinate pivot) {
+    private List<Coordinate> knightsThreateningCoordinates(Coordinate pivot) {
         int row = pivot.getRow();
         char col = pivot.getColumn();
 
