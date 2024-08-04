@@ -8,26 +8,70 @@ import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Objects;
+import java.util.UUID;
+
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChessGame {
+    private final UUID chessGameId;
     private final ChessBoard chessBoard;
     private final UserAccount playerForWhite;
     private final UserAccount playerForBlack;
-    private final Rating whitePlayerRating;
-    private final Rating blackPlayerRating;
+    private final Rating playerForWhiteRating;
+    private final Rating playerForBlackRating;
     private final SessionEvents sessionEvents;
     private final TimeControllingTYPE timeControllingTYPE;
     private @Getter(AccessLevel.NONE) StatusPair<Operations> isGameOver;
 
-    public static Builder builder() {
-        return new Builder();
+    private ChessGame(
+            UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack, Rating playerForWhiteRating,
+            Rating playerForBlackRating, SessionEvents sessionEvents, TimeControllingTYPE timeControllingTYPE,
+            StatusPair<Operations> statusPair
+    ) {
+        Objects.requireNonNull(chessGameId);
+        Objects.requireNonNull(chessBoard);
+        Objects.requireNonNull(playerForWhite);
+        Objects.requireNonNull(playerForBlack);
+        Objects.requireNonNull(playerForWhiteRating);
+        Objects.requireNonNull(playerForBlackRating);
+        Objects.requireNonNull(sessionEvents);
+        Objects.requireNonNull(timeControllingTYPE);
+        Objects.requireNonNull(statusPair);
+
+        this.chessGameId = chessGameId;
+        this.chessBoard = chessBoard;
+        this.playerForWhite = playerForWhite;
+        this.playerForBlack = playerForBlack;
+        this.playerForWhiteRating = playerForWhiteRating;
+        this.playerForBlackRating = playerForBlackRating;
+        this.sessionEvents = sessionEvents;
+        this.timeControllingTYPE = timeControllingTYPE;
+        this.isGameOver = statusPair;
+    }
+
+    public static ChessGame of(
+            UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack,
+            SessionEvents sessionEvents, TimeControllingTYPE timeControllingTYPE
+    ) {
+        return new ChessGame(
+                chessGameId, chessBoard, playerForWhite, playerForBlack, playerForWhite.getRating(),
+                playerForBlack.getRating(), sessionEvents, timeControllingTYPE, StatusPair.ofFalse()
+        );
+    }
+
+    public static ChessGame fromRepository(
+            UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack,
+            Rating whitePlayerRating, Rating blackPlayerRating, SessionEvents sessionEvents,
+            TimeControllingTYPE timeControllingTYPE, StatusPair<Operations> statusPair
+    ) {
+        return new ChessGame(
+                chessGameId, chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating,
+                sessionEvents, timeControllingTYPE, statusPair
+        );
     }
 
     private void gameOver(Operations operation) {
@@ -64,8 +108,8 @@ public class ChessGame {
         return Objects.equals(chessBoard, chessGame.chessBoard) &&
                 Objects.equals(playerForWhite, chessGame.playerForWhite) &&
                 Objects.equals(playerForBlack, chessGame.playerForBlack) &&
-                Objects.equals(whitePlayerRating, chessGame.whitePlayerRating) &&
-                Objects.equals(blackPlayerRating, chessGame.blackPlayerRating) &&
+                Objects.equals(playerForWhiteRating, chessGame.playerForWhiteRating) &&
+                Objects.equals(playerForBlackRating, chessGame.playerForBlackRating) &&
                 Objects.equals(sessionEvents, chessGame.sessionEvents) &&
                 timeControllingTYPE == chessGame.timeControllingTYPE &&
                 Objects.equals(isGameOver, chessGame.isGameOver);
@@ -76,72 +120,12 @@ public class ChessGame {
         int result = Objects.hashCode(chessBoard);
         result = 31 * result + Objects.hashCode(playerForWhite);
         result = 31 * result + Objects.hashCode(playerForBlack);
-        result = 31 * result + Objects.hashCode(whitePlayerRating);
-        result = 31 * result + Objects.hashCode(blackPlayerRating);
+        result = 31 * result + Objects.hashCode(playerForWhiteRating);
+        result = 31 * result + Objects.hashCode(playerForBlackRating);
         result = 31 * result + Objects.hashCode(sessionEvents);
         result = 31 * result + Objects.hashCode(timeControllingTYPE);
         result = 31 * result + Objects.hashCode(isGameOver);
         return result;
-    }
-
-    public static class Builder {
-        private ChessBoard chessBoard;
-        private UserAccount playerForWhite;
-        private UserAccount playerForBlack;
-        private Rating whitePlayerRating;
-        private Rating blackPlayerRating;
-        private SessionEvents sessionEvents;
-        private TimeControllingTYPE timeControllingTYPE;
-
-        private Builder() {}
-
-        public Builder chessBoard(ChessBoard chessBoard) {
-            this.chessBoard = chessBoard;
-            return this;
-        }
-
-        public Builder playerForWhite(UserAccount playerForWhite) {
-            this.playerForWhite = playerForWhite;
-            return this;
-        }
-
-        public Builder playerForBlack(UserAccount playerForBlack) {
-            this.playerForBlack = playerForBlack;
-            return this;
-        }
-
-        public Builder setWhitePlayerRating(Rating whitePlayerRating) {
-            this.whitePlayerRating = whitePlayerRating;
-            return this;
-        }
-
-        public Builder setBlackPlayerRating(Rating blackPlayerRating) {
-            this.blackPlayerRating = blackPlayerRating;
-            return this;
-        }
-
-        public Builder setSessionEvents(SessionEvents sessionEvents) {
-            this.sessionEvents = sessionEvents;
-            return this;
-        }
-
-        public Builder timeControllingTYPE(TimeControllingTYPE timeControllingTYPE) {
-            this.timeControllingTYPE = timeControllingTYPE;
-            return this;
-        }
-
-        public ChessGame build() {
-            Objects.requireNonNull(chessBoard);
-            Objects.requireNonNull(playerForWhite);
-            Objects.requireNonNull(playerForBlack);
-            Objects.requireNonNull(timeControllingTYPE);
-
-            return new ChessGame(
-                    chessBoard, playerForWhite, playerForBlack,
-                    whitePlayerRating, blackPlayerRating,
-                    sessionEvents, timeControllingTYPE, StatusPair.ofFalse()
-            );
-        }
     }
 
     @Getter
