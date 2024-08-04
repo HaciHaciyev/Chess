@@ -96,7 +96,10 @@ public class ChessGame {
     }
 
     public void returnMovement() {
-        chessBoard.returnOfTheMovement();
+        final boolean successfulMoveReturning = chessBoard.returnOfTheMovement();
+        if (!successfulMoveReturning) {
+            throw new IllegalArgumentException("Can`t return the move.");
+        }
     }
 
     @Override
