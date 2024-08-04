@@ -51,6 +51,10 @@ public class ChessGame {
         }
     }
 
+    public void returnMovement() {
+        chessBoard.returnOfTheMovement();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
