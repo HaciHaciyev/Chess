@@ -21,22 +21,21 @@ public class UserAccount implements UserDetails {
     private final UUID id;
     private final Username username;
     private final Email email;
-    private final Password password;
-    private final Password passwordConfirm;
+    private Password password;
     private Rating rating;
     private @Getter(AccessLevel.PRIVATE) Boolean isEnable;
     private final AccountEvents accountEvents;
     private final /**@ManyToMany*/ Set<UserAccount> partners;
     private final /**@ManyToMany*/ Set<ChessGame> games;
 
-    private UserAccount(UUID id, Username username, Email email, Password password,
-                       Password passwordConfirm, Rating rating, Boolean isEnable, AccountEvents accountEvents,
-                       Set<UserAccount> partners, Set<ChessGame> games) {
+    private UserAccount(
+            UUID id, Username username, Email email, Password password, Rating rating, Boolean isEnable,
+            AccountEvents accountEvents, Set<UserAccount> partners, Set<ChessGame> games
+    ) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(username);
         Objects.requireNonNull(email);
         Objects.requireNonNull(password);
-        Objects.requireNonNull(passwordConfirm);
         Objects.requireNonNull(rating);
         Objects.requireNonNull(isEnable);
         Objects.requireNonNull(accountEvents);
@@ -47,7 +46,6 @@ public class UserAccount implements UserDetails {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.passwordConfirm = passwordConfirm;
         this.rating = rating;
         this.isEnable = isEnable;
         this.accountEvents = accountEvents;
@@ -55,13 +53,11 @@ public class UserAccount implements UserDetails {
         this.games = games;
     }
 
-    public static UserAccount inboundUserAccount(
-            Username username, Email email, Password password, Password passwordConfirm
-    ) {
+    public static UserAccount of(Username username, Email email, Password password) {
         short defaultRating = 1400;
         return new UserAccount(
-                UUID.randomUUID(), username, email, password, passwordConfirm, new Rating(defaultRating),
-                Boolean.FALSE, AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
+                UUID.randomUUID(), username, email, password, new Rating(defaultRating), Boolean.FALSE,
+                AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
         );
     }
 
@@ -69,11 +65,10 @@ public class UserAccount implements UserDetails {
      * this method is used to call from repository
      */
     public static UserAccount fromRepository(
-            UUID id, Username username, Email email, Password password,
-            Password passwordConfirm, Rating rating, boolean enabled, AccountEvents events
+            UUID id, Username username, Email email, Password password, Rating rating, boolean enabled, AccountEvents events
     ) {
         return new UserAccount(
-                id, username, email, password, passwordConfirm, rating, enabled, events, new HashSet<>(), new HashSet<>()
+                id, username, email, password, rating, enabled, events, new HashSet<>(), new HashSet<>()
         );
     }
 
@@ -95,6 +90,16 @@ public class UserAccount implements UserDetails {
     public void removeGame(ChessGame game) {
         Objects.requireNonNull(game);
         games.remove(game);
+    }
+
+    public void changePassword(Password password) {
+        Objects.requireNonNull(password);
+        this.password = password;
+    }
+
+    public void changeRating(Rating rating) {
+        Objects.requireNonNull(rating);
+        this.rating = rating;
     }
 
     public void enable() {
@@ -133,7 +138,6 @@ public class UserAccount implements UserDetails {
                Objects.equals(email, that.email) &&
                Objects.equals(rating, that.rating) &&
                Objects.equals(password, that.password) &&
-               Objects.equals(passwordConfirm, that.passwordConfirm) &&
                Objects.equals(accountEvents, that.accountEvents);
     }
 
@@ -144,7 +148,6 @@ public class UserAccount implements UserDetails {
         result = 31 * result + Objects.hashCode(email);
         result = 31 * result + Objects.hashCode(rating);
         result = 31 * result + Objects.hashCode(password);
-        result = 31 * result + Objects.hashCode(passwordConfirm);
         result = 31 * result + Objects.hashCode(accountEvents);
         return result;
     }

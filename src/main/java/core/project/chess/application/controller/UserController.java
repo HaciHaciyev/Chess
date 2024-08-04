@@ -61,12 +61,6 @@ public class UserController {
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password")
         );
 
-        Password passwordConfirmation = Result.ofThrowable(
-                () -> new Password(passwordEncoder.encode(registrationForm.passwordConfirmation()))
-        ).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password confirmation")
-        );
-
         if (outboundUserRepository.isUsernameExists(username)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
         }
@@ -75,18 +69,14 @@ public class UserController {
         }
 
         UserAccount userAccount = Result.ofThrowable(() ->
-                UserAccount.inboundUserAccount(username, email, password, passwordConfirmation)
+                UserAccount.of(username, email, password)
         ).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.CONFLICT, "Invalid user account")
         );
 
         inboundUserRepository.save(userAccount);
 
-        var token = EmailConfirmationToken.builder()
-                .tokenId(UUID.randomUUID())
-                .userAccount(userAccount)
-                .build();
-
+        var token = EmailConfirmationToken.createToken(userAccount);
         inboundUserRepository.saveUserToken(token);
 
         String link = String.format("/token/verification?%s", token.getToken());
@@ -113,18 +103,6 @@ public class UserController {
         foundToken.getUserAccount().enable();
         inboundUserRepository.enable(foundToken);
 
-        return "token-verification";
-    }
-
-    @ExceptionHandler(ResponseStatusException.class)
-    public String handleResponseStatusException(ResponseStatusException e, Model model) {
-        model.addAttribute("error", e.getReason());
-        return "token-verification";
-    }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public String handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, Model model) {
-        model.addAttribute("error", "Invalid token format");
         return "token-verification";
     }
 }

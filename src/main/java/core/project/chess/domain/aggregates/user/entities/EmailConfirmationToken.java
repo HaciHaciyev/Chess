@@ -2,9 +2,7 @@ package core.project.chess.domain.aggregates.user.entities;
 
 import core.project.chess.domain.aggregates.user.events.TokenEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Token;
-import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,7 +12,6 @@ import java.util.UUID;
 
 @Slf4j
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class EmailConfirmationToken {
     private final UUID tokenId;
     private final Token token;
@@ -22,8 +19,29 @@ public class EmailConfirmationToken {
     private @Getter(AccessLevel.PRIVATE) Boolean isConfirmed;
     private final /**@OneToOne*/ UserAccount userAccount;
 
-    public static Builder builder() {
-        return new Builder();
+    private EmailConfirmationToken(UUID tokenId, Token token, TokenEvents tokenEvents, Boolean isConfirmed, UserAccount userAccount) {
+        Objects.requireNonNull(tokenId);
+        Objects.requireNonNull(token);
+        Objects.requireNonNull(tokenEvents);
+        Objects.requireNonNull(isConfirmed);
+        Objects.requireNonNull(userAccount);
+        this.tokenId = tokenId;
+        this.token = token;
+        this.tokenEvents = tokenEvents;
+        this.isConfirmed = isConfirmed;
+        this.userAccount = userAccount;
+    }
+
+    public static EmailConfirmationToken createToken(final UserAccount userAccount) {
+        return new EmailConfirmationToken(
+                UUID.randomUUID(), Token.createToken(), new TokenEvents(LocalDateTime.now()), Boolean.FALSE, userAccount
+        );
+    }
+
+    public static EmailConfirmationToken fromRepository(
+            final UUID tokenId, final Token token, final TokenEvents tokenEvents, final Boolean isConfirmed, final UserAccount userAccount
+    ) {
+        return new EmailConfirmationToken(tokenId, token, tokenEvents, isConfirmed, userAccount);
     }
 
     public boolean isExpired() {
@@ -40,89 +58,5 @@ public class EmailConfirmationToken {
         }
 
         isConfirmed = Boolean.TRUE;
-    }
-
-    public static class Builder {
-        private UUID tokenId;
-        private UserAccount userAccount;
-        private /**Optional*/ Token token;
-        private /**Optional*/ TokenEvents tokenEvents;
-        private /**Optional*/ Boolean isConfirmed;
-
-        private Builder() {}
-
-        public Builder tokenId(final UUID tokenId) {
-            this.tokenId = tokenId;
-            return this;
-        }
-
-        public Builder userAccount(final UserAccount userAccount) {
-            this.userAccount = userAccount;
-            return this;
-        }
-
-        public Builder token(final @Nullable Token token) {
-            this.token = token;
-            return this;
-        }
-
-        public Builder tokenEvents(final @Nullable TokenEvents tokenEvents) {
-            this.tokenEvents = tokenEvents;
-            return this;
-        }
-
-        public Builder confirmed(final @Nullable Boolean confirmed) {
-            isConfirmed = confirmed;
-            return this;
-        }
-
-        public EmailConfirmationToken build() {
-            Objects.requireNonNull(tokenId);
-            Objects.requireNonNull(userAccount);
-
-            boolean allUsed = token != null && tokenEvents != null && isConfirmed != null;
-            if (allUsed) {
-                log.info("EmailConfirmation token was recreated.");
-            }
-
-            boolean notUsed = token == null && tokenEvents == null && isConfirmed == null;
-            if (notUsed) {
-                log.info("A new token has been created.");
-            }
-
-            if (!allUsed && !notUsed) {
-                String doc = """
-                        You have 2 different ways for create this entity:
-                       
-                        EmailConfirmationToken emailConfirmationToken = EmailConfirmationToken.builder()
-                                        .tokenId(...)
-                                        .userAccount(...)
-                                        .build();
-                        
-                        EmailConfirmationToken emailConfirmationTokenSecond = EmailConfirmationToken.builder()
-                                       .tokenId(...)
-                                       .userAccount(...)
-                                       .setToken(...)
-                                       .tokenEvents(...)
-                                       .confirmed(...)
-                                       .build();
-                        
-                        The first method must be used when creating a new token and therefore
-                        can only be used in controllers to verify the email addresses of new users.
-                        
-                        The second method is used to obtain a token that already exists in the database,
-                        for example in repositories.
-                        """;
-
-                log.info(doc);
-                throw new IllegalStateException(doc);
-            }
-
-            return new EmailConfirmationToken(
-                    tokenId, Objects.requireNonNullElse(token, Token.createToken()),
-                    Objects.requireNonNullElse(tokenEvents, new TokenEvents(LocalDateTime.now())),
-                    Objects.requireNonNullElse(isConfirmed,false), userAccount
-            );
-        }
     }
 }
