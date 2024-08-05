@@ -3,10 +3,12 @@ package core.project.chess.domain.aggregates.chess.entities;
 import core.project.chess.domain.aggregates.chess.value_objects.*;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import jakarta.annotation.Nullable;
+import lombok.AccessLevel;
 import lombok.Getter;
 import org.springframework.data.util.Pair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The `ChessBoard` class represents the central entity of the Chess Aggregate. It encapsulates the state and behavior of a chess board,
@@ -55,9 +57,9 @@ public class ChessBoard {
     private boolean isBlackKingMoved;
     private Coordinate currentWhiteKingPosition;
     private Coordinate currentBlackKingPosition;
+    private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
     private final Map<Coordinate, Field> fieldMap;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
-
     private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
     private static final Coordinate initialBlackKingPosition = Coordinate.E8;
 
@@ -71,7 +73,8 @@ public class ChessBoard {
      */
     private ChessBoard(
             final UUID chessBoardId, final Coordinate initialWhiteKingPosition,
-            final Coordinate initialBlackKingPosition, final InitializationTYPE initializationTYPE
+            final Coordinate initialBlackKingPosition, final InitializationTYPE initializationTYPE,
+            final List<AlgebraicNotation> algebraicNotations
     ) {
         Objects.requireNonNull(chessBoardId);
         Objects.requireNonNull(initialWhiteKingPosition);
@@ -84,17 +87,21 @@ public class ChessBoard {
         this.isBlackKingMoved = false;
         this.currentWhiteKingPosition = initialWhiteKingPosition;
         this.currentBlackKingPosition = initialBlackKingPosition;
+        this.initializationTYPE = initializationTYPE;
+        this.listOfAlgebraicNotations = algebraicNotations;
         this.fieldMap = new HashMap<>();
-        this.listOfAlgebraicNotations = new LinkedList<>();
 
         /**
-         * Checks if the initialization type is set to STANDARD.
+         * Checks if the initialization type is set to STANDARD then we create new chess game,
+         * also we start from zero position for reading the ended chess game if initialization type set to READER_MODE.
          * If true, the `standardInitializer()` method is called to set up the initial state of the chess board.
          */
-        final boolean standardInit = initializationTYPE.equals(InitializationTYPE.STANDARD);
+        final boolean standardInit =
+                initializationTYPE.equals(InitializationTYPE.STANDARD) || initializationTYPE.equals(InitializationTYPE.READER_MODE);
         if (standardInit) {
             standardInitializer();
         }
+
     }
 
     /**
@@ -106,7 +113,7 @@ public class ChessBoard {
      */
     public static ChessBoard starndardChessBoard(final UUID chessBoardId) {
         return new ChessBoard(
-                chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD
+                chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD, new LinkedList<>()
         );
     }
 
@@ -556,7 +563,7 @@ public class ChessBoard {
      * Represents the different types of initialization for a chess board.
      */
     private enum InitializationTYPE {
-        STANDARD, DURING_THE_GAME
+        STANDARD, DURING_THE_GAME, READER_MODE
     }
 
     /**
