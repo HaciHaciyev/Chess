@@ -8,7 +8,6 @@ import lombok.Getter;
 import org.springframework.data.util.Pair;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * The `ChessBoard` class represents the central entity of the Chess Aggregate. It encapsulates the state and behavior of a chess board,
@@ -48,28 +47,30 @@ import java.util.stream.Collectors;
  *
  *
  * @author Hadzhyiev Hadzhy
- * @version 1.1
+ * @version 1.2
  */
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
     private Color figuresTurn;
-    private boolean isWhiteKingMoved;
-    private boolean isBlackKingMoved;
+    private boolean validWhiteShortCasting;
+    private boolean validWhiteLongCasting;
+    private boolean validBlackShortCasting;
+    private boolean validBlackLongCasting;
     private Coordinate currentWhiteKingPosition;
     private Coordinate currentBlackKingPosition;
-    private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
     private final Map<Coordinate, Field> fieldMap;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
     private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
     private static final Coordinate initialBlackKingPosition = Coordinate.E8;
+    private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
 
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
      *
-     * @param chessBoardId               The unique identifier of the chess board.
-     * @param initialWhiteKingPosition   The initial position of the white king.
-     * @param initialBlackKingPosition   The initial position of the black king.
-     * @param initializationTYPE         The type of initialization for the chess board.
+     * @param chessBoardId             The unique identifier of the chess board.
+     * @param initialWhiteKingPosition The initial position of the white king.
+     * @param initialBlackKingPosition The initial position of the black king.
+     * @param initializationTYPE       The type of initialization for the chess board.
      */
     private ChessBoard(
             final UUID chessBoardId, final Coordinate initialWhiteKingPosition,
@@ -82,14 +83,21 @@ public class ChessBoard {
         Objects.requireNonNull(initializationTYPE);
 
         this.chessBoardId = chessBoardId;
-        this.figuresTurn = Color.WHITE;
-        this.isWhiteKingMoved = false;
-        this.isBlackKingMoved = false;
-        this.currentWhiteKingPosition = initialWhiteKingPosition;
-        this.currentBlackKingPosition = initialBlackKingPosition;
         this.initializationTYPE = initializationTYPE;
         this.listOfAlgebraicNotations = algebraicNotations;
         this.fieldMap = new HashMap<>();
+
+        this.figuresTurn = Color.WHITE;
+        this.currentWhiteKingPosition = initialWhiteKingPosition;
+        this.currentBlackKingPosition = initialBlackKingPosition;
+
+        /** These fields are intended to determine whether castling is possible from the point of view
+         * of the pieces intended for castling not having been used earlier in the movement.
+         * This is not complete validation of castling of course.*/
+        this.validWhiteShortCasting = true;
+        this.validWhiteLongCasting = true;
+        this.validBlackShortCasting = true;
+        this.validBlackLongCasting = true;
 
         /**
          * Checks if the initialization type is set to STANDARD then we create new chess game,
@@ -113,8 +121,7 @@ public class ChessBoard {
      */
     public static ChessBoard starndardChessBoard(final UUID chessBoardId) {
         return new ChessBoard(
-                chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD, new LinkedList<>()
-        );
+                chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD, new LinkedList<>());
     }
 
     /**
@@ -178,22 +185,6 @@ public class ChessBoard {
     }
 
     /**
-     * Checks if the king of the specified color has moved.
-     *
-     * @param color The color of the king to check.
-     * @return True if the king has moved, false otherwise.
-     */
-    public boolean isKingMoved(final Color color) {
-        if (color.equals(Color.WHITE) && isWhiteKingMoved) {
-            return true;
-        }
-        if (color.equals(Color.BLACK) && isBlackKingMoved) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Updates the position of the king on the chess board.
      *
      * @param king        The king piece that has moved.
@@ -201,16 +192,262 @@ public class ChessBoard {
      */
     private void changedKingPosition(final King king, final Coordinate coordinate) {
         if (king.color().equals(Color.WHITE)) {
-            this.isWhiteKingMoved = true;
-        } else {
-            this.isBlackKingMoved = true;
-        }
-
-        if (king.color().equals(Color.WHITE)) {
             this.currentWhiteKingPosition = coordinate;
         } else {
             this.currentBlackKingPosition = coordinate;
         }
+    }
+
+    /**
+     * Updates the castling ability based on the movement of a Rook or King piece.
+     * <p>
+     * This method modifies the following class-level variables:
+     * - `validWhiteShortCasting`
+     * - `validWhiteLongCasting`
+     * - `validBlackShortCasting`
+     * - `validBlackLongCasting`
+     *
+     * @param from The coordinate from which the piece was moved.
+     * @param piece The piece that was moved.
+     * @throws IllegalStateException if the provided piece is not a Rook or King.
+     */
+    private void changeOfCastlingAbility(final Coordinate from, final Piece piece) {
+        if (!(piece instanceof Rook) || !(piece instanceof King (Color color))) {
+            throw new IllegalStateException("Invalid method usage, check documentation.");
+        }
+
+        final boolean whiteColorFigure = color.equals(Color.WHITE);
+        if (whiteColorFigure) {
+
+            if (piece instanceof King) {
+                this.validWhiteShortCasting = false;
+                this.validWhiteLongCasting = false;
+            }
+
+            if (from.equals(Coordinate.A1)) {
+                validWhiteLongCasting = false;
+            } else {
+                validWhiteShortCasting = false;
+            }
+
+        } else {
+
+            if (piece instanceof King) {
+                this.validBlackShortCasting = false;
+                this.validBlackLongCasting = false;
+            }
+
+            if (from.equals(Coordinate.A8)) {
+                validBlackLongCasting = false;
+            } else {
+                validBlackShortCasting = false;
+            }
+
+        }
+    }
+
+    /**
+     * This method is responsible for updating the castling ability of a piece during a revert move.
+     *
+     * @param piece  The piece being moved.
+     * @param castle The castling ability associated with the move, if any.
+     * @throws IllegalStateException if the provided piece is not a King or Rook.
+     */
+    private void changeOfCastlingAbilityInRevertMove(
+            final Piece piece, final @Nullable AlgebraicNotation.Castle castle
+    ) {
+        if (!(piece instanceof King (Color color)) || !(piece instanceof Rook)) {
+            throw new IllegalStateException("Invalid method usage, check documentation.");
+        }
+
+        if (!Objects.isNull(castle)) {
+            changeOfCastlingAbilityInRevertCastling((King) piece, castle);
+        }
+
+        if (color.equals(Color.BLACK)) {
+            processHistoryForBlackFigures(piece);
+        } else {
+            processHistoryForWhiteFigures(piece);
+        }
+    }
+
+    /**
+     * This method is responsible for updating the castling ability of white figures based on the move history.
+     *
+     * @param piece The white piece being moved.
+     */
+    private void processHistoryForWhiteFigures(final Piece piece) {
+        for (int i = 0; i < listOfAlgebraicNotations.size(); i++) {
+            final Color color = i % 10 == 2 ? Color.WHITE : Color.BLACK;
+            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
+
+            if (!color.equals(piece.color())) {
+                continue;
+            }
+
+            final boolean king = algebraicNotation.algebraicNotation().charAt(0) == 'K';
+            if (king) {
+                validWhiteShortCasting = false;
+                validWhiteLongCasting = false;
+            }
+
+            final Coordinate from = algebraicNotation.coordinates().getFirst();
+
+            final boolean leftRookMoved = algebraicNotation.algebraicNotation().charAt(0) == 'R' && from.equals(Coordinate.A1);
+            if (leftRookMoved) {
+                validWhiteLongCasting = false;
+            }
+
+            final boolean rightRookMoved = algebraicNotation.algebraicNotation().charAt(0) == 'R' && from.equals(Coordinate.H1);
+            if (rightRookMoved) {
+                validWhiteShortCasting = false;
+            }
+        }
+    }
+
+    /**
+     * This method is responsible for updating the castling ability of black figures based on the move history.
+     *
+     * @param piece The white piece being moved.
+     */
+    private void processHistoryForBlackFigures(final Piece piece) {
+        for (int i = 0; i < listOfAlgebraicNotations.size(); i++) {
+            final Color color = i % 10 == 2 ? Color.WHITE : Color.BLACK;
+            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
+
+            if (!color.equals(piece.color())) {
+                continue;
+            }
+
+            final boolean king = algebraicNotation.algebraicNotation().charAt(0) == 'K';
+            if (king) {
+                validBlackShortCasting = false;
+                validBlackLongCasting = false;
+            }
+
+            final Coordinate from = algebraicNotation.coordinates().getFirst();
+
+            final boolean leftRookMoved = algebraicNotation.algebraicNotation().charAt(0) == 'R' && from.equals(Coordinate.H8);
+            if (leftRookMoved) {
+                validBlackShortCasting = false;
+            }
+
+            final boolean rightRookMoved = algebraicNotation.algebraicNotation().charAt(0) == 'R' && from.equals(Coordinate.A8);
+            if (rightRookMoved) {
+                validBlackLongCasting = false;
+            }
+        }
+    }
+
+    /**
+     * This method is responsible for updating the castling ability of a King during a revert castling move.
+     *
+     * @param king    The King involved in the castling move.
+     * @param castle  The castling ability associated with the move.
+     */
+    private void changeOfCastlingAbilityInRevertCastling(
+            final King king, final AlgebraicNotation.Castle castle
+    ) {
+        final boolean whiteFigures = king.color().equals(Color.WHITE);
+        final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
+        if (shortCastling) {
+
+            if (whiteFigures) {
+                validWhiteShortCasting = true;
+            } else {
+                validBlackShortCasting = true;
+            }
+
+        } else {
+
+            if (whiteFigures) {
+                validWhiteLongCasting = true;
+            } else {
+                validBlackLongCasting = true;
+            }
+
+        }
+
+        changeCastlingAbilityOfSecondRookInRevertCastling(king.color(), castle);
+    }
+
+    /**
+     * This method is responsible for updating the castling ability of the second Rook involved in a revert castling move.
+     *
+     * @param color   The color of the King involved in the castling move.
+     * @param castle  The castling ability associated with the move.
+     */
+    private void changeCastlingAbilityOfSecondRookInRevertCastling(
+            final Color color, final AlgebraicNotation.Castle castle
+    ) {
+        for (int i = 0; i < listOfAlgebraicNotations.size(); i++) {
+            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
+            final Color figureColor = i % 10 == 2 ? Color.WHITE : Color.BLACK;
+            final boolean rook = algebraicNotation.algebraicNotation().charAt(0) == 'R';
+
+            final boolean ourRookIsMoved = rook && figureColor.equals(color);
+            if (ourRookIsMoved) {
+                return;
+            }
+        }
+
+        changeAbility(color, castle);
+    }
+
+    /**
+     * This method is responsible for updating the castling ability based on the color of the King and the type of castling.
+     *
+     * @param color   The color of the King.
+     * @param castle  The castling ability associated with the move.
+     */
+    private void changeAbility(final Color color, final AlgebraicNotation.Castle castle) {
+        if (color.equals(Color.WHITE)) {
+            if (castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING)) {
+                validWhiteLongCasting = true;
+            } else {
+                validWhiteShortCasting = true;
+            }
+        }
+
+        if (castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING)) {
+            validBlackLongCasting = true;
+        }
+
+        validBlackShortCasting = true;
+    }
+
+    /**
+     * Checks if the player with the given color is able to perform the specified castling move.
+     * <p>
+     * This method checks the current state of the game to determine if the requested castling move is valid.
+     * It takes into account the type of castling (short or long) and the color of the player.
+     * <p>
+     * Note that this validation is not final, as it only checks if the pieces required for castling
+     * have not moved previously during the game. If either the king or the rook have been moved
+     * at any point, castling will not be possible.
+     *
+     * @param color The color of the player performing the castling move.
+     * @param castle The type of castling move (short or long).
+     * @return `true` if the player is able to perform the specified castling move, `false` otherwise.
+     */
+    private boolean ableToCastling(final Color color, final AlgebraicNotation.Castle castle) {
+        final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(castle);
+        if (shortCasting) {
+
+            if (color.equals(Color.WHITE)) {
+                return validWhiteShortCasting;
+            }
+
+            if (color.equals(Color.BLACK)) {
+                return validBlackShortCasting;
+            }
+        }
+
+        if (color.equals(Color.WHITE)) {
+            return validWhiteLongCasting;
+        }
+
+        return validBlackLongCasting;
     }
 
     /**
@@ -295,7 +532,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move.");
         }
 
-        /**Process operations from StatusPair. All validation need to be processed before that.*/
+        /** Process operations from StatusPair. All validation need to be processed before that.*/
         LinkedHashSet<Operations> operations = statusPair.valueOrElseThrow();
 
         startField.removeFigure();
@@ -314,8 +551,14 @@ public class ChessBoard {
             endField.addFigure(piece);
         }
 
+        /** Monitor opportunities for castling and switch players.*/
         if (piece instanceof King king) {
             changedKingPosition(king, to);
+            changeOfCastlingAbility(from, king);
+        }
+
+        if (piece instanceof Rook rook) {
+            changeOfCastlingAbility(from, rook);
         }
 
         switchFiguresTurn();
@@ -324,39 +567,6 @@ public class ChessBoard {
         listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, operations, from, to, inCaseOfPromotion));
 
         return AlgebraicNotation.opponentKingStatus(operations);
-    }
-
-    /**
-     * Reverts the last move made in the game.
-     *
-     * @return `true` if the last move was successfully reverted, `false` otherwise.
-     */
-    protected final boolean returnOfTheMovement() {
-        if (listOfAlgebraicNotations.isEmpty()) {
-            return false;
-        }
-
-        AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
-        StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(lastMovement);
-        if (statusPair.status()) {
-            revertCastling(statusPair.valueOrElseThrow());
-            return true;
-        }
-
-        var movementPair = lastMovement.coordinates();
-        Coordinate from = movementPair.getFirst();
-        Coordinate to = movementPair.getSecond();
-
-        Field startedField = fieldMap.get(from);
-        Field endedField = fieldMap.get(to);
-        Piece piece = endedField.pieceOptional().orElseThrow();
-
-        endedField.removeFigure();
-        startedField.addFigure(piece);
-
-        listOfAlgebraicNotations.removeLast();
-        switchFiguresTurn();
-        return true;
     }
 
     /**
@@ -378,6 +588,11 @@ public class ChessBoard {
             throw new IllegalStateException("Invalid method usage, check the documentation.");
         }
 
+        final Color color = king.color();
+        if (!ableToCastling(color, AlgebraicNotation.castle(to))) {
+            throw new IllegalArgumentException("Invalid move.");
+        }
+
         StatusPair<LinkedHashSet<Operations>> statusPair = king.canCastle(this, kingStartedField, kingEndField);
         if (!statusPair.status() || !safeForKing(from, to)) {
             throw new IllegalArgumentException("Invalid move.");
@@ -386,7 +601,6 @@ public class ChessBoard {
         /**Process operations from StatusPair. All validation need to be processed before that.*/
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
-        changedKingPosition(king, to);
 
         final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(AlgebraicNotation.castle(to));
         if (shortCasting) {
@@ -394,6 +608,10 @@ public class ChessBoard {
         } else {
             moveRookInLongCastling(to);
         }
+
+        /** Monitor opportunities for castling and switch players.*/
+        changedKingPosition(king, to);
+        changeOfCastlingAbility(from, king);
 
         switchFiguresTurn();
 
@@ -457,6 +675,45 @@ public class ChessBoard {
     }
 
     /**
+     * Reverts the last move made in the game.
+     *
+     * @return `true` if the last move was successfully reverted, `false` otherwise.
+     */
+    protected final boolean returnOfTheMovement() {
+        if (listOfAlgebraicNotations.isEmpty()) {
+            return false;
+        }
+
+        AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
+        StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(lastMovement);
+        if (statusPair.status()) {
+            revertCastling(statusPair.valueOrElseThrow());
+            return true;
+        }
+
+        var movementPair = lastMovement.coordinates();
+        Coordinate from = movementPair.getFirst();
+        Coordinate to = movementPair.getSecond();
+
+        Field startedField = fieldMap.get(from);
+        Field endedField = fieldMap.get(to);
+        Piece piece = endedField.pieceOptional().orElseThrow();
+
+        endedField.removeFigure();
+        startedField.addFigure(piece);
+
+        listOfAlgebraicNotations.removeLast();
+
+        if (piece instanceof King king) {
+            changedKingPosition(king, from);
+            changeOfCastlingAbilityInRevertMove(king, null);
+        }
+
+        switchFiguresTurn();
+        return true;
+    }
+
+    /**
      * Reverts a castling move.
      *
      * @param castle the castling information
@@ -481,6 +738,10 @@ public class ChessBoard {
         }
 
         listOfAlgebraicNotations.removeLast();
+
+        changedKingPosition(king, from);
+        changeOfCastlingAbilityInRevertMove(king, castle);
+
         switchFiguresTurn();
     }
 
@@ -655,12 +916,6 @@ public class ChessBoard {
             if (algebraicNotation.isBlank()) {
                 throw new IllegalArgumentException("Algebraic notation can`t be black.");
             }
-
-            validate(algebraicNotation);
-        }
-
-        private void validate(String algebraicNotation) {
-
         }
 
         /**
