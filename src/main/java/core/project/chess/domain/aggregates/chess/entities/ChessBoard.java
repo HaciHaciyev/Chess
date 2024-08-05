@@ -649,6 +649,20 @@ public class ChessBoard {
      * whether a move is a castling move and to get the appropriate algebraic notation for it.
      */
     private record AlgebraicNotation(String algebraicNotation) {
+
+        public AlgebraicNotation {
+            Objects.requireNonNull(algebraicNotation);
+            if (algebraicNotation.isBlank()) {
+                throw new IllegalArgumentException("Algebraic notation can`t be black.");
+            }
+
+            validate(algebraicNotation);
+        }
+
+        private void validate(String algebraicNotation) {
+
+        }
+
         /**
          * Represents a simple pawn movement, where the pawn moves forward without capturing any piece.
          * The last symbol of the notation indicates an operation related to the enemy king or the end of the game as a whole, like
