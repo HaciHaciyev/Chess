@@ -1,6 +1,7 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.value_objects.*;
+import core.project.chess.infrastructure.utilities.Result;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
@@ -81,6 +82,7 @@ public class ChessBoard {
         Objects.requireNonNull(initialWhiteKingPosition);
         Objects.requireNonNull(initialBlackKingPosition);
         Objects.requireNonNull(initializationTYPE);
+        Objects.requireNonNull(algebraicNotations);
 
         this.chessBoardId = chessBoardId;
         this.initializationTYPE = initializationTYPE;
@@ -121,7 +123,8 @@ public class ChessBoard {
      */
     public static ChessBoard starndardChessBoard(final UUID chessBoardId) {
         return new ChessBoard(
-                chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD, new LinkedList<>());
+                chessBoardId, initialWhiteKingPosition, initialBlackKingPosition, InitializationTYPE.STANDARD, new LinkedList<>()
+        );
     }
 
     /**
@@ -166,11 +169,13 @@ public class ChessBoard {
 
     /**
      * Retrieves the latest movement on the chess board, represented as a pair of coordinates.
+     * <p>
+     * If the latest movement was a castling move, the method will return the coordinates of the King's position before and after the castling move.
      *
      * @return An Optional containing the pair of coordinates representing the latest movement, or an empty Optional if no movement has been made.
      */
     public Optional<Pair<Coordinate, Coordinate>> latestMovement() {
-        AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.getLast();
+        AlgebraicNotation algebraicNotation = Result.ofThrowable(listOfAlgebraicNotations::getLast).orElseGet(null);
         if (algebraicNotation == null) {
             return Optional.empty();
         }
@@ -183,6 +188,47 @@ public class ChessBoard {
         }
 
         return Optional.of(algebraicNotation.coordinates());
+    }
+
+    /**
+     * Checks if the move from the specified 'from' coordinate to the 'to' coordinate is safe for the king.
+     *
+     * @param from  The coordinate the piece is moving from.
+     * @param to    The coordinate the piece is moving to.
+     * @return True if the move is safe for the king, false otherwise.
+     */
+    public boolean safeForKing(final Coordinate from, final Coordinate to) {
+        Color kingColor = fieldMap.get(from).pieceOptional().orElseThrow().color();
+        King king = theKing(kingColor);
+
+        return kingColor == Color.WHITE ?
+                king.safeForKing(this, currentWhiteKingPosition, from, to) :
+                king.safeForKing(this, currentBlackKingPosition, from, to);
+    }
+
+    /**
+     * Retrieves the king object based on the specified color.
+     *
+     * @param kingColor The color of the king to retrieve.
+     * @return The king object.
+     * @throws IllegalStateException If the king object cannot be found.
+     */
+    public King theKing(final Color kingColor) {
+        return kingColor.equals(Color.WHITE) ?
+
+                (King) fieldMap
+                        .get(currentWhiteKingPosition)
+                        .pieceOptional()
+                        .orElseThrow(
+                                () -> new IllegalStateException("Invalid method usage, check documentation.")
+                        )
+                :
+                (King) fieldMap
+                        .get(currentBlackKingPosition)
+                        .pieceOptional()
+                        .orElseThrow(
+                                () -> new IllegalStateException("Invalid method usage, check documentation.")
+                        );
     }
 
     private void switchFiguresTurn() {
@@ -401,8 +447,8 @@ public class ChessBoard {
             final Color color, final AlgebraicNotation.Castle castle
     ) {
         for (int i = 0; i < listOfAlgebraicNotations.size(); i++) {
-            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
             final Color figureColor = i % 10 == 2 ? Color.WHITE : Color.BLACK;
+            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
             final boolean rook = algebraicNotation.algebraicNotation().charAt(0) == 'R';
 
             final boolean ourRookIsMoved = rook && figureColor.equals(color);
@@ -437,6 +483,29 @@ public class ChessBoard {
     }
 
     /**
+     * Retrieves the pair of coordinates representing a castling move.
+     *
+     * @param castle The type of castling move (short or long).
+     * @return A Pair of Coordinates representing the castling move.
+     */
+    private Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle) {
+        final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
+        if (shortCastling) {
+            if (figuresTurn.equals(Color.WHITE)) {
+                return Pair.of(Coordinate.E1, Coordinate.H1);
+            } else {
+                return Pair.of(Coordinate.E8, Coordinate.H8);
+            }
+        }
+
+        if (figuresTurn.equals(Color.WHITE)) {
+            return Pair.of(Coordinate.E1, Coordinate.A1);
+        } else {
+            return Pair.of(Coordinate.E1, Coordinate.A8);
+        }
+    }
+
+    /**
      * Checks if the player with the given color is able to perform the specified castling move.
      * <p>
      * This method checks the current state of the game to determine if the requested castling move is valid.
@@ -468,47 +537,6 @@ public class ChessBoard {
         }
 
         return validBlackLongCasting;
-    }
-
-    /**
-     * Checks if the move from the specified 'from' coordinate to the 'to' coordinate is safe for the king.
-     *
-     * @param from  The coordinate the piece is moving from.
-     * @param to    The coordinate the piece is moving to.
-     * @return True if the move is safe for the king, false otherwise.
-     */
-    public boolean safeForKing(final Coordinate from, final Coordinate to) {
-        Color kingColor = fieldMap.get(from).pieceOptional().orElseThrow().color();
-        King king = theKing(kingColor);
-
-        return kingColor == Color.WHITE ?
-                king.safeForKing(this, currentWhiteKingPosition, from, to) :
-                king.safeForKing(this, currentBlackKingPosition, from, to);
-    }
-
-    /**
-     * Retrieves the king object based on the specified color.
-     *
-     * @param kingColor The color of the king to retrieve.
-     * @return The king object.
-     * @throws IllegalStateException If the king object cannot be found.
-     */
-    public King theKing(final Color kingColor) {
-        return kingColor.equals(Color.WHITE) ?
-
-                (King) fieldMap
-                        .get(currentWhiteKingPosition)
-                        .pieceOptional()
-                        .orElseThrow(
-                                () -> new IllegalStateException("Invalid method usage, check documentation.")
-                        )
-                :
-                (King) fieldMap
-                        .get(currentBlackKingPosition)
-                        .pieceOptional()
-                        .orElseThrow(
-                                () -> new IllegalStateException("Invalid method usage, check documentation.")
-                        );
     }
 
     /**
@@ -815,29 +843,6 @@ public class ChessBoard {
 
         endField.removeFigure();
         startField.addFigure(rook);
-    }
-
-    /**
-     * Retrieves the pair of coordinates representing a castling move.
-     *
-     * @param castle The type of castling move (short or long).
-     * @return A Pair of Coordinates representing the castling move.
-     */
-    private Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle) {
-        final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
-        if (shortCastling) {
-            if (figuresTurn.equals(Color.WHITE)) {
-                return Pair.of(Coordinate.E1, Coordinate.H1);
-            } else {
-                return Pair.of(Coordinate.E8, Coordinate.H8);
-            }
-        }
-
-        if (figuresTurn.equals(Color.WHITE)) {
-            return Pair.of(Coordinate.E1, Coordinate.A1);
-        } else {
-            return Pair.of(Coordinate.E1, Coordinate.A8);
-        }
     }
 
     /**
