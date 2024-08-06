@@ -133,7 +133,7 @@ public record Pawn(Color color)
             ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
             char startColumn, char endColumn, int startRow, int endRow, Field endField
     ) {
-        if (Math.abs(startRow - endRow) == 1 && Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1) {
+        if (Math.abs(startRow - endRow) != 1 || Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) != 1) {
             throw new IllegalStateException("Invalid method usage, check the documentation.");
         }
 

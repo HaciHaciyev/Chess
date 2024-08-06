@@ -1,6 +1,7 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
+import core.project.chess.infrastructure.utilities.ChessNotationValidator;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
@@ -8,7 +9,6 @@ import org.springframework.data.util.Pair;
 
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * The `AlgebraicNotation` class is responsible for generating the algebraic notation representation of a chess move.
@@ -31,7 +31,7 @@ public record AlgebraicNotation(String algebraicNotation) {
             throw new IllegalArgumentException("Algebraic notation can`t be black.");
         }
 
-        validate();
+        ChessNotationValidator.validate(algebraicNotation);
     }
 
     /**
@@ -42,7 +42,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * "e2-e4"
      * "e2-e4+"
      */
-    private static final String SIMPLE_PAWN_MOVEMENT_FORMAT = "%s-%s%s";
+    public static final String SIMPLE_PAWN_MOVEMENT_FORMAT = "%s-%s%s";
 
     /**
      * Represents a simple movement of a chess piece (other than a pawn), where the piece moves without capturing any piece.
@@ -50,7 +50,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * "Nf3-g5"
      * "Nf3-g5#"
      */
-    private static final String SIMPLE_FIGURE_MOVEMENT_FORMAT = "%s%s-%s%s";
+    public static final String SIMPLE_FIGURE_MOVEMENT_FORMAT = "%s%s-%s%s";
 
     /**
      * Represents a pawn capture operation, where a pawn captures an opponent's piece.
@@ -58,7 +58,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * "e2xd3"
      * "e2xd3."
      */
-    private static final String PAWN_CAPTURE_OPERATION_FORMAT = "%s%s%s%s";
+    public static final String PAWN_CAPTURE_OPERATION_FORMAT = "%s%s%s%s";
 
     /**
      * Represents a capture operation by a chess piece (other than a pawn), where the piece captures an opponent's piece.
@@ -66,7 +66,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * "Nf3xd4"
      * "Nf3xd4+"
      */
-    private static final String FIGURE_CAPTURE_OPERATION_FORMAT = "%s%s%s%s%s";
+    public static final String FIGURE_CAPTURE_OPERATION_FORMAT = "%s%s%s%s%s";
 
     /**
      * Represents a castling move, where the king and the rook move together.
@@ -74,7 +74,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * "O-O" (short castling) or "O-O-O" (long castling)
      * "O-O+" (short castling) or "O-O-O+" (long castling)
      */
-    private static final String CASTLE_PLUS_OPERATION_FORMAT = "%s%s";
+    public static final String CASTLE_PLUS_OPERATION_FORMAT = "%s%s";
 
     /**
      * Represents a pawn promotion, where a pawn is promoted to a different piece (e.g., queen, rook, bishop, or knight).
@@ -82,7 +82,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * "a7-a8=Q"
      * "a7-a8=Q+"
      */
-    private static final String PROMOTION_FORMAT = "%s-%s=%s%s";
+    public static final String PROMOTION_FORMAT = "%s-%s=%s%s";
 
     /**
      * Represents a pawn promotion that also includes a capture operation.
@@ -90,7 +90,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * "a7xb8=Q"
      * "a7xb8=Q#"
      */
-    private static final String PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT = "%s%s%s=%s%s";
+    public static final String PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT = "%s%s%s=%s%s";
 
     /**
      * Generates the algebraic notation representation of a chess move.
@@ -104,7 +104,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @throws NullPointerException if any of the required parameters are null.
      */
     public static AlgebraicNotation of(
-            Piece piece, Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to, @Nullable Piece inCaseOfPromotion
+            final Piece piece, final Set<ChessBoard.Operations> operationsSet, final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
     ) {
         Objects.requireNonNull(piece);
         Objects.requireNonNull(operationsSet);
@@ -235,12 +235,12 @@ public record AlgebraicNotation(String algebraicNotation) {
     }
 
     /**
-     * Determines the status of the opponent's king based on the set of operations performed during the move.
+     * Utility function that determines the status of the opponent's king based on the set of operations performed during the move.
      *
      * @param operationsSet The set of operations performed during the move.
      * @return The status of the opponent's king.
      */
-    public static ChessBoard.Operations opponentKingStatus(Set<ChessBoard.Operations> operationsSet) {
+    public static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
         if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) {
             return ChessBoard.Operations.STALEMATE;
         }
@@ -260,7 +260,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @param piece The piece to be converted.
      * @return The algebraic notation type of the piece.
      */
-    private static String pieceToType(Piece piece) {
+    public static String pieceToType(final Piece piece) {
         return switch (piece) {
             case King _ -> "K";
             case Queen _ -> "Q";
@@ -271,13 +271,27 @@ public record AlgebraicNotation(String algebraicNotation) {
         };
     }
 
+    public static int columnToInt(char startColumn) {
+        return switch (startColumn) {
+            case 'A' -> 1;
+            case 'B' -> 2;
+            case 'C' -> 3;
+            case 'D' -> 4;
+            case 'E' -> 5;
+            case 'F' -> 6;
+            case 'G' -> 7;
+            case 'H' -> 8;
+            default -> throw new IllegalStateException("Unexpected value: " + startColumn);
+        };
+    }
+
     /**
      * Determines the type of castling move (short or long) based on the ending coordinate.
      *
      * @param to The ending coordinate of the castling move.
      * @return The type of castling move (short or long).
      */
-    public static AlgebraicNotation.Castle castle(Coordinate to) {
+    public static AlgebraicNotation.Castle castle(final Coordinate to) {
         final boolean isShortCasting = to.equals(Coordinate.G1) || to.equals(Coordinate.G8);
         if (isShortCasting) {
             return AlgebraicNotation.Castle.SHORT_CASTLING;
@@ -295,7 +309,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      *         corresponding {@link AlgebraicNotation.Castle} instance (either {@link AlgebraicNotation.Castle#SHORT_CASTLING}
      *         or {@link AlgebraicNotation.Castle#LONG_CASTLING}).
      */
-    public static StatusPair<AlgebraicNotation.Castle> isCastling(AlgebraicNotation algebraicNotation) {
+    public static StatusPair<AlgebraicNotation.Castle> isCastling(final AlgebraicNotation algebraicNotation) {
         String algebraicNotationSTR = algebraicNotation.algebraicNotation();
 
         final boolean shortCasting = algebraicNotationSTR.equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation()) ||
@@ -317,7 +331,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * This function can only be used to predetermine the user's intention to make castling,
      * However, this is by no means a final validation of this operation.
      */
-    public static boolean isCastling(Piece piece, Coordinate from, Coordinate to) {
+    public static boolean isCastling(final Piece piece, final Coordinate from, final Coordinate to) {
         final boolean isKing = (piece instanceof King);
         if (!isKing) {
             return false;
@@ -338,7 +352,7 @@ public record AlgebraicNotation(String algebraicNotation) {
     }
 
     /**
-     * Extracts the "from" and "to" coordinates from the algebraic notation of a chess move.
+     * Extracts the "from" and "to" coordinates from the algebraic notation of a chess move. Use isCastling(...) function before.
      *
      * @return a {@link Pair} containing the "from" and "to" coordinates of the move.
      * @throws IllegalStateException if the algebraic notation represents a castling move, as the coordinates cannot be extracted in the same way.
@@ -354,36 +368,16 @@ public record AlgebraicNotation(String algebraicNotation) {
 
         final boolean startFromFigureType = Character.isLetter(algebraicNotation.charAt(0)) && Character.isLetter(algebraicNotation.charAt(1));
         if (startFromFigureType) {
-
             from = Coordinate.valueOf(algebraicNotation.substring(1, 3));
+            to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
 
-            final boolean containsCaptureOperation = containsCaptureOperation(algebraicNotation.charAt(3));
-            if (containsCaptureOperation) {
-                to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
-            } else {
-                to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
-            }
-        } else  {
-
-            from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
-
-            final boolean containsCaptureOperation = containsCaptureOperation(algebraicNotation.charAt(2));
-            if (containsCaptureOperation) {
-                to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
-            } else {
-                to = Coordinate.valueOf(algebraicNotation.substring(2, 4));
-            }
+            return Pair.of(from, to);
         }
+
+        from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
+        to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
 
         return Pair.of(from, to);
-    }
-
-    private boolean containsCaptureOperation(char c) {
-        if (c == 'X') {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -394,12 +388,15 @@ public record AlgebraicNotation(String algebraicNotation) {
      */
     public Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle, final Color color) {
         final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
+
         if (shortCastling) {
+
             if (color.equals(Color.WHITE)) {
                 return Pair.of(Coordinate.E1, Coordinate.H1);
             } else {
                 return Pair.of(Coordinate.E8, Coordinate.H8);
             }
+
         }
 
         if (color.equals(Color.WHITE)) {
@@ -421,92 +418,5 @@ public record AlgebraicNotation(String algebraicNotation) {
         Castle(String algebraicNotation) {
             this.algebraicNotation = algebraicNotation;
         }
-    }
-
-    /** Functions for validation.*/
-    private void validate() {
-        if (isSimplePawnMovement(algebraicNotation)) {
-            validateSimplePawnMovement(algebraicNotation);
-        } else if (isSimpleFigureMovement(algebraicNotation)) {
-            validateSimpleFigureMovement(algebraicNotation);
-        } else if (isPawnCaptureOperation(algebraicNotation)) {
-            validatePawnCaptureOperation(algebraicNotation);
-        } else if (isFigureCaptureOperation(algebraicNotation)) {
-            validateFigureCaptureOperation(algebraicNotation);
-        } else if (isCastlePlusOperation(algebraicNotation)) {
-            validateCastlePlusOperation(algebraicNotation);
-        } else if (isPromotion(algebraicNotation)) {
-            validatePromotion(algebraicNotation);
-        } else if (isPromotionPlusOperation(algebraicNotation)) {
-            validatePromotionPlusOperation(algebraicNotation);
-        } else {
-            throw new IllegalArgumentException("Invalid algebraic notation format: " + algebraicNotation);
-        }
-    }
-
-    private boolean isSimplePawnMovement(final String algebraicNotation) {
-        return Pattern.matches(
-                String.format(SIMPLE_PAWN_MOVEMENT_FORMAT, "[A-H][1-8]", "[A-H][1-8]", "[+#.]?"), algebraicNotation
-        );
-    }
-
-    private void validateSimplePawnMovement(final String algebraicNotation) {
-        /** TODO*/
-    }
-
-    private boolean isSimpleFigureMovement(final String algebraicNotation) {
-        return Pattern.matches(
-                String.format(SIMPLE_FIGURE_MOVEMENT_FORMAT, "[RNBQK]", "[A-H][1-8]", "[A-H][1-8]", "[+#.]?"), algebraicNotation
-        );
-    }
-
-    private void validateSimpleFigureMovement(final String algebraicNotation) {
-        /** TODO*/
-    }
-
-    private boolean isPawnCaptureOperation(final String algebraicNotation) {
-        return Pattern.matches(
-                String.format(PAWN_CAPTURE_OPERATION_FORMAT, "[A-H][1-8]", "x", "[A-H][1-8]", "[+#.]?"), algebraicNotation
-        );
-    }
-
-    private void validatePawnCaptureOperation(final String algebraicNotation) {
-        /** TODO*/
-    }
-
-    private boolean isFigureCaptureOperation(final String algebraicNotation) {
-        return Pattern.matches(
-                String.format(FIGURE_CAPTURE_OPERATION_FORMAT, "[RNBQK]", "[A-H][1-8]", "x", "[A-H][1-8]", "[+#.]?"), algebraicNotation
-        );
-    }
-
-    private void validateFigureCaptureOperation(final String algebraicNotation) {
-        /** TODO*/
-    }
-
-    private boolean isCastlePlusOperation(final String algebraicNotation) {
-        return Pattern.matches(String.format(CASTLE_PLUS_OPERATION_FORMAT, "O-O(-O)?", "[+#.]?"), algebraicNotation);
-    }
-
-    private void validateCastlePlusOperation(final String algebraicNotation) {
-        /** TODO*/
-    }
-
-    private boolean isPromotion(final String algebraicNotation) {
-        return Pattern.matches(String.format(PROMOTION_FORMAT, "[A-H][1-8]", "[A-H][1-8]", "[QRBN]", "[+#.]?"), algebraicNotation);
-    }
-
-    private void validatePromotion(final String algebraicNotation) {
-        /** TODO*/
-    }
-
-    private boolean isPromotionPlusOperation(final String algebraicNotation) {
-        return Pattern.matches(
-                String.format(PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT, "[A-H][1-8]", "x", "[A-h][1-8]", "[QRBN]", "[+#.]?"), algebraicNotation
-        );
-    }
-
-    private void validatePromotionPlusOperation(final String algebraicNotation) {
-        /** TODO*/
     }
 }
