@@ -47,7 +47,7 @@ import java.util.*;
  *
  *
  * @author Hadzhyiev Hadzhy
- * @version 1.2
+ * @version 1.3
  */
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
