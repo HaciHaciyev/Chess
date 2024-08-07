@@ -6,6 +6,7 @@ import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.infrastructure.utilities.Glicko2RatingCalculator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +22,9 @@ public class UserAccount implements UserDetails {
     private final UUID id;
     private final Username username;
     private final Email email;
-    private Password password;
-    private Rating rating;
-    private @Getter(AccessLevel.PRIVATE) Boolean isEnable;
+    private final Password password;
+    private @Getter(AccessLevel.NONE) Rating rating;
+    private @Getter(AccessLevel.NONE) Boolean isEnable;
     private final AccountEvents accountEvents;
     private final /**@ManyToMany*/ Set<UserAccount> partners;
     private final /**@ManyToMany*/ Set<ChessGame> games;
@@ -54,7 +55,7 @@ public class UserAccount implements UserDetails {
     }
 
     public static UserAccount of(Username username, Email email, Password password) {
-        short defaultRating = 1400;
+        short defaultRating = 1500;
         return new UserAccount(
                 UUID.randomUUID(), username, email, password, new Rating(defaultRating), Boolean.FALSE,
                 AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
@@ -72,38 +73,57 @@ public class UserAccount implements UserDetails {
         );
     }
 
-    public void addPartner(UserAccount partner) {
+    public void addPartner(final UserAccount partner) {
         Objects.requireNonNull(partner);
         partners.add(partner);
     }
 
-    public void removePartner(UserAccount partner) {
+    public void removePartner(final UserAccount partner) {
         Objects.requireNonNull(partner);
         partners.remove(partner);
     }
 
-    public void addGame(ChessGame game) {
+    public void addGame(final ChessGame game) {
         Objects.requireNonNull(game);
         games.add(game);
     }
 
-    public void removeGame(ChessGame game) {
+    public void removeGame(final ChessGame game) {
         Objects.requireNonNull(game);
         games.remove(game);
     }
 
-    public void changePassword(Password password) {
-        Objects.requireNonNull(password);
-        this.password = password;
-    }
+    public void changeRating(final ChessGame chessGame) {
+        Objects.requireNonNull(chessGame);
+        if (chessGame.gameResult().isEmpty()) {
+            throw new IllegalArgumentException("Invalid method usage, check documentation.");
+        }
 
-    public void changeRating(Rating rating) {
-        Objects.requireNonNull(rating);
-        this.rating = rating;
+        short secondPlayerRating = 0;
+
+        final boolean isWhitePlayer = chessGame.getPlayerForWhite().getId().equals(this.id);
+        if (isWhitePlayer) {
+            secondPlayerRating = chessGame.getPlayerForBlackRating().rating();
+        }
+
+        final boolean blackPlayer = chessGame.getPlayerForBlack().getId().equals(this.id);
+        if (blackPlayer) {
+            secondPlayerRating = chessGame.getPlayerForWhiteRating().rating();
+        }
+
+        if (secondPlayerRating == 0) throw new IllegalArgumentException("Invalid method usage, check documentation.");
+
+        final short updatedRating = Glicko2RatingCalculator.calculateRating(chessGame);
+        this.rating = new Rating(updatedRating);
     }
 
     public void enable() {
         this.isEnable = true;
+    }
+
+    public Rating getRating() {
+        final short ratingForReturn = this.rating.rating();
+        return new Rating(ratingForReturn);
     }
 
     @Override
