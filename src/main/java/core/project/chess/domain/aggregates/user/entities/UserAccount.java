@@ -108,7 +108,12 @@ public class UserAccount implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(
+                new SimpleGrantedAuthority("ROLE_USER"),
+                new SimpleGrantedAuthority("ROLE_VIEWER"),
+                new SimpleGrantedAuthority("ROLE_PLAYER_FOR_WHITE"),
+                new SimpleGrantedAuthority("ROLE_PLAYER_FOR_BLACK")
+        );
     }
 
     @Override
