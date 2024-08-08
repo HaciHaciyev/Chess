@@ -51,6 +51,22 @@ public record Pawn(Color color)
         return validate(chessBoard, setOfOperations, startField, endField);
     }
 
+    public boolean isValidPieceForPawnPromotion(final Pawn pawnForPromotion, final Piece inCaseOfPromotion) {
+        Objects.requireNonNull(pawnForPromotion);
+        Objects.requireNonNull(inCaseOfPromotion);
+
+        if (inCaseOfPromotion instanceof King || inCaseOfPromotion instanceof Pawn) {
+            return false;
+        }
+
+        final boolean sameColorPieces = pawnForPromotion.color().equals(inCaseOfPromotion.color());
+        if (!sameColorPieces) {
+            return false;
+        }
+
+        return true;
+    }
+
     private StatusPair<LinkedHashSet<Operations>> validate(
             final ChessBoard chessBoard, final LinkedHashSet<Operations> setOfOperations, final Field startField, final Field endField
     ) {

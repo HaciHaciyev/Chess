@@ -576,8 +576,16 @@ public class ChessBoard {
 
         /** Validation.*/
         StatusPair<LinkedHashSet<Operations>> statusPair = piece.isValidMove(this, from, to);
-        if (!statusPair.status() || !safeForKing(from, to)) {
+        if (!statusPair.status()) {
             throw new IllegalArgumentException("Invalid move.");
+        }
+
+        final boolean promotionOperation = statusPair.valueOrElseThrow().contains(Operations.PROMOTION);
+        if (promotionOperation) {
+            final boolean isValidPieceForPromotion = new Pawn(piece.color()).isValidPieceForPawnPromotion((Pawn) piece, inCaseOfPromotion);
+            if (!isValidPieceForPromotion) {
+                throw new IllegalArgumentException("Mismatch in color of figures for pawn promotion.");
+            }
         }
 
         /** Process operations from StatusPair. All validation need to be processed before that.*/
@@ -612,7 +620,11 @@ public class ChessBoard {
         switchFiguresTurn();
 
         /** Recording the move made in algebraic notation.*/
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, operations, from, to, inCaseOfPromotion));
+
+        final AlgebraicNotation.PieceTYPE inCaseOfPromotionPieceType = AlgebraicNotation.PieceTYPE.valueOf(
+                inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion)
+        );
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, operations, from, to, inCaseOfPromotionPieceType));
 
         return AlgebraicNotation.opponentKingStatus(operations);
     }
@@ -642,7 +654,7 @@ public class ChessBoard {
         }
 
         StatusPair<LinkedHashSet<Operations>> statusPair = king.canCastle(this, kingStartedField, kingEndField);
-        if (!statusPair.status() || !safeForKing(from, to)) {
+        if (!statusPair.status()) {
             throw new IllegalArgumentException("Invalid move.");
         }
 
