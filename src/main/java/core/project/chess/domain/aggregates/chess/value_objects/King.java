@@ -4,11 +4,9 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
@@ -44,11 +42,11 @@ public record King(Color color)
 
         boolean isNotKnight = knights.stream().noneMatch(field -> field.pieceOptional().orElseThrow() instanceof Knight);
 
-        boolean isEaten = knights.stream().allMatch(field -> field.getCoordinate().equals(to));
+        boolean isEaten = knights.stream()
+                .filter(field -> field.pieceOptional().orElseThrow() instanceof Knight)
+                .allMatch(field -> field.getCoordinate().equals(to));
 
-        boolean isFriendly = knights.stream().allMatch(field -> field.pieceOptional().orElseThrow().color().equals(color));
-
-        return isNotKnight || isEaten || isFriendly;
+        return isNotKnight || isEaten;
     }
 
     private List<Field> knightAttackPositions(ChessBoard chessBoard, Coordinate pivot) {
@@ -80,6 +78,7 @@ public record King(Color color)
                 .filter(Field::isPresent)
                 .toList();
     }
+
 
     private boolean fromPawns(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
         var pawns = pawnsThreateningCoordinate(chessBoard, kingPosition);
@@ -202,9 +201,7 @@ public record King(Color color)
         var possibleKings = coordinatesThreatenedByPawn(chessBoard, to);
 
         boolean checkFromPawn = possibleKings.stream()
-                .map(field -> field.pieceOptional().orElseThrow())
-                .filter(King.class::isInstance)
-                .anyMatch(opponentKing -> opponentKing.color().equals(color));
+                .anyMatch(field -> field.getCoordinate().equals(king));
 
         var enemyPieces = Direction.enemyPiecesFromAllDirections(chessBoard, king, from, to, oppositePiece(Pawn.class));
 
@@ -219,9 +216,7 @@ public record King(Color color)
         var possibleKings = knightAttackPositions(chessBoard, to);
 
         boolean checkFromKnight = possibleKings.stream()
-                .map(field -> field.pieceOptional().orElseThrow())
-                .filter(King.class::isInstance)
-                .anyMatch(opponentKing -> opponentKing.color().equals(color));
+                .anyMatch(field -> field.getCoordinate().equals(king));
 
         var enemyPieces = Direction.enemyPiecesFromAllDirections(chessBoard, king, from, to, oppositePiece(Knight.class));
 
