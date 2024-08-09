@@ -48,7 +48,7 @@ public class ChessNotationValidator {
     }
 
     private static boolean isSimplePawnMovement(final String algebraicNotation) {
-        return Pattern.matches(String.format(SIMPLE_PAWN_MOVEMENT_FORMAT, "[A-H][1-8]", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
+        return Pattern.matches(String.format(SIMPLE_PAWN_MOVEMENT_FORMAT, "[A-H][2-7]", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
     }
 
     private static boolean isSimpleFigureMovement(final String algebraicNotation) {
@@ -57,12 +57,12 @@ public class ChessNotationValidator {
     }
 
     private static boolean isPawnCaptureOperation(final String algebraicNotation) {
-        return Pattern.matches(String.format(PAWN_CAPTURE_OPERATION_FORMAT, "[A-H][1-8]", "x", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
+        return Pattern.matches(String.format(PAWN_CAPTURE_OPERATION_FORMAT, "[A-H][2-7]", "X", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
     }
 
     private static boolean isFigureCaptureOperation(final String algebraicNotation) {
         return Pattern.matches(
-                String.format(FIGURE_CAPTURE_OPERATION_FORMAT, "[RNBQK]", "[A-H][1-8]", "x", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
+                String.format(FIGURE_CAPTURE_OPERATION_FORMAT, "[RNBQK]", "[A-H][1-8]", "X", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
     }
 
     private static boolean isCastlePlusOperation(final String algebraicNotation) {
@@ -75,7 +75,7 @@ public class ChessNotationValidator {
 
     private static boolean isPromotionPlusOperation(final String algebraicNotation) {
         return Pattern.matches(
-                String.format(PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT, "[A-H][1-8]", "x", "[A-h][1-8]", "[QRBN]", "[+#.]?"),
+                String.format(PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT, "[A-H][1-8]", "X", "[A-h][1-8]", "[QRBN]", "[+#.]?"),
                 algebraicNotation
         );
     }
@@ -95,16 +95,20 @@ public class ChessNotationValidator {
 
         final boolean validMoveDistance = Math.abs(from.getRow() - to.getRow()) == 1;
         if (validMoveDistance) {
+            final boolean fieldForPromotion = to.getRow() == 1 || to.getRow() == 8;
+            if (fieldForPromotion) {
+                throw new IllegalArgumentException("Invalid algebraic notation.");
+            }
+
             return;
         }
 
         throw new IllegalArgumentException("Invalid algebraic notation.");
     }
 
-
     private static void validatePawnCaptureOperation(final String algebraicNotation) {
-        final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(1, 3));
-        final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
+        final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
+        final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
         final int startColumn = columnToInt(from.getColumn());
         final int endColumn = columnToInt(to.getColumn());
         final int startRow = from.getRow();
@@ -112,6 +116,11 @@ public class ChessNotationValidator {
 
         final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 && Math.abs(startColumn - endColumn) == 1;
         if (diagonalCapture) {
+            final boolean fieldForPromotion = to.getRow() == 1 || to.getRow() == 8;
+            if (fieldForPromotion) {
+                throw new IllegalArgumentException("Invalid algebraic notation.");
+            }
+
             return;
         }
 
@@ -119,8 +128,8 @@ public class ChessNotationValidator {
     }
 
     private static void validatePromotion(final String algebraicNotation) {
-        final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(1, 3));
-        final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
+        final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
+        final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
         final int startColumn = columnToInt(from.getColumn());
         final int endColumn = columnToInt(to.getColumn());
         final int startRow = from.getRow();

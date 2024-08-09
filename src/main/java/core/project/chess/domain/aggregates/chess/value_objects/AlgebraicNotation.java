@@ -93,7 +93,7 @@ public record AlgebraicNotation(String algebraicNotation) {
     public static final String PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT = "%s%s%s=%s%s";
 
     /**
-     * Generates the algebraic notation representation of a chess move.
+     * Generates the algebraic notation representation of a chess move. Able to using only in Domain.
      *
      * @param piece The piece being moved.
      * @param operationsSet The set of operations performed during the move (e.g., capture, promotion, check, checkmate, stalemate).
@@ -160,7 +160,7 @@ public record AlgebraicNotation(String algebraicNotation) {
     private static AlgebraicNotation pawnCaptureRecording(Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
         final String algebraicNotation = PAWN_CAPTURE_OPERATION_FORMAT.formatted(
-                from, ChessBoard.Operations.CAPTURE, to, opponentKingStatus.getAlgebraicNotation()
+                from, ChessBoard.Operations.CAPTURE.getAlgebraicNotation(), to, opponentKingStatus.getAlgebraicNotation()
         );
 
         return new AlgebraicNotation(algebraicNotation);
@@ -180,7 +180,7 @@ public record AlgebraicNotation(String algebraicNotation) {
     ) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
         final String algebraicNotation = FIGURE_CAPTURE_OPERATION_FORMAT.formatted(
-                pieceToType(piece), from, ChessBoard.Operations.CAPTURE, to, opponentKingStatus.getAlgebraicNotation()
+                pieceToType(piece), from, ChessBoard.Operations.CAPTURE.getAlgebraicNotation(), to, opponentKingStatus.getAlgebraicNotation()
         );
 
         return new AlgebraicNotation(algebraicNotation);
@@ -225,13 +225,13 @@ public record AlgebraicNotation(String algebraicNotation) {
     private static AlgebraicNotation promotionRecording(
             Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to, PieceTYPE inCaseOfPromotion
     ) {
-        String algebraicNotation;
+        final String algebraicNotation;
 
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
 
         if (operationsSet.contains(ChessBoard.Operations.CAPTURE)) {
             algebraicNotation = PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT.formatted(
-                    from, ChessBoard.Operations.CAPTURE, to, inCaseOfPromotion, opponentKingStatus.getAlgebraicNotation()
+                    from, ChessBoard.Operations.CAPTURE.getAlgebraicNotation(), to, inCaseOfPromotion.getPieceType(), opponentKingStatus.getAlgebraicNotation()
             );
 
             return new AlgebraicNotation(algebraicNotation);
@@ -317,16 +317,22 @@ public record AlgebraicNotation(String algebraicNotation) {
      *         or {@link AlgebraicNotation.Castle#LONG_CASTLING}).
      */
     public static StatusPair<AlgebraicNotation.Castle> isCastling(final AlgebraicNotation algebraicNotation) {
-        String algebraicNotationSTR = algebraicNotation.algebraicNotation();
+        final String algebraicNotationSTR = algebraicNotation.algebraicNotation();
 
-        final boolean shortCasting = algebraicNotationSTR.equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation()) ||
-                algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1).equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation());
+        final boolean shortCasting = algebraicNotationSTR
+                .equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation())
+                || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
+                .equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation());
+
         if (shortCasting) {
             return StatusPair.ofTrue(AlgebraicNotation.Castle.SHORT_CASTLING);
         }
 
-        final boolean longCasting = algebraicNotationSTR.equals(AlgebraicNotation.Castle.LONG_CASTLING.getAlgebraicNotation()) ||
-                algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1).equals(AlgebraicNotation.Castle.LONG_CASTLING.getAlgebraicNotation());
+        final boolean longCasting = algebraicNotationSTR
+                .equals(AlgebraicNotation.Castle.LONG_CASTLING.getAlgebraicNotation())
+                || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
+                .equals(AlgebraicNotation.Castle.LONG_CASTLING.getAlgebraicNotation());
+
         if (longCasting) {
             return StatusPair.ofTrue(AlgebraicNotation.Castle.LONG_CASTLING);
         }
@@ -371,7 +377,7 @@ public record AlgebraicNotation(String algebraicNotation) {
 
         final Coordinate from;
         final Coordinate to;
-        String algebraicNotation = this.algebraicNotation();
+        final String algebraicNotation = this.algebraicNotation();
 
         final boolean startFromFigureType = Character.isLetter(algebraicNotation.charAt(0)) && Character.isLetter(algebraicNotation.charAt(1));
         if (startFromFigureType) {
