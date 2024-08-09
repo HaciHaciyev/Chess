@@ -621,9 +621,8 @@ public class ChessBoard {
 
         /** Recording the move made in algebraic notation.*/
 
-        final AlgebraicNotation.PieceTYPE inCaseOfPromotionPieceType = AlgebraicNotation.PieceTYPE.valueOf(
-                inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion)
-        );
+        final var inCaseOfPromotionPieceType =
+                AlgebraicNotation.PieceTYPE.valueOf(inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion));
         listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, operations, from, to, inCaseOfPromotionPieceType));
 
         return AlgebraicNotation.opponentKingStatus(operations);
