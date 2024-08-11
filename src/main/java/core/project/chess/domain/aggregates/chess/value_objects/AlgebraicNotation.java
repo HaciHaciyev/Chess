@@ -104,7 +104,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @throws NullPointerException if any of the required parameters are null.
      */
     public static AlgebraicNotation of(
-            final Piece piece, final Set<ChessBoard.Operations> operationsSet, final Coordinate from, final Coordinate to, final @Nullable PieceTYPE inCaseOfPromotion
+            final PieceTYPE piece, final Set<ChessBoard.Operations> operationsSet, final Coordinate from, final Coordinate to, final @Nullable PieceTYPE inCaseOfPromotion
     ) {
         Objects.requireNonNull(piece);
         Objects.requireNonNull(operationsSet);
@@ -119,14 +119,19 @@ public record AlgebraicNotation(String algebraicNotation) {
         final boolean promotion = operationsSet.contains(ChessBoard.Operations.PROMOTION);
         if (promotion) {
             Objects.requireNonNull(inCaseOfPromotion);
+            if (!piece.equals(PieceTYPE.P)) {
+                throw new IllegalArgumentException();
+            }
+
             return promotionRecording(operationsSet, from, to, inCaseOfPromotion);
         }
 
         final boolean capture = operationsSet.contains(ChessBoard.Operations.CAPTURE);
         if (capture) {
-            if (piece instanceof Pawn) {
+            if (piece.equals(PieceTYPE.P)) {
                 return pawnCaptureRecording(operationsSet, from, to);
             }
+
             return figureCaptureRecording(piece, operationsSet, from, to);
         }
 
@@ -176,11 +181,11 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @return An `AlgebraicNotation` object representing the algebraic notation of the figure capture operation.
      */
     private static AlgebraicNotation figureCaptureRecording(
-            Piece piece, Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to
+            PieceTYPE piece, Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to
     ) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
         final String algebraicNotation = FIGURE_CAPTURE_OPERATION_FORMAT.formatted(
-                pieceToType(piece), from, ChessBoard.Operations.CAPTURE.getAlgebraicNotation(), to, opponentKingStatus.getAlgebraicNotation()
+                piece, from, ChessBoard.Operations.CAPTURE.getAlgebraicNotation(), to, opponentKingStatus.getAlgebraicNotation()
         );
 
         return new AlgebraicNotation(algebraicNotation);
@@ -196,9 +201,9 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @return An `AlgebraicNotation` object representing the algebraic notation of the simple movement.
      */
     private static AlgebraicNotation simpleMovementRecording(
-            Piece piece, Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to
+            PieceTYPE piece, Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to
     ) {
-        if (piece instanceof Pawn) {
+        if (piece.equals(PieceTYPE.P)) {
             final String algebraicNotation = SIMPLE_PAWN_MOVEMENT_FORMAT.formatted(
                     from, to, opponentKingStatus(operationsSet).getAlgebraicNotation()
             );
@@ -207,7 +212,7 @@ public record AlgebraicNotation(String algebraicNotation) {
         }
 
         final String algebraicNotation = SIMPLE_FIGURE_MOVEMENT_FORMAT.formatted(
-                pieceToType(piece), from, to, opponentKingStatus(operationsSet).getAlgebraicNotation()
+                piece, from, to, opponentKingStatus(operationsSet).getAlgebraicNotation()
         );
 
         return new AlgebraicNotation(algebraicNotation);
@@ -267,14 +272,14 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @param piece The piece to be converted.
      * @return The algebraic notation type of the piece.
      */
-    public static String pieceToType(final Piece piece) {
+    public static PieceTYPE pieceToType(final Piece piece) {
         return switch (piece) {
-            case King _ -> "K";
-            case Queen _ -> "Q";
-            case Rook _ -> "R";
-            case Bishop _ -> "B";
-            case Knight _ -> "N";
-            default -> "";
+            case King _ -> PieceTYPE.K;
+            case Queen _ -> PieceTYPE.Q;
+            case Rook _ -> PieceTYPE.R;
+            case Bishop _ -> PieceTYPE.B;
+            case Knight _ -> PieceTYPE.N;
+            default -> PieceTYPE.P;
         };
     }
 
@@ -344,8 +349,8 @@ public record AlgebraicNotation(String algebraicNotation) {
      * This function can only be used to predetermine the user's intention to make castling,
      * However, this is by no means a final validation of this operation.
      */
-    public static boolean isCastling(final Piece piece, final Coordinate from, final Coordinate to) {
-        final boolean isKing = (piece instanceof King);
+    public static boolean isCastling(final PieceTYPE piece, final Coordinate from, final Coordinate to) {
+        final boolean isKing = piece.equals(PieceTYPE.K);
         if (!isKing) {
             return false;
         }
@@ -355,13 +360,8 @@ public record AlgebraicNotation(String algebraicNotation) {
             return false;
         }
 
-        final boolean isCastle = to.equals(Coordinate.C1) || to.equals(Coordinate.G1) ||
+        return to.equals(Coordinate.C1) || to.equals(Coordinate.G1) ||
                 to.equals(Coordinate.C8) || to.equals(Coordinate.G8);
-        if (!isCastle) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -435,7 +435,7 @@ public record AlgebraicNotation(String algebraicNotation) {
 
     @Getter
     public enum PieceTYPE {
-        K("K"), Q("Q"), B("B"), N("N"), R("R");
+        K("K"), Q("Q"), B("B"), N("N"), R("R"), P("");
 
         private final String pieceType;
 

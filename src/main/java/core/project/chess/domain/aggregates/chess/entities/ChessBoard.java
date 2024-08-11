@@ -87,7 +87,7 @@ public class ChessBoard {
         this.chessBoardId = chessBoardId;
         this.initializationTYPE = initializationTYPE;
         this.listOfAlgebraicNotations = algebraicNotations;
-        this.fieldMap = new HashMap<>();
+        this.fieldMap = new EnumMap<>(Coordinate.class);
 
         this.figuresTurn = Color.WHITE;
         this.currentWhiteKingPosition = initialWhiteKingPosition;
@@ -134,6 +134,8 @@ public class ChessBoard {
      * @return A new `Field` object representing the field at the specified coordinate.
      */
     public Field field(final Coordinate coordinate) {
+        Objects.requireNonNull(coordinate);
+
         Field field = fieldMap.get(coordinate);
         return new Field(
                 field.getCoordinate(), field.pieceOptional().orElse(null)
@@ -198,6 +200,9 @@ public class ChessBoard {
      * @return True if the move is safe for the king, false otherwise.
      */
     public boolean safeForKing(final Coordinate from, final Coordinate to) {
+        Objects.requireNonNull(from);
+        Objects.requireNonNull(to);
+
         Color kingColor = fieldMap.get(from).pieceOptional().orElseThrow().color();
         King king = theKing(kingColor);
 
@@ -214,6 +219,7 @@ public class ChessBoard {
      * @throws IllegalStateException If the king object cannot be found.
      */
     public King theKing(final Color kingColor) {
+        Objects.requireNonNull(kingColor);
         return kingColor.equals(Color.WHITE) ?
 
                 (King) fieldMap
@@ -243,11 +249,9 @@ public class ChessBoard {
      * This validation rather checks what color pieces should be moved.
      * Finally, validation of the question of who should walk can only be carried out in the controller.*/
     private boolean validateFiguresTurn(final Coordinate coordinate) {
-        Color figuresThatTryToMove = this.field(coordinate).pieceOptional().orElseThrow().color();
-        if (figuresThatTryToMove != figuresTurn) {
-            return false;
-        }
-        return true;
+        final Color figuresThatTryToMove = this.field(coordinate).pieceOptional().orElseThrow().color();
+
+        return figuresThatTryToMove != figuresTurn;
     }
 
     /**
@@ -505,6 +509,16 @@ public class ChessBoard {
         }
     }
 
+    private boolean isCastling(final Piece piece, final Coordinate from, final Coordinate to) {
+        final boolean king = piece instanceof King;
+        if (!king) {
+            return false;
+        }
+
+        return from.equals(Coordinate.E1) && (to.equals(Coordinate.G1) || to.equals(Coordinate.C1))
+                || from.equals(Coordinate.E8) && (to.equals(Coordinate.G8) || to.equals(Coordinate.C8));
+    }
+
     /**
      * Checks if the player with the given color is able to perform the specified castling move.
      * <p>
@@ -570,7 +584,7 @@ public class ChessBoard {
         Piece piece = startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
 
         /** Delegate the operation to another method if necessary.*/
-        if (AlgebraicNotation.isCastling(piece, from, to)) {
+        if (isCastling(piece, from, to)) {
             return castling(from, to);
         }
 
@@ -582,6 +596,7 @@ public class ChessBoard {
 
         final boolean promotionOperation = statusPair.valueOrElseThrow().contains(Operations.PROMOTION);
         if (promotionOperation) {
+
             final boolean isValidPieceForPromotion = new Pawn(piece.color()).isValidPieceForPawnPromotion((Pawn) piece, inCaseOfPromotion);
             if (!isValidPieceForPromotion) {
                 throw new IllegalArgumentException("Mismatch in color of figures for pawn promotion.");
@@ -622,8 +637,11 @@ public class ChessBoard {
         /** Recording the move made in algebraic notation.*/
 
         final var inCaseOfPromotionPieceType =
-                AlgebraicNotation.PieceTYPE.valueOf(inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion));
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, operations, from, to, inCaseOfPromotionPieceType));
+                inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
+
+        listOfAlgebraicNotations.add(
+                AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType)
+        );
 
         return AlgebraicNotation.opponentKingStatus(operations);
     }
@@ -676,7 +694,9 @@ public class ChessBoard {
 
         /** Recording the move made in algebraic notation.*/
         LinkedHashSet<Operations> operations = statusPair.valueOrElseThrow();
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(piece, operations, from, to, null));
+        listOfAlgebraicNotations.add(
+                AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null)
+        );
 
         return AlgebraicNotation.opponentKingStatus(operations);
     }
