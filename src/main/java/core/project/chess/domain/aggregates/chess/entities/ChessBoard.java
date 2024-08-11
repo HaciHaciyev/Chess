@@ -226,14 +226,14 @@ public class ChessBoard {
                         .get(currentWhiteKingPosition)
                         .pieceOptional()
                         .orElseThrow(
-                                () -> new IllegalStateException("Invalid method usage, check documentation.")
+                                () -> new IllegalStateException("Unexpected exception.")
                         )
                 :
                 (King) fieldMap
                         .get(currentBlackKingPosition)
                         .pieceOptional()
                         .orElseThrow(
-                                () -> new IllegalStateException("Invalid method usage, check documentation.")
+                                () -> new IllegalStateException("Unexpected exception.")
                         );
     }
 
@@ -283,7 +283,7 @@ public class ChessBoard {
      */
     private void changeOfCastlingAbility(final Coordinate from, final Piece piece) {
         if (!(piece instanceof Rook) || !(piece instanceof King (Color color))) {
-            throw new IllegalStateException("Invalid method usage, check documentation.");
+            throw new IllegalStateException("Invalid method usage, check documentation. Only kings and rooks available for this function.");
         }
 
         final boolean whiteColorFigure = color.equals(Color.WHITE);
@@ -327,7 +327,7 @@ public class ChessBoard {
             final Piece piece, final @Nullable AlgebraicNotation.Castle castle
     ) {
         if (!(piece instanceof King (Color color)) || !(piece instanceof Rook)) {
-            throw new IllegalStateException("Invalid method usage, check documentation.");
+            throw new IllegalStateException("Invalid method usage, check documentation. Only kings and rooks available for this function.");
         }
 
         if (!Objects.isNull(castle)) {
@@ -509,6 +509,14 @@ public class ChessBoard {
         }
     }
 
+    /**
+     * Determines whether the given move represents a castling move for the specified piece.
+     *
+     * @param piece the piece that is being moved
+     * @param from the starting coordinate of the piece
+     * @param to the ending coordinate of the piece
+     * @return true if the move represents a valid castling move, false otherwise
+     */
     private boolean isCastling(final Piece piece, final Coordinate from, final Coordinate to) {
         final boolean king = piece instanceof King;
         if (!king) {
@@ -576,12 +584,12 @@ public class ChessBoard {
         }
 
         if (from.equals(to)) {
-            throw new IllegalArgumentException("Invalid move.");
+            throw new IllegalArgumentException("Invalid move. Coordinate 'from' can`t be equal to coordinate 'to'");
         }
 
         Field startField = fieldMap.get(from);
         Field endField = fieldMap.get(to);
-        Piece piece = startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Piece piece = startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move. No piece for movement."));
 
         /** Delegate the operation to another method if necessary.*/
         if (isCastling(piece, from, to)) {
@@ -591,15 +599,14 @@ public class ChessBoard {
         /** Validation.*/
         StatusPair<LinkedHashSet<Operations>> statusPair = piece.isValidMove(this, from, to);
         if (!statusPair.status()) {
-            throw new IllegalArgumentException("Invalid move.");
+            throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
 
         final boolean promotionOperation = statusPair.valueOrElseThrow().contains(Operations.PROMOTION);
         if (promotionOperation) {
-
             final boolean isValidPieceForPromotion = new Pawn(piece.color()).isValidPieceForPawnPromotion((Pawn) piece, inCaseOfPromotion);
             if (!isValidPieceForPromotion) {
-                throw new IllegalArgumentException("Mismatch in color of figures for pawn promotion.");
+                throw new IllegalArgumentException("Mismatch in color of figures for pawn promotion. Failed validation.");
             }
         }
 
@@ -659,7 +666,7 @@ public class ChessBoard {
         /** Preparation of necessary data and validation.*/
         Field kingStartedField = fieldMap.get(from);
         Field kingEndField = fieldMap.get(to);
-        Piece piece = kingStartedField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Piece piece = kingStartedField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move. No piece for movement."));
 
         if (!(piece instanceof King king)) {
             throw new IllegalStateException("Invalid method usage, check the documentation.");
@@ -667,12 +674,12 @@ public class ChessBoard {
 
         final Color color = king.color();
         if (!ableToCastling(color, AlgebraicNotation.castle(to))) {
-            throw new IllegalArgumentException("Invalid move.");
+            throw new IllegalArgumentException("Invalid move. One or both of the pieces to be castled have made moves, castling is not possible.");
         }
 
         StatusPair<LinkedHashSet<Operations>> statusPair = king.canCastle(this, kingStartedField, kingEndField);
         if (!statusPair.status()) {
-            throw new IllegalArgumentException("Invalid move.");
+            throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
@@ -712,7 +719,7 @@ public class ChessBoard {
         if (isWhiteCastling) {
             Field startField = fieldMap.get(Coordinate.H1);
             Field endField = fieldMap.get(Coordinate.F1);
-            Rook rook = (Rook) startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
             startField.removeFigure();
             endField.addFigure(rook);
@@ -721,7 +728,7 @@ public class ChessBoard {
 
         Field startField = fieldMap.get(Coordinate.H8);
         Field endField = fieldMap.get(Coordinate.F8);
-        Rook rook = (Rook) startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
         startField.removeFigure();
         endField.addFigure(rook);
@@ -738,7 +745,7 @@ public class ChessBoard {
         if (isWhiteCastling) {
             Field startField = fieldMap.get(Coordinate.A1);
             Field endField = fieldMap.get(Coordinate.D1);
-            Rook rook = (Rook) startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
             startField.removeFigure();
             endField.addFigure(rook);
@@ -747,7 +754,7 @@ public class ChessBoard {
 
         Field startField = fieldMap.get(Coordinate.A8);
         Field endField = fieldMap.get(Coordinate.D8);
-        Rook rook = (Rook) startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
         startField.removeFigure();
         endField.addFigure(rook);
@@ -835,7 +842,7 @@ public class ChessBoard {
         if (isWhiteCastling) {
             Field startField = fieldMap.get(Coordinate.H1);
             Field endField = fieldMap.get(Coordinate.F1);
-            Rook rook = (Rook) endField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
             endField.removeFigure();
             startField.addFigure(rook);
@@ -844,7 +851,7 @@ public class ChessBoard {
 
         Field startField = fieldMap.get(Coordinate.H8);
         Field endField = fieldMap.get(Coordinate.F8);
-        Rook rook = (Rook) endField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
         endField.removeFigure();
         startField.addFigure(rook);
@@ -861,7 +868,7 @@ public class ChessBoard {
         if (isWhiteCastling) {
             Field startField = fieldMap.get(Coordinate.A1);
             Field endField = fieldMap.get(Coordinate.D1);
-            Rook rook = (Rook) endField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+            Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
             endField.removeFigure();
             startField.addFigure(rook);
@@ -870,7 +877,7 @@ public class ChessBoard {
 
         Field startField = fieldMap.get(Coordinate.A8);
         Field endField = fieldMap.get(Coordinate.D8);
-        Rook rook = (Rook) endField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move."));
+        Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
         endField.removeFigure();
         startField.addFigure(rook);

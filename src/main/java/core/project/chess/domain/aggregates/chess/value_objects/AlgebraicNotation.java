@@ -247,12 +247,34 @@ public record AlgebraicNotation(String algebraicNotation) {
     }
 
     /**
-     * Utility function that determines the status of the opponent's king based on the set of operations performed during the move.
+     * Determines the status of the opponent's king based on the given set of chess board operations.
      *
-     * @param operationsSet The set of operations performed during the move.
-     * @return The status of the opponent's king.
+     * @param operationsSet a set of chess board operations performed during a move
+     * @return the status of the opponent's king, which can be one of the following:
+     *         - {@link ChessBoard.Operations#STALEMATE} if the opponent's king is in stalemate
+     *         - {@link ChessBoard.Operations#CHECKMATE} if the opponent's king is in checkmate
+     *         - {@link ChessBoard.Operations#CHECK} if the opponent's king is in check
+     *         - {@link ChessBoard.Operations#EMPTY} if none of the above conditions are met
+     * @throws IllegalArgumentException if the set of operations contains more than one operation involving the opponent's king or stalemate
      */
     public static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
+        int opponentKingStatusCount = 0;
+        if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) {
+            opponentKingStatusCount++;
+        }
+        if (operationsSet.contains(ChessBoard.Operations.CHECKMATE)) {
+            opponentKingStatusCount++;
+        }
+        if (operationsSet.contains(ChessBoard.Operations.CHECK)) {
+            opponentKingStatusCount++;
+        }
+
+        if (opponentKingStatusCount > 1) {
+            throw new IllegalArgumentException(
+                    "A move must have only one operation involving the enemy King or stalemate, an invalid set of operations."
+            );
+        }
+
         if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) {
             return ChessBoard.Operations.STALEMATE;
         }
@@ -328,7 +350,6 @@ public record AlgebraicNotation(String algebraicNotation) {
                 .equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation())
                 || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
                 .equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation());
-
         if (shortCasting) {
             return StatusPair.ofTrue(AlgebraicNotation.Castle.SHORT_CASTLING);
         }
@@ -337,7 +358,6 @@ public record AlgebraicNotation(String algebraicNotation) {
                 .equals(AlgebraicNotation.Castle.LONG_CASTLING.getAlgebraicNotation())
                 || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
                 .equals(AlgebraicNotation.Castle.LONG_CASTLING.getAlgebraicNotation());
-
         if (longCasting) {
             return StatusPair.ofTrue(AlgebraicNotation.Castle.LONG_CASTLING);
         }
@@ -433,6 +453,9 @@ public record AlgebraicNotation(String algebraicNotation) {
         }
     }
 
+    /**
+     * Represents the different types of chess pieces.
+     */
     @Getter
     public enum PieceTYPE {
         K("K"), Q("Q"), B("B"), N("N"), R("R"), P("");

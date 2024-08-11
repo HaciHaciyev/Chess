@@ -85,7 +85,7 @@ public class ChessNotationValidator {
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
 
         if (from.getColumn() != to.getColumn()) {
-            throw new IllegalStateException();
+            throw new IllegalArgumentException("Invalid algebraic notation.");
         }
 
         final boolean validPassage = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
