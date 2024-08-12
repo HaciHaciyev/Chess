@@ -113,15 +113,17 @@ public record AlgebraicNotation(String algebraicNotation) {
 
         final boolean castle = isCastling(piece, from, to);
         if (castle) {
+            if (operationsSet.contains(ChessBoard.Operations.CAPTURE) || operationsSet.contains(ChessBoard.Operations.PROMOTION)) {
+                throw new IllegalArgumentException("Invalid set of operations.");
+            }
+
             return castlingRecording(operationsSet, to);
         }
 
         final boolean promotion = operationsSet.contains(ChessBoard.Operations.PROMOTION);
         if (promotion) {
             Objects.requireNonNull(inCaseOfPromotion);
-            if (!piece.equals(PieceTYPE.P)) {
-                throw new IllegalArgumentException();
-            }
+            if (!piece.equals(PieceTYPE.P)) throw new IllegalArgumentException("Only pawns available for promotion.");
 
             return promotionRecording(operationsSet, from, to, inCaseOfPromotion);
         }

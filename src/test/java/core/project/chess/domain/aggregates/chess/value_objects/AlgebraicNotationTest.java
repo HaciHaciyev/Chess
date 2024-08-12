@@ -113,7 +113,7 @@ class AlgebraicNotationTest {
     }
 
     @Test
-    void queenMovementValidation() {
+    void figureMovementValidation() {
         var simpleQueenMovement = AlgebraicNotation.of(
                 PieceTYPE.Q, Collections.emptySet(), Coordinate.C5, Coordinate.C8, null
         );
@@ -130,7 +130,11 @@ class AlgebraicNotationTest {
                 () -> AlgebraicNotation.of(PieceTYPE.Q, Set.of(ChessBoard.Operations.PROMOTION), Coordinate.E7, Coordinate.E8, PieceTYPE.N)
         );
 
-        assertThatThrownBy(invalidPromotion::orElseThrow).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(invalidPromotion::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Only pawns available for promotion.");
+
+        var invalidPromotion2 = Result.ofThrowable(() -> new AlgebraicNotation("QC7-C8=N"));
+
+        assertThatThrownBy(invalidPromotion2::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation format.");
 
         var invalidQueenMovement = Result.ofThrowable(
                 () -> AlgebraicNotation.of(PieceTYPE.Q, Collections.emptySet(), Coordinate.E7, Coordinate.G6, null)
@@ -144,5 +148,108 @@ class AlgebraicNotationTest {
 
         assertThatThrownBy(invalidQueenOperationsOnOpponentKing::orElseThrow).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("A move must have only one operation involving the enemy King or stalemate, an invalid set of operations.");
+
+        var simpleKnightMovement = AlgebraicNotation.of(
+                PieceTYPE.N, Collections.emptySet(), Coordinate.C5, Coordinate.D7, null
+        );
+
+        assertThat(simpleKnightMovement.algebraicNotation()).isNotNull().isEqualTo("NC5-D7");
+
+        var simpleKnightMovementPlusCaptureAndStalemate = AlgebraicNotation.of(
+                PieceTYPE.N, Set.of(ChessBoard.Operations.CAPTURE, ChessBoard.Operations.STALEMATE), Coordinate.C5, Coordinate.D7, null
+        );
+
+        assertThat(simpleKnightMovementPlusCaptureAndStalemate.algebraicNotation()).isNotNull().isEqualTo("NC5XD7.");
+
+        var simpleRookMovement = AlgebraicNotation.of(
+                PieceTYPE.R, Set.of(ChessBoard.Operations.CAPTURE, ChessBoard.Operations.CHECKMATE), Coordinate.A1, Coordinate.A8, null
+        );
+
+        assertThat(simpleRookMovement.algebraicNotation()).isNotNull().isEqualTo("RA1XA8#");
+
+        var simpleBishopMovement = AlgebraicNotation.of(
+                PieceTYPE.B, Set.of(ChessBoard.Operations.CAPTURE, ChessBoard.Operations.CHECKMATE), Coordinate.C1, Coordinate.G5, null
+        );
+
+        assertThat(simpleBishopMovement.algebraicNotation()).isNotNull().isEqualTo("BC1XG5#");
+    }
+
+    @Test
+    void kingMovementValidation() {
+        var invalidCastling = Result.ofThrowable(() -> new AlgebraicNotation("O-O-OX"));
+
+        assertThatThrownBy(invalidCastling::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation format.");
+
+        var shortCastingPlusCheck = AlgebraicNotation.of(
+                PieceTYPE.K, Set.of(ChessBoard.Operations.CHECK), Coordinate.E1, Coordinate.G1, null
+        );
+
+        assertThat(shortCastingPlusCheck.algebraicNotation()).isNotNull().isEqualTo("O-O+");
+
+        var longCastingPlusCheck = AlgebraicNotation.of(
+                PieceTYPE.K, Set.of(ChessBoard.Operations.CHECK), Coordinate.E8, Coordinate.C8, null
+        );
+
+        assertThat(longCastingPlusCheck.algebraicNotation()).isNotNull().isEqualTo("O-O-O+");
+
+        var invalidPromotion = Result.ofThrowable(
+                () -> AlgebraicNotation.of(PieceTYPE.K, Set.of(ChessBoard.Operations.PROMOTION), Coordinate.E2, Coordinate.E1, PieceTYPE.Q)
+        );
+
+        assertThatThrownBy(invalidPromotion::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Only pawns available for promotion.");
+
+        var invalidPromotion2 = Result.ofThrowable(
+                () -> new AlgebraicNotation("KE2-E1=Q")
+        );
+
+        assertThatThrownBy(invalidPromotion2::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation format.");
+
+        var invalidSetOfOperationsInCastling = Result.ofThrowable(
+                () -> AlgebraicNotation.of(
+                        PieceTYPE.K, Set.of(ChessBoard.Operations.PROMOTION), Coordinate.E1, Coordinate.G1, null
+                )
+        );
+
+        assertThatThrownBy(invalidSetOfOperationsInCastling::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid set of operations.");
+
+        var invalidSetOfOperationsInCastling2 = Result.ofThrowable(
+                () -> new AlgebraicNotation("OXO=Q")
+        );
+
+        assertThatThrownBy(invalidSetOfOperationsInCastling2::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation format.");
+
+        var invalidSetOfOperationsInCastling3 = Result.ofThrowable(
+                () -> AlgebraicNotation.of(
+                        PieceTYPE.K, Set.of(ChessBoard.Operations.CAPTURE), Coordinate.E1, Coordinate.G1, null
+                )
+        );
+
+        assertThatThrownBy(invalidSetOfOperationsInCastling3::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid set of operations.");
+
+        var invalidSetOfOperationsInCastling4 = Result.ofThrowable(
+                () -> AlgebraicNotation.of(
+                        PieceTYPE.K, Set.of(ChessBoard.Operations.CAPTURE, ChessBoard.Operations.PROMOTION), Coordinate.E1, Coordinate.G1, null
+                )
+        );
+
+        assertThatThrownBy(invalidSetOfOperationsInCastling4::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid set of operations.");
+
+        var simpleKingMovementWithCapture = AlgebraicNotation.of(
+                PieceTYPE.K, Set.of(ChessBoard.Operations.CAPTURE), Coordinate.E7, Coordinate.F8, null
+        );
+
+        assertThat(simpleKingMovementWithCapture.algebraicNotation()).isNotNull().isEqualTo("KE7XF8");
+
+        var invalidMoveDistance = Result.ofThrowable(
+                () -> AlgebraicNotation.of(PieceTYPE.K, Collections.emptySet(), Coordinate.B3, Coordinate.B5, null)
+        );
+
+        assertThatThrownBy(invalidMoveDistance::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation.");
+
+        var simpleMovementWithCaptureAndCheckmate = AlgebraicNotation.of(
+                PieceTYPE.K, Set.of(ChessBoard.Operations.CAPTURE, ChessBoard.Operations.CHECKMATE), Coordinate.E7, Coordinate.F8, null
+        );
+
+        assertThat(simpleMovementWithCaptureAndCheckmate.algebraicNotation()).isNotNull().isEqualTo("KE7XF8#");
     }
 }

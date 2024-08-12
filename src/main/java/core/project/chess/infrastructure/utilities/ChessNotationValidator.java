@@ -44,7 +44,7 @@ public class ChessNotationValidator {
             return;
         }
 
-        throw new IllegalArgumentException(String.format("Invalid algebraic notation format: %s.", algebraicNotation));
+        throw new IllegalArgumentException("Invalid algebraic notation format.");
     }
 
     private static boolean isSimplePawnMovement(final String algebraicNotation) {
@@ -70,12 +70,12 @@ public class ChessNotationValidator {
     }
 
     private static boolean isPromotion(final String algebraicNotation) {
-        return Pattern.matches(String.format(PROMOTION_FORMAT, "[A-H][1-8]", "[A-H][1-8]", "[QRBN]", "[+#.]?"), algebraicNotation);
+        return Pattern.matches(String.format(PROMOTION_FORMAT, "[A-H][2-7]", "[A-H][1-8]", "[QRBN]", "[+#.]?"), algebraicNotation);
     }
 
     private static boolean isPromotionPlusOperation(final String algebraicNotation) {
         return Pattern.matches(
-                String.format(PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT, "[A-H][1-8]", "X", "[A-h][1-8]", "[QRBN]", "[+#.]?"),
+                String.format(PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT, "[A-H][2-7]", "X", "[A-h][1-8]", "[QRBN]", "[+#.]?"),
                 algebraicNotation
         );
     }
