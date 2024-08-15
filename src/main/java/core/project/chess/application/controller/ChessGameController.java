@@ -119,14 +119,8 @@ public class ChessGameController {
                 GamePreparationMessageType.CHESS_GAME_STARTED, "A partner for your chess game has been successfully found. Have a nice game!."
         );
 
-        messagingTemplate.convertAndSendToUser(
-                firstPlayer.getUsername(), USER_DESTINATION_ADDRESS.formatted(firstPlayer.getId()), message
-        );
-
-        messagingTemplate.convertAndSendToUser(
-                firstPlayer.getUsername(), USER_DESTINATION_ADDRESS.formatted(secondPlayer.getId()), message
-        );
-
+        messagingTemplate.convertAndSendToUser(firstPlayer.getUsername(), USER_DESTINATION_ADDRESS.formatted(firstPlayer.getId()), message);
+        messagingTemplate.convertAndSendToUser(firstPlayer.getUsername(), USER_DESTINATION_ADDRESS.formatted(secondPlayer.getId()), message);
         messagingTemplate.convertAndSend(chessGame.getChessBoard());
     }
 
@@ -140,9 +134,7 @@ public class ChessGameController {
                         GamePreparationMessageType.UNABLE_TO_FIND_A_PARTNER, "A partner for your chess game was not found. You can try again."
                 );
 
-                messagingTemplate.convertAndSendToUser(
-                        potentialOpponent.getUsername(), USER_DESTINATION_ADDRESS.formatted(potentialOpponent.getId()), message
-                );
+                messagingTemplate.convertAndSendToUser(potentialOpponent.getUsername(), USER_DESTINATION_ADDRESS.formatted(potentialOpponent.getId()), message);
             }
 
             final boolean opponent = chessGameService.isOpponent(player, gameParameters, potentialOpponent, potentialOpponentGameParameters);

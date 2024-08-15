@@ -4,7 +4,7 @@ Create Table UserAccount (
     email varchar(255) not null,
     password varchar(128) not null,
     rating smallint not null,
-    is_enable boolean not null default true,
+    is_enable boolean not null,
     creation_date timestamp not null,
     last_updated_date timestamp not null,
     primary key (id)
