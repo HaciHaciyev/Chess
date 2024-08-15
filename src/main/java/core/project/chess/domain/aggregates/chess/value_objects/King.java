@@ -6,7 +6,6 @@ import core.project.chess.infrastructure.utilities.StatusPair;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
@@ -28,25 +27,117 @@ public record King(Color color)
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        return fromKnights(chessBoard, kingPosition, to)
-                && fromPawns(chessBoard, kingPosition, to)
-                && fromAnythingElse(chessBoard, kingPosition, to);
-    }
-
-    private boolean fromKnights(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
-        var knights = knightAttackPositions(chessBoard, kingPosition);
-
-        if (knights.isEmpty()) {
-            return true;
+        if (kingPosition.equals(from)) {
+            return kingIsMoved(chessBoard, to);
         }
 
-        boolean isNotKnight = knights.stream().noneMatch(field -> field.pieceOptional().orElseThrow() instanceof Knight);
+        return otherPieceIsMoved(chessBoard, kingPosition, to);
+    }
 
-        boolean isEaten = knights.stream()
-                .filter(field -> field.pieceOptional().orElseThrow() instanceof Knight)
-                .allMatch(field -> field.getCoordinate().equals(to));
+    private boolean kingIsMoved(ChessBoard chessBoard, Coordinate futureKing) {
+        var pawns = pawnsThreateningCoordinate(chessBoard, futureKing, color);
 
-        return isNotKnight || isEaten;
+        for (Field possiblePawn : pawns) {
+            Piece pawn = possiblePawn.pieceOptional().orElseThrow();
+
+            boolean isEnemyPawn = pawn instanceof Pawn && !pawn.color().equals(color);
+
+            if (isEnemyPawn) {
+                return false;
+            }
+        }
+
+        var knights = knightAttackPositions(chessBoard, futureKing);
+
+        for (Field possibleKnight : knights) {
+            Piece knight = possibleKnight.pieceOptional().orElseThrow();
+
+            boolean isEnemyKnight = knight instanceof Knight && !knight.color().equals(color);
+
+            if (isEnemyKnight) {
+                return false;
+            }
+        }
+
+        var diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, futureKing);
+
+        for (Field field : diagonalFields) {
+            Piece piece = field.pieceOptional().orElseThrow();
+
+            boolean isEnemyBishopOrQueen = (piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color);
+
+            if (isEnemyBishopOrQueen) {
+                return false;
+            }
+        }
+
+        var horizontalAndVerticalFields = Direction.occupiedFieldsFromHorizontalAndVerticalDirections(chessBoard, futureKing);
+
+        for (Field field : horizontalAndVerticalFields) {
+            Piece piece = field.pieceOptional().orElseThrow();
+
+            boolean isEnemyRookOrQueen = (piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color);
+
+            if (isEnemyRookOrQueen) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean otherPieceIsMoved(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
+        var pawns = pawnsThreateningCoordinate(chessBoard, kingPosition, color);
+
+        for (Field possiblePawn : pawns) {
+            Piece pawn = possiblePawn.pieceOptional().orElseThrow();
+
+            boolean isEnemyPawn = pawn instanceof Pawn && !pawn.color().equals(color);
+            boolean isNotEaten = possiblePawn.getCoordinate().equals(to);
+
+            if (isEnemyPawn || isNotEaten) {
+                return false;
+            }
+        }
+
+        var knights = knightAttackPositions(chessBoard, kingPosition);
+
+        for (Field possibleKnight : knights) {
+            Piece knight = possibleKnight.pieceOptional().orElseThrow();
+
+            boolean isEnemyKnight = knight instanceof Knight && !knight.color().equals(color);
+            boolean isNotEaten = possibleKnight.getCoordinate().equals(to);
+
+            if (isEnemyKnight || isNotEaten) {
+                return false;
+            }
+        }
+
+        var diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, kingPosition);
+
+        for (Field field : diagonalFields) {
+            Piece piece = field.pieceOptional().orElseThrow();
+
+            boolean isEnemyBishopOrQueen = (piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color);
+
+            if (isEnemyBishopOrQueen) {
+                return false;
+            }
+        }
+
+        var horizontalAndVerticalFields = Direction.occupiedFieldsFromHorizontalAndVerticalDirections(chessBoard, kingPosition);
+
+        for (Field field : horizontalAndVerticalFields) {
+            Piece piece = field.pieceOptional().orElseThrow();
+
+            boolean isEnemyRookOrQueen = (piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color);
+
+            if (isEnemyRookOrQueen) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private List<Field> knightAttackPositions(ChessBoard chessBoard, Coordinate pivot) {
@@ -79,28 +170,18 @@ public record King(Color color)
                 .toList();
     }
 
+    private List<Field> pawnsThreateningCoordinate(ChessBoard chessBoard, Coordinate pivot, Color color) {
+        List<StatusPair<Coordinate>> coordinates = new ArrayList<>(2);
 
-    private boolean fromPawns(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
-        var pawns = pawnsThreateningCoordinate(chessBoard, kingPosition);
-
-        if (pawns.isEmpty()) {
-            return true;
+        if (Color.WHITE.equals(color)) {
+          coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() - 1));
+          coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() + 1));
+        } else {
+            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() - 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() + 1));
         }
 
-        boolean isNotPawn = pawns.stream().noneMatch(pawn -> pawn.pieceOptional().orElseThrow() instanceof Pawn);
-
-        boolean isEaten = pawns.stream().allMatch(pawn -> pawn.getCoordinate().equals(to));
-
-        boolean isFriendly = pawns.stream().allMatch(pawn -> pawn.pieceOptional().orElseThrow().color().equals(color));
-
-        return isNotPawn || isEaten || isFriendly;
-    }
-
-    private List<Field> pawnsThreateningCoordinate(ChessBoard chessBoard, Coordinate pivot) {
-        return Stream.of(
-                        Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() - 1),
-                        Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() + 1)
-                )
+        return coordinates.stream()
                 .filter(StatusPair::status)
                 .map(StatusPair::valueOrElseThrow)
                 .map(chessBoard::field)
@@ -108,11 +189,18 @@ public record King(Color color)
                 .toList();
     }
 
-    private List<Field> coordinatesThreatenedByPawn(ChessBoard chessBoard, Coordinate pawn) {
-        return Stream.of(
-                        Coordinate.coordinate(pawn.getRow() + 1, pawn.getColumn() - 1),
-                        Coordinate.coordinate(pawn.getRow() + 1, pawn.getColumn() + 1)
-                )
+    private List<Field> coordinatesThreatenedByPawn(ChessBoard chessBoard, Coordinate pivot, Color color) {
+        List<StatusPair<Coordinate>> coordinates = new ArrayList<>(2);
+
+        if (Color.WHITE.equals(color)) {
+            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() - 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() + 1));
+        } else {
+            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() - 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() + 1));
+        }
+
+        return coordinates.stream()
                 .filter(StatusPair::status)
                 .map(StatusPair::valueOrElseThrow)
                 .map(chessBoard::field)
@@ -120,29 +208,9 @@ public record King(Color color)
                 .toList();
     }
 
-    private boolean fromAnythingElse(ChessBoard chessBoard, Coordinate kingPosition, Coordinate imaginary) {
-        var pieces = Direction.piecesFromAllDirections(chessBoard, kingPosition, imaginary);
-
-        if (pieces.isEmpty()) {
-            return true;
-        }
-
-        boolean areEnemiesButCantHurt = pieces.stream()
-                .filter(piece -> !piece.color().equals(color))
-                .noneMatch(piece -> piece instanceof Bishop
-                        || piece instanceof Rook
-                        || piece instanceof Queen);
-
-        boolean areFriendly = pieces.stream()
-                .allMatch(piece -> piece.color().equals(color));
-
-        return areEnemiesButCantHurt || areFriendly;
-    }
-
-    // no use yet
-    private List<Coordinate> surroundingCoordinates(Coordinate kingPosition) {
-        int row = kingPosition.getRow();
-        char column = kingPosition.getColumn();
+    private List<Field> surroundingFields(ChessBoard chessBoard, Coordinate pivot) {
+        int row = pivot.getRow();
+        char column = pivot.getColumn();
 
         var up = Coordinate.coordinate(row + 1, column);
         var down = Coordinate.coordinate(row - 1, column);
@@ -165,125 +233,107 @@ public record King(Color color)
                 )
                 .filter(StatusPair::status)
                 .map(StatusPair::valueOrElseThrow)
+                .map(chessBoard::field)
+                .filter(Field::isPresent)
                 .toList();
     }
 
-    /**
-     * TODO for Nicat
-     */
     public boolean stalemate(ChessBoard chessBoard, Coordinate from, Coordinate to) {
-        return false;
+        boolean surrounded = surroundingFields(chessBoard, from).stream()
+                .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
+
+        return surrounded;
     }
 
-    /**
-     * TODO for Nicat
-     */
     public boolean checkmate(ChessBoard chessBoard, Coordinate from, Coordinate to) {
-        return false;
-    }
+        boolean check = check(chessBoard, from, to);
+        boolean surrounded = surroundingFields(chessBoard, from).stream()
+                .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
 
+        return check && surrounded;
+    }
 
     public boolean check(ChessBoard chessBoard, Coordinate from, Coordinate to) {
         Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
-        Coordinate king = getKing(chessBoard);
+        Coordinate king = getOurKing(chessBoard);
 
         return switch (piece) {
             case Pawn _ -> pawnMoved(chessBoard, king, from, to);
             case Knight _ -> knightMoved(chessBoard, king, from, to);
-            case Bishop _ -> bishopMoved(chessBoard, king, from, to);
-            case Rook _ -> rookMoved(chessBoard, king, from, to);
-            case Queen _ -> queenMoved(chessBoard, king, from, to);
-            case King _ -> kingMoved(chessBoard, king, from, to);
+            case Bishop _ -> validateDirections(chessBoard, king, from, to, Bishop.class);
+            case Rook _ -> validateDirections(chessBoard, king, from, to, Rook.class);
+            case Queen _ -> validateDirections(chessBoard, king, from, to, Queen.class);
+            case King _ -> validateDirections(chessBoard, king, from, to, King.class);
         };
     }
 
+    private boolean fieldIsBlockedOrDangerous(ChessBoard chessBoard, Field field) {
+        if (field.pieceOptional().orElseThrow().color().equals(color)) {
+            return true;
+        }
+
+        return kingIsMoved(chessBoard, field.getCoordinate());
+    }
+
     private boolean pawnMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
-        var possibleKings = coordinatesThreatenedByPawn(chessBoard, to);
+        var possibleKings = coordinatesThreatenedByPawn(chessBoard, to, color);
 
-        boolean checkFromPawn = possibleKings.stream()
-                .anyMatch(field -> field.getCoordinate().equals(king));
+        for (Field possibleKing : possibleKings) {
+            if (possibleKing.getCoordinate().equals(king)) {
+                return true;
+            }
+        }
 
-        var enemyPieces = Direction.enemyPiecesFromAllDirections(chessBoard, king, from, to, oppositePiece(Pawn.class));
+        return validateDirections(chessBoard, king, from, to, Pawn.class);
+    }
 
-        boolean checkFromAnythingElse = enemyPieces.stream()
-                .noneMatch(piece -> (piece instanceof Pawn || piece instanceof Knight || piece instanceof King)
-                        && !piece.color().equals(color));
+    private boolean validateDirections(ChessBoard chessBoard, Coordinate king,
+                                       Coordinate from, Coordinate to,
+                                       Class<? extends Piece> clazz) {
+        var diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, king, to, oppositePiece(clazz));
 
-        return checkFromPawn || checkFromAnythingElse;
+        for (Field field : diagonalFields) {
+            if (field.getCoordinate().equals(from)) {
+                continue;
+            }
+
+            Piece piece = field.pieceOptional().orElseThrow();
+
+            if ((piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color)) {
+                return true;
+            }
+        }
+
+        var horizontalAndVerticalFields = Direction.occupiedFieldsFromHorizontalAndVerticalDirections(chessBoard, king, to, oppositePiece(clazz));
+
+        for (Field field : horizontalAndVerticalFields) {
+            if (field.getCoordinate().equals(from)) {
+                continue;
+            }
+
+            Piece piece = field.pieceOptional().orElseThrow();
+
+            if ((piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean knightMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
         var possibleKings = knightAttackPositions(chessBoard, to);
 
-        boolean checkFromKnight = possibleKings.stream()
-                .anyMatch(field -> field.getCoordinate().equals(king));
+        for (Field possibleKing : possibleKings) {
+            if (possibleKing.getCoordinate().equals(king)) {
+                return true;
+            }
+        }
 
-        var enemyPieces = Direction.enemyPiecesFromAllDirections(chessBoard, king, from, to, oppositePiece(Knight.class));
-
-        boolean checkFromAnythingElse = enemyPieces.stream()
-                .noneMatch(piece -> (piece instanceof Pawn || piece instanceof Knight || piece instanceof King)
-                        && !piece.color().equals(color));
-
-        return checkFromKnight || checkFromAnythingElse;
+        return validateDirections(chessBoard, king, from, to, Knight.class);
     }
 
-    private boolean bishopMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
-        var pieces = Direction.piecesFromDiagonalDirections(chessBoard, to);
-
-        boolean checkFromBishop = pieces.stream()
-                .filter(King.class::isInstance)
-                .anyMatch(opponentKing -> opponentKing.color().equals(color));
-
-        var enemyPieces = Direction.enemyPiecesFromAllDirections(chessBoard, king, from, to, oppositePiece(Bishop.class));
-
-        boolean checkFromAnythingElse = enemyPieces.stream()
-                .noneMatch(piece -> (piece instanceof Pawn || piece instanceof Knight || piece instanceof King)
-                        && !piece.color().equals(color));
-
-        return checkFromBishop || checkFromAnythingElse;
-    }
-
-    private boolean rookMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
-        var pieces = Direction.piecesFromHorizontalAndVerticalDirections(chessBoard, to);
-
-        boolean checkFromRook = pieces.stream()
-                .filter(King.class::isInstance)
-                .anyMatch(opponentKing -> opponentKing.color().equals(color));
-
-        var enemyPieces = Direction.enemyPiecesFromAllDirections(chessBoard, king, from, to, oppositePiece(Rook.class));
-
-        boolean checkFromAnythingElse = enemyPieces.stream()
-                .noneMatch(piece -> (piece instanceof Pawn || piece instanceof Knight || piece instanceof King)
-                        && !piece.color().equals(color));
-
-        return checkFromRook || checkFromAnythingElse;
-    }
-
-    private boolean queenMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
-        var pieces = Direction.piecesFromAllDirections(chessBoard, to);
-
-        boolean checkFromQueen = pieces.stream()
-                .filter(King.class::isInstance)
-                .anyMatch(opponentKing -> opponentKing.color().equals(color));
-
-        var enemyPieces = Direction.enemyPiecesFromAllDirections(chessBoard, king, from, to, oppositePiece(Queen.class));
-
-        boolean checkFromAnythingElse = enemyPieces.stream()
-                .noneMatch(piece -> (piece instanceof Pawn || piece instanceof Knight || piece instanceof King)
-                        && !piece.color().equals(color));
-
-        return checkFromQueen || checkFromAnythingElse;
-    }
-
-    private boolean kingMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
-        var enemyPieces = Direction.enemyPiecesFromAllDirections(chessBoard, king, from, to, oppositePiece(King.class));
-
-        return enemyPieces.stream()
-                .noneMatch(piece -> (piece instanceof Pawn || piece instanceof Knight || piece instanceof King)
-                        && !piece.color().equals(color));
-    }
-
-    private Coordinate getKing(ChessBoard board) {
+    private Coordinate getOurKing(ChessBoard board) {
         if (this.color.equals(Color.WHITE)) {
             return board.currentWhiteKingPosition();
         } else {
@@ -333,19 +383,14 @@ public record King(Color color)
             this.strategy = strategy;
         }
 
-        /**
-         * Returns an Optional occupied field towards specified direction from pivot.
-         * <p>
-         * If field's coordinate equals imaginary piece's coordinate then field with mock friendly piece is returned
-         */
-        public Optional<Field> occupiedFieldFrom(ChessBoard chessBoard, Coordinate pivot, Coordinate replace) {
+        public Optional<Field> occupiedFieldFrom(ChessBoard chessBoard, Coordinate pivot, Coordinate ignore) {
             var possibleCoordinate = strategy.apply(pivot);
 
             while (possibleCoordinate.status()) {
                 Coordinate coordinate = possibleCoordinate.valueOrElseThrow();
 
-                if (coordinate.equals(replace)) {
-                    return fieldWithMockPiece(chessBoard, pivot, replace);
+                if (coordinate.equals(ignore)) {
+                    return Optional.empty();
                 }
 
                 Field field = chessBoard.field(coordinate);
@@ -360,19 +405,14 @@ public record King(Color color)
         }
 
         public Optional<Field> occupiedFieldFrom(ChessBoard chessBoard, Coordinate pivot,
-                                                 Coordinate ignore, Coordinate replace,
-                                                 Piece piece) {
+                                                 Coordinate replace, Piece replacement) {
             var possibleCoordinate = strategy.apply(pivot);
 
             while (possibleCoordinate.status()) {
                 Coordinate coordinate = possibleCoordinate.valueOrElseThrow();
 
-                if (coordinate.equals(ignore)) {
-                    continue;
-                }
-
                 if (coordinate.equals(replace)) {
-                    Field field = new Field(replace, piece);
+                    Field field = new Field(replace, replacement);
                     return Optional.of(field);
                 }
 
@@ -387,10 +427,6 @@ public record King(Color color)
             return Optional.empty();
         }
 
-
-        /**
-         * Returns an Optional occupied field towards specified direction from pivot
-         */
         public Optional<Field> occupiedFieldFrom(ChessBoard chessBoard, Coordinate pivot) {
             var possibleCoordinate = strategy.apply(pivot);
 
@@ -408,55 +444,92 @@ public record King(Color color)
             return Optional.empty();
         }
 
-        public static List<Piece> enemyPiecesFromAllDirections(ChessBoard chessBoard, Coordinate pivot,
-                                                               Coordinate from, Coordinate to,
-                                                               Piece piece) {
+        public static List<Field> occupiedFieldsFromDiagonalDirections(ChessBoard chessBoard, Coordinate pivot,
+                                                                       Coordinate replace, Piece replacement) {
+            var topLeft = TOP_LEFT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
+            var topRight = TOP_RIGHT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
 
-            var topLeft = TOP_LEFT.occupiedFieldFrom(chessBoard, pivot, from, to, piece);
-            var top = TOP.occupiedFieldFrom(chessBoard, pivot, from, to, piece);
-            var topRight = TOP_RIGHT.occupiedFieldFrom(chessBoard, pivot, from, to, piece);
-
-
-            var left = LEFT.occupiedFieldFrom(chessBoard, pivot, from, to, piece);
-            var right = RIGHT.occupiedFieldFrom(chessBoard, pivot, from, to, piece);
-
-
-            var bottomLeft = BOTTOM_LEFT.occupiedFieldFrom(chessBoard, pivot, from, to, piece);
-            var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot, from, to, piece);
-            var bottomRight = BOTTOM_RIGHT.occupiedFieldFrom(chessBoard, pivot, from, to, piece);
-
+            var bottomLeft = BOTTOM_LEFT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
+            var bottomRight = BOTTOM_RIGHT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
 
             return Stream.of(
                             topLeft,
-                            top,
                             topRight,
-                            left,
-                            right,
                             bottomLeft,
-                            bottom,
                             bottomRight
                     )
                     .filter(Optional::isPresent)
                     .map(Optional::orElseThrow)
-                    .map(field -> field.pieceOptional().orElseThrow())
                     .toList();
         }
 
-        public static List<Piece> piecesFromAllDirections(ChessBoard chessBoard, Coordinate pivot, Coordinate imaginary) {
+        public static List<Field> occupiedFieldsFromDiagonalDirections(ChessBoard chessBoard, Coordinate pivot) {
+            var topLeft = TOP_LEFT.occupiedFieldFrom(chessBoard, pivot);
+            var topRight = TOP_RIGHT.occupiedFieldFrom(chessBoard, pivot);
+
+            var bottomLeft = BOTTOM_LEFT.occupiedFieldFrom(chessBoard, pivot);
+            var bottomRight = BOTTOM_RIGHT.occupiedFieldFrom(chessBoard, pivot);
+
+            return Stream.of(
+                            topLeft,
+                            topRight,
+                            bottomLeft,
+                            bottomRight
+                    )
+                    .filter(Optional::isPresent)
+                    .map(Optional::orElseThrow)
+                    .toList();
+        }
+
+        public static List<Field> occupiedFieldsFromHorizontalAndVerticalDirections(ChessBoard chessBoard, Coordinate pivot,
+                                                                                    Coordinate replace, Piece replacement) {
+            var top = TOP.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
+            var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
+
+            var left = LEFT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
+            var right = RIGHT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
+
+            return Stream.of(
+                            top,
+                            bottom,
+                            left,
+                            right
+                    )
+                    .filter(Optional::isPresent)
+                    .map(Optional::orElseThrow)
+                    .toList();
+        }
+
+        public static List<Field> occupiedFieldsFromHorizontalAndVerticalDirections(ChessBoard chessBoard, Coordinate pivot) {
+            var top = TOP.occupiedFieldFrom(chessBoard, pivot);
+            var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot);
+
+            var left = LEFT.occupiedFieldFrom(chessBoard, pivot);
+            var right = RIGHT.occupiedFieldFrom(chessBoard, pivot);
+
+            return Stream.of(
+                            top,
+                            bottom,
+                            left,
+                            right
+                    )
+                    .filter(Optional::isPresent)
+                    .map(Optional::orElseThrow)
+                    .toList();
+        }
+
+        public static List<Piece> fieldsFromAllDirections(ChessBoard chessBoard, Coordinate pivot, Coordinate imaginary) {
             var topLeft = TOP_LEFT.occupiedFieldFrom(chessBoard, pivot, imaginary);
             var top = TOP.occupiedFieldFrom(chessBoard, pivot, imaginary);
             var topRight = TOP_RIGHT.occupiedFieldFrom(chessBoard, pivot, imaginary);
 
-
             var left = LEFT.occupiedFieldFrom(chessBoard, pivot, imaginary);
             var right = RIGHT.occupiedFieldFrom(chessBoard, pivot, imaginary);
-
 
             var bottomLeft = BOTTOM_LEFT.occupiedFieldFrom(chessBoard, pivot, imaginary);
             var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot, imaginary);
             var bottomRight = BOTTOM_RIGHT.occupiedFieldFrom(chessBoard, pivot, imaginary);
 
-
             return Stream.of(
                             topLeft,
                             top,
@@ -473,20 +546,17 @@ public record King(Color color)
                     .toList();
         }
 
-        public static List<Piece> piecesFromAllDirections(ChessBoard chessBoard, Coordinate pivot) {
+        public static List<Field> fieldsFromAllDirections(ChessBoard chessBoard, Coordinate pivot) {
             var topLeft = TOP_LEFT.occupiedFieldFrom(chessBoard, pivot);
             var top = TOP.occupiedFieldFrom(chessBoard, pivot);
             var topRight = TOP_RIGHT.occupiedFieldFrom(chessBoard, pivot);
 
-
             var left = LEFT.occupiedFieldFrom(chessBoard, pivot);
             var right = RIGHT.occupiedFieldFrom(chessBoard, pivot);
-
 
             var bottomLeft = BOTTOM_LEFT.occupiedFieldFrom(chessBoard, pivot);
             var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot);
             var bottomRight = BOTTOM_RIGHT.occupiedFieldFrom(chessBoard, pivot);
-
 
             return Stream.of(
                             topLeft,
@@ -500,54 +570,7 @@ public record King(Color color)
                     )
                     .filter(Optional::isPresent)
                     .map(Optional::orElseThrow)
-                    .map(field -> field.pieceOptional().orElseThrow())
                     .toList();
         }
-
-
-        public static List<Piece> piecesFromHorizontalAndVerticalDirections(ChessBoard chessBoard, Coordinate pivot) {
-            var top = TOP.occupiedFieldFrom(chessBoard, pivot);
-            var left = LEFT.occupiedFieldFrom(chessBoard, pivot);
-            var right = RIGHT.occupiedFieldFrom(chessBoard, pivot);
-            var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot);
-
-            return Stream.of(
-                            top,
-                            left,
-                            right,
-                            bottom
-                    )
-                    .filter(Optional::isPresent)
-                    .map(Optional::orElseThrow)
-                    .map(field -> field.pieceOptional().orElseThrow())
-                    .toList();
-        }
-
-        public static List<Piece> piecesFromDiagonalDirections(ChessBoard chessBoard, Coordinate pivot) {
-            var topLeft = TOP_LEFT.occupiedFieldFrom(chessBoard, pivot);
-            var topRight = TOP_RIGHT.occupiedFieldFrom(chessBoard, pivot);
-            var bottomLeft = BOTTOM_LEFT.occupiedFieldFrom(chessBoard, pivot);
-            var bottomRight = BOTTOM_RIGHT.occupiedFieldFrom(chessBoard, pivot);
-
-            return Stream.of(
-                            topLeft,
-                            topRight,
-                            bottomLeft,
-                            bottomRight
-                    )
-                    .filter(Optional::isPresent)
-                    .map(Optional::orElseThrow)
-                    .map(field -> field.pieceOptional().orElseThrow())
-                    .toList();
-        }
-
-
-        private Optional<Field> fieldWithMockPiece(ChessBoard chessBoard, Coordinate pivot, Coordinate imaginary) {
-            Color color = chessBoard.field(pivot).pieceOptional().orElseThrow().color();
-            var mockPiece = new Pawn(color);
-            var field = new Field(imaginary, mockPiece);
-            return Optional.of(field);
-        }
-
     }
 }
