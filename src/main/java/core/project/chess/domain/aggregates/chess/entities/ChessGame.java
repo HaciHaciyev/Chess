@@ -44,6 +44,9 @@ public class ChessGame {
         Objects.requireNonNull(sessionEvents);
         Objects.requireNonNull(timeControllingTYPE);
         Objects.requireNonNull(statusPair);
+        if (playerForBlack.getId().equals(playerForWhite.getId())) {
+            throw new IllegalArgumentException("Game can`t be initialize with one same player.");
+        }
 
         this.chessGameId = chessGameId;
         this.chessBoard = chessBoard;
@@ -72,8 +75,7 @@ public class ChessGame {
             TimeControllingTYPE timeControllingTYPE, StatusPair<GameResult> statusPair
     ) {
         return new ChessGame(
-                chessGameId, chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating,
-                sessionEvents, timeControllingTYPE, statusPair
+                chessGameId, chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating, sessionEvents, timeControllingTYPE, statusPair
         );
     }
 
@@ -102,7 +104,7 @@ public class ChessGame {
     }
 
     public void makeMovement(
-            final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
+            final UUID userId, final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
     ) throws IllegalAccessException {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
@@ -111,7 +113,21 @@ public class ChessGame {
             throw new IllegalAccessException("Game is over.");
         }
 
-        Operations operation = chessBoard.reposition(from, to, inCaseOfPromotion);
+        final boolean isWhitePlayer = userId.equals(playerForWhite.getId());
+        final boolean isBlackPlayer = userId.equals(playerForBlack.getId());
+
+        if (!isWhitePlayer && !isBlackPlayer) {
+            throw new IllegalAccessException("Not a player.");
+        }
+
+        if (isWhitePlayer && !Color.WHITE.equals(playersTurn)) {
+            throw new IllegalArgumentException("It`s opponent move turn.");
+        }
+        if (isBlackPlayer && !Color.WHITE.equals(playersTurn)) {
+            throw new IllegalArgumentException("It`s opponent move turn.");
+        }
+
+        final Operations operation = chessBoard.reposition(from, to, inCaseOfPromotion);
 
         final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
         if (gameOver) {
@@ -122,7 +138,16 @@ public class ChessGame {
         switchPlayersTurn();
     }
 
-    public void returnMovement() throws IllegalAccessException {
+    public void returnMovement(final UUID userId) throws IllegalAccessException {
+        Objects.requireNonNull(userId);
+
+        final boolean isWhitePlayer = userId.equals(playerForWhite.getId());
+        final boolean isBlackPlayer = userId.equals(playerForBlack.getId());
+
+        if (!isWhitePlayer && !isBlackPlayer) {
+            throw new IllegalAccessException("Not a player.");
+        }
+
         if (isGameOver.status()) {
             throw new IllegalAccessException("Game is over.");
         }
@@ -202,6 +227,29 @@ public class ChessGame {
         result = 31 * result + Objects.hashCode(timeControllingTYPE);
         result = 31 * result + Objects.hashCode(isGameOver);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("""
+                ChessGame {
+                Id : %s,
+                Players turn : %s,
+                Player for white figures : %s,
+                Player for black figures : %s,
+                Rating of player for white : %d,
+                Rating of player for black : %d,
+                Creation date : %s,
+                Last Updated Date : %s.
+                TimeControllingType : %s,
+                Is game over : %s, reason : %s
+                }
+                """,
+                this.chessGameId.toString(), this.playersTurn.toString(), this.playerForWhite.getUsername(), this.playerForBlack.getUsername(),
+                this.playerForWhiteRating.rating(), this.playerForBlackRating.rating(), this.sessionEvents.creationDate().toString(),
+                this.sessionEvents.lastUpdateDate().toString(), this.timeControllingTYPE.toString(),
+                isGameOver.status(), isGameOver.status() ? isGameOver.valueOrElseThrow().toString() : "game is not over."
+        );
     }
 
     @Getter

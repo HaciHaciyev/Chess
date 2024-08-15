@@ -1,4 +1,4 @@
-Create Table ChessSession (
+Create Table ChessGame (
     id char(36) not null,
     players_turn char(5) not null,
     chess_board_id char(36) not null,
@@ -11,7 +11,7 @@ Create Table ChessSession (
     constraint game_board_fk foreign key (chess_board_id) references ChessGame (id)
 );
 
-Create Table ChessGame (
+Create Table ChessGameHistory (
     id char(36) not null,
     chess_session_id char(36) not null,
     algebraic_chess_notations text[] not null,

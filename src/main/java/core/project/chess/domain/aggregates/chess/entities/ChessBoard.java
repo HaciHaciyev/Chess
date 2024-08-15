@@ -959,6 +959,41 @@ public class ChessBoard {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChessBoard that = (ChessBoard) o;
+        return validWhiteShortCasting == that.validWhiteShortCasting &&
+                validWhiteLongCasting == that.validWhiteLongCasting &&
+                validBlackShortCasting == that.validBlackShortCasting &&
+                validBlackLongCasting == that.validBlackLongCasting &&
+                Objects.equals(chessBoardId, that.chessBoardId) &&
+                figuresTurn == that.figuresTurn &&
+                currentWhiteKingPosition == that.currentWhiteKingPosition &&
+                currentBlackKingPosition == that.currentBlackKingPosition &&
+                Objects.equals(fieldMap, that.fieldMap) &&
+                Objects.equals(listOfAlgebraicNotations, that.listOfAlgebraicNotations) &&
+                initializationTYPE == that.initializationTYPE;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                chessBoardId,
+                figuresTurn,
+                validWhiteShortCasting,
+                validWhiteLongCasting,
+                validBlackShortCasting,
+                validBlackLongCasting,
+                currentWhiteKingPosition,
+                currentBlackKingPosition,
+                fieldMap,
+                listOfAlgebraicNotations,
+                initializationTYPE
+        );
+    }
+
     /**
      * Initializes the standard chess board setup.
      * <p>
