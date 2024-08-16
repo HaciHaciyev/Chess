@@ -245,7 +245,8 @@ public record King(Color color)
             return true;
         }
 
-        return validateKingMovementForSafety(chessBoard, field.getCoordinate());
+//        return validateKingMovementForSafety(chessBoard, field.getCoordinate());
+        return false;
     }
 
     private boolean pawnMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
@@ -258,6 +259,18 @@ public record King(Color color)
         }
 
         return validateDirections(chessBoard, king, from, to, Pawn.class);
+    }
+
+    private boolean knightMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
+        var possibleKings = knightAttackPositions(chessBoard, to);
+
+        for (Field possibleKing : possibleKings) {
+            if (possibleKing.getCoordinate().equals(king)) {
+                return true;
+            }
+        }
+
+        return validateDirections(chessBoard, king, from, to, Knight.class);
     }
 
     private boolean validateDirections(ChessBoard chessBoard, Coordinate king,
@@ -292,18 +305,6 @@ public record King(Color color)
         }
 
         return false;
-    }
-
-    private boolean knightMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
-        var possibleKings = knightAttackPositions(chessBoard, to);
-
-        for (Field possibleKing : possibleKings) {
-            if (possibleKing.getCoordinate().equals(king)) {
-                return true;
-            }
-        }
-
-        return validateDirections(chessBoard, king, from, to, Knight.class);
     }
 
     private Coordinate getOurKing(ChessBoard board) {
