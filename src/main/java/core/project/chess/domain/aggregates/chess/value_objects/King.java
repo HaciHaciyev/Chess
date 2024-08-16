@@ -18,20 +18,49 @@ public record King(Color color)
         return StatusPair.ofFalse();
     }
 
-    public boolean safeForKing(ChessBoard chessBoard, Coordinate kingPosition, Coordinate from, Coordinate to) {
+    public boolean safeForKing(final ChessBoard chessBoard, final Coordinate kingPosition, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
         if (kingPosition.equals(from)) {
-            return kingIsMoved(chessBoard, to);
+            return validateKingMovementForSafety(chessBoard, to);
         }
 
-        return otherPieceIsMoved(chessBoard, kingPosition, to);
+        return validatePieceMovementForKingSafety(chessBoard, kingPosition, to);
     }
 
-    private boolean kingIsMoved(ChessBoard chessBoard, Coordinate futureKing) {
-        var pawns = pawnsThreateningCoordinate(chessBoard, futureKing, color);
+    public boolean check(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+        Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
+        Coordinate king = getOurKing(chessBoard);
+
+        return switch (piece) {
+            case Pawn _ -> pawnMoved(chessBoard, king, from, to);
+            case Knight _ -> knightMoved(chessBoard, king, from, to);
+            case Bishop _ -> validateDirections(chessBoard, king, from, to, Bishop.class);
+            case Rook _ -> validateDirections(chessBoard, king, from, to, Rook.class);
+            case Queen _ -> validateDirections(chessBoard, king, from, to, Queen.class);
+            case King _ -> validateDirections(chessBoard, king, from, to, King.class);
+        };
+    }
+
+    /** In process to implementation.*/
+    public boolean checkmate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+        boolean check = check(chessBoard, from, to);
+        boolean surrounded = surroundingFields(chessBoard, from).stream()
+                .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
+
+        return check && surrounded;
+    }
+
+    /** In process to implementation.*/
+    public boolean stalemate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+        return surroundingFields(chessBoard, from).stream()
+                .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
+    }
+
+    private boolean validateKingMovementForSafety(ChessBoard chessBoard, Coordinate futureKingPosition) {
+        var pawns = pawnsThreateningCoordinate(chessBoard, futureKingPosition, color);
 
         for (Field possiblePawn : pawns) {
             Piece pawn = possiblePawn.pieceOptional().orElseThrow();
@@ -43,7 +72,7 @@ public record King(Color color)
             }
         }
 
-        var knights = knightAttackPositions(chessBoard, futureKing);
+        var knights = knightAttackPositions(chessBoard, futureKingPosition);
 
         for (Field possibleKnight : knights) {
             Piece knight = possibleKnight.pieceOptional().orElseThrow();
@@ -55,7 +84,7 @@ public record King(Color color)
             }
         }
 
-        var diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, futureKing);
+        var diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, futureKingPosition);
 
         for (Field field : diagonalFields) {
             Piece piece = field.pieceOptional().orElseThrow();
@@ -67,7 +96,7 @@ public record King(Color color)
             }
         }
 
-        var horizontalAndVerticalFields = Direction.occupiedFieldsFromHorizontalAndVerticalDirections(chessBoard, futureKing);
+        var horizontalAndVerticalFields = Direction.occupiedFieldsFromHorizontalAndVerticalDirections(chessBoard, futureKingPosition);
 
         for (Field field : horizontalAndVerticalFields) {
             Piece piece = field.pieceOptional().orElseThrow();
@@ -82,7 +111,7 @@ public record King(Color color)
         return true;
     }
 
-    private boolean otherPieceIsMoved(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
+    private boolean validatePieceMovementForKingSafety(ChessBoard chessBoard, Coordinate kingPosition, Coordinate to) {
         var pawns = pawnsThreateningCoordinate(chessBoard, kingPosition, color);
 
         for (Field possiblePawn : pawns) {
@@ -234,41 +263,12 @@ public record King(Color color)
                 .toList();
     }
 
-    public boolean stalemate(ChessBoard chessBoard, Coordinate from, Coordinate to) {
-        boolean surrounded = surroundingFields(chessBoard, from).stream()
-                .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
-
-        return surrounded;
-    }
-
-    public boolean checkmate(ChessBoard chessBoard, Coordinate from, Coordinate to) {
-        boolean check = check(chessBoard, from, to);
-        boolean surrounded = surroundingFields(chessBoard, from).stream()
-                .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
-
-        return check && surrounded;
-    }
-
-    public boolean check(ChessBoard chessBoard, Coordinate from, Coordinate to) {
-        Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
-        Coordinate king = getOurKing(chessBoard);
-
-        return switch (piece) {
-            case Pawn _ -> pawnMoved(chessBoard, king, from, to);
-            case Knight _ -> knightMoved(chessBoard, king, from, to);
-            case Bishop _ -> validateDirections(chessBoard, king, from, to, Bishop.class);
-            case Rook _ -> validateDirections(chessBoard, king, from, to, Rook.class);
-            case Queen _ -> validateDirections(chessBoard, king, from, to, Queen.class);
-            case King _ -> validateDirections(chessBoard, king, from, to, King.class);
-        };
-    }
-
     private boolean fieldIsBlockedOrDangerous(ChessBoard chessBoard, Field field) {
         if (field.pieceOptional().orElseThrow().color().equals(color)) {
             return true;
         }
 
-        return kingIsMoved(chessBoard, field.getCoordinate());
+        return validateKingMovementForSafety(chessBoard, field.getCoordinate());
     }
 
     private boolean pawnMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
