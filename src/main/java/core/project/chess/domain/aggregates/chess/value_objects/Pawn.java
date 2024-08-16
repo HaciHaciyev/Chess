@@ -59,12 +59,7 @@ public record Pawn(Color color)
             return false;
         }
 
-        final boolean sameColorPieces = pawnForPromotion.color().equals(inCaseOfPromotion.color());
-        if (!sameColorPieces) {
-            return false;
-        }
-
-        return true;
+        return pawnForPromotion.color().equals(inCaseOfPromotion.color());
     }
 
     private StatusPair<LinkedHashSet<Operations>> validate(
@@ -187,11 +182,7 @@ public record Pawn(Color color)
         Coordinate from = lastMovement.getFirst();
         Coordinate to = lastMovement.getSecond();
 
-        final boolean pawnDoubleMove = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
-        if (pawnDoubleMove) {
-            return true;
-        }
-        return false;
+        return (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
     }
 
     private Optional<Coordinate> previousMoveCoordinate(ChessBoard chessBoard) {
