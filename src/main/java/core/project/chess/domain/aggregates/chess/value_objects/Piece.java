@@ -61,7 +61,7 @@ public sealed interface Piece
         if (opponentKing.checkmate(chessBoard, from, to)) {
             return Operations.CHECKMATE;
         }
-        if (opponentKing.checkmate(chessBoard, from, to)) {
+        if (opponentKing.check(chessBoard, from, to)) {
             return Operations.CHECK;
         }
         
