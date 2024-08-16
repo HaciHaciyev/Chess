@@ -682,7 +682,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move. One or both of the pieces to be castled have made moves, castling is not possible.");
         }
 
-        StatusPair<LinkedHashSet<Operations>> statusPair = king.canCastle(this, kingStartedField, kingEndField);
+        StatusPair<LinkedHashSet<Operations>> statusPair = king.isValidMove(this, kingStartedField.getCoordinate(), kingEndField.getCoordinate());
         if (!statusPair.status()) {
             throw new IllegalArgumentException("Invalid move. Failed validation.");
         }

@@ -18,10 +18,6 @@ public record King(Color color)
         return StatusPair.ofFalse();
     }
 
-    public StatusPair<LinkedHashSet<Operations>> canCastle(ChessBoard chessBoard, Field from, Field to) {
-        return StatusPair.ofFalse();
-    }
-
     public boolean safeForKing(ChessBoard chessBoard, Coordinate kingPosition, Coordinate from, Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
