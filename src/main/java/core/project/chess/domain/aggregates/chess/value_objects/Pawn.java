@@ -51,7 +51,7 @@ public record Pawn(Color color)
         return validate(chessBoard, setOfOperations, startField, endField);
     }
 
-    public boolean isValidPieceForPawnPromotion(final Pawn pawnForPromotion, final Piece inCaseOfPromotion) {
+    public boolean isValidPromotion(final Pawn pawnForPromotion, final Piece inCaseOfPromotion) {
         Objects.requireNonNull(pawnForPromotion);
         Objects.requireNonNull(inCaseOfPromotion);
 

@@ -613,7 +613,7 @@ public class ChessBoard {
         if (promotionOperation) {
 
             Pawn pawn = (Pawn) piece;
-            final boolean isValidPieceForPromotion = pawn.isValidPieceForPawnPromotion((Pawn) piece, inCaseOfPromotion);
+            final boolean isValidPieceForPromotion = pawn.isValidPromotion(pawn, inCaseOfPromotion);
             if (!isValidPieceForPromotion) {
                 throw new IllegalArgumentException("Mismatch in color of figures for pawn promotion. Failed validation.");
             }
