@@ -15,7 +15,50 @@ public record King(Color color)
 
     @Override
     public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        return StatusPair.ofFalse();
+        Objects.requireNonNull(chessBoard);
+        Objects.requireNonNull(from);
+        Objects.requireNonNull(to);
+        if (from.equals(to)) {
+            return StatusPair.ofFalse();
+        }
+
+        Field startField = chessBoard.field(from);
+        Field endField = chessBoard.field(to);
+
+        final boolean pieceNotExists = startField.pieceOptional().isEmpty();
+        if (pieceNotExists) {
+            return StatusPair.ofFalse();
+        }
+
+        if (!(startField.pieceOptional().get() instanceof King (var kingColor))) {
+            throw new IllegalStateException("Invalid method usage, check documentation.");
+        }
+
+        final boolean endFieldOccupiedBySameColorPiece =
+                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(kingColor);
+        if (endFieldOccupiedBySameColorPiece) {
+            return StatusPair.ofFalse();
+        }
+
+        final boolean validKingMovement = isValidKingMovementCoordinates(startField, endField);
+        if (!validKingMovement) {
+            return StatusPair.ofFalse();
+        }
+
+        final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
+        if (!isSafeForTheKing) {
+            return StatusPair.ofFalse();
+        }
+
+        var setOfOperations = new LinkedHashSet<Operations>();
+        setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
+
+        final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && !endField.pieceOptional().get().color().equals(kingColor);
+        if (opponentPieceInEndField) {
+            setOfOperations.add(Operations.CAPTURE);
+        }
+
+        return StatusPair.ofTrue(setOfOperations);
     }
 
     public boolean safeForKing(final ChessBoard chessBoard, final Coordinate kingPosition, final Coordinate from, final Coordinate to) {
@@ -57,6 +100,23 @@ public record King(Color color)
     public boolean stalemate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         return surroundingFields(chessBoard, from).stream()
                 .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
+    }
+
+    private boolean isValidKingMovementCoordinates(Field startField, Field endField) {
+        final Coordinate from = startField.getCoordinate();
+        final Coordinate to = endField.getCoordinate();
+        final int startColumn = columnToInt(from.getColumn());
+        final int endColumn = columnToInt(to.getColumn());
+        final int startRow = from.getRow();
+        final int endRow = to.getRow();
+
+        final boolean surroundField = Math.abs(startColumn - endColumn) <= 1 && Math.abs(startRow - endRow) <= 1;
+        if (surroundField) {
+            return true;
+        }
+
+        return from.equals(Coordinate.E1) && (to.equals(Coordinate.C1) || to.equals(Coordinate.G1)) ||
+                from.equals(Coordinate.E8) && (to.equals(Coordinate.C8) || to.equals(Coordinate.G8));
     }
 
     private boolean validateKingMovementForSafety(ChessBoard chessBoard, Coordinate previousKing, Coordinate futureKing) {
