@@ -541,7 +541,10 @@ public class ChessBoard {
      * @param castle The type of castling move (short or long).
      * @return `true` if the player is able to perform the specified castling move, `false` otherwise.
      */
-    private boolean ableToCastling(final Color color, final AlgebraicNotation.Castle castle) {
+    public boolean ableToCastling(final Color color, final AlgebraicNotation.Castle castle) {
+        Objects.requireNonNull(color);
+        Objects.requireNonNull(castle);
+
         final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(castle);
         if (shortCasting) {
 
@@ -604,10 +607,12 @@ public class ChessBoard {
 
         final boolean promotionOperation = statusPair.valueOrElseThrow().contains(Operations.PROMOTION);
         if (promotionOperation) {
+
             final boolean isValidPieceForPromotion = new Pawn(piece.color()).isValidPieceForPawnPromotion((Pawn) piece, inCaseOfPromotion);
             if (!isValidPieceForPromotion) {
                 throw new IllegalArgumentException("Mismatch in color of figures for pawn promotion. Failed validation.");
             }
+
         }
 
         /** Process operations from StatusPair. All validation need to be processed before that.*/

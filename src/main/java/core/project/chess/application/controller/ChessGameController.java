@@ -78,10 +78,7 @@ public class ChessGameController {
                     GamePreparationMessageType.WAITING_FOR_THE_OPPONENT, "We are currently searching for an opponent that suits your requirements."
             );
 
-            messagingTemplate.convertAndSendToUser(
-                    firstPlayer.getUsername(), USER_DESTINATION_ADDRESS.formatted(firstPlayer.getId()), message
-            );
-
+            messagingTemplate.convertAndSendToUser(firstPlayer.getUsername(), USER_DESTINATION_ADDRESS.formatted(firstPlayer.getId()), message);
             return;
         }
 
