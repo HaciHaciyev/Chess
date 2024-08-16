@@ -517,7 +517,11 @@ public class ChessBoard {
      * @param to the ending coordinate of the piece
      * @return true if the move represents a valid castling move, false otherwise
      */
-    private boolean isCastling(final Piece piece, final Coordinate from, final Coordinate to) {
+    public boolean isCastling(final Piece piece, final Coordinate from, final Coordinate to) {
+        Objects.requireNonNull(piece);
+        Objects.requireNonNull(from);
+        Objects.requireNonNull(to);
+
         final boolean king = piece instanceof King;
         if (!king) {
             return false;

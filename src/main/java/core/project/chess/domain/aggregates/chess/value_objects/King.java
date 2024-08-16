@@ -40,7 +40,7 @@ public record King(Color color)
             return StatusPair.ofFalse();
         }
 
-        final boolean validKingMovement = isValidKingMovementCoordinates(startField, endField);
+        final boolean validKingMovement = isValidKingMovementCoordinates(chessBoard, startField, endField);
         if (!validKingMovement) {
             return StatusPair.ofFalse();
         }
@@ -102,7 +102,7 @@ public record King(Color color)
                 .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
     }
 
-    private boolean isValidKingMovementCoordinates(Field startField, Field endField) {
+    private boolean isValidKingMovementCoordinates(ChessBoard chessBoard, Field startField, Field endField) {
         final Coordinate from = startField.getCoordinate();
         final Coordinate to = endField.getCoordinate();
         final int startColumn = columnToInt(from.getColumn());
@@ -115,8 +115,7 @@ public record King(Color color)
             return true;
         }
 
-        return from.equals(Coordinate.E1) && (to.equals(Coordinate.C1) || to.equals(Coordinate.G1)) ||
-                from.equals(Coordinate.E8) && (to.equals(Coordinate.C8) || to.equals(Coordinate.G8));
+        return chessBoard.isCastling(startField.pieceOptional().orElseThrow(), from, to);
     }
 
     private boolean validateKingMovementForSafety(ChessBoard chessBoard, Coordinate previousKing, Coordinate futureKing) {
