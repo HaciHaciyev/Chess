@@ -34,8 +34,7 @@ public record King(Color color)
             throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
-        final boolean endFieldOccupiedBySameColorPiece =
-                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(kingColor);
+        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(kingColor);
         if (endFieldOccupiedBySameColorPiece) {
             return StatusPair.ofFalse();
         }
