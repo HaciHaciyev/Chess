@@ -6,14 +6,14 @@ import core.project.chess.infrastructure.utilities.StatusPair;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
-import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
+import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
 public record Queen(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+    public StatusPair<LinkedHashSet<ChessBoard.Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);

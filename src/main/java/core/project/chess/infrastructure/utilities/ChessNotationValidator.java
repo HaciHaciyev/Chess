@@ -23,13 +23,23 @@ public class ChessNotationValidator {
 
     private ChessNotationValidator() {}
 
+    private static final String COORDINATES = "[A-H][1-8]";
+
+    private static final String INFLUENCE_ON_OPPONENT_KING = "[+#.]?";
+
+    private static final String PAWN_START_MOVEMENT_COORDINATES = "[A-H][2-7]";
+
     public static void validate(String algebraicNotation) {
-        if (isSimplePawnMovement(algebraicNotation)) {
-            validateSimplePawnMovement(algebraicNotation);
-            return;
-        }
         if (isSimpleFigureMovement(algebraicNotation) || isFigureCaptureOperation(algebraicNotation)) {
             validateSimpleFigureMovementOrCapture(algebraicNotation);
+            return;
+        }
+        if (isPromotion(algebraicNotation) || isPromotionPlusOperation(algebraicNotation)) {
+            validatePromotion(algebraicNotation);
+            return;
+        }
+        if (isSimplePawnMovement(algebraicNotation)) {
+            validateSimplePawnMovement(algebraicNotation);
             return;
         }
         if (isPawnCaptureOperation(algebraicNotation)) {
@@ -39,45 +49,46 @@ public class ChessNotationValidator {
         if (isCastlePlusOperation(algebraicNotation)) {
             return;
         }
-        if (isPromotion(algebraicNotation) || isPromotionPlusOperation(algebraicNotation)) {
-            validatePromotion(algebraicNotation);
-            return;
-        }
 
         throw new IllegalArgumentException("Invalid algebraic notation format.");
     }
 
     private static boolean isSimplePawnMovement(final String algebraicNotation) {
-        return Pattern.matches(String.format(SIMPLE_PAWN_MOVEMENT_FORMAT, "[A-H][2-7]", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
+        final String regex = SIMPLE_PAWN_MOVEMENT_FORMAT.formatted(PAWN_START_MOVEMENT_COORDINATES, COORDINATES, INFLUENCE_ON_OPPONENT_KING);
+        return Pattern.matches(regex, algebraicNotation);
     }
 
     private static boolean isSimpleFigureMovement(final String algebraicNotation) {
-        return Pattern.matches(
-                String.format(SIMPLE_FIGURE_MOVEMENT_FORMAT, "[RNBQK]", "[A-H][1-8]", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
+        final String regex = SIMPLE_FIGURE_MOVEMENT_FORMAT.formatted("[RNBQK]", COORDINATES, COORDINATES, INFLUENCE_ON_OPPONENT_KING);
+        return Pattern.matches(regex, algebraicNotation);
     }
 
     private static boolean isPawnCaptureOperation(final String algebraicNotation) {
-        return Pattern.matches(String.format(PAWN_CAPTURE_OPERATION_FORMAT, "[A-H][2-7]", "X", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
+        final String regex = PAWN_CAPTURE_OPERATION_FORMAT.formatted(PAWN_START_MOVEMENT_COORDINATES, "X", COORDINATES, INFLUENCE_ON_OPPONENT_KING);
+        return Pattern.matches(regex, algebraicNotation);
     }
 
     private static boolean isFigureCaptureOperation(final String algebraicNotation) {
-        return Pattern.matches(
-                String.format(FIGURE_CAPTURE_OPERATION_FORMAT, "[RNBQK]", "[A-H][1-8]", "X", "[A-H][1-8]", "[+#.]?"), algebraicNotation);
+        final String regex = FIGURE_CAPTURE_OPERATION_FORMAT.formatted("[RNBQK]", COORDINATES, "X", COORDINATES, INFLUENCE_ON_OPPONENT_KING);
+        return Pattern.matches(regex, algebraicNotation);
     }
 
     private static boolean isCastlePlusOperation(final String algebraicNotation) {
-        return Pattern.matches(String.format(CASTLE_PLUS_OPERATION_FORMAT, "O-O(-O)?", "[+#.]?"), algebraicNotation);
+        final String regex = CASTLE_PLUS_OPERATION_FORMAT.formatted("O-O(-O)?", INFLUENCE_ON_OPPONENT_KING);
+        return Pattern.matches(regex, algebraicNotation);
     }
 
     private static boolean isPromotion(final String algebraicNotation) {
-        return Pattern.matches(String.format(PROMOTION_FORMAT, "[A-H][2-7]", "[A-H][1-8]", "[QRBN]", "[+#.]?"), algebraicNotation);
+        final String regex = PROMOTION_FORMAT.formatted(PAWN_START_MOVEMENT_COORDINATES, COORDINATES, "[QRBN]", INFLUENCE_ON_OPPONENT_KING);
+        return Pattern.matches(regex, algebraicNotation);
     }
 
     private static boolean isPromotionPlusOperation(final String algebraicNotation) {
-        return Pattern.matches(
-                String.format(PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT, "[A-H][2-7]", "X", "[A-h][1-8]", "[QRBN]", "[+#.]?"),
-                algebraicNotation
+        final String regex = PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT.formatted(
+                PAWN_START_MOVEMENT_COORDINATES, "X", COORDINATES, "[QRBN]", INFLUENCE_ON_OPPONENT_KING
         );
+
+        return Pattern.matches(regex, algebraicNotation);
     }
 
     private static void validateSimplePawnMovement(final String algebraicNotation) {
@@ -85,7 +96,7 @@ public class ChessNotationValidator {
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
 
         if (from.getColumn() != to.getColumn()) {
-            throw new IllegalArgumentException("Invalid algebraic notation.");
+            throw new IllegalArgumentException("'From' can`t be equal to 'to' coordinate.");
         }
 
         final boolean validPassage = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
@@ -97,13 +108,13 @@ public class ChessNotationValidator {
         if (validMoveDistance) {
             final boolean fieldForPromotion = to.getRow() == 1 || to.getRow() == 8;
             if (fieldForPromotion) {
-                throw new IllegalArgumentException("Invalid algebraic notation.");
+                throw new IllegalArgumentException("It is the field for PROMOTION but promotion is not added.");
             }
 
             return;
         }
 
-        throw new IllegalArgumentException("Invalid algebraic notation.");
+        throw new IllegalArgumentException("Invalid pawn movement.");
     }
 
     private static void validatePawnCaptureOperation(final String algebraicNotation) {
@@ -118,13 +129,13 @@ public class ChessNotationValidator {
         if (diagonalCapture) {
             final boolean fieldForPromotion = to.getRow() == 1 || to.getRow() == 8;
             if (fieldForPromotion) {
-                throw new IllegalArgumentException("Invalid algebraic notation.");
+                throw new IllegalArgumentException("It is the field for PROMOTION but promotion is not added.");
             }
 
             return;
         }
 
-        throw new IllegalArgumentException("Invalid algebraic notation.");
+        throw new IllegalArgumentException("Invalid pawn capture operation.");
     }
 
     private static void validatePromotion(final String algebraicNotation) {
@@ -137,12 +148,12 @@ public class ChessNotationValidator {
 
         final boolean validRows = (startRow == 7 && endRow == 8) || (startRow == 2 && endRow == 1);
         if (!validRows) {
-            throw new IllegalArgumentException("Invalid algebraic notation.");
+            throw new IllegalArgumentException("Invalid coordinates for pawn promotion.");
         }
 
         final boolean validColumns = (startColumn == endColumn) || Math.abs(startColumn - endColumn) == 1;
         if (!validColumns) {
-            throw new IllegalArgumentException("Invalid algebraic notation.");
+            throw new IllegalArgumentException("Invalid coordinates for pawn promotion.");
         }
     }
 
@@ -162,7 +173,7 @@ public class ChessNotationValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid algebraic notation.");
+            throw new IllegalArgumentException("Invalid king movement.");
         }
 
         final boolean verticalMove = startColumn == endColumn && startRow != endRow;
@@ -183,7 +194,7 @@ public class ChessNotationValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid algebraic notation.");
+            throw new IllegalArgumentException("Invalid queen movement coordinates.");
         }
 
         final boolean rook = algebraicNotation.charAt(0) == 'R';
@@ -196,7 +207,7 @@ public class ChessNotationValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid algebraic notation.");
+            throw new IllegalArgumentException("Invalid rook movement coordinates.");
         }
 
         final boolean bishop = algebraicNotation.charAt(0) == 'B';
@@ -205,7 +216,7 @@ public class ChessNotationValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid algebraic notation.");
+            throw new IllegalArgumentException("Invalid bishop movement coordinates.");
         }
 
         final boolean knight = algebraicNotation.charAt(0) == 'N';
@@ -219,7 +230,7 @@ public class ChessNotationValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid algebraic notation.");
+            throw new IllegalArgumentException("Invalid knight movement coordinates.");
         }
     }
 }

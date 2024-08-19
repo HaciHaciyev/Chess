@@ -28,7 +28,7 @@ class AlgebraicNotationTest {
                 () -> AlgebraicNotation.of(PieceTYPE.P, Collections.emptySet(), Coordinate.E2, Coordinate.E6, null)
         );
 
-        assertThatThrownBy(invalidMoveDistance::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation.");
+        assertThatThrownBy(invalidMoveDistance::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid pawn movement.");
 
         var diagonalCapture = AlgebraicNotation.of(
                 PieceTYPE.P, Set.of(ChessBoard.Operations.CAPTURE), Coordinate.E2, Coordinate.D3, null
@@ -38,7 +38,7 @@ class AlgebraicNotationTest {
                 () -> AlgebraicNotation.of(PieceTYPE.P, Collections.emptySet(), Coordinate.E2, Coordinate.G5, null)
         );
 
-        assertThatThrownBy(invalidMovement::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation.");
+        assertThatThrownBy(invalidMovement::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("'From' can`t be equal to 'to' coordinate.");
 
         assertThat(diagonalCapture.algebraicNotation()).isEqualTo("E2XD3");
 
@@ -47,7 +47,7 @@ class AlgebraicNotationTest {
                 () -> AlgebraicNotation.of(PieceTYPE.P, Collections.emptySet(), Coordinate.E2, Coordinate.C4, null)
         );
 
-        assertThatThrownBy(invalidDiagonalMoveDistance::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation.");
+        assertThatThrownBy(invalidDiagonalMoveDistance::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("'From' can`t be equal to 'to' coordinate.");
 
         /** Promotion.*/
 
@@ -56,7 +56,7 @@ class AlgebraicNotationTest {
                 () -> AlgebraicNotation.of(PieceTYPE.P, Collections.emptySet(), Coordinate.E7, Coordinate.E8, null)
         );
 
-        assertThatThrownBy(forgetPromotionOperation::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation.");
+        assertThatThrownBy(forgetPromotionOperation::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("It is the field for PROMOTION but promotion is not added.");
 
         /** Forget to put PieceType for promotion.*/
         Result<AlgebraicNotation, NullPointerException> invalidPromotionPieceType = Result.ofThrowable(
@@ -77,7 +77,7 @@ class AlgebraicNotationTest {
                 () -> AlgebraicNotation.of(PieceTYPE.P, Set.of(ChessBoard.Operations.PROMOTION), Coordinate.E2, Coordinate.E4, PieceTYPE.Q)
         );
 
-        assertThatThrownBy(invalidCoordinatesForPromotion::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation.");
+        assertThatThrownBy(invalidCoordinatesForPromotion::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid coordinates for pawn promotion.");
 
         /** Capture*/
 
@@ -244,7 +244,7 @@ class AlgebraicNotationTest {
                 () -> AlgebraicNotation.of(PieceTYPE.K, Collections.emptySet(), Coordinate.B3, Coordinate.B5, null)
         );
 
-        assertThatThrownBy(invalidMoveDistance::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid algebraic notation.");
+        assertThatThrownBy(invalidMoveDistance::orElseThrow).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Invalid king movement.");
 
         var simpleMovementWithCaptureAndCheckmate = AlgebraicNotation.of(
                 PieceTYPE.K, Set.of(ChessBoard.Operations.CAPTURE, ChessBoard.Operations.CHECKMATE), Coordinate.E7, Coordinate.F8, null
