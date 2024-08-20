@@ -20,14 +20,14 @@ import java.util.*;
 @Getter
 public class UserAccount implements UserDetails {
     private final UUID id;
-    private final Username username;
     private final Email email;
+    private final Username username;
     private final Password password;
+    private final AccountEvents accountEvents;
     private @Getter(AccessLevel.NONE) Rating rating;
     private @Getter(AccessLevel.NONE) Boolean isEnable;
-    private final AccountEvents accountEvents;
-    private final /**@ManyToMany*/ Set<UserAccount> partners;
     private final /**@ManyToMany*/ Set<ChessGame> games;
+    private final /**@ManyToMany*/ Set<UserAccount> partners;
 
     private UserAccount(
             UUID id, Username username, Email email, Password password, Rating rating, Boolean isEnable,
@@ -128,12 +128,7 @@ public class UserAccount implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(
-                new SimpleGrantedAuthority("ROLE_USER"),
-                new SimpleGrantedAuthority("ROLE_VIEWER"),
-                new SimpleGrantedAuthority("ROLE_PLAYER_FOR_WHITE"),
-                new SimpleGrantedAuthority("ROLE_PLAYER_FOR_BLACK")
-        );
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override

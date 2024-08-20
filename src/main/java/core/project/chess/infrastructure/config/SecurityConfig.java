@@ -34,6 +34,9 @@ public class SecurityConfig {
                                         "/home", "/registration_form", "registration",
                                         "token/verification","/login", "/logout", "/login?expired"
                                 ).permitAll()
+                                .requestMatchers(
+                                        "/game-process/{gameId}", "/process-movement/{gameId}", "/create-game"
+                                ).hasRole("USER")
                                 .anyRequest().authenticated()
                 )
                 .formLogin(formLogin ->

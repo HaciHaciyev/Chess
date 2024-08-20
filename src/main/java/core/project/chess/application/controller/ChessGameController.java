@@ -22,6 +22,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,7 +56,13 @@ public class ChessGameController {
 
     @MessageMapping("/create-game")
     @SendTo("/game-process/{gameId}")
-    final void preparingForChessGame(@Payload final UUID userId, @Payload InboundGameParameters gameParameters) {
+    final void preparingForChessGame(@Payload InboundGameParameters gameParameters) throws IllegalAccessException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!authentication.isAuthenticated()) {
+            throw new IllegalAccessException("User need to be authenticated.");
+        }
+
+        UUID userId = (UUID) authentication.getPrincipal();
 
         Objects.requireNonNull(userId);
         Objects.requireNonNull(gameParameters);
@@ -148,8 +156,15 @@ public class ChessGameController {
     @MessageMapping("/process-movement/{gameId}")
     @SendTo("/game-process/{gameId}")
     final void processMovement(
-            @Payload final UUID userId,@Payload final ChessMovementForm move, @PathVariable("gameId") final UUID gameId
+            @Payload final ChessMovementForm move, @PathVariable("gameId") final UUID gameId
     ) throws IllegalAccessException {
+
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!authentication.isAuthenticated()) {
+            throw new IllegalAccessException("User need to be authenticated.");
+        }
+
+        final UUID userId = (UUID) authentication.getPrincipal();
 
         Objects.requireNonNull(userId);
         Objects.requireNonNull(move);
