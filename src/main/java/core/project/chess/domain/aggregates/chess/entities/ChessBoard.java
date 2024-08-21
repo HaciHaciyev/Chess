@@ -282,9 +282,11 @@ public class ChessBoard {
      * @throws IllegalStateException if the provided piece is not a Rook or King.
      */
     private void changeOfCastlingAbility(final Coordinate from, final Piece piece) {
-        if (!(piece instanceof Rook) || !(piece instanceof King (Color color))) {
+        if (!(piece instanceof Rook) && !(piece instanceof King)) {
             throw new IllegalStateException("Invalid method usage, check documentation. Only kings and rooks available for this function.");
         }
+
+        final Color color = piece.color();
 
         final boolean whiteColorFigure = color.equals(Color.WHITE);
         if (whiteColorFigure) {
@@ -326,11 +328,14 @@ public class ChessBoard {
     private void changeOfCastlingAbilityInRevertMove(
             final Piece piece, final @Nullable AlgebraicNotation.Castle castle
     ) {
-        if (!(piece instanceof King (Color color)) || !(piece instanceof Rook)) {
+        if (!(piece instanceof King) && !(piece instanceof Rook)) {
             throw new IllegalStateException("Invalid method usage, check documentation. Only kings and rooks available for this function.");
         }
 
+        final Color color = piece.color();
+
         if (!Objects.isNull(castle)) {
+            assert piece instanceof King;
             changeOfCastlingAbilityInRevertCastling((King) piece, castle);
         }
 

@@ -56,7 +56,7 @@ public class ChessGameController {
 
     @MessageMapping("/create-game")
     @SendTo("/game-process/{gameId}")
-    final void preparingForChessGame(@Payload InboundGameParameters gameParameters) throws IllegalAccessException {
+    final void preparingForChessGame(@Payload final InboundGameParameters gameParameters) throws IllegalAccessException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!authentication.isAuthenticated()) {
             throw new IllegalAccessException("User need to be authenticated.");
