@@ -174,13 +174,26 @@ public record King(Color color)
         };
     }
 
+    record Check(boolean check, Field from) {}
+
     /** In process to implementation.*/
     public boolean checkmate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        boolean check = check(chessBoard, from, to);
-        boolean surrounded = surroundingFields(chessBoard, from).stream()
-                .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
+        var check = check(chessBoard, from, to);
 
-        return check && surrounded;
+        if (check.check()) {
+            boolean surrounded = surroundingFields(chessBoard, from).stream()
+                    .allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
+
+
+            boolean canBlockOrEat = canBlockOrEat(chessBoard, check.from());
+            return surrounded;
+        }
+
+        return false;
+    }
+
+    private boolean canBlockOrEat(ChessBoard chessBoard, Field from) {
+        return false;
     }
 
     /** In process to implementation.*/
@@ -395,31 +408,31 @@ public record King(Color color)
         return false;
     }
 
-    private boolean pawnMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
+    private Check pawnMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
         var possibleKings = coordinatesThreatenedByPawn(chessBoard, to, color);
 
         for (Field possibleKing : possibleKings) {
             if (possibleKing.getCoordinate().equals(king)) {
-                return true;
+                return new Check(true, new Field(to, oppositePiece(Pawn.class)));
             }
         }
 
         return validateDirections(chessBoard, king, from, to, Pawn.class);
     }
 
-    private boolean knightMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
+    private Check knightMoved(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
         var possibleKings = knightAttackPositions(chessBoard, to);
 
         for (Field possibleKing : possibleKings) {
             if (possibleKing.getCoordinate().equals(king)) {
-                return true;
+                return new Check(true, new Field(to, oppositePiece(Knight.class)));
             }
         }
 
         return validateDirections(chessBoard, king, from, to, Knight.class);
     }
 
-    private boolean validateDirections(ChessBoard chessBoard, Coordinate king,
+    private Check validateDirections(ChessBoard chessBoard, Coordinate king,
                                        Coordinate from, Coordinate to,
                                        Class<? extends Piece> clazz) {
         var diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, king, to, oppositePiece(clazz));
@@ -432,7 +445,7 @@ public record King(Color color)
             Piece piece = field.pieceOptional().orElseThrow();
 
             if ((piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color)) {
-                return true;
+                return new Check(true, new Field(to, oppositePiece(clazz)));
             }
         }
 
@@ -446,14 +459,14 @@ public record King(Color color)
             Piece piece = field.pieceOptional().orElseThrow();
 
             if ((piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color)) {
-                return true;
+                return new Check(true, new Field(to, oppositePiece(clazz)));
             }
         }
 
-        return false;
+        return new Check(false, null);
     }
 
-    private Coordinate getOurKing(ChessBoard board) {
+    private Coordinate getKingCoordinate(ChessBoard board) {
         if (this.color.equals(Color.WHITE)) {
             return board.currentWhiteKingPosition();
         } else {
