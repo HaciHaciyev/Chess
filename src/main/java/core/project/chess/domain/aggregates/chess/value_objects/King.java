@@ -66,15 +66,103 @@ public record King(Color color)
         Objects.requireNonNull(to);
 
         if (kingPosition.equals(from)) {
+            if (chessBoard.isCastling(chessBoard.theKing(color), from, to)) {
+                return safeToCastle(chessBoard, from, to);
+            }
+
             return validateKingMovementForSafety(chessBoard, from, to);
         }
 
         return validatePieceMovementForKingSafety(chessBoard, kingPosition, from, to);
     }
 
-    public boolean check(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+    private boolean safeToCastle(ChessBoard chessBoard, Coordinate presentKing, Coordinate futureKing) {
+        List<Field> fieldsToCastle = getCastLingFields(chessBoard, presentKing, futureKing);
+
+        for (Field field : fieldsToCastle) {
+            if (field.isPresent() && !field.getCoordinate().equals(futureKing)) {
+                return false;
+            }
+
+            var pawns = pawnsThreateningCoordinate(chessBoard, field.getCoordinate(), color);
+
+            for (Field pawn : pawns) {
+                if (pawn.pieceOptional().get() instanceof Pawn) {
+                    return false;
+                }
+            }
+
+            var knights = knightAttackPositions(chessBoard, field.getCoordinate());
+
+            for (Field knight : knights) {
+                Piece piece = knight.pieceOptional().get();
+                if (piece instanceof Knight && !piece.color().equals(color)) {
+                    return false;
+                }
+            }
+
+            var diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, field.getCoordinate());
+
+            for (Field diagonalField : diagonalFields) {
+                Piece piece = diagonalField.pieceOptional().get();
+
+                if ((piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color)) {
+                    return false;
+                }
+            }
+
+            var horizontalVerticalFields = Direction.occupiedFieldsFromHorizontalAndVerticalDirections(chessBoard, field.getCoordinate());
+
+            for (Field horizontalField : horizontalVerticalFields) {
+                Piece piece = horizontalField.pieceOptional().get();
+
+                if ((piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private List<Field> getCastLingFields(ChessBoard chessBoard, Coordinate presentKing, Coordinate futureKing) {
+        var from = presentKing.getColumn();
+        var to = futureKing.getColumn();
+
+        List<Field> fields = new ArrayList<>();
+        fields.add(chessBoard.field(presentKing));
+
+        // short castling
+        if (from > to) {
+            while(true) {
+                var left = Coordinate.coordinate(presentKing.getRow(), presentKing.getColumn() - 1).valueOrElseThrow();
+
+                if (left.equals(futureKing)) {
+                   fields.add(chessBoard.field(left));
+                   return fields;
+                }
+                fields.add(chessBoard.field(left));
+            }
+        }
+
+        // long castling
+        if (from < to) {
+            while (true) {
+                var right = Coordinate.coordinate(presentKing.getRow(), presentKing.getColumn() + 1).valueOrElseThrow();
+
+                if (right.equals(futureKing)) {
+                    fields.add(chessBoard.field(right));
+                    return fields;
+                }
+                fields.add(chessBoard.field(right));
+            }
+        }
+
+        return fields;
+    }
+
+    public Check check(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
-        Coordinate king = getOurKing(chessBoard);
+        Coordinate king = getKingCoordinate(chessBoard);
 
         return switch (piece) {
             case Pawn _ -> pawnMoved(chessBoard, king, from, to);
