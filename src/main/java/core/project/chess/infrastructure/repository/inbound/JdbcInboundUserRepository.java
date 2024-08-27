@@ -67,8 +67,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                                 is_confirmed = ?
                             Where id = ?
                             """,
-                    token.getUserAccount().isEnabled(),
-                    token.getUserAccount().getId().toString()
+                    token.isConfirmed(),
+                    token.getTokenId().toString()
             );
 
             jdbcTemplate.update("""
@@ -76,8 +76,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                                is_enable = ?
                             WHERE id = ?
                             """,
-                    token.isConfirmed(),
-                    token.getTokenId().toString()
+                    token.getUserAccount().isEnabled(),
+                    token.getUserAccount().getId().toString()
             );
 
             log.info("User account {} has became available", token);
