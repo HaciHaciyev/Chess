@@ -76,108 +76,6 @@ public record King(Color color)
         return validatePieceMovementForKingSafety(chessBoard, kingPosition, from, to);
     }
 
-    public boolean check(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
-        Coordinate king = getKingCoordinate(chessBoard);
-
-        return switch (piece) {
-            case Pawn p -> !pawnMovedCheck(chessBoard, king, from, to).isEmpty();
-            case Knight n -> !knightMovedCheck(chessBoard, king, from, to).isEmpty();
-            case Bishop b -> !validateDirectionsCheck(chessBoard, king, from, to, Bishop.class).isEmpty();
-            case Rook r -> !validateDirectionsCheck(chessBoard, king, from, to, Rook.class).isEmpty();
-            case Queen q -> !validateDirectionsCheck(chessBoard, king, from, to, Queen.class).isEmpty();
-            case King k -> !validateDirectionsCheck(chessBoard, king, from, to, King.class).isEmpty();
-        };
-    }
-
-    public boolean checkmate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
-        Coordinate king = getKingCoordinate(chessBoard);
-
-        return switch (piece) {
-            case Pawn p -> pawnMovedCheckmate(chessBoard, king, from, to);
-            case Knight n -> knightMovedCheckmate(chessBoard, king, from, to);
-            case Bishop b -> otherMovedCheckmate(chessBoard, king, from, to, Bishop.class);
-            case Rook r -> otherMovedCheckmate(chessBoard, king, from, to, Rook.class);
-            case Queen q -> otherMovedCheckmate(chessBoard, king, from, to, Queen.class);
-            case King k -> otherMovedCheckmate(chessBoard, king, from, to, King.class);
-        };
-    }
-
-    public boolean stalemate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        /** TODO */
-        Coordinate king = getKingCoordinate(chessBoard);
-        boolean check = check(chessBoard, from, to);
-
-        if (check) {
-            return false;
-        }
-
-        List<Field> surroundings = surroundingFields(chessBoard, king);
-
-        boolean surrounded = surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
-
-        if (!surrounded) {
-            return false;
-        }
-
-        List<Field> fields = getAllFriendlyFields(chessBoard);
-
-        for (Field field : fields) {
-            Piece piece = field.pieceOptional().get();
-            Coordinate coordinate = field.getCoordinate();
-
-            if (piece instanceof Pawn) {
-                List<Field> coords = coordinatesThreatenedByPawn(chessBoard, coordinate, color);
-
-                for (Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
-                }
-            }
-            if (piece instanceof Knight) {
-                List<Field> coords = knightAttackPositions(chessBoard, king);
-
-                for (Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
-                }
-            }
-            if (piece instanceof Bishop) {
-                List<Field> coords = Direction.fieldsFromDiagonalDirections(chessBoard, coordinate);
-
-                for (Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
-                }
-            }
-            if (piece instanceof Rook) {
-                List<Field> coords = Direction.fieldsFromHorizontalAndVerticalDirections(chessBoard, coordinate);
-
-                for (Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
-                }
-            }
-            if (piece instanceof Queen) {
-                List<Field> coords = Direction.fieldsFromAllDirections(chessBoard, coordinate);
-
-                for (Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        /** TODO fix*/
-        return false;
-    }
-
     private boolean safeToCastle(ChessBoard chessBoard, Coordinate presentKing, Coordinate futureKing) {
         List<Field> fieldsToCastle = getCastLingFields(chessBoard, presentKing, futureKing);
 
@@ -260,6 +158,106 @@ public record King(Color color)
         }
 
         return fields;
+    }
+
+    public boolean check(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+        Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
+        Coordinate king = getKingCoordinate(chessBoard);
+
+        return switch (piece) {
+            case Pawn p -> !pawnMovedCheck(chessBoard, king, from, to).isEmpty();
+            case Knight k -> !knightMovedCheck(chessBoard, king, from, to).isEmpty();
+            case Bishop b -> !validateDirectionsCheck(chessBoard, king, from, to, Bishop.class).isEmpty();
+            case Rook r -> !validateDirectionsCheck(chessBoard, king, from, to, Rook.class).isEmpty();
+            case Queen q -> !validateDirectionsCheck(chessBoard, king, from, to, Queen.class).isEmpty();
+            case King k -> !validateDirectionsCheck(chessBoard, king, from, to, King.class).isEmpty();
+        };
+    }
+
+    public boolean checkmate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+        Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
+        Coordinate king = getKingCoordinate(chessBoard);
+
+        return switch (piece) {
+            case Pawn p -> pawnMovedCheckmate(chessBoard, king, from, to);
+            case Knight k -> knightMovedCheckmate(chessBoard, king, from, to);
+            case Bishop b -> otherMovedCheckmate(chessBoard, king, from, to, Bishop.class);
+            case Rook r -> otherMovedCheckmate(chessBoard, king, from, to, Rook.class);
+            case Queen q -> otherMovedCheckmate(chessBoard, king, from, to, Queen.class);
+            case King k -> otherMovedCheckmate(chessBoard, king, from, to, King.class);
+        };
+    }
+
+    public boolean stalemate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+        Coordinate king = getKingCoordinate(chessBoard);
+        boolean check = check(chessBoard, from, to);
+
+        if (check) {
+            return false;
+        }
+
+        List<Field> surroundings = surroundingFields(chessBoard, king);
+
+        boolean surrounded = surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
+
+        if (!surrounded) {
+            return false;
+        }
+
+        List<Field> fields = getAllFriendlyFields(chessBoard);
+
+        for (Field field : fields) {
+            Piece piece = field.pieceOptional().get();
+            Coordinate coordinate = field.getCoordinate();
+
+            if (piece instanceof Pawn) {
+                List<Field> coords = coordinatesThreatenedByPawn(chessBoard, coordinate, color);
+
+                for (Field coord : coords) {
+                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                        return false;
+                    }
+                }
+            }
+            if (piece instanceof Knight) {
+                List<Field> coords = knightAttackPositions(chessBoard, king);
+
+                for (Field coord : coords) {
+                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                        return false;
+                    }
+                }
+            }
+            if (piece instanceof Bishop) {
+                List<Field> coords = Direction.fieldsFromDiagonalDirections(chessBoard, coordinate);
+
+                for (Field coord : coords) {
+                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                        return false;
+                    }
+                }
+            }
+            if (piece instanceof Rook) {
+                List<Field> coords = Direction.fieldsFromHorizontalAndVerticalDirections(chessBoard, coordinate);
+
+                for (Field coord : coords) {
+                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                        return false;
+                    }
+                }
+            }
+            if (piece instanceof Queen) {
+                List<Field> coords = Direction.fieldsFromAllDirections(chessBoard, coordinate);
+
+                for (Field coord : coords) {
+                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     private boolean otherMovedCheckmate(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to, Class<? extends Piece> clazz) {
