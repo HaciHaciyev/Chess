@@ -123,78 +123,86 @@ public record King(Color color)
 
         for (final Field field : fields) {
 
-            final Piece piece = field.pieceOptional().orElseThrow();
-            final Coordinate coordinate = field.getCoordinate();
+            final boolean result = processFields(chessBoard, king, field);
+            if (!result) {
+                return false;
+            }
+        }
 
-            if (piece instanceof Pawn) {
+        return true;
+    }
 
-                final List<Field> pawnCoordinates = coordinatesThreatenedByPawn(chessBoard, coordinate, color);
+    private boolean processFields(ChessBoard chessBoard, Coordinate king, Field field) {
+        final Piece piece = field.pieceOptional().orElseThrow();
+        final Coordinate coordinate = field.getCoordinate();
 
-                if (piece.color().equals(Color.WHITE)) {
+        if (piece instanceof Pawn) {
 
-                    final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn());
-                    if (possibleForwardCoordinate.status()) {
-                        pawnCoordinates.add(chessBoard.field(possibleForwardCoordinate.orElseThrow()));
-                    }
+            final List<Field> pawnCoordinates = coordinatesThreatenedByPawn(chessBoard, coordinate, color);
 
-                } else {
+            if (piece.color().equals(Color.WHITE)) {
 
-                    final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn());
-                    if (possibleForwardCoordinate.status()) {
-                        pawnCoordinates.add(chessBoard.field(possibleForwardCoordinate.orElseThrow()));
-                    }
-
+                final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn());
+                if (possibleForwardCoordinate.status()) {
+                    pawnCoordinates.add(chessBoard.field(possibleForwardCoordinate.orElseThrow()));
                 }
 
-                for (final Field coord : pawnCoordinates) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
+            } else {
+
+                final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn());
+                if (possibleForwardCoordinate.status()) {
+                    pawnCoordinates.add(chessBoard.field(possibleForwardCoordinate.orElseThrow()));
                 }
 
             }
 
-            if (piece instanceof Knight) {
-                final List<Field> coords = knightAttackPositions(chessBoard, king);
-
-                for (Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
-                }
-
-            }
-
-            if (piece instanceof Bishop) {
-                final List<Field> coords = Direction.fieldsFromDiagonalDirections(chessBoard, coordinate);
-
-                for (final Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
+            for (final Field coord : pawnCoordinates) {
+                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                    return false;
                 }
             }
 
-            if (piece instanceof Rook) {
-                final List<Field> coords = Direction.fieldsFromHorizontalAndVerticalDirections(chessBoard, coordinate);
+        }
 
-                for (Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
+        if (piece instanceof Knight) {
+            final List<Field> coords = knightAttackPositions(chessBoard, king);
+
+            for (Field coord : coords) {
+                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                    return false;
                 }
             }
 
-            if (piece instanceof Queen) {
-                final List<Field> coords = Direction.fieldsFromAllDirections(chessBoard, coordinate);
+        }
 
-                for (final Field coord : coords) {
-                    if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                        return false;
-                    }
+        if (piece instanceof Bishop) {
+            final List<Field> coords = Direction.fieldsFromDiagonalDirections(chessBoard, coordinate);
+
+            for (final Field coord : coords) {
+                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                    return false;
                 }
             }
+        }
 
+        if (piece instanceof Rook) {
+            final List<Field> coords = Direction.fieldsFromHorizontalAndVerticalDirections(chessBoard, coordinate);
+
+            for (Field coord : coords) {
+                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                    return false;
+                }
+            }
+        }
+
+        if (piece instanceof Queen) {
+            final List<Field> coords = Direction.fieldsFromAllDirections(chessBoard, coordinate);
+
+            for (final Field coord : coords) {
+                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
+                    return false;
+                }
+            }
         }
 
         return true;
