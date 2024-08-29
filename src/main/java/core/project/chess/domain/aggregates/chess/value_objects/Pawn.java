@@ -107,7 +107,7 @@ public record Pawn(Color color)
             return isPassageValid(chessBoard, setOfOperations, startRow, endColumn, endRow);
         }
 
-        final boolean validMoveDistance = (startRow - endRow == 1) || (startRow - endRow == -1);
+        final boolean validMoveDistance = Math.abs(startRow - endRow) == 1;
 
         final boolean fieldForPromotion = endRow == 1 || endRow == 8;
         if (fieldForPromotion && validMoveDistance) {

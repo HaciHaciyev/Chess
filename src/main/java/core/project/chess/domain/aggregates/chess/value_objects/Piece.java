@@ -58,7 +58,7 @@ public sealed interface Piece
         final King opponentKing = new King(opponentFiguresColor);
 
         /** TODO Fix.*/
-        if (opponentKing.stalemate(chessBoard, from, to)) {
+        /**if (opponentKing.stalemate(chessBoard, from, to)) {
             return Operations.STALEMATE;
         }
         if (opponentKing.checkmate(chessBoard, from, to)) {
@@ -66,7 +66,7 @@ public sealed interface Piece
         }
         if (opponentKing.check(chessBoard, from, to)) {
             return Operations.CHECK;
-        }
+        }*/
         
         return Operations.EMPTY;
     }
