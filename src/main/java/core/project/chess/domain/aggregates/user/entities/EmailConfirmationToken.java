@@ -2,29 +2,26 @@ package core.project.chess.domain.aggregates.user.entities;
 
 import core.project.chess.domain.aggregates.user.events.TokenEvents;
 import core.project.chess.domain.aggregates.user.value_objects.Token;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-@Slf4j
 @Getter
 public class EmailConfirmationToken {
     private final UUID tokenId;
     private final Token token;
     private final TokenEvents tokenEvents;
-    private @Getter(AccessLevel.PRIVATE) Boolean isConfirmed;
+    private boolean isConfirmed;
     private final /**@OneToOne*/ UserAccount userAccount;
 
-    private EmailConfirmationToken(UUID tokenId, Token token, TokenEvents tokenEvents, Boolean isConfirmed, UserAccount userAccount) {
+    private EmailConfirmationToken(UUID tokenId, Token token, TokenEvents tokenEvents, boolean isConfirmed, UserAccount userAccount) {
         Objects.requireNonNull(tokenId);
         Objects.requireNonNull(token);
         Objects.requireNonNull(tokenEvents);
-        Objects.requireNonNull(isConfirmed);
         Objects.requireNonNull(userAccount);
+
         this.tokenId = tokenId;
         this.token = token;
         this.tokenEvents = tokenEvents;
@@ -48,15 +45,11 @@ public class EmailConfirmationToken {
         return tokenEvents.isExpired();
     }
 
-    public boolean isConfirmed() {
-        return isConfirmed.equals(Boolean.TRUE);
-    }
-
     public void confirm() {
-        if (isConfirmed.equals(Boolean.TRUE)) {
+        if (isConfirmed) {
             throw new IllegalStateException("Email confirmation token is already confirmed");
         }
 
-        isConfirmed = Boolean.TRUE;
+        isConfirmed = true;
     }
 }

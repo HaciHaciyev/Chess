@@ -2,8 +2,8 @@ package core.project.chess.domain.aggregates.chess.value_objects;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
+import core.project.chess.infrastructure.utilities.Pair;
 import core.project.chess.infrastructure.utilities.StatusPair;
-import org.springframework.data.util.Pair;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -35,8 +35,7 @@ public record Pawn(Color color)
             throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
-        final boolean endFieldOccupiedBySameColorPiece =
-                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(pawnColor);
+        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(pawnColor);
         if (endFieldOccupiedBySameColorPiece) {
             return StatusPair.ofFalse();
         }
@@ -45,6 +44,7 @@ public record Pawn(Color color)
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
+
         var setOfOperations = new LinkedHashSet<Operations>();
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
@@ -131,7 +131,7 @@ public record Pawn(Color color)
             intermediateRow = endRow + 1;
         }
 
-        Coordinate intermediateCoordinate = Coordinate.coordinate(intermediateRow, column).valueOrElseThrow();
+        final Coordinate intermediateCoordinate = Coordinate.coordinate(intermediateRow, columnToInt(column)).orElseThrow();
         Field interMediateField = chessBoard.field(intermediateCoordinate);
         if (!interMediateField.isEmpty()) {
             return StatusPair.ofFalse();
@@ -144,6 +144,7 @@ public record Pawn(Color color)
             ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
             char startColumn, char endColumn, int startRow, int endRow, Field endField
     ) {
+
         if (Math.abs(startRow - endRow) != 1 || Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) != 1) {
             throw new IllegalStateException("Invalid method usage, check the documentation.");
         }
@@ -154,7 +155,7 @@ public record Pawn(Color color)
         }
 
         final boolean endFieldIsEmpty = endField.isEmpty();
-        if (!endFieldIsEmpty) {
+        if (endFieldIsEmpty) {
             return StatusPair.ofFalse();
         }
 

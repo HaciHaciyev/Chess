@@ -2,75 +2,65 @@ package core.project.chess.domain.aggregates.user.entities;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.user.events.AccountEvents;
-import core.project.chess.domain.aggregates.user.value_objects.Email;
-import core.project.chess.domain.aggregates.user.value_objects.Password;
-import core.project.chess.domain.aggregates.user.value_objects.Rating;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.domain.aggregates.user.value_objects.*;
 import core.project.chess.infrastructure.utilities.Glicko2RatingCalculator;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
 
-@Slf4j
 @Getter
-public class UserAccount implements UserDetails {
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class UserAccount {
     private final UUID id;
-    private final Email email;
     private final Username username;
+    private final Email email;
     private final Password password;
+    private final UserRole userRole;
+    private boolean isEnable;
+    private Rating rating;
     private final AccountEvents accountEvents;
-    private @Getter(AccessLevel.NONE) Rating rating;
-    private @Getter(AccessLevel.NONE) Boolean isEnable;
-    private final /**@ManyToMany*/ Set<ChessGame> games;
     private final /**@ManyToMany*/ Set<UserAccount> partners;
+    private final /**@ManyToMany*/ Set<ChessGame> games;
 
-    private UserAccount(
-            UUID id, Username username, Email email, Password password, Rating rating, Boolean isEnable,
-            AccountEvents accountEvents, Set<UserAccount> partners, Set<ChessGame> games
+    public static UserAccount of(Username username, Email email, Password password) {
+        Objects.requireNonNull(username);
+        Objects.requireNonNull(email);
+        Objects.requireNonNull(password);
+
+        short defaultRating = 1500;
+
+        return new UserAccount(
+                UUID.randomUUID(), username, email, password, UserRole.NONE, false,
+                new Rating(defaultRating), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
+        );
+    }
+
+    /**
+     * this method is used to call only from repository
+     */
+    public static UserAccount fromRepository(
+            UUID id, Username username, Email email, Password password, UserRole userRole, boolean enabled, Rating rating, AccountEvents events
     ) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(username);
         Objects.requireNonNull(email);
         Objects.requireNonNull(password);
+        Objects.requireNonNull(userRole);
         Objects.requireNonNull(rating);
-        Objects.requireNonNull(isEnable);
-        Objects.requireNonNull(accountEvents);
-        Objects.requireNonNull(partners);
-        Objects.requireNonNull(games);
+        Objects.requireNonNull(events);
 
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.rating = rating;
-        this.isEnable = isEnable;
-        this.accountEvents = accountEvents;
-        this.partners = partners;
-        this.games = games;
+        return new UserAccount(id, username, email, password, userRole, enabled, rating, events, new HashSet<>(), new HashSet<>());
     }
 
-    public static UserAccount of(Username username, Email email, Password password) {
-        short defaultRating = 1500;
-        return new UserAccount(
-                UUID.randomUUID(), username, email, password, new Rating(defaultRating), Boolean.FALSE,
-                AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
-        );
+    public boolean isEnable() {
+        return isEnable;
     }
 
-    /**
-     * this method is used to call from repository
-     */
-    public static UserAccount fromRepository(
-            UUID id, Username username, Email email, Password password, Rating rating, boolean enabled, AccountEvents events
-    ) {
-        return new UserAccount(
-                id, username, email, password, rating, enabled, events, new HashSet<>(), new HashSet<>()
-        );
+    public Rating getRating() {
+        final short ratingForReturn = this.rating.rating();
+        return new Rating(ratingForReturn);
     }
 
     public void addPartner(final UserAccount partner) {
@@ -93,10 +83,21 @@ public class UserAccount implements UserDetails {
         games.remove(game);
     }
 
+    public void enable() {
+        this.isEnable = true;
+    }
+
     public void changeRating(final ChessGame chessGame) {
         Objects.requireNonNull(chessGame);
+        validateRatingChanging(chessGame);
+
+        final short updatedRating = Glicko2RatingCalculator.calculateRating(chessGame);
+        this.rating = new Rating(updatedRating);
+    }
+
+    private void validateRatingChanging(ChessGame chessGame) {
         if (chessGame.gameResult().isEmpty()) {
-            throw new IllegalArgumentException("Invalid method usage, check documentation.");
+            throw new IllegalArgumentException("The game is not ended for rating calculation.");
         }
 
         short secondPlayerRating = 0;
@@ -112,64 +113,24 @@ public class UserAccount implements UserDetails {
         }
 
         if (secondPlayerRating == 0) throw new IllegalArgumentException("Invalid method usage, check documentation.");
-
-        final short updatedRating = Glicko2RatingCalculator.calculateRating(chessGame);
-        this.rating = new Rating(updatedRating);
-    }
-
-    public void enable() {
-        this.isEnable = true;
-    }
-
-    public Rating getRating() {
-        final short ratingForReturn = this.rating.rating();
-        return new Rating(ratingForReturn);
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-    }
-
-    @Override
-    public String getPassword() {
-        return password.password();
-    }
-
-    @Override
-    public String getUsername() {
-        return username.username();
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return isEnable;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (partners.size() != ((UserAccount) o).partners.size()) return false;
-
         UserAccount that = (UserAccount) o;
-        return Objects.equals(id, that.id) &&
-               Objects.equals(username, that.username) &&
-               Objects.equals(email, that.email) &&
-               Objects.equals(rating, that.rating) &&
-               Objects.equals(password, that.password) &&
-               Objects.equals(accountEvents, that.accountEvents);
+
+        return isEnable == that.isEnable && Objects.equals(id, that.id) && Objects.equals(username, that.username) &&
+                Objects.equals(email, that.email) && Objects.equals(password, that.password) && userRole == that.userRole &&
+                Objects.equals(rating, that.rating) && Objects.equals(accountEvents, that.accountEvents);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(id);
-        result = 31 * result + Objects.hashCode(username);
-        result = 31 * result + Objects.hashCode(email);
-        result = 31 * result + Objects.hashCode(rating);
-        result = 31 * result + Objects.hashCode(password);
-        result = 31 * result + Objects.hashCode(accountEvents);
-        return result;
+        return Objects.hash(
+                id, username, email, password, userRole, isEnable, rating, accountEvents
+        );
     }
 
     @Override
@@ -182,21 +143,24 @@ public class UserAccount implements UserDetails {
         }
 
         return String.format("""
-               \nUserAccount: %s {
-                    user name : %s,
-                    email : %s,
-                    rating : %d,
-                    is enable : %s,
-                    creation date : %s,
-                    last updated date : %s
+               UserAccount: %s {
+                    Username : %s,
+                    Email : %s,
+                    User role : %s,
+                    Is enable : %s,
+                    Rating : %d,
+                    Creation date : %s,
+                    Last updated date : %s
                }
                """,
                 id,
                 username.username(),
                 email.email(),
-                rating.rating(),
+                userRole,
                 enables,
+                rating.rating(),
                 accountEvents.creationDate().toString(),
-                accountEvents.lastUpdateDate().toString());
+                accountEvents.lastUpdateDate().toString()
+        );
     }
 }

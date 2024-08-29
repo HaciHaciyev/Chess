@@ -1,11 +1,11 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
-import core.project.chess.infrastructure.utilities.ChessNotationValidator;
+import core.project.chess.infrastructure.utilities.Pair;
 import core.project.chess.infrastructure.utilities.StatusPair;
+import core.project.chess.infrastructure.utilities.ChessNotationValidator;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
-import org.springframework.data.util.Pair;
 
 import java.util.Objects;
 import java.util.Set;
@@ -298,11 +298,11 @@ public record AlgebraicNotation(String algebraicNotation) {
      */
     public static PieceTYPE pieceToType(final Piece piece) {
         return switch (piece) {
-            case King _ -> PieceTYPE.K;
-            case Queen _ -> PieceTYPE.Q;
-            case Rook _ -> PieceTYPE.R;
-            case Bishop _ -> PieceTYPE.B;
-            case Knight _ -> PieceTYPE.N;
+            case King k -> PieceTYPE.K;
+            case Queen q -> PieceTYPE.Q;
+            case Rook r -> PieceTYPE.R;
+            case Bishop b -> PieceTYPE.B;
+            case Knight k -> PieceTYPE.N;
             default -> PieceTYPE.P;
         };
     }
@@ -327,13 +327,13 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @param to The ending coordinate of the castling move.
      * @return The type of castling move (short or long).
      */
-    public static AlgebraicNotation.Castle castle(final Coordinate to) {
+    public static Castle castle(final Coordinate to) {
         final boolean isShortCasting = to.equals(Coordinate.G1) || to.equals(Coordinate.G8);
         if (isShortCasting) {
-            return AlgebraicNotation.Castle.SHORT_CASTLING;
+            return Castle.SHORT_CASTLING;
         }
 
-        return AlgebraicNotation.Castle.LONG_CASTLING;
+        return Castle.LONG_CASTLING;
     }
 
     /**
@@ -342,26 +342,26 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @param algebraicNotation the algebraic notation to be checked
      * @return a {@link StatusPair} containing a boolean value indicating whether the
      *         given algebraic notation represents a castling move, and if so, the
-     *         corresponding {@link AlgebraicNotation.Castle} instance (either {@link AlgebraicNotation.Castle#SHORT_CASTLING}
-     *         or {@link AlgebraicNotation.Castle#LONG_CASTLING}).
+     *         corresponding {@link Castle} instance (either {@link Castle#SHORT_CASTLING}
+     *         or {@link Castle#LONG_CASTLING}).
      */
-    public static StatusPair<AlgebraicNotation.Castle> isCastling(final AlgebraicNotation algebraicNotation) {
+    public static StatusPair<Castle> isCastling(final AlgebraicNotation algebraicNotation) {
         final String algebraicNotationSTR = algebraicNotation.algebraicNotation();
 
         final boolean shortCasting = algebraicNotationSTR
-                .equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation())
+                .equals(Castle.SHORT_CASTLING.getAlgebraicNotation())
                 || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
-                .equals(AlgebraicNotation.Castle.SHORT_CASTLING.getAlgebraicNotation());
+                .equals(Castle.SHORT_CASTLING.getAlgebraicNotation());
         if (shortCasting) {
-            return StatusPair.ofTrue(AlgebraicNotation.Castle.SHORT_CASTLING);
+            return StatusPair.ofTrue(Castle.SHORT_CASTLING);
         }
 
         final boolean longCasting = algebraicNotationSTR
-                .equals(AlgebraicNotation.Castle.LONG_CASTLING.getAlgebraicNotation())
+                .equals(Castle.LONG_CASTLING.getAlgebraicNotation())
                 || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
-                .equals(AlgebraicNotation.Castle.LONG_CASTLING.getAlgebraicNotation());
+                .equals(Castle.LONG_CASTLING.getAlgebraicNotation());
         if (longCasting) {
-            return StatusPair.ofTrue(AlgebraicNotation.Castle.LONG_CASTLING);
+            return StatusPair.ofTrue(Castle.LONG_CASTLING);
         }
 
         return StatusPair.ofFalse();
@@ -421,8 +421,8 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @param castle The type of castling move (short or long).
      * @return A Pair of Coordinates representing the castling move.
      */
-    public Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle, final Color color) {
-        final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
+    public Pair<Coordinate, Coordinate> castlingCoordinates(final Castle castle, final Color color) {
+        final boolean shortCastling = castle.equals(Castle.SHORT_CASTLING);
 
         if (shortCastling) {
 

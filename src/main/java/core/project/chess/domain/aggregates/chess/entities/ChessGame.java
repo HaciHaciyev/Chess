@@ -7,8 +7,8 @@ import core.project.chess.domain.aggregates.chess.value_objects.GameResult;
 import core.project.chess.domain.aggregates.chess.value_objects.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
+import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.StatusPair;
-import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -50,6 +50,7 @@ public class ChessGame {
 
         this.chessGameId = chessGameId;
         this.chessBoard = chessBoard;
+        this.playersTurn = Color.WHITE;
         this.playerForWhite = playerForWhite;
         this.playerForBlack = playerForBlack;
         this.playerForWhiteRating = playerForWhiteRating;
@@ -84,11 +85,11 @@ public class ChessGame {
             return Optional.empty();
         }
 
-        if (isGameOver.valueOrElseThrow().equals(GameResult.DRAW)) {
+        if (isGameOver.orElseThrow().equals(GameResult.DRAW)) {
             return Optional.of(GameResult.DRAW);
         }
 
-        if (isGameOver.valueOrElseThrow().equals(GameResult.WHITE_WIN)) {
+        if (isGameOver.orElseThrow().equals(GameResult.WHITE_WIN)) {
             return Optional.of(GameResult.WHITE_WIN);
         }
 
@@ -104,26 +105,32 @@ public class ChessGame {
     }
 
     public void makeMovement(
-            final UUID userId, final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
-    ) throws IllegalAccessException {
+            final String username, final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion
+    ) throws IllegalArgumentException {
+
+        Objects.requireNonNull(username);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
         if (isGameOver.status()) {
-            throw new IllegalAccessException("Game is over.");
+            throw new IllegalArgumentException("Game is over.");
         }
 
-        final boolean isWhitePlayer = userId.equals(playerForWhite.getId());
-        final boolean isBlackPlayer = userId.equals(playerForBlack.getId());
+        final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
+        final boolean isBlackPlayer = username.equals(playerForBlack.getUsername().username());
 
-        if (!isWhitePlayer && !isBlackPlayer) {
-            throw new IllegalAccessException("Not a player.");
+        final boolean thirdPartyUser = !isWhitePlayer && !isBlackPlayer;
+        if (thirdPartyUser) {
+            throw new IllegalArgumentException("Not a player.");
         }
 
-        if (isWhitePlayer && !Color.WHITE.equals(playersTurn)) {
+        final boolean whiteTriesToMoveButNotHistTurn = isWhitePlayer && !Color.WHITE.equals(playersTurn);
+        if (whiteTriesToMoveButNotHistTurn) {
             throw new IllegalArgumentException("It`s opponent move turn.");
         }
-        if (isBlackPlayer && !Color.WHITE.equals(playersTurn)) {
+
+        final boolean blackTriesToMoveButNotHistTurn = isBlackPlayer && !Color.BLACK.equals(playersTurn);
+        if (blackTriesToMoveButNotHistTurn) {
             throw new IllegalArgumentException("It`s opponent move turn.");
         }
 
@@ -248,7 +255,7 @@ public class ChessGame {
                 this.chessGameId.toString(), this.playersTurn.toString(), this.playerForWhite.getUsername(), this.playerForBlack.getUsername(),
                 this.playerForWhiteRating.rating(), this.playerForBlackRating.rating(), this.sessionEvents.creationDate().toString(),
                 this.sessionEvents.lastUpdateDate().toString(), this.timeControllingTYPE.toString(),
-                isGameOver.status(), isGameOver.status() ? isGameOver.valueOrElseThrow().toString() : "game is not over."
+                isGameOver.status(), isGameOver.status() ? isGameOver.orElseThrow().toString() : "game is not over."
         );
     }
 

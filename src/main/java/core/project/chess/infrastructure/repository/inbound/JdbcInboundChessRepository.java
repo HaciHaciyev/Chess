@@ -2,25 +2,25 @@ package core.project.chess.infrastructure.repository.inbound;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
+import core.project.chess.infrastructure.config.jdbc.JDBC;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Repository
+@ApplicationScoped
 public class JdbcInboundChessRepository implements InboundChessRepository {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final JDBC jdbc;
 
-    public JdbcInboundChessRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    JdbcInboundChessRepository(JDBC jdbc) {
+        this.jdbc = jdbc;
     }
 
     @Override
-    public void saveStarterChessGame(final ChessGame chessGame) {
+    public void saveStartedChessGame(ChessGame chessGame) {
 
     }
 
     @Override
-    public void updateCompletedGame(final ChessGame chessGame) {
+    public void updateCompletedGame(ChessGame chessGame) {
 
     }
 }

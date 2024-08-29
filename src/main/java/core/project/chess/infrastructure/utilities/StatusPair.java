@@ -26,7 +26,7 @@ public class StatusPair<T> {
         return status;
     }
 
-    public T valueOrElseThrow() {
+    public T orElseThrow() {
         if (value == null) {
             throw new NoSuchElementException();
         }

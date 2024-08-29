@@ -13,7 +13,7 @@ public record Queen(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<LinkedHashSet<ChessBoard.Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);

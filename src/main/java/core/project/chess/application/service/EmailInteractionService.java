@@ -1,24 +1,26 @@
 package core.project.chess.application.service;
 
 import core.project.chess.domain.aggregates.user.value_objects.Email;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
+import io.quarkus.logging.Log;
+import io.quarkus.mailer.Mail;
+import io.quarkus.mailer.Mailer;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Slf4j
-@Service
+import java.util.Objects;
+
+@ApplicationScoped
 public class EmailInteractionService {
 
-    private static final String BUSINESS_EMAIL = "";
+    private final Mailer mailer;
 
-    private final JavaMailSender emailSender;
-
-    public EmailInteractionService(JavaMailSender emailSender) {
-        this.emailSender = emailSender;
+    EmailInteractionService(Mailer mailer) {
+        this.mailer = mailer;
     }
 
-    public void sendToEmail(Email userEmail, String link) {
+    public void sendToEmail(Email email, String link) {
+        Objects.requireNonNull(email);
+        Objects.requireNonNull(link);
+
         String subject = "Email confirmation";
         String body = String.format(
                 """
@@ -29,14 +31,7 @@ public class EmailInteractionService {
                 link
         );
 
-        var message = new SimpleMailMessage();
-        message.setFrom(BUSINESS_EMAIL);
-        message.setTo(userEmail.email());
-        message.setSubject(subject);
-        message.setText(body);
-
-        emailSender.send(message);
-        log.info("Token sent to : {}", userEmail.email());
+        mailer.send(Mail.withText(link, subject, body));
+        Log.info("Token sent to : {%s}".formatted(email.email()));
     }
 }
-

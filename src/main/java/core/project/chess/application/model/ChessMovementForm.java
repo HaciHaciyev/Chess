@@ -2,10 +2,14 @@ package core.project.chess.application.model;
 
 import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
 import core.project.chess.domain.aggregates.chess.value_objects.Piece;
-import jakarta.annotation.Nullable;
+import core.project.chess.infrastructure.utilities.OptionalArgument;
 
-public record ChessMovementForm(
-        Coordinate from, Coordinate to, @Nullable Piece inCaseOfPromotion
-) {
+import java.util.Objects;
 
+public record ChessMovementForm(Coordinate from, Coordinate to, @OptionalArgument Piece inCaseOfPromotion) {
+
+    public ChessMovementForm {
+        Objects.requireNonNull(from);
+        Objects.requireNonNull(to);
+    }
 }

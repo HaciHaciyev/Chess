@@ -1,12 +1,11 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.value_objects.*;
-import core.project.chess.infrastructure.utilities.Result;
 import core.project.chess.infrastructure.utilities.StatusPair;
+import core.project.chess.infrastructure.utilities.Pair;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
-import org.springframework.data.util.Pair;
 
 import java.util.*;
 
@@ -60,6 +59,7 @@ public class ChessBoard {
     private Coordinate currentWhiteKingPosition;
     private Coordinate currentBlackKingPosition;
     private final Map<Coordinate, Field> fieldMap;
+    private final Map<String, Byte> hashCodeOfBoard;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
     private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
     private static final Coordinate initialBlackKingPosition = Coordinate.E8;
@@ -88,6 +88,7 @@ public class ChessBoard {
         this.initializationTYPE = initializationTYPE;
         this.listOfAlgebraicNotations = algebraicNotations;
         this.fieldMap = new EnumMap<>(Coordinate.class);
+        this.hashCodeOfBoard = new HashMap<>();
 
         this.figuresTurn = Color.WHITE;
         this.currentWhiteKingPosition = initialWhiteKingPosition;
@@ -177,16 +178,16 @@ public class ChessBoard {
      * @return An Optional containing the pair of coordinates representing the latest movement, or an empty Optional if no movement has been made.
      */
     public Optional<Pair<Coordinate, Coordinate>> latestMovement() {
-        AlgebraicNotation algebraicNotation = Result.ofThrowable(listOfAlgebraicNotations::getLast).orElseGet(null);
-        if (algebraicNotation == null) {
+        if (listOfAlgebraicNotations.isEmpty()) {
             return Optional.empty();
         }
 
+        AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.getLast();
+
         StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(algebraicNotation);
         if (statusPair.status()) {
-            return Optional.of(
-                    algebraicNotation.castlingCoordinates(statusPair.valueOrElseThrow(), figuresTurn)
-            );
+
+            return Optional.of(algebraicNotation.castlingCoordinates(statusPair.orElseThrow(), figuresTurn));
         }
 
         return Optional.of(algebraicNotation.coordinates());
@@ -206,7 +207,7 @@ public class ChessBoard {
         Color kingColor = fieldMap.get(from).pieceOptional().orElseThrow().color();
         King king = theKing(kingColor);
 
-        return kingColor == Color.WHITE ?
+        return kingColor.equals(Color.WHITE) ?
                 king.safeForKing(this, currentWhiteKingPosition, from, to) :
                 king.safeForKing(this, currentBlackKingPosition, from, to);
     }
@@ -237,6 +238,46 @@ public class ChessBoard {
                         );
     }
 
+    /**
+     * Generates a string representation of the current position on the chessboard.
+     * <p>
+     * This method iterates over all the fields of the board, represented as coordinates,
+     * and creates a string where each field is associated with its coordinate
+     * and the corresponding piece (if present). If the field is empty,
+     * no piece information is added for that field.
+     *
+     * @return A string representing the current position on the board, where each
+     *         coordinate is mapped to a piece representation or an empty string.
+     */
+    public final String generateHashOfBoard() {
+        var hashOfBoard = new StringBuilder();
+
+        for (final Coordinate coordinate : Coordinate.values()) {
+
+            final Field field = fieldMap.get(coordinate);
+            final String pieceRepresentation = field.pieceOptional().isEmpty() ? "" : convertPieceToHash(field.pieceOptional().get());
+
+            hashOfBoard
+                    .append(coordinate.toString())
+                    .append(" -> ")
+                    .append(pieceRepresentation)
+                    .append("; ");
+        }
+
+        return hashOfBoard.toString();
+    }
+
+    private String convertPieceToHash(final Piece piece) {
+        return switch (piece) {
+            case King k -> "K-%s".formatted(piece.color().toString().charAt(0));
+            case Queen q -> "Q-%s".formatted(piece.color().toString().charAt(0));
+            case Rook r -> "R-%s".formatted(piece.color().toString().charAt(0));
+            case Bishop b -> "B-%s".formatted(piece.color().toString().charAt(0));
+            case Knight k -> "N-%s".formatted(piece.color().toString().charAt(0));
+            case Pawn p -> "" + piece.color().toString().charAt(0);
+        };
+    }
+
     private void switchFiguresTurn() {
         if (figuresTurn.equals(Color.WHITE)) {
             figuresTurn = Color.BLACK;
@@ -248,10 +289,15 @@ public class ChessBoard {
     /** This is not a complete validation of which player should play at this point.
      * This validation rather checks what color pieces should be moved.
      * Finally, validation of the question of who should walk can only be carried out in the controller.*/
-    private boolean validateFiguresTurn(final Coordinate coordinate) {
-        final Color figuresThatTryToMove = this.field(coordinate).pieceOptional().orElseThrow().color();
+    private boolean validateFiguresTurnAndPieceExisting(final Coordinate coordinate) {
+        final Color colorOfFiguresThatTryToMove = this.field(coordinate)
+                .pieceOptional()
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Invalid move. No piece for movement.")
+                )
+                .color();
 
-        return figuresThatTryToMove != figuresTurn;
+        return colorOfFiguresThatTryToMove == figuresTurn;
     }
 
     /**
@@ -589,7 +635,7 @@ public class ChessBoard {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        if (!validateFiguresTurn(from)) {
+        if (!validateFiguresTurnAndPieceExisting(from)) {
             throw new IllegalArgumentException(
                     String.format("At the moment, the player for %s must move and not the opponent", figuresTurn)
             );
@@ -599,9 +645,9 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move. Coordinate 'from' can`t be equal to coordinate 'to'");
         }
 
-        Field startField = fieldMap.get(from);
-        Field endField = fieldMap.get(to);
-        Piece piece = startField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move. No piece for movement."));
+        final Field startField = fieldMap.get(from);
+        final Field endField = fieldMap.get(to);
+        final Piece piece = startField.pieceOptional().orElseThrow();
 
         /** Delegate the operation to another method if necessary.*/
         if (isCastling(piece, from, to)) {
@@ -609,15 +655,16 @@ public class ChessBoard {
         }
 
         /** Validation.*/
-        StatusPair<LinkedHashSet<Operations>> statusPair = piece.isValidMove(this, from, to);
+        final StatusPair<LinkedHashSet<Operations>> statusPair = piece.isValidMove(this, from, to);
         if (!statusPair.status()) {
             throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
 
-        final boolean promotionOperation = statusPair.valueOrElseThrow().contains(Operations.PROMOTION);
+        final boolean promotionOperation = statusPair.orElseThrow().contains(Operations.PROMOTION);
         if (promotionOperation) {
 
             Pawn pawn = (Pawn) piece;
+
             final boolean isValidPieceForPromotion = pawn.isValidPromotion(pawn, inCaseOfPromotion);
             if (!isValidPieceForPromotion) {
                 throw new IllegalArgumentException("Mismatch in color of figures for pawn promotion. Failed validation.");
@@ -626,7 +673,7 @@ public class ChessBoard {
         }
 
         /** Process operations from StatusPair. All validation need to be processed before that.*/
-        LinkedHashSet<Operations> operations = statusPair.valueOrElseThrow();
+        final LinkedHashSet<Operations> operations = statusPair.orElseThrow();
 
         startField.removeFigure();
 
@@ -644,7 +691,7 @@ public class ChessBoard {
             endField.addFigure(piece);
         }
 
-        /** Monitor opportunities for castling and switch players.*/
+        /** Monitor opportunities for castling, switch players.*/
         if (piece instanceof King king) {
             changedKingPosition(king, to);
             changeOfCastlingAbility(from, king);
@@ -654,16 +701,20 @@ public class ChessBoard {
             changeOfCastlingAbility(from, rook);
         }
 
+        final String currentPositionHash = generateHashOfBoard();
+        hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
+
         switchFiguresTurn();
 
         /** Recording the move made in algebraic notation.*/
 
-        final var inCaseOfPromotionPieceType =
-                inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
+        final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
 
-        listOfAlgebraicNotations.add(
-                AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType)
-        );
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType));
+
+        if (hashCodeOfBoard.get(currentPositionHash) == 3) {
+            return Operations.STALEMATE;
+        }
 
         return AlgebraicNotation.opponentKingStatus(operations);
     }
@@ -679,9 +730,9 @@ public class ChessBoard {
      */
     private Operations castling(final Coordinate from, final Coordinate to) {
         /** Preparation of necessary data and validation.*/
-        Field kingStartedField = fieldMap.get(from);
-        Field kingEndField = fieldMap.get(to);
-        Piece piece = kingStartedField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move. No piece for movement."));
+        final Field kingStartedField = fieldMap.get(from);
+        final Field kingEndField = fieldMap.get(to);
+        final Piece piece = kingStartedField.pieceOptional().orElseThrow(() -> new IllegalArgumentException("Invalid move. No piece for movement."));
 
         if (!(piece instanceof King king)) {
             throw new IllegalStateException("Invalid method usage, check the documentation.");
@@ -692,7 +743,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move. One or both of the pieces to be castled have made moves, castling is not possible.");
         }
 
-        StatusPair<LinkedHashSet<Operations>> statusPair = king.isValidMove(this, kingStartedField.getCoordinate(), kingEndField.getCoordinate());
+        final StatusPair<LinkedHashSet<Operations>> statusPair = king.isValidMove(this, kingStartedField.getCoordinate(), kingEndField.getCoordinate());
         if (!statusPair.status()) {
             throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
@@ -712,13 +763,19 @@ public class ChessBoard {
         changedKingPosition(king, to);
         changeOfCastlingAbility(from, king);
 
+        final String currentPositionHash = generateHashOfBoard();
+        hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
+
         switchFiguresTurn();
 
         /** Recording the move made in algebraic notation.*/
-        LinkedHashSet<Operations> operations = statusPair.valueOrElseThrow();
-        listOfAlgebraicNotations.add(
-                AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null)
-        );
+        final LinkedHashSet<Operations> operations = statusPair.orElseThrow();
+
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
+
+        if (hashCodeOfBoard.get(currentPositionHash) == 3) {
+            return Operations.STALEMATE;
+        }
 
         return AlgebraicNotation.opponentKingStatus(operations);
     }
@@ -732,18 +789,18 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            Field startField = fieldMap.get(Coordinate.H1);
-            Field endField = fieldMap.get(Coordinate.F1);
-            Rook rook = (Rook) startField.pieceOptional().orElseThrow();
+            final Field startField = fieldMap.get(Coordinate.H1);
+            final Field endField = fieldMap.get(Coordinate.F1);
+            final Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
             startField.removeFigure();
             endField.addFigure(rook);
             return;
         }
 
-        Field startField = fieldMap.get(Coordinate.H8);
-        Field endField = fieldMap.get(Coordinate.F8);
-        Rook rook = (Rook) startField.pieceOptional().orElseThrow();
+        final Field startField = fieldMap.get(Coordinate.H8);
+        final Field endField = fieldMap.get(Coordinate.F8);
+        final Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
         startField.removeFigure();
         endField.addFigure(rook);
@@ -758,18 +815,18 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            Field startField = fieldMap.get(Coordinate.A1);
-            Field endField = fieldMap.get(Coordinate.D1);
-            Rook rook = (Rook) startField.pieceOptional().orElseThrow();
+            final Field startField = fieldMap.get(Coordinate.A1);
+            final Field endField = fieldMap.get(Coordinate.D1);
+            final Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
             startField.removeFigure();
             endField.addFigure(rook);
             return;
         }
 
-        Field startField = fieldMap.get(Coordinate.A8);
-        Field endField = fieldMap.get(Coordinate.D8);
-        Rook rook = (Rook) startField.pieceOptional().orElseThrow();
+        final Field startField = fieldMap.get(Coordinate.A8);
+        final Field endField = fieldMap.get(Coordinate.D8);
+        final Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
         startField.removeFigure();
         endField.addFigure(rook);
@@ -785,33 +842,164 @@ public class ChessBoard {
             return false;
         }
 
-        AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
-        StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(lastMovement);
+        final String currentPositionHash = generateHashOfBoard();
+        final AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
+        final StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(lastMovement);
+
         if (statusPair.status()) {
-            revertCastling(statusPair.valueOrElseThrow());
+            revertCastling(statusPair.orElseThrow());
             return true;
         }
 
-        var movementPair = lastMovement.coordinates();
-        Coordinate from = movementPair.getFirst();
-        Coordinate to = movementPair.getSecond();
+        final var movementPair = lastMovement.coordinates();
+        final Coordinate from = movementPair.getFirst();
+        final Coordinate to = movementPair.getSecond();
 
-        Field startedField = fieldMap.get(from);
-        Field endedField = fieldMap.get(to);
-        Piece piece = endedField.pieceOptional().orElseThrow();
+        final Field startedField = fieldMap.get(from);
+        final Field endedField = fieldMap.get(to);
+        final Piece piece = endedField.pieceOptional().orElseThrow();
 
         endedField.removeFigure();
         startedField.addFigure(piece);
 
+        final boolean isCapture = lastMovement.algebraicNotation().contains("X");
+        if (isCapture) {
+
+            final Piece previouslyCapturedPiece;
+            if (this.figuresTurn.equals(Color.WHITE)) {
+                previouslyCapturedPiece = findPreviouslyCapturedPiece(startedField.coordinate, Color.BLACK);
+            } else {
+                previouslyCapturedPiece = findPreviouslyCapturedPiece(startedField.coordinate, Color.WHITE);
+            }
+
+            startedField.addFigure(previouslyCapturedPiece);
+        }
+
         listOfAlgebraicNotations.removeLast();
+
+        final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
+        if (newValue == 0) {
+            hashCodeOfBoard.remove(currentPositionHash);
+        } else {
+            hashCodeOfBoard.put(currentPositionHash, newValue);
+        }
 
         if (piece instanceof King king) {
             changedKingPosition(king, from);
             changeOfCastlingAbilityInRevertMove(king, null);
         }
 
+        if (piece instanceof Rook rook) {
+            changeOfCastlingAbilityInRevertMove(rook, null);
+        }
+
         switchFiguresTurn();
         return true;
+    }
+
+    /**
+     * Finds a previously captured piece based on the given coordinate and color.
+     * <p>
+     * This method iterates through a list of algebraic notations, starting from the
+     * second-to-last move, and looks for a piece that was moved to the specified
+     * coordinates. If the piece is not found in previous moves, the method checks
+     * which piece should be at the specified position based on the color and rank.
+     *
+     * <p>The method performs the following steps:</p>
+     * <ol>
+     *     <li>Iterates through the list of algebraic notations in reverse order,
+     *     starting from the second-to-last element.</li>
+     *     <li>For each notation, extracts the coordinates of the destination position.</li>
+     *     <li>Compares the destination position with the given coordinate.</li>
+     *     <li>If the coordinates match, checks if the piece is a pawn based on the
+     *     second character of the notation.</li>
+     *     <li>If the piece is not a pawn, returns the corresponding piece object
+     *     (King, Queen, Rook, Bishop, Knight) based on the first character of the notation.</li>
+     *     <li>If no piece was found in previous moves, checks which piece should be
+     *     at the specified position based on the color and rank.</li>
+     *     <li>If no piece is found, throws an exception.</li>
+     * </ol>
+     *
+     * @param coordinate the coordinate at which to find the previously captured piece.
+     * @param color the color of the piece to find (white or black).
+     * @return a piece object corresponding to the specified coordinate and color.
+     * @throws RuntimeException if the piece cannot be found at the specified position or
+     * if an unexpected situation arises.
+     */
+    private Piece findPreviouslyCapturedPiece(final Coordinate coordinate, final Color color) {
+
+        for (int i = listOfAlgebraicNotations.size() - 2; i >= 0; i -= 2) {
+
+            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
+
+            var movementPair = algebraicNotation.coordinates();
+            Coordinate to = movementPair.getSecond();
+
+            final String notation = algebraicNotation.algebraicNotation();
+
+            if (to.equals(coordinate)) {
+
+                final boolean pawnMovement = Character.isDigit(notation.charAt(1));
+                if (pawnMovement) {
+                    return new Pawn(color);
+                }
+
+                return switch (notation.charAt(0)) {
+                    case 'K' -> new King(color);
+                    case 'Q' -> new Queen(color);
+                    case 'R' -> new Rook(color);
+                    case 'B' -> new Bishop(color);
+                    case 'N' -> new Knight(color);
+                    default -> throw new RuntimeException("Unexpected situation.");
+                };
+            }
+        }
+
+        if (color.equals(Color.WHITE)) {
+
+            if (coordinate.getRow() == 2) {
+                return new Pawn(color);
+            }
+
+            if (coordinate.equals(Coordinate.D1)) {
+                return new Queen(color);
+            }
+
+            if (coordinate.equals(Coordinate.A1) || coordinate.equals(Coordinate.H1)) {
+                return new Rook(color);
+            }
+
+            if (coordinate.equals(Coordinate.B1) || coordinate.equals(Coordinate.G1)) {
+                return new Knight(color);
+            }
+
+            if (coordinate.equals(Coordinate.C1) || coordinate.equals(Coordinate.F1)) {
+                return new Bishop(color);
+            }
+
+        }
+
+        if (coordinate.getRow() == 7) {
+            return new Pawn(color);
+        }
+
+        if (coordinate.equals(Coordinate.D8)) {
+            return new Queen(color);
+        }
+
+        if (coordinate.equals(Coordinate.A8) || coordinate.equals(Coordinate.H8)) {
+            return new Rook(color);
+        }
+
+        if (coordinate.equals(Coordinate.B8) || coordinate.equals(Coordinate.G8)) {
+            return new Knight(color);
+        }
+
+        if (coordinate.equals(Coordinate.C8) || coordinate.equals(Coordinate.F8)) {
+            return new Bishop(color);
+        }
+
+        throw new RuntimeException("Unexpected situation.");
     }
 
     /**
@@ -820,13 +1008,15 @@ public class ChessBoard {
      * @param castle the castling information
      */
     private void revertCastling(final AlgebraicNotation.Castle castle) {
-        var movementPair = castlingCoordinates(castle);
-        Coordinate from = movementPair.getFirst();
-        Coordinate to = movementPair.getSecond();
+        final String currentPositionHash = generateHashOfBoard();
 
-        Field kingStartedField = fieldMap.get(from);
-        Field kingEndedField = fieldMap.get(to);
-        King king = (King) kingEndedField.pieceOptional().orElseThrow();
+        final var movementPair = castlingCoordinates(castle);
+        final Coordinate from = movementPair.getFirst();
+        final Coordinate to = movementPair.getSecond();
+
+        final Field kingStartedField = fieldMap.get(from);
+        final Field kingEndedField = fieldMap.get(to);
+        final King king = (King) kingEndedField.pieceOptional().orElseThrow();
 
         kingEndedField.removeFigure();
         kingStartedField.addFigure(king);
@@ -839,6 +1029,13 @@ public class ChessBoard {
         }
 
         listOfAlgebraicNotations.removeLast();
+
+        final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
+        if (newValue == 0) {
+            hashCodeOfBoard.remove(currentPositionHash);
+        } else {
+            hashCodeOfBoard.put(currentPositionHash, newValue);
+        }
 
         changedKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(king, castle);
@@ -855,18 +1052,18 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            Field startField = fieldMap.get(Coordinate.H1);
-            Field endField = fieldMap.get(Coordinate.F1);
-            Rook rook = (Rook) endField.pieceOptional().orElseThrow();
+            final Field startField = fieldMap.get(Coordinate.H1);
+            final Field endField = fieldMap.get(Coordinate.F1);
+            final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
             endField.removeFigure();
             startField.addFigure(rook);
             return;
         }
 
-        Field startField = fieldMap.get(Coordinate.H8);
-        Field endField = fieldMap.get(Coordinate.F8);
-        Rook rook = (Rook) endField.pieceOptional().orElseThrow();
+        final Field startField = fieldMap.get(Coordinate.H8);
+        final Field endField = fieldMap.get(Coordinate.F8);
+        final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
         endField.removeFigure();
         startField.addFigure(rook);
@@ -881,18 +1078,18 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            Field startField = fieldMap.get(Coordinate.A1);
-            Field endField = fieldMap.get(Coordinate.D1);
-            Rook rook = (Rook) endField.pieceOptional().orElseThrow();
+            final Field startField = fieldMap.get(Coordinate.A1);
+            final Field endField = fieldMap.get(Coordinate.D1);
+            final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
             endField.removeFigure();
             startField.addFigure(rook);
             return;
         }
 
-        Field startField = fieldMap.get(Coordinate.A8);
-        Field endField = fieldMap.get(Coordinate.D8);
-        Rook rook = (Rook) endField.pieceOptional().orElseThrow();
+        final Field startField = fieldMap.get(Coordinate.A8);
+        final Field endField = fieldMap.get(Coordinate.D8);
+        final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
         endField.removeFigure();
         startField.addFigure(rook);
@@ -954,11 +1151,11 @@ public class ChessBoard {
 
             Color color = piece.color();
             return switch (piece) {
-                case King _ -> Optional.of(new King(color));
-                case Queen _ -> Optional.of(new Queen(color));
-                case Rook _ -> Optional.of(new Rook(color));
-                case Bishop _ -> Optional.of(new Bishop(color));
-                case Knight _ -> Optional.of(new Knight(color));
+                case King k -> Optional.of(new King(color));
+                case Queen q -> Optional.of(new Queen(color));
+                case Rook r -> Optional.of(new Rook(color));
+                case Bishop b -> Optional.of(new Bishop(color));
+                case Knight k -> Optional.of(new Knight(color));
                 default -> Optional.of(new Pawn(color));
             };
         }
