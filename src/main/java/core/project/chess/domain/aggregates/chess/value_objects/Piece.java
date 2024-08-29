@@ -57,6 +57,7 @@ public sealed interface Piece
         final Color opponentFiguresColor = figuresColor.equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
         final King opponentKing = new King(opponentFiguresColor);
 
+        /** TODO Fix.*/
         if (opponentKing.stalemate(chessBoard, from, to)) {
             return Operations.STALEMATE;
         }
