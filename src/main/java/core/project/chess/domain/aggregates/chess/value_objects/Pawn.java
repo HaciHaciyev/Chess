@@ -71,9 +71,7 @@ public record Pawn(Color color)
         final int startRow = startField.getCoordinate().getRow();
         final int endRow = endField.getCoordinate().getRow();
 
-        final boolean isRightPawnMovingWay =
-                (pawnColor.equals(Color.WHITE) && startRow < endRow) ||
-                (pawnColor.equals(Color.BLACK) && startRow > endRow);
+        final boolean isRightPawnMovingWay = (pawnColor.equals(Color.WHITE) && startRow < endRow) || (pawnColor.equals(Color.BLACK) && startRow > endRow);
         if (!isRightPawnMovingWay) {
             return StatusPair.ofFalse();
         }
@@ -83,8 +81,7 @@ public record Pawn(Color color)
             return straightMove(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow, endField);
         }
 
-        final boolean diagonalCapture =
-                Math.abs(startRow - endRow) == 1 && Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1;
+        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 && Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1;
         if (diagonalCapture) {
             return diagonalCapture(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow, endField);
         }
@@ -114,6 +111,7 @@ public record Pawn(Color color)
 
         final boolean fieldForPromotion = endRow == 1 || endRow == 8;
         if (fieldForPromotion && validMoveDistance) {
+
             setOfOperations.add(Operations.PROMOTION);
             return StatusPair.ofTrue(setOfOperations);
         }
@@ -150,6 +148,7 @@ public record Pawn(Color color)
         }
 
         if (captureOnPassage(chessBoard, endColumn, endRow)) {
+
             setOfOperations.add(Operations.CAPTURE);
             return StatusPair.ofTrue(setOfOperations);
         }
@@ -169,6 +168,7 @@ public record Pawn(Color color)
 
     private boolean captureOnPassage(ChessBoard chessBoard, char endColumn, int endRow) {
         Optional<Coordinate> lastMoveCoordinate = previousMoveCoordinate(chessBoard);
+
         return previousMoveWasPassage(chessBoard) &&
                 lastMoveCoordinate.isPresent() &&
                 lastMoveCoordinate.get().getColumn() == endColumn &&

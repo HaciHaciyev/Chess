@@ -34,7 +34,7 @@ import java.util.*;
 @Path("/chess-game")
 @ApplicationScoped
 @RolesAllowed("USER")
-@ServerEndpoint("/chess-game/{gameId}/{username}")
+@ServerEndpoint("/chess-game/{gameId}")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameHandler {
 

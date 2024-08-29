@@ -33,8 +33,7 @@ public record Knight(Color color)
             throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
-        final boolean endFieldOccupiedBySameColorPiece =
-                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(knightColor);
+        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(knightColor);
         if (endFieldOccupiedBySameColorPiece) {
             return StatusPair.ofFalse();
         }
@@ -43,12 +42,12 @@ public record Knight(Color color)
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
+
         var setOfOperations = new LinkedHashSet<Operations>();
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         final Color opponentPieceColor = knightColor == Color.WHITE ? Color.BLACK : Color.WHITE;
-        final boolean opponentPieceInEndField =
-                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
+        final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
         if (opponentPieceInEndField) {
             setOfOperations.add(Operations.CAPTURE);
         }
@@ -63,9 +62,8 @@ public record Knight(Color color)
 
     private boolean knightMove(final Coordinate from, final Coordinate to) {
         int differenceOfRow = Math.abs(from.getRow() - to.getRow());
-        int differenceOfColumn = Math.abs(
-                columnToInt(from.getColumn()) - columnToInt(to.getColumn())
-        );
+        int differenceOfColumn = Math.abs(columnToInt(from.getColumn()) - columnToInt(to.getColumn()));
+
         return (differenceOfRow == 2 && differenceOfColumn == 1) || (differenceOfRow == 1 && differenceOfColumn == 2);
     }
 }

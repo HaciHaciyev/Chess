@@ -1,10 +1,10 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
+import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.Pair;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import core.project.chess.infrastructure.utilities.ChessNotationValidator;
-import jakarta.annotation.Nullable;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -104,7 +104,8 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @throws NullPointerException if any of the required parameters are null.
      */
     public static AlgebraicNotation of(
-            final PieceTYPE piece, final Set<ChessBoard.Operations> operationsSet, final Coordinate from, final Coordinate to, final @Nullable PieceTYPE inCaseOfPromotion
+            final PieceTYPE piece, final Set<ChessBoard.Operations> operationsSet,
+            final Coordinate from, final Coordinate to, final @OptionalArgument PieceTYPE inCaseOfPromotion
     ) {
         Objects.requireNonNull(piece);
         Objects.requireNonNull(operationsSet);

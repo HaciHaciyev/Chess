@@ -33,8 +33,7 @@ public record Queen(Color color)
             throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
-        final boolean endFieldOccupiedBySameColorPiece =
-                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(queenColor);
+        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(queenColor);
         if (endFieldOccupiedBySameColorPiece) {
             return StatusPair.ofFalse();
         }
@@ -43,12 +42,12 @@ public record Queen(Color color)
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
+
         var setOfOperations = new LinkedHashSet<Operations>();
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         final Color opponentPieceColor = queenColor == Color.WHITE ? Color.BLACK : Color.WHITE;
-        final boolean opponentPieceInEndField =
-                endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
+        final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
         if (opponentPieceInEndField) {
             setOfOperations.add(Operations.CAPTURE);
         }
