@@ -122,8 +122,8 @@ public record King(Color color)
         final List<Field> fields = getAllFriendlyFields(chessBoard);
 
         for (final Field field : fields) {
-
             final boolean result = processFields(chessBoard, king, field);
+
             if (!result) {
                 return false;
             }
