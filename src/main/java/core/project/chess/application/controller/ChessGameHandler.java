@@ -87,7 +87,7 @@ public class ChessGameHandler {
     }
 
     @OnOpen
-    public void onOpen(final Session session, @PathParam("gameId") final String gameId) throws JsonProcessingException {
+    public void onOpen(final Session session, @PathParam("gameId") final String gameId) {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
 
@@ -96,8 +96,7 @@ public class ChessGameHandler {
 
         pair.getSecond().add(session);
 
-        final String chessBoardMessage = objectMapper.writeValueAsString(pair.getFirst().getChessBoard().generateHashOfBoard());
-
+        final String chessBoardMessage = pair.getFirst().getChessBoard().toString();
         sendMessage(session, chessBoardMessage);
     }
 
@@ -120,7 +119,7 @@ public class ChessGameHandler {
 
         chessGame.makeMovement(username, chessMovementForm.from(), chessMovementForm.to(), chessMovementForm.inCaseOfPromotion());
 
-        final String chessBoardMessage = objectMapper.writeValueAsString(pair.getFirst().getChessBoard().generateHashOfBoard());
+        final String chessBoardMessage = pair.getFirst().getChessBoard().toString();
 
         for (Session currentSession : pair.getSecond()) {
             sendMessage(currentSession, chessBoardMessage);

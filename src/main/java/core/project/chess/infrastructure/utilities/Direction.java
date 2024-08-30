@@ -1,7 +1,7 @@
 package core.project.chess.infrastructure.utilities;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
-import core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation;
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
 import core.project.chess.domain.aggregates.chess.value_objects.Piece;
 

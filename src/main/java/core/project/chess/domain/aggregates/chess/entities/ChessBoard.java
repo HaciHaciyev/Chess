@@ -47,7 +47,7 @@ import java.util.*;
  *
  *
  * @author Hadzhyiev Hadzhy
- * @version 1.3
+ * @version 1.5
  */
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
@@ -60,6 +60,7 @@ public class ChessBoard {
     private Coordinate currentBlackKingPosition;
     private final Map<Coordinate, Field> fieldMap;
     private final Map<String, Byte> hashCodeOfBoard;
+    private final ArrayList<String> keysOfHashCodeOfBoard;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
     private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
     private static final Coordinate initialBlackKingPosition = Coordinate.E8;
@@ -88,7 +89,8 @@ public class ChessBoard {
         this.initializationTYPE = initializationTYPE;
         this.listOfAlgebraicNotations = algebraicNotations;
         this.fieldMap = new EnumMap<>(Coordinate.class);
-        this.hashCodeOfBoard = new HashMap<>();
+        this.keysOfHashCodeOfBoard = new ArrayList<>(10);
+        this.hashCodeOfBoard = new HashMap<>(10, 0.75f);
 
         this.figuresTurn = Color.WHITE;
         this.currentWhiteKingPosition = initialWhiteKingPosition;
@@ -171,6 +173,15 @@ public class ChessBoard {
     }
 
     /**
+     * Retrieves a last generating toString() for ChessBoard.
+     *
+     * @return String representation of ChessBoard.
+     */
+    public String actualRepresentationOfChessBoard() {
+        return keysOfHashCodeOfBoard.getLast();
+    }
+
+    /**
      * Retrieves the latest movement on the chess board, represented as a pair of coordinates.
      * <p>
      * If the latest movement was a castling move, the method will return the coordinates of the King's position before and after the castling move.
@@ -236,35 +247,6 @@ public class ChessBoard {
                         .orElseThrow(
                                 () -> new IllegalStateException("Unexpected exception.")
                         );
-    }
-
-    /**
-     * Generates a string representation of the current position on the chessboard.
-     * <p>
-     * This method iterates over all the fields of the board, represented as coordinates,
-     * and creates a string where each field is associated with its coordinate
-     * and the corresponding piece (if present). If the field is empty,
-     * no piece information is added for that field.
-     *
-     * @return A string representing the current position on the board, where each
-     *         coordinate is mapped to a piece representation or an empty string.
-     */
-    public final String generateHashOfBoard() {
-        var hashOfBoard = new StringBuilder();
-
-        for (final Coordinate coordinate : Coordinate.values()) {
-
-            final Field field = fieldMap.get(coordinate);
-            final String pieceRepresentation = field.pieceOptional().isEmpty() ? "" : convertPieceToHash(field.pieceOptional().get());
-
-            hashOfBoard
-                    .append(coordinate.toString())
-                    .append(" -> ")
-                    .append(pieceRepresentation)
-                    .append("; ");
-        }
-
-        return hashOfBoard.toString();
     }
 
     private String convertPieceToHash(final Piece piece) {
@@ -701,15 +683,13 @@ public class ChessBoard {
             changeOfCastlingAbility(from, rook);
         }
 
-        final String currentPositionHash = generateHashOfBoard();
+        final String currentPositionHash = toString();
+        keysOfHashCodeOfBoard.add(currentPositionHash);
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
         switchFiguresTurn();
-
         /** Recording the move made in algebraic notation.*/
-
         final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
-
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType));
 
         if (hashCodeOfBoard.get(currentPositionHash) == 3) {
@@ -763,14 +743,13 @@ public class ChessBoard {
         changedKingPosition(king, to);
         changeOfCastlingAbility(from, king);
 
-        final String currentPositionHash = generateHashOfBoard();
+        final String currentPositionHash = toString();
+        keysOfHashCodeOfBoard.add(currentPositionHash);
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
         switchFiguresTurn();
-
         /** Recording the move made in algebraic notation.*/
         final LinkedHashSet<Operations> operations = statusPair.orElseThrow();
-
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
 
         if (hashCodeOfBoard.get(currentPositionHash) == 3) {
@@ -842,7 +821,7 @@ public class ChessBoard {
             return false;
         }
 
-        final String currentPositionHash = generateHashOfBoard();
+        final String currentPositionHash = keysOfHashCodeOfBoard.getLast();
         final AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
         final StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(lastMovement);
 
@@ -875,8 +854,8 @@ public class ChessBoard {
             startedField.addFigure(previouslyCapturedPiece);
         }
 
+        keysOfHashCodeOfBoard.removeLast();
         listOfAlgebraicNotations.removeLast();
-
         final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
         if (newValue == 0) {
             hashCodeOfBoard.remove(currentPositionHash);
@@ -1008,7 +987,7 @@ public class ChessBoard {
      * @param castle the castling information
      */
     private void revertCastling(final AlgebraicNotation.Castle castle) {
-        final String currentPositionHash = generateHashOfBoard();
+        final String currentPositionHash = toString();
 
         final var movementPair = castlingCoordinates(castle);
         final Coordinate from = movementPair.getFirst();
@@ -1207,6 +1186,36 @@ public class ChessBoard {
     }
 
     /**
+     * Generates a string representation of the current position on the chessboard.
+     * <p>
+     * This method iterates over all the fields of the board, represented as coordinates,
+     * and creates a string where each field is associated with its coordinate
+     * and the corresponding piece (if present). If the field is empty,
+     * no piece information is added for that field.
+     *
+     * @return A string representing the current position on the board, where each
+     *         coordinate is mapped to a piece representation or an empty string.
+     */
+    @Override
+    public final String toString() {
+        var hashOfBoard = new StringBuilder();
+
+        for (final Coordinate coordinate : Coordinate.values()) {
+
+            final Field field = fieldMap.get(coordinate);
+            final String pieceRepresentation = field.pieceOptional().isEmpty() ? "" : convertPieceToHash(field.pieceOptional().get());
+
+            hashOfBoard
+                    .append(coordinate.toString())
+                    .append(" -> ")
+                    .append(pieceRepresentation)
+                    .append("; ");
+        }
+
+        return hashOfBoard.toString();
+    }
+
+    /**
      * Initializes the standard chess board setup.
      * <p>
      * This method populates the {@code fieldMap} with the initial positions of the chess pieces on the board.
@@ -1232,26 +1241,14 @@ public class ChessBoard {
         fieldMap.put(Coordinate.H8, new Field(Coordinate.H8, new Rook(Color.BLACK)));
 
         for (Coordinate coordinate : Coordinate.values()) {
-            final boolean fieldForWhitePawn = coordinate.getRow() == 2;
-            if (fieldForWhitePawn) {
-                fieldMap.put(
-                        coordinate, new Field(coordinate, new Pawn(Color.WHITE))
-                );
+            if (coordinate.getRow() == 1 || coordinate.getRow() == 8) {
+                continue;
             }
 
-            final boolean fieldForBlackPawn = coordinate.getRow() == 7;
-            if (fieldForBlackPawn) {
-                fieldMap.put(
-                        coordinate, new Field(coordinate, new Pawn(Color.BLACK))
-                );
-            }
-
-            final boolean fieldMustBeEmpty = coordinate.getRow() != 1 && coordinate.getRow() != 2 &&
-                    coordinate.getRow() != 7 && coordinate.getRow() != 8;
-            if (fieldMustBeEmpty) {
-                fieldMap.put(
-                        coordinate, new Field(coordinate, null)
-                );
+            switch (coordinate.getRow()) {
+                case 2 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(Color.WHITE)));
+                case 7 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(Color.BLACK)));
+                default -> fieldMap.put(coordinate, new Field(coordinate, null));
             }
         }
     }

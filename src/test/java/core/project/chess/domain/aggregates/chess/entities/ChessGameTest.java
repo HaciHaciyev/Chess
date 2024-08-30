@@ -203,10 +203,10 @@ class ChessGameTest {
         chessGame.makeMovement(firstPlayerUsername, Coordinate.B5, Coordinate.C6, null);
 
         // INVALID. Valid Bishop move but it`s not safety for King.
-        /**assertThrows(
+        assertThrows(
                 IllegalArgumentException.class,
                 () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.F8, Coordinate.E7, null)
-        );*/
+        );
     }
 
     public final Supplier<ChessGame> chessGameSupplier() {

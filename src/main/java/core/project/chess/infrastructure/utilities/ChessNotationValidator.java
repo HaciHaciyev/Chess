@@ -4,7 +4,7 @@ import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
 
 import java.util.regex.Pattern;
 
-import static core.project.chess.domain.aggregates.chess.value_objects.AlgebraicNotation.*;
+import static core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.*;
 
 /**
  * This class provides methods to validate and process chess move notations in algebraic notation.

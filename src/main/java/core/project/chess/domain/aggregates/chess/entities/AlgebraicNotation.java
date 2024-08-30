@@ -1,6 +1,6 @@
-package core.project.chess.domain.aggregates.chess.value_objects;
+package core.project.chess.domain.aggregates.chess.entities;
 
-import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
+import core.project.chess.domain.aggregates.chess.value_objects.*;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.Pair;
 import core.project.chess.infrastructure.utilities.StatusPair;
@@ -23,15 +23,16 @@ import java.util.Set;
  * The class also includes some helper methods, such as `isCastling()` and `castle()`, which are used to determine
  * whether a move is a castling move and to get the appropriate algebraic notation for it.
  */
-public record AlgebraicNotation(String algebraicNotation) {
+public class AlgebraicNotation {
 
-    public AlgebraicNotation {
-        Objects.requireNonNull(algebraicNotation);
-        if (algebraicNotation.isBlank()) {
-            throw new IllegalArgumentException("Algebraic notation can`t be black.");
-        }
+    private final String algebraicNotation;
 
-        ChessNotationValidator.validate(algebraicNotation);
+    public String algebraicNotation() {
+        return algebraicNotation;
+    }
+
+    private AlgebraicNotation(String algebraicNotation) {
+        this.algebraicNotation = algebraicNotation;
     }
 
     /**
@@ -92,6 +93,17 @@ public record AlgebraicNotation(String algebraicNotation) {
      */
     public static final String PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT = "%s%s%s=%s%s";
 
+    public static AlgebraicNotation fromRepository(final String algebraicNotation) {
+        Objects.requireNonNull(algebraicNotation);
+        if (algebraicNotation.isBlank()) {
+            throw new IllegalArgumentException("Algebraic notation can`t be black.");
+        }
+
+        ChessNotationValidator.validate(algebraicNotation);
+
+        return new AlgebraicNotation(algebraicNotation);
+    }
+
     /**
      * Generates the algebraic notation representation of a chess move. Able to using only in Domain.
      *
@@ -103,7 +115,7 @@ public record AlgebraicNotation(String algebraicNotation) {
      * @return An `AlgebraicNotation` object representing the algebraic notation of the move.
      * @throws NullPointerException if any of the required parameters are null.
      */
-    public static AlgebraicNotation of(
+    static AlgebraicNotation of(
             final PieceTYPE piece, final Set<ChessBoard.Operations> operationsSet,
             final Coordinate from, final Coordinate to, final @OptionalArgument PieceTYPE inCaseOfPromotion
     ) {
@@ -400,7 +412,6 @@ public record AlgebraicNotation(String algebraicNotation) {
 
         final Coordinate from;
         final Coordinate to;
-        final String algebraicNotation = this.algebraicNotation();
 
         final boolean startFromFigureType = Character.isLetter(algebraicNotation.charAt(0)) && Character.isLetter(algebraicNotation.charAt(1));
         if (startFromFigureType) {
@@ -440,6 +451,19 @@ public record AlgebraicNotation(String algebraicNotation) {
         } else {
             return Pair.of(Coordinate.E1, Coordinate.A8);
         }
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AlgebraicNotation that)) return false;
+
+        return algebraicNotation.equals(that.algebraicNotation);
+    }
+
+    @Override
+    public int hashCode() {
+        return algebraicNotation.hashCode();
     }
 
     /**
