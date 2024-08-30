@@ -207,6 +207,9 @@ class ChessGameTest {
                 IllegalArgumentException.class,
                 () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.F8, Coordinate.E7, null)
         );
+
+        // VALID. Pawn captures enemy bishop threatening King.
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.B7, Coordinate.C6, null);
     }
 
     public final Supplier<ChessGame> chessGameSupplier() {
