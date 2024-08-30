@@ -460,7 +460,47 @@ class ChessGameTest {
                 () -> chessGame.makeMovement(secondPlayerUsername, E8, E6, null)
         );
 
+        // INVALID. Invalid pawn movement, pawn can`t move back.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.G7, Coordinate.G8, null)
+        );
 
+        // INVALID. Invalid Knight move.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.F6, Coordinate.F5, null)
+        );
+
+        // INVALID. Invalid diagonal pawn movement distance.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.D3, Coordinate.E4, null)
+        );
+
+        // VALID. Bishop move.
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.C8, Coordinate.G4, null);
+
+        // VALID. Pawn move.
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.H2, Coordinate.H3, null);
+
+        // VALID. Bishop capture Knight.
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.G4, Coordinate.F3, null);
+
+        // VALID. Queen capture Bishop.
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.D1, Coordinate.F3, null);
+
+        // VALID. Knight move.
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.F6, Coordinate.D7, null);
+
+        // VALID. Bishop move.
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.C1, Coordinate.E3, null);
+
+        // VALID. Pawn move.
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.F7, Coordinate.F6, null);
+
+        // VALID. Pawn move.
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.A2, Coordinate.A3, null);
     }
 
     public final Supplier<ChessGame> chessGameSupplier() {
