@@ -101,8 +101,7 @@ public class ChessGameHandler {
     }
 
     @OnMessage
-    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message)
-            throws JsonProcessingException {
+    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
         Objects.requireNonNull(message);

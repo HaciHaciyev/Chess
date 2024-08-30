@@ -109,12 +109,10 @@ public class ChessBoard {
          * also we start from zero position for reading the ended chess game if initialization type set to READER_MODE.
          * If true, the `standardInitializer()` method is called to set up the initial state of the chess board.
          */
-        final boolean standardInit =
-                initializationTYPE.equals(InitializationTYPE.STANDARD) || initializationTYPE.equals(InitializationTYPE.READER_MODE);
+        final boolean standardInit = initializationTYPE.equals(InitializationTYPE.STANDARD);
         if (standardInit) {
             standardInitializer();
         }
-
     }
 
     /**
@@ -1078,7 +1076,7 @@ public class ChessBoard {
      * Represents the different types of initialization for a chess board.
      */
     private enum InitializationTYPE {
-        STANDARD, DURING_THE_GAME, READER_MODE
+        STANDARD, DURING_THE_GAME
     }
 
     /**
