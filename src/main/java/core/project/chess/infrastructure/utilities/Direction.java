@@ -339,6 +339,7 @@ public enum Direction {
             Coordinate coordinate = possibleCoordinate.orElseThrow();
 
             if (coordinate.equals(ignore)) {
+                possibleCoordinate = strategy.apply(coordinate);
                 continue;
             }
 
