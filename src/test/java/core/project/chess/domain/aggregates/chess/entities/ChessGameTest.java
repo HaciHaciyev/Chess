@@ -210,6 +210,35 @@ class ChessGameTest {
 
         // VALID. Pawn captures enemy bishop threatening King.
         chessGame.makeMovement(secondPlayerUsername, Coordinate.B7, Coordinate.C6, null);
+
+        // VALID. Short castle.
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.E1, Coordinate.G1, null);
+
+        // INVALID. Invalid rook move.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.A8, Coordinate.B6, null)
+        );
+
+        // INVALID. Invalid pawn move distance.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.C6, Coordinate.C4, null)
+        );
+
+        // INVALID. Valid Knight move but end field occupied by same color piece.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.F6, Coordinate.H7, null)
+        );
+
+        // INVALID. Invalid King move distance.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.E8, Coordinate.E6, null)
+        );
+
+
     }
 
     public final Supplier<ChessGame> chessGameSupplier() {

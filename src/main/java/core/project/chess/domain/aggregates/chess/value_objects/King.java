@@ -1,5 +1,7 @@
 package core.project.chess.domain.aggregates.chess.value_objects;
 
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.Castle;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.infrastructure.utilities.Direction;
@@ -208,45 +210,59 @@ public record King(Color color)
         return true;
     }
 
-    private boolean safeToCastle(ChessBoard chessBoard, Coordinate presentKing, Coordinate futureKing) {
-        final List<Field> fieldsToCastle = getCastlingFields(chessBoard, presentKing, futureKing);
+    private boolean safeToCastle(final ChessBoard chessBoard, final Coordinate presentKingPosition, final Coordinate futureKingPosition) {
 
+        final Castle castle;
+        if (presentKingPosition.getColumn() < futureKingPosition.getColumn()) {
+            castle = Castle.SHORT_CASTLING;
+        } else {
+            castle = Castle.LONG_CASTLING;
+        }
+
+        final boolean ableToCastle = chessBoard.ableToCastling(color, castle);
+        if (!ableToCastle) {
+            return false;
+        }
+
+        final List<Field> fieldsToCastle = getCastlingFields(chessBoard, presentKingPosition, futureKingPosition);
         for (final Field field : fieldsToCastle) {
 
-            if (field.isPresent() && !field.getCoordinate().equals(futureKing)) {
+            if (field.isPresent() && !(field.pieceOptional().orElseThrow() instanceof King)) {
                 return false;
             }
 
-            final List<ChessBoard.Field> pawns = pawnsThreateningCoordinate(chessBoard, field.getCoordinate(), color);
-            for (Field pawn : pawns) {
-                if (pawn.pieceOptional().orElseThrow() instanceof Pawn) {
+            final List<Field> pawns = pawnsThreateningCoordinate(chessBoard, field.getCoordinate(), color);
+            for (final Field fieldWithPawn : pawns) {
+                final Pawn pawn = (Pawn) fieldWithPawn.pieceOptional().orElseThrow();
+
+                if (!pawn.color().equals(this.color)) {
                     return false;
                 }
             }
 
-            final List<ChessBoard.Field> knights = knightAttackPositions(chessBoard, field.getCoordinate());
-            for (Field knight : knights) {
-                final Piece piece = knight.pieceOptional().orElseThrow();
+            final List<Field> knights = knightAttackPositions(chessBoard, field.getCoordinate());
+            for (final Field fieldWithKnight : knights) {
+                final Piece piece = fieldWithKnight.pieceOptional().orElseThrow();
 
-                if (piece instanceof Knight && !piece.color().equals(color)) {
+                if (piece instanceof Knight && !piece.color().equals(this.color)) {
                     return false;
                 }
             }
 
-            final List<ChessBoard.Field> diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, field.getCoordinate());
-            for (Field diagonalField : diagonalFields) {
+            final List<Field> occupiedDiagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, field.getCoordinate());
+            for (final Field diagonalField : occupiedDiagonalFields) {
                 final Piece piece = diagonalField.pieceOptional().orElseThrow();
 
-                if ((piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color)) {
+                if ((piece instanceof Bishop || piece instanceof Queen || piece instanceof King) && !piece.color().equals(this.color)) {
                     return false;
                 }
             }
 
-            final List<ChessBoard.Field> horizontalVerticalFields = Direction.occupiedFieldsFromHorizontalVerticalDirections(chessBoard, field.getCoordinate());
-            for (Field horizontalField : horizontalVerticalFields) {
+            final List<Field> horizontalVerticalFields = Direction.occupiedFieldsFromHorizontalVerticalDirections(chessBoard, field.getCoordinate());
+            for (final Field horizontalField : horizontalVerticalFields) {
                 final Piece piece = horizontalField.pieceOptional().orElseThrow();
 
-                if ((piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color)) {
+                if ((piece instanceof Rook || piece instanceof Queen || piece instanceof King) && !piece.color().equals(this.color)) {
                     return false;
                 }
             }
@@ -256,41 +272,59 @@ public record King(Color color)
         return true;
     }
 
-    private List<Field> getCastlingFields(ChessBoard chessBoard, Coordinate presentKing, Coordinate futureKing) {
+    private List<Field> getCastlingFields(final ChessBoard chessBoard, final Coordinate presentKing, final Coordinate futureKingPosition) {
         final char from = presentKing.getColumn();
-        final char to = futureKing.getColumn();
+        final char to = futureKingPosition.getColumn();
 
         final List<Field> fields = new ArrayList<>();
         fields.add(chessBoard.field(presentKing));
 
-        final boolean shortCastling = from > to;
+        final boolean shortCastling = from < to;
         if (shortCastling) {
 
-            while (true) {
-                final Coordinate left = Coordinate.coordinate(presentKing.getRow(), presentKing.getColumn() - 1).orElseThrow();
+            int row = presentKing.getRow();
+            int column = AlgebraicNotation.columnToInt(presentKing.getColumn()) + 1;
 
-                if (left.equals(futureKing)) {
-                    fields.add(chessBoard.field(left));
+            do {
+                final Coordinate coordinate = Coordinate
+                        .coordinate(row, column)
+                        .orElseThrow(
+                                () -> new IllegalStateException("Can`t create coordinate. The method needs repair.")
+                        );
+
+                if (coordinate.equals(futureKingPosition)) {
+                    fields.add(chessBoard.field(coordinate));
                     return fields;
                 }
 
-                fields.add(chessBoard.field(left));
-            }
+                fields.add(chessBoard.field(coordinate));
+                column++;
+            } while (true);
+
         }
 
-        final boolean longCastling = from < to;
+        final boolean longCastling = from > to;
         if (longCastling) {
 
-            while (true) {
-                final Coordinate right = Coordinate.coordinate(presentKing.getRow(), presentKing.getColumn() + 1).orElseThrow();
+            int row = presentKing.getRow();
+            int column = AlgebraicNotation.columnToInt(presentKing.getColumn()) - 1;
 
-                if (right.equals(futureKing)) {
-                    fields.add(chessBoard.field(right));
+            do {
+                final Coordinate coordinate = Coordinate
+                        .coordinate(row, column)
+                        .orElseThrow(
+                                () -> new IllegalStateException("Can`t create coordinate. The method needs repair.")
+                        );
+
+                if (coordinate.equals(futureKingPosition)) {
+                    fields.add(chessBoard.field(coordinate));
                     return fields;
                 }
 
-                fields.add(chessBoard.field(right));
-            }
+                fields.add(chessBoard.field(coordinate));
+                column--;
+            } while (true);
+
         }
 
         return fields;
