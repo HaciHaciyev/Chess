@@ -868,6 +868,7 @@ public record King(Color color)
                 continue;
             }
 
+
             final Piece piece = field.pieceOptional().orElseThrow();
 
             if ((piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color)) {
