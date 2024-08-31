@@ -497,9 +497,9 @@ public record King(Color color)
 
             final StatusPair<Coordinate> possibleCoordinate;
             if (Color.WHITE.equals(color)) {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, currentCoordinate.getColumn());
+                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, AlgebraicNotation.columnToInt(currentCoordinate.getColumn()));
             } else {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, currentCoordinate.getColumn());
+                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, AlgebraicNotation.columnToInt(currentCoordinate.getColumn()));
             }
 
             if (possibleCoordinate.status()) {
@@ -554,6 +554,13 @@ public record King(Color color)
         }
 
         return Direction.BOTTOM_LEFT;
+    }
+
+        if (to.getColumn() == from.getColumn() && to.getRow() < from.getRow()) {
+            return Direction.BOTTOM;
+        }
+
+        return Direction.BOTTOM_RIGHT;
     }
 
     private List<Field> getAllFriendlyFields(ChessBoard chessBoard) {
