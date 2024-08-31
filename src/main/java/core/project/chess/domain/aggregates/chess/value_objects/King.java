@@ -541,20 +541,32 @@ public record King(Color color)
     }
 
     private Direction getEnemyDirection(Coordinate from, Coordinate to) {
-        if (to.getColumn() > from.getColumn() && to.getRow() > from.getRow()) {
-            return Direction.TOP_RIGHT;
-        }
-
-        if (to.getColumn() > from.getColumn() && to.getRow() < from.getRow()) {
-            return Direction.BOTTOM_RIGHT;
-        }
 
         if (to.getColumn() < from.getColumn() && to.getRow() > from.getRow()) {
             return Direction.TOP_LEFT;
         }
 
-        return Direction.BOTTOM_LEFT;
-    }
+        if (to.getColumn() == from.getColumn() && to.getRow() > from.getRow()) {
+            return Direction.TOP;
+        }
+
+        if (to.getColumn() > from.getColumn() && to.getRow() > from.getRow()) {
+            return Direction.TOP_RIGHT;
+        }
+
+
+        if (to.getColumn() < from.getColumn() && to.getRow() == from.getRow()) {
+            return Direction.LEFT;
+        }
+
+        if (to.getColumn() > from.getColumn() && to.getRow() == from.getRow()) {
+            return Direction.RIGHT;
+        }
+
+
+        if (to.getColumn() < from.getColumn()) {
+            return Direction.BOTTOM_LEFT;
+        }
 
         if (to.getColumn() == from.getColumn() && to.getRow() < from.getRow()) {
             return Direction.BOTTOM;
