@@ -396,14 +396,14 @@ public record King(Color color)
     private List<Field> surroundingFields(ChessBoard chessBoard, Coordinate pivot, List<Field> replace) {
         int row = pivot.getRow();
         char column = pivot.getColumn();
-        var up = Coordinate.coordinate(row + 1, column);
-        var down = Coordinate.coordinate(row - 1, column);
-        var left = Coordinate.coordinate(row, column - 1);
-        var right = Coordinate.coordinate(row, column + 1);
-        var downLeft = Coordinate.coordinate(row - 1, column - 1);
-        var downRight = Coordinate.coordinate(row - 1, column + 1);
-        var upperLeft = Coordinate.coordinate(row + 1, column - 1);
-        var upperRight = Coordinate.coordinate(row + 1, column + 1);
+        var up = Coordinate.coordinate(row + 1, AlgebraicNotation.columnToInt(column));
+        var down = Coordinate.coordinate(row - 1, AlgebraicNotation.columnToInt(column));
+        var left = Coordinate.coordinate(row, AlgebraicNotation.columnToInt(column) - 1);
+        var right = Coordinate.coordinate(row, AlgebraicNotation.columnToInt(column) + 1);
+        var downLeft = Coordinate.coordinate(row - 1, AlgebraicNotation.columnToInt(column) - 1);
+        var downRight = Coordinate.coordinate(row - 1, AlgebraicNotation.columnToInt(column) + 1);
+        var upperLeft = Coordinate.coordinate(row + 1, AlgebraicNotation.columnToInt(column) - 1);
+        var upperRight = Coordinate.coordinate(row + 1, AlgebraicNotation.columnToInt(column) + 1);
 
         return Stream.of(up, down, left, right, upperLeft, upperRight, downLeft, downRight)
                 .filter(StatusPair::status)
