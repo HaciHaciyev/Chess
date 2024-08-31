@@ -2,8 +2,7 @@ package core.project.chess.domain.aggregates.chess.value_objects;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.infrastructure.utilities.StatusPair;
-
-import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
@@ -17,7 +16,7 @@ public sealed interface Piece
      * a list of operations that the given operation can perform,
      * in the order in which they should be performed.
      */
-    StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
+    StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
 
     /**
      * Converts a column letter (A-H) to its corresponding integer value (1-8).

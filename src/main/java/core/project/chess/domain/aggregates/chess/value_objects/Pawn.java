@@ -8,6 +8,7 @@ import core.project.chess.infrastructure.utilities.StatusPair;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
@@ -15,7 +16,7 @@ public record Pawn(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+    public StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
@@ -40,15 +41,21 @@ public record Pawn(Color color)
             return StatusPair.ofFalse();
         }
 
+        var setOfOperations = new LinkedHashSet<Operations>();
+
+        final StatusPair<Set<Operations>> isValidMove = validate(chessBoard, setOfOperations, startField, endField);
+        if (!isValidMove.status()) {
+            return StatusPair.ofFalse();
+        }
+
         final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
 
-        var setOfOperations = new LinkedHashSet<Operations>();
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
-        return validate(chessBoard, setOfOperations, startField, endField);
+        return StatusPair.ofTrue(setOfOperations);
     }
 
     public boolean isValidPromotion(final Pawn pawnForPromotion, final Piece inCaseOfPromotion) {
@@ -62,7 +69,7 @@ public record Pawn(Color color)
         return pawnForPromotion.color().equals(inCaseOfPromotion.color());
     }
 
-    private StatusPair<LinkedHashSet<Operations>> validate(
+    private StatusPair<Set<Operations>> validate(
             final ChessBoard chessBoard, final LinkedHashSet<Operations> setOfOperations, final Field startField, final Field endField
     ) {
         final Color pawnColor = startField.pieceOptional().orElseThrow().color();
@@ -89,7 +96,7 @@ public record Pawn(Color color)
         return StatusPair.ofFalse();
     }
 
-    private StatusPair<LinkedHashSet<Operations>> straightMove(
+    private StatusPair<Set<Operations>> straightMove(
             ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
             char startColumn, char endColumn, int startRow, int endRow, Field endField
     ) {
@@ -119,7 +126,7 @@ public record Pawn(Color color)
         return validMoveDistance ? StatusPair.ofTrue(setOfOperations) : StatusPair.ofFalse();
     }
 
-    private StatusPair<LinkedHashSet<Operations>> isPassageValid(
+    private StatusPair<Set<Operations>> isPassageValid(
             ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, int startRow, char column, int endRow
     ) {
         int intermediateRow;
@@ -138,7 +145,7 @@ public record Pawn(Color color)
         return StatusPair.ofTrue(setOfOperations);
     }
 
-    private StatusPair<LinkedHashSet<Operations>> diagonalCapture(
+    private StatusPair<Set<Operations>> diagonalCapture(
             ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
             char startColumn, char endColumn, int startRow, int endRow, Field endField
     ) {

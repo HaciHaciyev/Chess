@@ -5,6 +5,7 @@ import core.project.chess.infrastructure.utilities.StatusPair;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
@@ -13,7 +14,7 @@ public record Rook(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+    public StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
@@ -38,12 +39,17 @@ public record Rook(Color color)
             return StatusPair.ofFalse();
         }
 
+        var setOfOperations = new LinkedHashSet<Operations>();
+        final StatusPair<Set<Operations>> isValidMove = validate(chessBoard, setOfOperations, startField, endField);
+        if (!isValidMove.status()) {
+            return StatusPair.ofFalse();
+        }
+
         final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
 
-        var setOfOperations = new LinkedHashSet<Operations>();
         setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         final Color opponentPieceColor = rookColor == Color.WHITE ? Color.BLACK : Color.WHITE;
@@ -52,10 +58,10 @@ public record Rook(Color color)
             setOfOperations.add(Operations.CAPTURE);
         }
 
-        return validate(chessBoard, setOfOperations, startField, endField);
+        return StatusPair.ofTrue(setOfOperations);
     }
 
-    private StatusPair<LinkedHashSet<Operations>> validate(
+    private StatusPair<Set<Operations>> validate(
             final ChessBoard chessBoard, final LinkedHashSet<Operations> setOfOperations, final Field startField, final Field endField
     ) {
         final char startColumn = startField.getCoordinate().getColumn();

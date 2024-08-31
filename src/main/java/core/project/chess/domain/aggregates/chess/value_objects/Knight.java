@@ -5,6 +5,7 @@ import core.project.chess.infrastructure.utilities.StatusPair;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
@@ -13,7 +14,7 @@ public record Knight(Color color)
         implements Piece {
 
     @Override
-    public StatusPair<LinkedHashSet<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+    public StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
@@ -38,6 +39,11 @@ public record Knight(Color color)
             return StatusPair.ofFalse();
         }
 
+        final boolean knightMove = knightMove(startField.getCoordinate(), endField.getCoordinate());
+        if (!knightMove) {
+            return StatusPair.ofFalse();
+        }
+
         final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
@@ -52,12 +58,7 @@ public record Knight(Color color)
             setOfOperations.add(Operations.CAPTURE);
         }
 
-        final boolean knightMove = knightMove(startField.getCoordinate(), endField.getCoordinate());
-        if (knightMove) {
-            return StatusPair.ofTrue(setOfOperations);
-        }
-
-        return StatusPair.ofFalse();
+        return StatusPair.ofTrue(setOfOperations);
     }
 
     private boolean knightMove(final Coordinate from, final Coordinate to) {

@@ -1,6 +1,7 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.value_objects.*;
+import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import core.project.chess.infrastructure.utilities.Pair;
 import jakarta.annotation.Nullable;
@@ -609,7 +610,7 @@ public class ChessBoard {
      * @throws IllegalArgumentException If the move is invalid.
      */
     protected final Operations reposition(
-            final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion
+            final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion
     ) {
         /** Preparation of necessary data and validation.*/
         Objects.requireNonNull(from);
@@ -635,7 +636,7 @@ public class ChessBoard {
         }
 
         /** Validation.*/
-        final StatusPair<LinkedHashSet<Operations>> statusPair = piece.isValidMove(this, from, to);
+        final StatusPair<Set<Operations>> statusPair = piece.isValidMove(this, from, to);
         if (!statusPair.status()) {
             throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
@@ -653,7 +654,7 @@ public class ChessBoard {
         }
 
         /** Process operations from StatusPair. All validation need to be processed before that.*/
-        final LinkedHashSet<Operations> operations = statusPair.orElseThrow();
+        final Set<Operations> operations = statusPair.orElseThrow();
 
         startField.removeFigure();
 
@@ -721,7 +722,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move. One or both of the pieces to be castled have made moves, castling is not possible.");
         }
 
-        final StatusPair<LinkedHashSet<Operations>> statusPair = king.isValidMove(this, kingStartedField.getCoordinate(), kingEndField.getCoordinate());
+        final StatusPair<Set<Operations>> statusPair = king.isValidMove(this, kingStartedField.getCoordinate(), kingEndField.getCoordinate());
         if (!statusPair.status()) {
             throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
@@ -747,7 +748,7 @@ public class ChessBoard {
 
         switchFiguresTurn();
         /** Recording the move made in algebraic notation.*/
-        final LinkedHashSet<Operations> operations = statusPair.orElseThrow();
+        final Set<Operations> operations = statusPair.orElseThrow();
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
 
         if (hashCodeOfBoard.get(currentPositionHash) == 3) {
