@@ -650,6 +650,11 @@ public record King(Color color)
         for (final Field possiblePawn : pawnsThreateningCoordinates) {
             final Pawn pawn = (Pawn) possiblePawn.pieceOptional().orElseThrow();
 
+            final boolean isWillBeEaten = to.equals(possiblePawn.getCoordinate());
+            if (isWillBeEaten) {
+                continue;
+            }
+
             if (!pawn.color().equals(color)) {
                 return false;
             }
@@ -658,6 +663,11 @@ public record King(Color color)
         final List<Field> potentialKnightAttackPositions = knightAttackPositions(chessBoard, kingPosition);
         for (final Field potentialKnightAttackPosition : potentialKnightAttackPositions) {
             final Piece piece = potentialKnightAttackPosition.pieceOptional().orElseThrow();
+
+            final boolean isWillBeEaten = to.equals(potentialKnightAttackPosition.getCoordinate());
+            if (isWillBeEaten) {
+                continue;
+            }
 
             final boolean isEnemyKnight = piece instanceof Knight && !piece.color().equals(color);
             if (isEnemyKnight) {
@@ -669,6 +679,16 @@ public record King(Color color)
         for (final Field field : occupiedDiagonalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
+            final boolean isWillBeEaten = to.equals(field.getCoordinate());
+            if (isWillBeEaten) {
+                continue;
+            }
+
+            final boolean thisPathWillBeBlockedByTheMove = isBlocked(kingPosition, field, to);
+            if (thisPathWillBeBlockedByTheMove) {
+                continue;
+            }
+
             final boolean isEnemyBishopOrQueen = (piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color);
             if (isEnemyBishopOrQueen) {
                 return false;
@@ -679,6 +699,16 @@ public record King(Color color)
         for (final Field field : occupiedHorizontalAndVerticalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
+            final boolean isWillBeEaten = to.equals(field.getCoordinate());
+            if (isWillBeEaten) {
+                continue;
+            }
+
+            final boolean thisPathWillBeBlockedByTheMove = isBlocked(kingPosition, field, to);
+            if (thisPathWillBeBlockedByTheMove) {
+                continue;
+            }
+
             final boolean isEnemyRookOrQueen = (piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color);
             if (isEnemyRookOrQueen) {
                 return false;
@@ -686,6 +716,116 @@ public record King(Color color)
         }
 
         return true;
+    }
+
+    private boolean isBlocked(
+            final Coordinate kingPosition, final Field fieldWithPotentialEnemyPiece, final Coordinate coordinateThatWillBeOccupiedByOutPieceAfterMove
+    ) {
+        final int rowOfKingPosition = kingPosition.getRow();
+        final int columnOfKingPosition = AlgebraicNotation.columnToInt(kingPosition.getColumn());
+
+        final int rowOfPotentialEnemy = fieldWithPotentialEnemyPiece.getCoordinate().getRow();
+        final int columnOfPotentialEnemy = AlgebraicNotation.columnToInt(fieldWithPotentialEnemyPiece.getCoordinate().getColumn());
+
+        final int rowOfCoordinateThatWillBeOccupiedByOurPiece = coordinateThatWillBeOccupiedByOutPieceAfterMove.getRow();
+        final int columnOfCoordinateThatWillBeOccupiedByOurPiece = AlgebraicNotation.columnToInt(coordinateThatWillBeOccupiedByOutPieceAfterMove.getColumn());
+
+        final boolean isPotentialAttackDiagonal = Math.abs(rowOfKingPosition - rowOfPotentialEnemy) == Math.abs(columnOfKingPosition - columnOfPotentialEnemy);
+        if (isPotentialAttackDiagonal) {
+
+            final boolean diagonalPositionEquality = Math.abs(rowOfCoordinateThatWillBeOccupiedByOurPiece - rowOfPotentialEnemy) ==
+                    Math.abs(columnOfCoordinateThatWillBeOccupiedByOurPiece - columnOfPotentialEnemy);
+
+            final boolean isBlocked = isBlockedFromDiagonal(
+                    rowOfKingPosition, columnOfKingPosition, rowOfPotentialEnemy, columnOfPotentialEnemy,
+                    rowOfCoordinateThatWillBeOccupiedByOurPiece, columnOfCoordinateThatWillBeOccupiedByOurPiece
+            );
+
+            if (diagonalPositionEquality && isBlocked) {
+                return true;
+            }
+        }
+
+        final boolean isPotentialAttackVertical = columnOfKingPosition == columnOfPotentialEnemy && rowOfKingPosition != rowOfPotentialEnemy;
+        if (isPotentialAttackVertical) {
+
+            final boolean columnEquality = columnOfCoordinateThatWillBeOccupiedByOurPiece == columnOfPotentialEnemy;
+
+            final boolean isBlocked = rowOfKingPosition < rowOfPotentialEnemy ?
+                    (rowOfCoordinateThatWillBeOccupiedByOurPiece > rowOfKingPosition && rowOfCoordinateThatWillBeOccupiedByOurPiece < rowOfPotentialEnemy)
+                    :
+                    (rowOfCoordinateThatWillBeOccupiedByOurPiece < rowOfKingPosition && rowOfCoordinateThatWillBeOccupiedByOurPiece > rowOfPotentialEnemy);
+
+            if (columnEquality && isBlocked) {
+                return true;
+            }
+        }
+
+        final boolean isPotentialAttackHorizontal = rowOfKingPosition == rowOfPotentialEnemy && columnOfKingPosition != columnOfPotentialEnemy;
+        if (isPotentialAttackHorizontal) {
+
+            final boolean rowEquality = rowOfCoordinateThatWillBeOccupiedByOurPiece == rowOfPotentialEnemy;
+
+            final boolean isBlocked = columnOfKingPosition < columnOfPotentialEnemy ?
+                    (columnOfCoordinateThatWillBeOccupiedByOurPiece > columnOfKingPosition && columnOfCoordinateThatWillBeOccupiedByOurPiece < columnOfPotentialEnemy)
+                    :
+                    (columnOfCoordinateThatWillBeOccupiedByOurPiece < columnOfKingPosition && columnOfCoordinateThatWillBeOccupiedByOurPiece > columnOfPotentialEnemy);
+
+            if (rowEquality && isBlocked) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Should be used only in isBlocked(...) function. No more legal usage.*/
+    private boolean isBlockedFromDiagonal(
+            final int rowOfKingPosition, final int columnOfKingPosition, final int rowOfPotentialEnemy, final int columnOfPotentialEnemy,
+            final int rowOfCoordinateThatWillBeOccupiedByOurPiece, final int columnOfCoordinateThatWillBeOccupiedByOurPiece) {
+
+        final Coordinate occupiedByFriendlyPieceCoordinate = Coordinate
+                .coordinate(rowOfCoordinateThatWillBeOccupiedByOurPiece, columnOfCoordinateThatWillBeOccupiedByOurPiece)
+                .orElseThrow(
+                        () -> new IllegalStateException("Can`t create coordinate. The method needs repair. Invalid usage of method. Check documentation.")
+                );
+
+        final int rowDirectionFromKingToEnemy = compareDirection(rowOfKingPosition, rowOfPotentialEnemy);
+        final int columnDirectionFromKingToEnemy = compareDirection(columnOfKingPosition, columnOfPotentialEnemy);
+
+        int row = rowOfKingPosition + rowDirectionFromKingToEnemy;
+        int column = columnOfKingPosition + columnDirectionFromKingToEnemy;
+        do {
+            final Coordinate coordinate = Coordinate
+                    .coordinate(row, column)
+                    .orElseThrow(
+                            () -> new IllegalStateException("Can`t create coordinate. The method needs repair.")
+                    );
+
+            final boolean isOccupiedByOurPiece = occupiedByFriendlyPieceCoordinate.equals(coordinate);
+            if (isOccupiedByOurPiece) {
+                return true;
+            }
+
+            row += rowDirectionFromKingToEnemy;
+            column += columnDirectionFromKingToEnemy;
+
+        } while (
+                switch (rowDirectionFromKingToEnemy) {
+                    case 0 -> true;
+                    case 1 -> row < rowOfPotentialEnemy;
+                    case -1 -> row > rowOfPotentialEnemy;
+                    default -> throw new IllegalStateException("Unexpected situation.");
+                }
+                && switch (columnDirectionFromKingToEnemy) {
+                    case 0 -> true;
+                    case 1 -> column < columnOfPotentialEnemy;
+                    case -1 -> column > columnOfKingPosition;
+                    default -> throw new IllegalStateException("Unexpected situation.");
+                }
+        );
+
+        return false;
     }
 
     private List<Field> knightAttackPositions(final ChessBoard chessBoard, final Coordinate pivot) {

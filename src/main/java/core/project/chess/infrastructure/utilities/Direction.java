@@ -165,18 +165,12 @@ public enum Direction {
     }
 
     public static List<ChessBoard.Field> occupiedFieldsFromHorizontalVerticalDirections(ChessBoard chessBoard, Coordinate pivot) {
-        var top = TOP.occupiedFieldFrom(chessBoard, pivot);
-        var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot);
+        final Optional<ChessBoard.Field> top = TOP.occupiedFieldFrom(chessBoard, pivot);
+        final Optional<ChessBoard.Field> bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot);
+        final Optional<ChessBoard.Field> left = LEFT.occupiedFieldFrom(chessBoard, pivot);
+        final Optional<ChessBoard.Field> right = RIGHT.occupiedFieldFrom(chessBoard, pivot);
 
-        var left = LEFT.occupiedFieldFrom(chessBoard, pivot);
-        var right = RIGHT.occupiedFieldFrom(chessBoard, pivot);
-
-        return Stream.of(
-                        top,
-                        bottom,
-                        left,
-                        right
-                )
+        return Stream.of(top, bottom, left, right)
                 .filter(Optional::isPresent)
                 .map(Optional::orElseThrow)
                 .toList();
