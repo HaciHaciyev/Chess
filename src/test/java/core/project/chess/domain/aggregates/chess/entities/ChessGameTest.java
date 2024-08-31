@@ -1,7 +1,7 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
-import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import static core.project.chess.domain.aggregates.chess.value_objects.Coordinate.*;
+import static core.project.chess.domain.aggregates.chess.enumerations.Coordinate.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ChessGameTest {

@@ -1,6 +1,8 @@
-package core.project.chess.domain.aggregates.chess.value_objects;
+package core.project.chess.domain.aggregates.chess.pieces;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
 import java.util.LinkedHashSet;
@@ -40,8 +42,9 @@ public record Rook(Color color)
         }
 
         var setOfOperations = new LinkedHashSet<Operations>();
-        final StatusPair<Set<Operations>> isValidMove = validate(chessBoard, setOfOperations, startField, endField);
-        if (!isValidMove.status()) {
+
+        final boolean isValidMove = validate(chessBoard, startField, endField);
+        if (!isValidMove) {
             return StatusPair.ofFalse();
         }
 
@@ -61,9 +64,33 @@ public record Rook(Color color)
         return StatusPair.ofTrue(setOfOperations);
     }
 
-    private StatusPair<Set<Operations>> validate(
-            final ChessBoard chessBoard, final LinkedHashSet<Operations> setOfOperations, final Field startField, final Field endField
-    ) {
+    /**
+     * Validates whether a move from the start field to the end field on a chessboard is a valid move for a Rook.
+     * <p>
+     * This method checks if the move is either vertical or horizontal. If the move is valid in either direction,
+     * it further checks if the path between the start and end fields is clear of any pieces.
+     *
+     * <p>
+     * Preconditions:
+     * <ul>
+     *     <li>The caller must ensure that the method <code>safeForKing(...)</code> has been called prior to invoking this method.
+     *         This is to confirm that the move does not place the king in check.</li>
+     *     <li>The caller must check that neither <code>startField</code> nor <code>endField</code> is <code>null</code>.</li>
+     *     <li>The caller must verify that the <code>endField</code> is not occupied by a piece of the same color as the piece being moved.
+     *         This is to ensure that the move does not violate the rules of chess regarding capturing pieces.</li>
+     * </ul>
+     * </p>
+     *
+     * @param chessBoard The chessboard on which the move is being validated. This object contains the current state of the board,
+     *                   including the positions of all pieces.
+     * @param startField The field from which the piece is moving. This field should contain the piece that is being moved.
+     * @param endField   The field to which the piece is moving. This field is the target location for the move.
+     *
+     * @return <code>true</code> if the move is valid (vertical or horizontal) and the path is clear; <code>false</code> otherwise.
+     *
+     * @throws IllegalArgumentException if any of the preconditions are not met (e.g., if <code>startField</code> or <code>endField</code> is <code>null</code>).
+     */
+    boolean validate(final ChessBoard chessBoard, final Field startField, final Field endField) {
         final char startColumn = startField.getCoordinate().getColumn();
         final char endColumn = endField.getCoordinate().getColumn();
         final int startRow = startField.getCoordinate().getRow();
@@ -71,18 +98,14 @@ public record Rook(Color color)
 
         final boolean verticalMove = startColumn == endColumn && startRow != endRow;
         if (verticalMove) {
-            return clearPath
-                    (chessBoard, startField.getCoordinate(), endField.getCoordinate())
-                    ? StatusPair.ofTrue(setOfOperations) : StatusPair.ofFalse();
+            return clearPath(chessBoard, startField.getCoordinate(), endField.getCoordinate());
         }
 
         final boolean horizontalMove = startColumn != endColumn && startRow == endRow;
         if (horizontalMove) {
-            return clearPath
-                    (chessBoard, startField.getCoordinate(), endField.getCoordinate())
-                    ? StatusPair.ofTrue(setOfOperations) : StatusPair.ofFalse();
+            return clearPath(chessBoard, startField.getCoordinate(), endField.getCoordinate());
         }
 
-        return StatusPair.ofFalse();
+        return false;
     }
 }

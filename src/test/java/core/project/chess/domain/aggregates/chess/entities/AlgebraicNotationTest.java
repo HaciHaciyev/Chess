@@ -1,6 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
-import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

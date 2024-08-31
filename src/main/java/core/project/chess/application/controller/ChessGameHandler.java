@@ -1,6 +1,5 @@
 package core.project.chess.application.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.model.ChessMovementForm;
 import core.project.chess.application.model.GameParameters;

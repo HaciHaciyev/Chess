@@ -1,20 +1,51 @@
-package core.project.chess.domain.aggregates.chess.value_objects;
+package core.project.chess.domain.aggregates.chess.pieces;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.infrastructure.utilities.Pair;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
 public record Pawn(Color color)
         implements Piece {
 
+    /**
+     * Validates whether a move from the 'from' coordinate to the 'to' coordinate is a valid move for a Pawn on the chessboard.
+     *
+     * <p>
+     * This method checks the following conditions:
+     * <ul>
+     *     <li>The move is not to the same field.</li>
+     *     <li>The starting field contains a piece (specifically a Pawn).</li>
+     *     <li>The target field is not occupied by a piece of the same color as the Pawn.</li>
+     *     <li>The move is valid according to the Pawn's movement rules.</li>
+     *     <li>The move does not place the player's king in check.</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Note: When calling this implementation for a Pawn, it does not validate for the promotion of the Pawn to another piece.
+     * The <code>isValidMove()</code> method can account for the promotion occurring, but it cannot validate the specific piece to promote to.
+     * For this, you should additionally call the function <code>isValidPromotion()</code>.
+     * </p>
+     *
+     * @param chessBoard The chessboard on which the move is being validated. This object contains the current state of the board,
+     *                   including the positions of all pieces.
+     * @param from The starting coordinate of the Pawn's move. This coordinate represents the current position of the Pawn.
+     * @param to   The target coordinate to which the Pawn is attempting to move. This coordinate represents the desired position.
+     *
+     * @return A {@link StatusPair} containing a set of operations and a boolean status indicating whether the move is valid.
+     *         If the move is valid, the status will be <code>true</code> and the set will contain the operations related to the move.
+     *         If the move is invalid, the status will be <code>false</code> and the set will be empty.
+     *
+     * @throws NullPointerException if any of the parameters (<code>chessBoard</code>, <code>from</code>, or <code>to</code>) are <code>null</code>.
+     * @throws IllegalStateException if the method is called with a piece that is not a Pawn.
+     */
     @Override
     public StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
@@ -69,7 +100,34 @@ public record Pawn(Color color)
         return pawnForPromotion.color().equals(inCaseOfPromotion.color());
     }
 
-    private StatusPair<Set<Operations>> validate(
+    /**
+     * Validates whether a Pawn's move from the start field to the end field on the chessboard is valid.
+     *
+     * <p>
+     * This method checks if the Pawn is moving in the correct direction based on its color, and whether the move is either
+     * a straight move or a diagonal capture. If the move is valid, it delegates the validation to the appropriate methods
+     * for straight moves or diagonal captures.
+     * </p>
+     *
+     * <p>
+     * <strong>Note:</strong> When calling this implementation for a Pawn, it does not validate for the promotion of the Pawn to another piece.
+     * The <code>isValidMove()</code> method can account for the promotion occurring, but it cannot validate the specific piece to promote to.
+     * For this, you should additionally call the function <code>isValidPromotion()</code>.
+     * </p>
+     *
+     * @param chessBoard The chessboard on which the move is being validated. This object contains the current state of the board,
+     *                   including the positions of all pieces.
+     * @param setOfOperations A set that will be populated with operations related to the move if it is valid.
+     * @param startField The field from which the Pawn is moving. This field should contain the Pawn that is being moved.
+     * @param endField The field to which the Pawn is moving. This field is the target location for the move.
+     *
+     * @return A {@link StatusPair} indicating the result of the validation. The status will be <code>true</code> if the move is valid,
+     *         and the set of operations will be populated accordingly. If the move is invalid, the status will be <code>false</code>
+     *         and the set will be empty.
+     *
+     * @throws NoSuchElementException if the starting field does not contain a piece (the Pawn).
+     */
+    StatusPair<Set<Operations>> validate(
             final ChessBoard chessBoard, final LinkedHashSet<Operations> setOfOperations, final Field startField, final Field endField
     ) {
         final Color pawnColor = startField.pieceOptional().orElseThrow().color();

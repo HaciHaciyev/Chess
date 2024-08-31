@@ -2,8 +2,8 @@ package core.project.chess.infrastructure.utilities;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
-import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
-import core.project.chess.domain.aggregates.chess.value_objects.Piece;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.domain.aggregates.chess.pieces.Piece;
 
 import java.util.ArrayList;
 import java.util.List;

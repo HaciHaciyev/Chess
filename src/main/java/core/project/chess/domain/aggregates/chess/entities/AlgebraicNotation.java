@@ -1,6 +1,9 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
-import core.project.chess.domain.aggregates.chess.value_objects.*;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.domain.aggregates.chess.pieces.Bishop;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.pieces.*;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.Pair;
 import core.project.chess.infrastructure.utilities.StatusPair;
@@ -119,10 +122,6 @@ public class AlgebraicNotation {
             final PieceTYPE piece, final Set<ChessBoard.Operations> operationsSet,
             final Coordinate from, final Coordinate to, final @OptionalArgument PieceTYPE inCaseOfPromotion
     ) {
-        Objects.requireNonNull(piece);
-        Objects.requireNonNull(operationsSet);
-        Objects.requireNonNull(from);
-        Objects.requireNonNull(to);
 
         final boolean castle = isCastling(piece, from, to);
         if (castle) {
@@ -135,8 +134,9 @@ public class AlgebraicNotation {
 
         final boolean promotion = operationsSet.contains(ChessBoard.Operations.PROMOTION);
         if (promotion) {
-            Objects.requireNonNull(inCaseOfPromotion);
-            if (!piece.equals(PieceTYPE.P)) throw new IllegalArgumentException("Only pawns available for promotion.");
+            if (!piece.equals(PieceTYPE.P)) {
+                throw new IllegalArgumentException("Only pawns available for promotion.");
+            }
 
             return promotionRecording(operationsSet, from, to, inCaseOfPromotion);
         }
@@ -272,7 +272,7 @@ public class AlgebraicNotation {
      *         - {@link ChessBoard.Operations#EMPTY} if none of the above conditions are met
      * @throws IllegalArgumentException if the set of operations contains more than one operation involving the opponent's king or stalemate
      */
-    public static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
+    static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
         int opponentKingStatusCount = 0;
         if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) {
             opponentKingStatusCount++;
@@ -340,7 +340,7 @@ public class AlgebraicNotation {
      * @param to The ending coordinate of the castling move.
      * @return The type of castling move (short or long).
      */
-    public static Castle castle(final Coordinate to) {
+    static Castle castle(final Coordinate to) {
         final boolean isShortCasting = to.equals(Coordinate.G1) || to.equals(Coordinate.G8);
         if (isShortCasting) {
             return Castle.SHORT_CASTLING;

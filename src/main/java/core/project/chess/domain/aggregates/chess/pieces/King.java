@@ -1,9 +1,11 @@
-package core.project.chess.domain.aggregates.chess.value_objects;
+package core.project.chess.domain.aggregates.chess.pieces;
 
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.Castle;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.infrastructure.utilities.Direction;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
@@ -260,6 +262,35 @@ public record King(Color color)
         return true;
     }
 
+    /**
+     * Validates whether the movement from the start field to the end field is a valid move for a King on the chessboard.
+     *
+     * <p>
+     * This method checks if the King is moving to an adjacent square (one square in any direction) or if the move is a castling move.
+     * A King can move one square in any direction, including diagonally, as long as the destination square is not under attack.
+     * If the move is valid, the method returns <code>true</code>; otherwise, it checks if the move is a castling move.
+     * </p>
+     *
+     * <p>
+     * Preconditions:
+     * <ul>
+     *     <li>The caller must ensure that the method <code>safeForKing(...)</code> has been called prior to invoking this method.
+     *         This is to confirm that the move does not place the king in check.</li>
+     *     <li>The caller must check that neither <code>chessBoard</code> nor <code>startField</code> nor <code>endField</code> is <code>null</code>.</li>
+     *     <li>The caller must verify that the <code>endField</code> is not occupied by a piece of the same color as the piece being moved.
+     *         This is to ensure that the move does not violate the rules of chess regarding capturing pieces.</li>
+     * </ul>
+     * </p>
+     *
+     * @param chessBoard The chessboard on which the move is being validated. This object contains the current state of the board,
+     *                   including the positions of all pieces.
+     * @param startField The field from which the King is moving. This field should contain the King that is being moved.
+     * @param endField   The field to which the King is moving. This field is the target location for the move.
+     *
+     * @return <code>true</code> if the move is valid (either an adjacent move or a castling move); <code>false</code> otherwise.
+     *
+     * @throws NoSuchElementException if the starting field does not contain a piece (the King).
+     */
     private boolean isValidKingMovementCoordinates(final ChessBoard chessBoard, final Field startField, final Field endField) {
         final Coordinate from = startField.getCoordinate();
         final Coordinate to = endField.getCoordinate();

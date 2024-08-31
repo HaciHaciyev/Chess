@@ -1,6 +1,8 @@
-package core.project.chess.domain.aggregates.chess.value_objects;
+package core.project.chess.domain.aggregates.chess.pieces;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import java.util.Set;
 

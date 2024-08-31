@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.utilities;
 
-import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 
 import java.util.regex.Pattern;
 

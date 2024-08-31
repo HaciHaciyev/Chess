@@ -4,7 +4,7 @@ import core.project.chess.application.model.GameParameters;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
-import core.project.chess.domain.aggregates.chess.value_objects.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.infrastructure.utilities.Result;
 import jakarta.enterprise.context.ApplicationScoped;

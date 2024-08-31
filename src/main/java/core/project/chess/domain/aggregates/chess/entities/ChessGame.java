@@ -1,10 +1,10 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
-import core.project.chess.domain.aggregates.chess.value_objects.Color;
-import core.project.chess.domain.aggregates.chess.value_objects.Coordinate;
-import core.project.chess.domain.aggregates.chess.value_objects.GameResult;
-import core.project.chess.domain.aggregates.chess.value_objects.Piece;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
+import core.project.chess.domain.aggregates.chess.pieces.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.OptionalArgument;

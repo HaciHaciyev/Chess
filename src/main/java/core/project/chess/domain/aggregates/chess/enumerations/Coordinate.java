@@ -1,4 +1,4 @@
-package core.project.chess.domain.aggregates.chess.value_objects;
+package core.project.chess.domain.aggregates.chess.enumerations;
 
 import core.project.chess.infrastructure.utilities.StatusPair;
 import lombok.Getter;

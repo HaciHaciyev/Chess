@@ -1,7 +1,7 @@
 package core.project.chess.application.model;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
-import core.project.chess.domain.aggregates.chess.value_objects.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 
 import java.time.Duration;

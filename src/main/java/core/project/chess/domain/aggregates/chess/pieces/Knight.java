@@ -1,6 +1,8 @@
-package core.project.chess.domain.aggregates.chess.value_objects;
+package core.project.chess.domain.aggregates.chess.pieces;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
 import java.util.LinkedHashSet;
@@ -61,7 +63,32 @@ public record Knight(Color color)
         return StatusPair.ofTrue(setOfOperations);
     }
 
-    private boolean knightMove(final Coordinate from, final Coordinate to) {
+    /**
+     * Validates whether a move from the 'from' coordinate to the 'to' coordinate is a valid knight move in chess.
+     * <p>
+     * A knight moves in an "L" shape: it can move two squares in one direction (either horizontally or vertically)
+     * and then one square in a perpendicular direction, or one square in one direction and then two squares in a
+     * perpendicular direction. This method checks if the given coordinates represent such a move.
+     *
+     * <p>
+     * Preconditions:
+     * <ul>
+     *     <li>The caller must ensure that the method <code>safeForKing(...)</code> has been called prior to invoking this method.
+     *         This is to confirm that the move does not place the king in check.</li>
+     *     <li>The caller must check that neither <code>from</code> nor <code>to</code> is <code>null</code>.</li>
+     *     <li>The caller must verify that the <code>to</code> coordinate is not occupied by a piece of the same color as the knight.
+     *         This is to ensure that the move does not violate the rules of chess regarding capturing pieces.</li>
+     * </ul>
+     * </p>
+     *
+     * @param from The starting coordinate of the knight's move. This coordinate represents the current position of the knight.
+     * @param to   The target coordinate to which the knight is attempting to move. This coordinate represents the desired position.
+     *
+     * @return <code>true</code> if the move from 'from' to 'to' is a valid knight move; <code>false</code> otherwise.
+     *
+     * @throws IllegalArgumentException if any of the preconditions are not met (e.g., if <code>from</code> or <code>to</code> is <code>null</code>).
+     */
+    boolean knightMove(final Coordinate from, final Coordinate to) {
         int differenceOfRow = Math.abs(from.getRow() - to.getRow());
         int differenceOfColumn = Math.abs(columnToInt(from.getColumn()) - columnToInt(to.getColumn()));
 
