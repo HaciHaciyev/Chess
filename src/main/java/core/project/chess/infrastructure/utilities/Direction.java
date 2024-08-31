@@ -146,6 +146,24 @@ public enum Direction {
                 .toList();
     }
 
+    public static List<ChessBoard.Field> occupiedFieldsFromHorizontalVerticalDirections(ChessBoard chessBoard, Coordinate pivot) {
+        var top = TOP.occupiedFieldFrom(chessBoard, pivot);
+        var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot);
+
+        var left = LEFT.occupiedFieldFrom(chessBoard, pivot);
+        var right = RIGHT.occupiedFieldFrom(chessBoard, pivot);
+
+        return Stream.of(
+                        top,
+                        bottom,
+                        left,
+                        right
+                )
+                .filter(Optional::isPresent)
+                .map(Optional::orElseThrow)
+                .toList();
+    }
+
     public static List<ChessBoard.Field> occupiedFieldsFromHorizontalVerticalDirections(ChessBoard chessBoard, Coordinate pivot, Coordinate ignore) {
         var top = TOP.occupiedFieldFrom(chessBoard, pivot, ignore);
         var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot, ignore);
@@ -164,13 +182,19 @@ public enum Direction {
                 .toList();
     }
 
-    public static List<ChessBoard.Field> occupiedFieldsFromHorizontalVerticalDirections(ChessBoard chessBoard, Coordinate pivot) {
-        final Optional<ChessBoard.Field> top = TOP.occupiedFieldFrom(chessBoard, pivot);
-        final Optional<ChessBoard.Field> bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot);
-        final Optional<ChessBoard.Field> left = LEFT.occupiedFieldFrom(chessBoard, pivot);
-        final Optional<ChessBoard.Field> right = RIGHT.occupiedFieldFrom(chessBoard, pivot);
+    public static List<ChessBoard.Field> occupiedFieldsFromHorizontalVerticalDirections(ChessBoard chessBoard, Coordinate pivot, Coordinate ignore, Coordinate end) {
+        var top = TOP.occupiedFieldFrom(chessBoard, pivot, ignore, end);
+        var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot, ignore, end);
 
-        return Stream.of(top, bottom, left, right)
+        var left = LEFT.occupiedFieldFrom(chessBoard, pivot, ignore, end);
+        var right = RIGHT.occupiedFieldFrom(chessBoard, pivot, ignore, end);
+
+        return Stream.of(
+                        top,
+                        bottom,
+                        left,
+                        right
+                )
                 .filter(Optional::isPresent)
                 .map(Optional::orElseThrow)
                 .toList();
@@ -288,6 +312,7 @@ public enum Direction {
             Coordinate coordinate = possibleCoordinate.orElseThrow();
 
             if (coordinate.equals(ignore)) {
+                possibleCoordinate = strategy.apply(coordinate);
                 continue;
             }
 

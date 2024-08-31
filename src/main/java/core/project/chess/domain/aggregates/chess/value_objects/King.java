@@ -695,7 +695,7 @@ public record King(Color color)
             }
         }
 
-        final List<Field> occupiedHorizontalAndVerticalFields = Direction.occupiedFieldsFromHorizontalVerticalDirections(chessBoard, kingPosition);
+        final List<Field> occupiedHorizontalAndVerticalFields = Direction.occupiedFieldsFromHorizontalVerticalDirections(chessBoard, kingPosition, from, to);
         for (final Field field : occupiedHorizontalAndVerticalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
