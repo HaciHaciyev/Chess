@@ -10,7 +10,7 @@ import org.flywaydb.core.Flyway;
 import javax.sql.DataSource;
 
 @Singleton
-public class DataSourceProvider {
+class DataSourceProvider {
 
     private final DataSource dataSource;
 
