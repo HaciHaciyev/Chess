@@ -358,7 +358,7 @@ public record King(Color color)
             final boolean block = canBlock(chessBoard, fields, king);
             final boolean eat = canEat(chessBoard, king, enemyField);
 
-            return block || eat;
+            return !block || eat;
         }
 
         return false;
