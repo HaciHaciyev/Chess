@@ -207,6 +207,17 @@ public class ChessBoard {
     }
 
     /**
+     * Returns the number of movements based on the size of the
+     * {@code listOfAlgebraicNotations}, assuming each movement
+     * is represented by a pair of notations.
+     *
+     * @return the number of movements (size / 2).
+     */
+    public int countOfMovement() {
+        return listOfAlgebraicNotations.size() / 2;
+    }
+
+    /**
      * Checks if the move from the specified 'from' coordinate to the 'to' coordinate is safe for the king.
      *
      * @param from  The coordinate the piece is moving from.
