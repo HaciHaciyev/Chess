@@ -128,7 +128,7 @@ public record Pawn(Color color)
      * @throws NoSuchElementException if the starting field does not contain a piece (the Pawn).
      */
     StatusPair<Set<Operations>> validate(
-            final ChessBoard chessBoard, final LinkedHashSet<Operations> setOfOperations, final Field startField, final Field endField
+            final ChessBoard chessBoard, final Set<Operations> setOfOperations, final Field startField, final Field endField
     ) {
         final Color pawnColor = startField.pieceOptional().orElseThrow().color();
         final char startColumn = startField.getCoordinate().getColumn();
@@ -155,7 +155,7 @@ public record Pawn(Color color)
     }
 
     private StatusPair<Set<Operations>> straightMove(
-            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
+            ChessBoard chessBoard, Set<Operations> setOfOperations,
             char startColumn, char endColumn, int startRow, int endRow, Field endField
     ) {
         if (startColumn != endColumn) {
@@ -185,7 +185,7 @@ public record Pawn(Color color)
     }
 
     private StatusPair<Set<Operations>> isPassageValid(
-            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations, int startRow, char column, int endRow
+            ChessBoard chessBoard, Set<Operations> setOfOperations, int startRow, char column, int endRow
     ) {
         int intermediateRow;
         if (startRow < endRow) {
@@ -204,7 +204,7 @@ public record Pawn(Color color)
     }
 
     private StatusPair<Set<Operations>> diagonalCapture(
-            ChessBoard chessBoard, LinkedHashSet<Operations> setOfOperations,
+            ChessBoard chessBoard, Set<Operations> setOfOperations,
             char startColumn, char endColumn, int startRow, int endRow, Field endField
     ) {
 
