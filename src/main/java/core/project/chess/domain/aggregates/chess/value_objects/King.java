@@ -338,8 +338,13 @@ public record King(Color color)
 
         final List<Field> surroundings = surroundingFields(chessBoard, king, enemies);
 
+        boolean surrounded = surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
         if (enemies.size() > 1) {
-            return surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
+            return surrounded;
+        }
+
+        if (!surrounded) {
+            return false;
         }
 
         final Field enemyField = enemies.getFirst();
