@@ -6,11 +6,13 @@ import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.infrastructure.utilities.Direction;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -38,6 +40,125 @@ class ChessGameTest {
     }
 
     @Test
+    @DisplayName("test directions path")
+    void testDirectionsPath() {
+        ChessGame game = chessGameSupplier().get();
+
+        String whitePlayer = game.getPlayerForWhite().getUsername().username();
+        String blackPlayer = game.getPlayerForBlack().getUsername().username();
+
+        List<ChessBoard.Field> coords = Direction.fieldsOfPathExclusive(game.getChessBoard(), D1, E2);
+        List<ChessBoard.Field> coords1 = Direction.fieldsOfPathInclusive(game.getChessBoard(), E2, G6);
+
+        System.out.println(coords);
+        coords1.forEach(f -> System.out.println(f.pieceOptional()));
+    }
+
+    @Test
+    void testNewDirectionFeat() {
+        ChessGame game = chessGameSupplier().get();
+
+        String whitePlayer = game.getPlayerForWhite().getUsername().username();
+        String blackPlayer = game.getPlayerForBlack().getUsername().username();
+
+        //1.
+        game.makeMovement(whitePlayer, E2, E4, null);
+
+        game.makeMovement(blackPlayer, E7, E5, null);
+
+        //2.
+        game.makeMovement(whitePlayer, G1, F3, null);
+
+        game.makeMovement(blackPlayer, B8, C6, null);
+
+        //3.
+        game.makeMovement(whitePlayer, B1, C3, null);
+
+        game.makeMovement(blackPlayer, G8, F6, null);
+
+        //4.
+        game.makeMovement(whitePlayer, D2, D3, null);
+
+        game.makeMovement(blackPlayer, F8, C5, null);
+
+        //5.
+        game.makeMovement(whitePlayer, C1, G5, null);
+
+        game.makeMovement(blackPlayer, H7, H6, null);
+
+        //6.
+        game.makeMovement(whitePlayer, G5, F6, null);
+
+        game.makeMovement(blackPlayer, D8, F6, null);
+
+        //7.
+        game.makeMovement(whitePlayer, A2, A3, null);
+
+        game.makeMovement(blackPlayer, D7, D6, null);
+
+        //8.
+        game.makeMovement(whitePlayer, C3, D5, null);
+
+        game.makeMovement(blackPlayer, F6, D8, null);
+
+        //9.
+        game.makeMovement(whitePlayer, C2, C3, null);
+
+        game.makeMovement(blackPlayer, C8, E6, null);
+
+        //10.
+        game.makeMovement(whitePlayer, D1, A4, null);
+
+        game.makeMovement(blackPlayer, D8, D7, null);
+
+        //11.
+        game.makeMovement(whitePlayer, D5, E3, null);
+
+        game.makeMovement(blackPlayer, C5, E3, null);
+
+        //12.
+        game.makeMovement(whitePlayer, F2, E3, null);
+
+        game.makeMovement(blackPlayer, E8, G8, null);
+
+        //13.
+        game.makeMovement(whitePlayer, D3, D4, null);
+
+        game.makeMovement(blackPlayer, E6, G4, null);
+
+        //14.
+        game.makeMovement(whitePlayer, F3, D2, null);
+
+        game.makeMovement(blackPlayer, D7, E7, null);
+
+        //15.
+        game.makeMovement(whitePlayer, D4, E5, null);
+
+        game.makeMovement(blackPlayer, D6, E5, null);
+
+        //16.
+        game.makeMovement(whitePlayer, D2, C4, null);
+
+        game.makeMovement(blackPlayer, E7, G5, null);
+
+        //17.
+        game.makeMovement(whitePlayer, F1, D3, null);
+
+        game.makeMovement(blackPlayer, G4, E6, null);
+
+        //18.
+        game.makeMovement(whitePlayer, G2, G3, null);
+
+        game.makeMovement(blackPlayer, E6, C4, null);
+
+
+        List<ChessBoard.Field> fields = Direction.occupiedFieldsFromDiagonalDirections(game.getChessBoard(), C6, field -> field.isPresent() && !field.getCoordinate().equals(E4));
+
+        fields.forEach(f -> System.out.println("Piece: " + f.pieceOptional() + "\n" + "Coordinate: " + f.getCoordinate()));
+
+    }
+
+    @Test
     void testChessGame() {
         chessGameLoad();
     }
@@ -51,214 +172,214 @@ class ChessGameTest {
         String blackPlayer = game.getPlayerForBlack().getUsername().username();
 
         //1.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, E2, E4, null));
+        game.makeMovement(whitePlayer, E2, E4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, E7, E5, null));
+        game.makeMovement(blackPlayer, E7, E5, null);
 
         //2.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, G1, F3, null));
+        game.makeMovement(whitePlayer, G1, F3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, B8, C6, null));
+        game.makeMovement(blackPlayer, B8, C6, null);
 
         //3.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, B1, C3, null));
+        game.makeMovement(whitePlayer, B1, C3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, G8, F6, null));
+        game.makeMovement(blackPlayer, G8, F6, null);
 
         //4.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, D2, D3, null));
+        game.makeMovement(whitePlayer, D2, D3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, F8, C5, null));
+        game.makeMovement(blackPlayer, F8, C5, null);
 
         //5.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, C1, G5, null));
+        game.makeMovement(whitePlayer, C1, G5, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, H7, H6, null));
+        game.makeMovement(blackPlayer, H7, H6, null);
 
         //6.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, G5, F6, null));
+        game.makeMovement(whitePlayer, G5, F6, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D8, F6, null));
+        game.makeMovement(blackPlayer, D8, F6, null);
 
         //7.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, A2, A3, null));
+        game.makeMovement(whitePlayer, A2, A3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D7, D6, null));
+        game.makeMovement(blackPlayer, D7, D6, null);
 
         //8.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, C3, D5, null));
+        game.makeMovement(whitePlayer, C3, D5, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, F6, D8, null));
+        game.makeMovement(blackPlayer, F6, D8, null);
 
         //9.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, C2, C3, null));
+        game.makeMovement(whitePlayer, C2, C3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C8, E6, null));
+        game.makeMovement(blackPlayer, C8, E6, null);
 
         //10.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, D1, A4, null));
+        game.makeMovement(whitePlayer, D1, A4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D8, D7, null));
+        game.makeMovement(blackPlayer, D8, D7, null);
 
         //11.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, D5, E3, null));
+        game.makeMovement(whitePlayer, D5, E3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C5, E3, null));
+        game.makeMovement(blackPlayer, C5, E3, null);
 
         //12.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F2, E3, null));
+        game.makeMovement(whitePlayer, F2, E3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, E8, G8, null));
+        game.makeMovement(blackPlayer, E8, G8, null);
 
         //13.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, D3, D4, null));
+        game.makeMovement(whitePlayer, D3, D4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, E6, G4, null));
+        game.makeMovement(blackPlayer, E6, G4, null);
 
         //14.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F3, D2, null));
+        game.makeMovement(whitePlayer, F3, D2, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D7, E7, null));
+        game.makeMovement(blackPlayer, D7, E7, null);
 
         //15.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, D4, E5, null));
+        game.makeMovement(whitePlayer, D4, E5, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D6, E5, null));
+        game.makeMovement(blackPlayer, D6, E5, null);
 
         //16.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, D2, C4, null));
+        game.makeMovement(whitePlayer, D2, C4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, E7, G5, null));
+        game.makeMovement(blackPlayer, E7, G5, null);
 
         //17.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F1, D3, null));
+        game.makeMovement(whitePlayer, F1, D3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, G4, E6, null));
+        game.makeMovement(blackPlayer, G4, E6, null);
 
         //18.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, G2, G3, null));
+        game.makeMovement(whitePlayer, G2, G3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, E6, C4, null));
+        game.makeMovement(blackPlayer, E6, C4, null);
 
         //19.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, D3, C4, null));
+        game.makeMovement(whitePlayer, D3, C4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, G5, E3, null));
+        game.makeMovement(blackPlayer, G5, E3, null);
 
         //20. fixed
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, C4, E2, null));
+        game.makeMovement(whitePlayer, C4, E2, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, A7, A6, null));
+        game.makeMovement(blackPlayer, A7, A6, null);
 
         //21.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, H1, F1, null));
+        game.makeMovement(whitePlayer, H1, F1, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, B7, B5, null));
+        game.makeMovement(blackPlayer, B7, B5, null);
 
         //22.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, A4, C2, null));
+        game.makeMovement(whitePlayer, A4, C2, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, A6, A5, null));
+        game.makeMovement(blackPlayer, A6, A5, null);
 
         //23.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, C3, C4, null));
+        game.makeMovement(whitePlayer, C3, C4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, B5, B4, null));
+        game.makeMovement(blackPlayer, B5, B4, null);
 
         //24.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, A3, B4, null));
+        game.makeMovement(whitePlayer, A3, B4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C6, B4, null));
+        game.makeMovement(blackPlayer, C6, B4, null);
 
         //25.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, C2, B1, null));
+        game.makeMovement(whitePlayer, C2, B1, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, F8, D8, null));
+        game.makeMovement(blackPlayer, F8, D8, null);
 
         //26.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F1, F5, null));
+        game.makeMovement(whitePlayer, F1, F5, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, F7, F6, null));
+        game.makeMovement(blackPlayer, F7, F6, null);
 
         //27.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, A1, A3, null));
+        game.makeMovement(whitePlayer, A1, A3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, E3, D2, null));
+        game.makeMovement(blackPlayer, E3, D2, null);
 
         //28.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, E1, F1, null));
+        game.makeMovement(whitePlayer, E1, F1, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D2, C2, null));
+        game.makeMovement(blackPlayer, D2, C2, null);
 
         //29.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, A3, A1, null));
+        game.makeMovement(whitePlayer, A3, A1, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D8, D4, null));
+        game.makeMovement(blackPlayer, D8, D4, null);
 
         //30.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, E2, F3, null));
+        game.makeMovement(whitePlayer, E2, F3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C2, C4, null));
+        game.makeMovement(blackPlayer, C2, C4, null);
 
         //31.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F1, G2, null));
+        game.makeMovement(whitePlayer, F1, G2, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D4, D2, null));
+        game.makeMovement(blackPlayer, D4, D2, null);
 
         //32.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, G2, G1, null));
+        game.makeMovement(whitePlayer, G2, G1, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, G8, F7, null));
+        game.makeMovement(blackPlayer, G8, F7, null);
 
         //33.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, B1, F1, null));
+        game.makeMovement(whitePlayer, B1, F1, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C4, F1, null));
+        game.makeMovement(blackPlayer, C4, F1, null);
 
         //34.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, G1, F1, null));
+        game.makeMovement(whitePlayer, G1, F1, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, G7, G6, null));
+        game.makeMovement(blackPlayer, G7, G6, null);
 
         //35.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F1, E1, null));
+        game.makeMovement(whitePlayer, F1, E1, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D2, B2, null));
+        game.makeMovement(blackPlayer, D2, B2, null);
 
         //36.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F3, H5, null));
+        game.makeMovement(whitePlayer, F3, H5, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, B4, C2, null));
+        game.makeMovement(blackPlayer, B4, C2, null);
 
         //37.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, E1, F2, null));
+        game.makeMovement(whitePlayer, E1, F2, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C2, A1, null));
+        game.makeMovement(blackPlayer, C2, A1, null);
 
         //38.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F2, F3, null));
+        game.makeMovement(whitePlayer, F2, F3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, A8, D8, null));
+        game.makeMovement(blackPlayer, A8, D8, null);
 
         //39.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, F3, G4, null));
+        game.makeMovement(whitePlayer, F3, G4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C7, C5, null));
+        game.makeMovement(blackPlayer, C7, C5, null);
 
         //40.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, H2, H4, null));
+        game.makeMovement(whitePlayer, H2, H4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C5, C4, null));
+        game.makeMovement(blackPlayer, C5, C4, null);
 
         //41.
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, G4, F3, null));
+        game.makeMovement(whitePlayer, G4, F3, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, C4, C3, null));
+        game.makeMovement(blackPlayer, C4, C3, null);
 
         //42. checkmate
-        assertDoesNotThrow(() -> game.makeMovement(whitePlayer, G3, G4, null));
+        game.makeMovement(whitePlayer, G3, G4, null);
 
-        assertDoesNotThrow(() -> game.makeMovement(blackPlayer, D8, D3, null));
+        game.makeMovement(blackPlayer, D8, D3, null);
     }
 
     public void chessGameLoad() {

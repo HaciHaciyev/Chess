@@ -352,8 +352,7 @@ public record King(Color color)
 
         if (enemy instanceof Bishop || enemy instanceof Rook || enemy instanceof Queen) {
 
-            final Direction direction = getEnemyDirection(king, enemyField.getCoordinate());
-            final List<Field> fields = direction.fieldsUntil(chessBoard, king, enemyField.getCoordinate());
+            final List<Field> fields = Direction.fieldsOfPathExclusive(chessBoard, king, enemyField.getCoordinate());
 
             final boolean block = canBlock(chessBoard, fields, king);
             final boolean eat = canEat(chessBoard, king, enemyField);
@@ -381,8 +380,7 @@ public record King(Color color)
 
         if (enemy instanceof Bishop || enemy instanceof Rook || enemy instanceof Queen) {
 
-            final Direction direction = getEnemyDirection(king, enemyField.getCoordinate());
-            final List<Field> fields = direction.fieldsUntil(chessBoard, king, enemyField.getCoordinate());
+            final List<Field> fields = Direction.fieldsOfPathExclusive(chessBoard, king, enemyField.getCoordinate());
 
             final boolean block = canBlock(chessBoard, fields, king);
             final boolean eat = canEat(chessBoard, king, enemyField);
@@ -442,8 +440,7 @@ public record King(Color color)
 
         if (enemy instanceof Bishop || enemy instanceof Rook || enemy instanceof Queen) {
 
-            final Direction direction = getEnemyDirection(king, enemyField.getCoordinate());
-            final List<Field> fields = direction.fieldsUntil(chessBoard, king, enemyField.getCoordinate());
+            final List<Field> fields = Direction.fieldsOfPathExclusive(chessBoard, king, enemyField.getCoordinate());
 
             final boolean block = canBlock(chessBoard, fields, king);
             final boolean eat = canEat(chessBoard, king, enemyField);
@@ -540,41 +537,6 @@ public record King(Color color)
         return false;
     }
 
-    private Direction getEnemyDirection(Coordinate from, Coordinate to) {
-
-        if (to.getColumn() < from.getColumn() && to.getRow() > from.getRow()) {
-            return Direction.TOP_LEFT;
-        }
-
-        if (to.getColumn() == from.getColumn() && to.getRow() > from.getRow()) {
-            return Direction.TOP;
-        }
-
-        if (to.getColumn() > from.getColumn() && to.getRow() > from.getRow()) {
-            return Direction.TOP_RIGHT;
-        }
-
-
-        if (to.getColumn() < from.getColumn() && to.getRow() == from.getRow()) {
-            return Direction.LEFT;
-        }
-
-        if (to.getColumn() > from.getColumn() && to.getRow() == from.getRow()) {
-            return Direction.RIGHT;
-        }
-
-
-        if (to.getColumn() < from.getColumn()) {
-            return Direction.BOTTOM_LEFT;
-        }
-
-        if (to.getColumn() == from.getColumn() && to.getRow() < from.getRow()) {
-            return Direction.BOTTOM;
-        }
-
-        return Direction.BOTTOM_RIGHT;
-    }
-
     private List<Field> getAllFriendlyFields(ChessBoard chessBoard) {
         final Coordinate kingCoordinate = getKingCoordinate(chessBoard);
         final Coordinate[] coordinates = Coordinate.values();
@@ -644,7 +606,7 @@ public record King(Color color)
             }
         }
 
-        final List<ChessBoard.Field> diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, futureKing, previousKing);
+        final List<ChessBoard.Field> diagonalFields = Direction.occupiedFieldsFromDiagonalDirections(chessBoard, futureKing, field -> field.isPresent() && !field.getCoordinate().equals(previousKing));
         for (final Field field : diagonalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
@@ -654,7 +616,7 @@ public record King(Color color)
             }
         }
 
-        final List<ChessBoard.Field> horizontalVerticalFields = Direction.occupiedFieldsFromHorizontalVerticalDirections(chessBoard, futureKing, previousKing);
+        final List<ChessBoard.Field> horizontalVerticalFields = Direction.occupiedFieldsFromHorizontalVerticalDirections(chessBoard, futureKing, field -> field.isPresent() && !field.getCoordinate().equals(previousKing));
         for (final Field field : horizontalVerticalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
