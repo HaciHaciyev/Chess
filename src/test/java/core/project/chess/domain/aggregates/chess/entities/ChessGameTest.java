@@ -7,8 +7,7 @@ import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.Direction;
-import io.quarkus.logging.Log;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,12 +16,12 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import static core.project.chess.domain.aggregates.chess.value_objects.Coordinate.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ChessGameTest {
 
     @Test /** In this method, a full-fledged game is played with its logic, and both valid and invalid moves are present.*/
+    @Disabled("For single performance checks.")
     void testChessGamePerformance() {
 
         for (int i = 0; i < 150_000; i++) {
@@ -40,12 +39,15 @@ class ChessGameTest {
     }
 
     @Test
-    @DisplayName("test directions path")
+    @DisplayName("Test chess game with many invalid moves.")
+    void testChessGame() {
+        chessGameLoad();
+    }
+
+    @Test
+    @DisplayName("Test directions path.")
     void testDirectionsPath() {
         ChessGame game = chessGameSupplier().get();
-
-        String whitePlayer = game.getPlayerForWhite().getUsername().username();
-        String blackPlayer = game.getPlayerForBlack().getUsername().username();
 
         List<ChessBoard.Field> coords = Direction.fieldsOfPathExclusive(game.getChessBoard(), D1, E2);
         List<ChessBoard.Field> coords1 = Direction.fieldsOfPathInclusive(game.getChessBoard(), E2, G6);
@@ -152,15 +154,12 @@ class ChessGameTest {
         game.makeMovement(blackPlayer, E6, C4, null);
 
 
-        List<ChessBoard.Field> fields = Direction.occupiedFieldsFromDiagonalDirections(game.getChessBoard(), C6, field -> field.isPresent() && !field.getCoordinate().equals(E4));
+        List<ChessBoard.Field> fields = Direction.occupiedFieldsFromDiagonalDirections(
+                game.getChessBoard(), C6, field -> field.isPresent() && !field.getCoordinate().equals(E4)
+        );
 
         fields.forEach(f -> System.out.println("Piece: " + f.pieceOptional() + "\n" + "Coordinate: " + f.getCoordinate()));
 
-    }
-
-    @Test
-    void testChessGame() {
-        chessGameLoad();
     }
 
     @Test
@@ -624,6 +623,9 @@ class ChessGameTest {
 
         // VALID. Pawn move.
         chessGame.makeMovement(firstPlayerUsername, Coordinate.A2, Coordinate.A3, null);
+
+        // VALID, Rook move.
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.A8, Coordinate.B8, null);
     }
 
     public final Supplier<ChessGame> chessGameSupplier() {
