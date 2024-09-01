@@ -173,10 +173,10 @@ public record King(Color color)
             return false;
         }
 
-        final List<Field> fields = getAllFriendlyFields(chessBoard);
+        final List<Field> fields = getAllFriendlyFields(chessBoard, to);
 
         for (final Field field : fields) {
-            final boolean result = processFields(chessBoard, king, field);
+            final boolean result = processFields(chessBoard, king, field, to);
 
             if (!result) {
                 return false;
@@ -186,19 +186,16 @@ public record King(Color color)
         return true;
     }
 
-    private boolean processFields(ChessBoard chessBoard, Coordinate king, Field field) {
+    private boolean processFields(ChessBoard chessBoard, Coordinate king, Field field, Coordinate futureEnemy) {
+
         final Piece piece = field.pieceOptional().orElseThrow();
         final Coordinate coordinate = field.getCoordinate();
 
         if (piece instanceof Pawn pawn) {
 
-            //TODO imitate a move for pawn to see
-            // in case of stalemate match pawn can't see the Queen in front of it
-
-
             final List<Field> pawnCoordinates = coordinatesThreatenedByPawn(chessBoard, coordinate, color);
 
-            Optional<Field> forwardMove = getForwardMove(chessBoard, coordinate);
+            Optional<Field> forwardMove = getForwardMove(chessBoard, coordinate, futureEnemy);
             forwardMove.ifPresent(pawnCoordinates::add);
 
             for (final Field coord : pawnCoordinates) {
@@ -277,7 +274,7 @@ public record King(Color color)
         return true;
     }
 
-    private Optional<Field> getForwardMove(ChessBoard chessBoard, Coordinate coordinate) {
+    private Optional<Field> getForwardMove(ChessBoard chessBoard, Coordinate coordinate, Coordinate ignore) {
         Field pawnField = chessBoard.field(coordinate);
         Piece piece = pawnField.pieceOptional().orElseThrow();
 
@@ -288,7 +285,14 @@ public record King(Color color)
                     );
 
             if (possibleForwardCoordinate.status()) {
-                Field field = chessBoard.field(possibleForwardCoordinate.orElseThrow());
+
+                Coordinate forward = possibleForwardCoordinate.orElseThrow();
+
+                if (forward.equals(ignore)) {
+                    return Optional.empty();
+                }
+
+                Field field = chessBoard.field(forward);
                 return Optional.of(field);
             }
 
@@ -300,7 +304,14 @@ public record King(Color color)
                     );
 
             if (possibleForwardCoordinate.status()) {
-                Field field = chessBoard.field(possibleForwardCoordinate.orElseThrow());
+
+                Coordinate forward = possibleForwardCoordinate.orElseThrow();
+
+                if (forward.equals(ignore)) {
+                    return Optional.empty();
+                }
+
+                Field field = chessBoard.field(forward);
                 return Optional.of(field);
             }
         }
@@ -854,7 +865,7 @@ public record King(Color color)
         return false;
     }
 
-    private List<Field> getAllFriendlyFields(ChessBoard chessBoard) {
+    private List<Field> getAllFriendlyFields(ChessBoard chessBoard, Coordinate ignore) {
         final Coordinate kingCoordinate = getKingCoordinate(chessBoard);
         final Coordinate[] coordinates = Coordinate.values();
 
@@ -862,6 +873,7 @@ public record King(Color color)
                 .map(chessBoard::field)
                 .filter(Field::isPresent)
                 .filter(field -> !field.getCoordinate().equals(kingCoordinate))
+                .filter(field -> !field.getCoordinate().equals(ignore))
                 .filter(field -> field.pieceOptional().orElseThrow().color().equals(color))
                 .toList();
     }
