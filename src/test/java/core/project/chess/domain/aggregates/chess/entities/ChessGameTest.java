@@ -224,6 +224,62 @@ class ChessGameTest {
     }
 
     @Test
+    @DisplayName("Test fastest stalemate")
+    void fastestStalemate() {
+        ChessGame game = chessGameSupplier().get();
+
+        String whitePlayer = game.getPlayerForWhite().getUsername().username();
+        String blackPlayer = game.getPlayerForBlack().getUsername().username();
+
+        game.makeMovement(whitePlayer, E2, E3, null);
+
+        game.makeMovement(blackPlayer, A7, A5, null);
+
+
+        game.makeMovement(whitePlayer, D1, H5, null);
+
+        game.makeMovement(blackPlayer, A8, A6, null);
+
+
+        game.makeMovement(whitePlayer, H5, A5, null);
+
+        game.makeMovement(blackPlayer, H7, H5, null);
+
+
+        game.makeMovement(whitePlayer, H2, H4, null);
+
+        game.makeMovement(blackPlayer, A6, H6, null);
+
+
+        game.makeMovement(whitePlayer, A5, C7, null);
+
+        game.makeMovement(blackPlayer, F7, F6, null);
+
+
+        game.makeMovement(whitePlayer, C7, D7, null);
+
+        game.makeMovement(blackPlayer, E8, F7, null);
+
+
+        game.makeMovement(whitePlayer, D7, B7, null);
+
+        game.makeMovement(blackPlayer, D8, D3, null);
+
+
+        game.makeMovement(whitePlayer, B7, B8, null);
+
+        game.makeMovement(blackPlayer, D3, H7, null);
+
+
+        game.makeMovement(whitePlayer, B8, C8, null);
+
+        game.makeMovement(blackPlayer, F7, G6, null);
+
+
+        game.makeMovement(whitePlayer, C8, E6, null);
+    }
+
+    @Test
     @DisplayName("Game between AinGrace and Hadzhy98 on 2024.08.04\nhttps://lichess.org/zuOBpEUY#11")
     void gameOn_2024_08_04() {
         ChessGame game = chessGameSupplier().get();

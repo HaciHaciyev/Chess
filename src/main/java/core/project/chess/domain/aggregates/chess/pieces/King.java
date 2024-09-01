@@ -190,76 +190,122 @@ public record King(Color color)
         final Piece piece = field.pieceOptional().orElseThrow();
         final Coordinate coordinate = field.getCoordinate();
 
-        if (piece instanceof Pawn) {
+        if (piece instanceof Pawn pawn) {
+
+            //TODO imitate a move for pawn to see
+            // in case of stalemate match pawn can't see the Queen in front of it
+
 
             final List<Field> pawnCoordinates = coordinatesThreatenedByPawn(chessBoard, coordinate, color);
 
-            if (piece.color().equals(Color.WHITE)) {
-
-                final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() + 1, coordinate.getColumn());
-                if (possibleForwardCoordinate.status()) {
-                    pawnCoordinates.add(chessBoard.field(possibleForwardCoordinate.orElseThrow()));
-                }
-
-            } else {
-
-                final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() - 1, coordinate.getColumn());
-                if (possibleForwardCoordinate.status()) {
-                    pawnCoordinates.add(chessBoard.field(possibleForwardCoordinate.orElseThrow()));
-                }
-
-            }
+            Optional<Field> forwardMove = getForwardMove(chessBoard, coordinate);
+            forwardMove.ifPresent(pawnCoordinates::add);
 
             for (final Field coord : pawnCoordinates) {
-                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                    return false;
+
+                if (coord.isPresent() && coord.pieceOptional().get().color().equals(color)) {
+                    continue;
+                }
+
+                if (pawn.validate(chessBoard, new LinkedHashSet<>(), field, coord).status()) {
+                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
                 }
             }
-
         }
 
-        if (piece instanceof Knight) {
+        if (piece instanceof Knight knight) {
             final List<Field> coords = knightAttackPositions(chessBoard, king);
 
             for (Field coord : coords) {
-                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                    return false;
+
+                if (coord.isPresent() && coord.pieceOptional().get().color().equals(color)) {
+                    continue;
+                }
+
+                if (knight.knightMove(field.getCoordinate(), coord.getCoordinate())) {
+                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
                 }
             }
-
         }
 
-        if (piece instanceof Bishop) {
+        if (piece instanceof Bishop bishop) {
             final List<Field> coords = Direction.fieldsFromDiagonalDirections(chessBoard, coordinate);
 
             for (final Field coord : coords) {
-                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                    return false;
+
+                if (coord.isPresent() && coord.pieceOptional().get().color().equals(color)) {
+                    continue;
+                }
+
+                if (bishop.validate(chessBoard, field, coord)) {
+                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
                 }
             }
         }
 
-        if (piece instanceof Rook) {
+        if (piece instanceof Rook rook) {
+
             final List<Field> coords = Direction.fieldsFromHorizontalAndVerticalDirections(chessBoard, coordinate);
 
             for (Field coord : coords) {
-                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                    return false;
+
+                if (coord.isPresent() && coord.pieceOptional().get().color().equals(color)) {
+                    continue;
+                }
+
+                if (rook.validate(chessBoard, field, coord)) {
+                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
                 }
             }
         }
 
-        if (piece instanceof Queen) {
+        if (piece instanceof Queen queen) {
             final List<Field> coords = Direction.fieldsFromAllDirections(chessBoard, coordinate);
 
             for (final Field coord : coords) {
-                if (piece.isValidMove(chessBoard, coordinate, coord.getCoordinate()).status()) {
-                    return false;
+
+                if (coord.isPresent() && coord.pieceOptional().get().color().equals(color)) {
+                    continue;
+                }
+
+                if (queen.validate(chessBoard, field, coord)) {
+                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
                 }
             }
         }
 
         return true;
+    }
+
+    private Optional<Field> getForwardMove(ChessBoard chessBoard, Coordinate coordinate) {
+        Field pawnField = chessBoard.field(coordinate);
+        Piece piece = pawnField.pieceOptional().orElseThrow();
+
+        if (piece.color().equals(Color.WHITE)) {
+
+            final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(
+                            coordinate.getRow() + 1, coordinate.getColumnAsInt()
+                    );
+
+            if (possibleForwardCoordinate.status()) {
+                Field field = chessBoard.field(possibleForwardCoordinate.orElseThrow());
+                return Optional.of(field);
+            }
+
+        } else {
+
+            final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate
+                    .coordinate(
+                            coordinate.getRow() - 1, coordinate.getColumnAsInt()
+                    );
+
+            if (possibleForwardCoordinate.status()) {
+                Field field = chessBoard.field(possibleForwardCoordinate.orElseThrow());
+                return Optional.of(field);
+            }
+        }
+
+        return Optional.empty();
     }
 
     /**
