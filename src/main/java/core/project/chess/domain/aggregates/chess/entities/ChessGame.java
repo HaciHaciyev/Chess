@@ -17,7 +17,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 public class ChessGame {
     private final UUID chessGameId;
@@ -138,6 +140,7 @@ public class ChessGame {
 
         final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
         if (gameOver) {
+            log.info("GAME OVER: {}", operation);
             gameOver(operation);
             return;
         }
@@ -173,11 +176,13 @@ public class ChessGame {
         }
 
         if (operation.equals(Operations.STALEMATE)) {
+            log.info("STALEMATE");
             drawEnding();
             return;
         }
 
         if (operation.equals(Operations.CHECKMATE)) {
+            log.info("CHECKMATE");
             winnerEnding();
             return;
         }
