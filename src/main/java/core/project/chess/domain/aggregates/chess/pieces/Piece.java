@@ -29,14 +29,14 @@ public sealed interface Piece
      */
     default int columnToInt(char startColumn) {
         return switch (startColumn) {
-            case 'A' -> 1;
-            case 'B' -> 2;
-            case 'C' -> 3;
-            case 'D' -> 4;
-            case 'E' -> 5;
-            case 'F' -> 6;
-            case 'G' -> 7;
-            case 'H' -> 8;
+            case 'a' -> 1;
+            case 'b' -> 2;
+            case 'c' -> 3;
+            case 'd' -> 4;
+            case 'e' -> 5;
+            case 'f' -> 6;
+            case 'g' -> 7;
+            case 'h' -> 8;
             default -> throw new IllegalStateException("Unexpected value: " + startColumn);
         };
     }

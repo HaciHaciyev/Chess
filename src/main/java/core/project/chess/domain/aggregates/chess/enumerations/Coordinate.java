@@ -6,14 +6,14 @@ import lombok.Getter;
 @Getter
 public enum Coordinate {
 
-    A1('A', 1), A2('A', 2), A3('A', 3), A4('A', 4), A5('A', 5), A6('A', 6), A7('A', 7), A8('A', 8),
-    B1('B', 1), B2('B', 2), B3('B', 3), B4('B', 4), B5('B', 5), B6('B', 6), B7('B', 7), B8('B', 8),
-    C1('C', 1), C2('C', 2), C3('C', 3), C4('C', 4), C5('C', 5), C6('C', 6), C7('C', 7), C8('C', 8),
-    D1('D', 1), D2('D', 2), D3('D', 3), D4('D', 4), D5('D', 5), D6('D', 6), D7('D', 7), D8('D', 8),
-    E1('E', 1), E2('E', 2), E3('E', 3), E4('E', 4), E5('E', 5), E6('E', 6), E7('E', 7), E8('E', 8),
-    F1('F', 1), F2('F', 2), F3('F', 3), F4('F', 4), F5('F', 5), F6('F', 6), F7('F', 7), F8('F', 8),
-    G1('G', 1), G2('G', 2), G3('G', 3), G4('G', 4), G5('G', 5), G6('G', 6), G7('G', 7), G8('G', 8),
-    H1('H', 1), H2('H', 2), H3('H', 3), H4('H', 4), H5('H', 5), H6('H', 6), H7('H', 7), H8('H', 8);
+    A1('a', 1), A2('a', 2), A3('a', 3), A4('a', 4), A5('a', 5), A6('a', 6), A7('a', 7), A8('a', 8),
+    B1('b', 1), B2('b', 2), B3('b', 3), B4('b', 4), B5('b', 5), B6('b', 6), B7('b', 7), B8('b', 8),
+    C1('c', 1), C2('c', 2), C3('c', 3), C4('c', 4), C5('c', 5), C6('c', 6), C7('c', 7), C8('c', 8),
+    D1('d', 1), D2('d', 2), D3('d', 3), D4('d', 4), D5('d', 5), D6('d', 6), D7('d', 7), D8('d', 8),
+    E1('e', 1), E2('e', 2), E3('e', 3), E4('e', 4), E5('e', 5), E6('e', 6), E7('e', 7), E8('e', 8),
+    F1('f', 1), F2('f', 2), F3('f', 3), F4('f', 4), F5('f', 5), F6('f', 6), F7('f', 7), F8('f', 8),
+    G1('g', 1), G2('g', 2), G3('g', 3), G4('g', 4), G5('g', 5), G6('g', 6), G7('g', 7), G8('g', 8),
+    H1('h', 1), H2('h', 2), H3('h', 3), H4('h', 4), H5('h', 5), H6('h', 6), H7('h', 7), H8('h', 8);
 
     private final int row;
 
@@ -56,28 +56,28 @@ public enum Coordinate {
      */
     public static char intToColumn(int columnNumber) {
         return switch (columnNumber) {
-            case 1 -> 'A';
-            case 2 -> 'B';
-            case 3 -> 'C';
-            case 4 -> 'D';
-            case 5 -> 'E';
-            case 6 -> 'F';
-            case 7 -> 'G';
-            case 8 -> 'H';
+            case 1 -> 'a';
+            case 2 -> 'b';
+            case 3 -> 'c';
+            case 4 -> 'd';
+            case 5 -> 'e';
+            case 6 -> 'f';
+            case 7 -> 'g';
+            case 8 -> 'h';
             default -> throw new IllegalStateException("Unexpected value: " + columnNumber);
         };
     }
 
     public int getColumnAsInt() {
         return switch (column) {
-            case 'A' -> 1;
-            case 'B' -> 2;
-            case 'C' -> 3;
-            case 'D' -> 4;
-            case 'E' -> 5;
-            case 'F' -> 6;
-            case 'G' -> 7;
-            case 'H' -> 8;
+            case 'a' -> 1;
+            case 'b' -> 2;
+            case 'c' -> 3;
+            case 'd' -> 4;
+            case 'e' -> 5;
+            case 'f' -> 6;
+            case 'g' -> 7;
+            case 'h' -> 8;
             default -> throw new IllegalStateException("Unexpected value: " + column);
         };
     }

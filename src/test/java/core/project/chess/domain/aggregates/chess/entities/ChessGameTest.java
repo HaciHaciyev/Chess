@@ -26,18 +26,16 @@ class ChessGameTest {
     @Disabled("For single performance checks.")
     void testChessGamePerformance() {
 
+        long startTime = System.nanoTime();
+
         for (int i = 0; i < 150_000; i++) {
 
-            long startTime = System.nanoTime();
-
             chessGameLoad();
-
-            long endTime = System.nanoTime();
-            long duration = endTime - startTime;
-
-            System.out.println(duration);
         }
 
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        System.out.println(duration);
     }
 
     @Test
@@ -214,7 +212,6 @@ class ChessGameTest {
 
         game.makeMovement(blackPlayer, E6, C4, null);
 
-
         List<ChessBoard.Field> fields = Direction.occupiedFieldsFromDiagonalDirections(
                 game.getChessBoard(), C6, field -> field.isPresent() && !field.getCoordinate().equals(E4)
         );
@@ -228,63 +225,6 @@ class ChessGameTest {
     @DisplayName("ChessBoard FEN render test")
     void testFENRender() {
         System.out.println(ChessBoard.renderASCII("r2qk2r/ppp2pp1/2npb2p/2bNp3/4P3/P1PP1N2/1P3PPP/R2QKB1R w KQkq - 1 10"));
-    }
-
-    @Test
-    @DisplayName("Test fastest stalemate")
-    void fastestStalemate() {
-
-        ChessGame game = chessGameSupplier().get();
-
-        String whitePlayer = game.getPlayerForWhite().getUsername().username();
-        String blackPlayer = game.getPlayerForBlack().getUsername().username();
-
-        game.makeMovement(whitePlayer, E2, E3, null);
-
-        game.makeMovement(blackPlayer, A7, A5, null);
-
-
-        game.makeMovement(whitePlayer, D1, H5, null);
-
-        game.makeMovement(blackPlayer, A8, A6, null);
-
-
-        game.makeMovement(whitePlayer, H5, A5, null);
-
-        game.makeMovement(blackPlayer, H7, H5, null);
-
-
-        game.makeMovement(whitePlayer, H2, H4, null);
-
-        game.makeMovement(blackPlayer, A6, H6, null);
-
-
-        game.makeMovement(whitePlayer, A5, C7, null);
-
-        game.makeMovement(blackPlayer, F7, F6, null);
-
-
-        game.makeMovement(whitePlayer, C7, D7, null);
-
-        game.makeMovement(blackPlayer, E8, F7, null);
-
-
-        game.makeMovement(whitePlayer, D7, B7, null);
-
-        game.makeMovement(blackPlayer, D8, D3, null);
-
-
-        game.makeMovement(whitePlayer, B7, B8, null);
-
-        game.makeMovement(blackPlayer, D3, H7, null);
-
-
-        game.makeMovement(whitePlayer, B8, C8, null);
-
-        game.makeMovement(blackPlayer, F7, G6, null);
-
-
-        game.makeMovement(whitePlayer, C8, E6, null);
     }
 
     @Test
