@@ -91,8 +91,8 @@ public record Queen(Color color)
      * @throws IllegalArgumentException if any of the preconditions are not met (e.g., if <code>startField</code> or <code>endField</code> is <code>null</code>).
      */
     boolean validate(final ChessBoard chessBoard, final Field startField, final Field endField) {
-        final char startColumn = startField.getCoordinate().getColumn();
-        final char endColumn = endField.getCoordinate().getColumn();
+        final int startColumn = startField.getCoordinate().columnToInt();
+        final int endColumn = endField.getCoordinate().columnToInt();
         final int startRow = startField.getCoordinate().getRow();
         final int endRow = endField.getCoordinate().getRow();
 
@@ -106,7 +106,7 @@ public record Queen(Color color)
             return clearPath(chessBoard, startField.getCoordinate(), endField.getCoordinate());
         }
 
-        final boolean diagonalMove = Math.abs(startRow - endRow) == Math.abs(columnToInt(startColumn) - columnToInt(endColumn));
+        final boolean diagonalMove = Math.abs(startRow - endRow) == Math.abs(startColumn - endColumn);
         if (diagonalMove) {
             return clearPath(chessBoard, startField.getCoordinate(), endField.getCoordinate());
         }

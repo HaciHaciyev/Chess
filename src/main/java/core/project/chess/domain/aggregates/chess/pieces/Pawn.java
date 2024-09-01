@@ -131,8 +131,8 @@ public record Pawn(Color color)
             final ChessBoard chessBoard, final Set<Operations> setOfOperations, final Field startField, final Field endField
     ) {
         final Color pawnColor = startField.pieceOptional().orElseThrow().color();
-        final char startColumn = startField.getCoordinate().getColumn();
-        final char endColumn = endField.getCoordinate().getColumn();
+        final int startColumn = startField.getCoordinate().columnToInt();
+        final int endColumn = endField.getCoordinate().columnToInt();
         final int startRow = startField.getCoordinate().getRow();
         final int endRow = endField.getCoordinate().getRow();
 
@@ -146,7 +146,7 @@ public record Pawn(Color color)
             return straightMove(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow, endField);
         }
 
-        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 && Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) == 1;
+        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 && Math.abs(startColumn - endColumn) == 1;
         if (diagonalCapture) {
             return diagonalCapture(chessBoard, setOfOperations, startColumn, endColumn, startRow, endRow, endField);
         }
@@ -156,7 +156,7 @@ public record Pawn(Color color)
 
     private StatusPair<Set<Operations>> straightMove(
             ChessBoard chessBoard, Set<Operations> setOfOperations,
-            char startColumn, char endColumn, int startRow, int endRow, Field endField
+            int startColumn, int endColumn, int startRow, int endRow, Field endField
     ) {
         if (startColumn != endColumn) {
             throw new IllegalStateException("Invalid method usage, check the documentation.");
@@ -185,7 +185,7 @@ public record Pawn(Color color)
     }
 
     private StatusPair<Set<Operations>> isPassageValid(
-            ChessBoard chessBoard, Set<Operations> setOfOperations, int startRow, char column, int endRow
+            ChessBoard chessBoard, Set<Operations> setOfOperations, int startRow, int column, int endRow
     ) {
         int intermediateRow;
         if (startRow < endRow) {
@@ -194,7 +194,7 @@ public record Pawn(Color color)
             intermediateRow = endRow + 1;
         }
 
-        final Coordinate intermediateCoordinate = Coordinate.coordinate(intermediateRow, columnToInt(column)).orElseThrow();
+        final Coordinate intermediateCoordinate = Coordinate.coordinate(intermediateRow, column).orElseThrow();
         Field interMediateField = chessBoard.field(intermediateCoordinate);
         if (!interMediateField.isEmpty()) {
             return StatusPair.ofFalse();
@@ -205,10 +205,10 @@ public record Pawn(Color color)
 
     private StatusPair<Set<Operations>> diagonalCapture(
             ChessBoard chessBoard, Set<Operations> setOfOperations,
-            char startColumn, char endColumn, int startRow, int endRow, Field endField
+            int startColumn, int endColumn, int startRow, int endRow, Field endField
     ) {
 
-        if (Math.abs(startRow - endRow) != 1 || Math.abs(columnToInt(startColumn) - columnToInt(endColumn)) != 1) {
+        if (Math.abs(startRow - endRow) != 1 || Math.abs(startColumn - endColumn) != 1) {
             throw new IllegalStateException("Invalid method usage, check the documentation.");
         }
 
@@ -231,7 +231,7 @@ public record Pawn(Color color)
         return StatusPair.ofTrue(setOfOperations);
     }
 
-    private boolean captureOnPassage(ChessBoard chessBoard, char endColumn, int endRow) {
+    private boolean captureOnPassage(ChessBoard chessBoard, int endColumn, int endRow) {
         Optional<Coordinate> lastMoveCoordinate = previousMoveCoordinate(chessBoard);
 
         return previousMoveWasPassage(chessBoard) &&

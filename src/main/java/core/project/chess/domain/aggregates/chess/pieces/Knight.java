@@ -90,7 +90,7 @@ public record Knight(Color color)
      */
     boolean knightMove(final Coordinate from, final Coordinate to) {
         int differenceOfRow = Math.abs(from.getRow() - to.getRow());
-        int differenceOfColumn = Math.abs(columnToInt(from.getColumn()) - columnToInt(to.getColumn()));
+        int differenceOfColumn = Math.abs(from.columnToInt() - to.columnToInt());
 
         return (differenceOfRow == 2 && differenceOfColumn == 1) || (differenceOfRow == 1 && differenceOfColumn == 2);
     }

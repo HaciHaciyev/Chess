@@ -21,27 +21,6 @@ public sealed interface Piece
     StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
 
     /**
-     * Converts a column letter (A-H) to its corresponding integer value (1-8).
-     *
-     * @param startColumn The column letter to be converted.
-     * @return The integer value corresponding to the input column letter.
-     * @throws IllegalStateException If the input character is not a valid column letter (A-H).
-     */
-    default int columnToInt(char startColumn) {
-        return switch (startColumn) {
-            case 'a' -> 1;
-            case 'b' -> 2;
-            case 'c' -> 3;
-            case 'd' -> 4;
-            case 'e' -> 5;
-            case 'f' -> 6;
-            case 'g' -> 7;
-            case 'h' -> 8;
-            default -> throw new IllegalStateException("Unexpected value: " + startColumn);
-        };
-    }
-
-    /**
      * Determines the influence of a move on the opponent's king.
      *
      * @param chessBoard The current state of the chess board.
@@ -64,9 +43,9 @@ public sealed interface Piece
         if (opponentKing.checkmate(chessBoard, from, to)) {
             return Operations.CHECKMATE;
         }
-        if (chessBoard.countOfMovement() >= 10 && opponentKing.stalemate(chessBoard, from, to)) {
+        /**if (chessBoard.countOfMovement() >= 10 && opponentKing.stalemate(chessBoard, from, to)) {
             return Operations.STALEMATE;
-        }
+        }*/
         
         return Operations.EMPTY;
     }
@@ -84,10 +63,10 @@ public sealed interface Piece
     default boolean clearPath(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
 
         final int startRow = from.getRow();
-        final int startColumn = columnToInt(from.getColumn());
+        final int startColumn = from.columnToInt();
 
         final int endRow = to.getRow();
-        final int endColumn = columnToInt(to.getColumn());
+        final int endColumn = to.columnToInt();
 
         final int rowDirection = compareDirection(startRow, endRow);
         final int columnDirection = compareDirection(startColumn, endColumn);

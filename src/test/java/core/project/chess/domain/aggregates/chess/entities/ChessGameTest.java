@@ -220,13 +220,6 @@ class ChessGameTest {
 
     }
 
-
-    @Test
-    @DisplayName("ChessBoard FEN render test")
-    void testFENRender() {
-        System.out.println(ChessBoard.renderASCII("r2qk2r/ppp2pp1/2npb2p/2bNp3/4P3/P1PP1N2/1P3PPP/R2QKB1R w KQkq - 1 10"));
-    }
-
     @Test
     @DisplayName("Game between AinGrace and Hadzhy98 on 2024.08.04\nhttps://lichess.org/zuOBpEUY#11")
     void gameOn_2024_08_04() {

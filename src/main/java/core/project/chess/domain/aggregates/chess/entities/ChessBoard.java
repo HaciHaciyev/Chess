@@ -7,8 +7,6 @@ import core.project.chess.domain.aggregates.chess.pieces.*;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import core.project.chess.infrastructure.utilities.Pair;
-import io.quarkus.runtime.util.StringUtil;
-import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -65,7 +63,7 @@ public class ChessBoard {
     private Coordinate currentBlackKingPosition;
     private final Map<Coordinate, Field> fieldMap;
     private final Map<String, Byte> hashCodeOfBoard;
-    private final ArrayList<String> keysOfHashCodeOfBoard;
+    private final ArrayList<String> fenKeysOfHashCodeOfBoard;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
     private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
     private static final Coordinate initialBlackKingPosition = Coordinate.E8;
@@ -94,7 +92,7 @@ public class ChessBoard {
         this.initializationTYPE = initializationTYPE;
         this.listOfAlgebraicNotations = algebraicNotations;
         this.fieldMap = new EnumMap<>(Coordinate.class);
-        this.keysOfHashCodeOfBoard = new ArrayList<>(10);
+        this.fenKeysOfHashCodeOfBoard = new ArrayList<>(10);
         this.hashCodeOfBoard = new HashMap<>(10, 0.75f);
 
         this.figuresTurn = Color.WHITE;
@@ -181,7 +179,48 @@ public class ChessBoard {
      * @return String representation of ChessBoard.
      */
     public String actualRepresentationOfChessBoard() {
-        return keysOfHashCodeOfBoard.getLast();
+        return fenKeysOfHashCodeOfBoard.getLast();
+    }
+
+    /**
+     * Generates a Portable Game Notation (PGN) string representation of the chess game.
+     *
+     * <p>This method constructs a PGN string by iterating through a list of algebraic notations
+     * representing the moves made in the game. Each move is formatted according to PGN standards,
+     * with move numbers and corresponding notations for both players.</p>
+     *
+     * <p>The method assumes that the list of algebraic notations contains pairs of moves,
+     * where each pair consists of a move by White followed by a move by Black.</p>
+     *
+     * @return a string representing the PGN of the chess game, formatted with move numbers
+     *         and corresponding algebraic notations for each turn.
+     *
+     * @example
+     * <pre>
+     *     // Assuming listOfAlgebraicNotations contains valid move notations
+     *     String pgnString = pgn();
+     *     // Output might look like: "1. e2-e4 e7-e5 2. Ng1-f3 Nb1-c6 ..."
+     * </pre>
+     */
+    public String pgn() {
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        int number = 1;
+        for (int i = 0; i < listOfAlgebraicNotations.size(); i += 2) {
+            final String notation = listOfAlgebraicNotations.get(i).algebraicNotation();
+            final String secondNotation = listOfAlgebraicNotations.get(i + 1).algebraicNotation();
+
+            stringBuilder.append(number)
+                    .append(". ")
+                    .append(notation)
+                    .append(" ")
+                    .append(secondNotation)
+                    .append(" ");
+
+            number++;
+        }
+
+        return stringBuilder.toString();
     }
 
     /**
@@ -261,17 +300,6 @@ public class ChessBoard {
                         .orElseThrow(
                                 () -> new IllegalStateException("Unexpected exception.")
                         );
-    }
-
-    private String convertPieceToHash(final Piece piece) {
-        return switch (piece) {
-            case King k -> "K-%s".formatted(piece.color().toString().charAt(0));
-            case Queen q -> "Q-%s".formatted(piece.color().toString().charAt(0));
-            case Rook r -> "R-%s".formatted(piece.color().toString().charAt(0));
-            case Bishop b -> "B-%s".formatted(piece.color().toString().charAt(0));
-            case Knight k -> "N-%s".formatted(piece.color().toString().charAt(0));
-            case Pawn p -> "" + piece.color().toString().charAt(0);
-        };
     }
 
     private void switchFiguresTurn() {
@@ -368,7 +396,7 @@ public class ChessBoard {
      * @throws IllegalStateException if the provided piece is not a King or Rook.
      */
     private void changeOfCastlingAbilityInRevertMove(
-            final Piece piece, final @Nullable AlgebraicNotation.Castle castle
+            final Piece piece, final @OptionalArgument AlgebraicNotation.Castle castle
     ) {
         if (!(piece instanceof King) && !(piece instanceof Rook)) {
             throw new IllegalStateException("Invalid method usage, check documentation. Only kings and rooks available for this function.");
@@ -697,12 +725,14 @@ public class ChessBoard {
             changeOfCastlingAbility(from, rook);
         }
 
-        final String currentPositionHash = toString();
-        keysOfHashCodeOfBoard.add(currentPositionHash);
+        switchFiguresTurn();
+
+        /** Recording the move made in algebraic notation and Fen.*/
+
+        final String currentPositionHash = this.toString();
+        fenKeysOfHashCodeOfBoard.add(currentPositionHash);
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
-        switchFiguresTurn();
-        /** Recording the move made in algebraic notation.*/
         final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType));
 
@@ -757,12 +787,13 @@ public class ChessBoard {
         changedKingPosition(king, to);
         changeOfCastlingAbility(from, king);
 
+        switchFiguresTurn();
+
+        /** Recording the move made in algebraic notation.*/
         final String currentPositionHash = toString();
-        keysOfHashCodeOfBoard.add(currentPositionHash);
+        fenKeysOfHashCodeOfBoard.add(currentPositionHash);
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
-        switchFiguresTurn();
-        /** Recording the move made in algebraic notation.*/
         final Set<Operations> operations = statusPair.orElseThrow();
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
 
@@ -835,7 +866,7 @@ public class ChessBoard {
             return false;
         }
 
-        final String currentPositionHash = keysOfHashCodeOfBoard.getLast();
+        final String currentPositionHash = fenKeysOfHashCodeOfBoard.getLast();
         final AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
         final StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(lastMovement);
 
@@ -868,7 +899,7 @@ public class ChessBoard {
             startedField.addFigure(previouslyCapturedPiece);
         }
 
-        keysOfHashCodeOfBoard.removeLast();
+        fenKeysOfHashCodeOfBoard.removeLast();
         listOfAlgebraicNotations.removeLast();
         final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
         if (newValue == 0) {
@@ -1207,26 +1238,32 @@ public class ChessBoard {
      * and the corresponding piece (if present). If the field is empty,
      * no piece information is added for that field.
      *
-     * @return A string representing the current position on the board, where each
+     * @return A string representing the current position on the board by FEN concepts, where each
      *         coordinate is mapped to a piece representation or an empty string.
      */
     @Override
     public final String toString() {
-        var hashOfBoard = new StringBuilder();
+        var fen = new StringBuilder();
 
         for (final Coordinate coordinate : Coordinate.values()) {
-
             final Field field = fieldMap.get(coordinate);
             final String pieceRepresentation = field.pieceOptional().isEmpty() ? "" : convertPieceToHash(field.pieceOptional().get());
 
-            hashOfBoard
-                    .append(coordinate.toString())
-                    .append(" -> ")
-                    .append(pieceRepresentation)
-                    .append("; ");
+            fen.append(pieceRepresentation);
         }
 
-        return hashOfBoard.toString();
+        return fen.toString();
+    }
+
+    private String convertPieceToHash(final Piece piece) {
+        return switch (piece) {
+            case King k -> k.color().equals(Color.WHITE) ? "K" : "k";
+            case Queen q -> q.color().equals(Color.WHITE) ? "Q" : "q";
+            case Rook r -> r.color().equals(Color.WHITE) ? "R" : "r";
+            case Bishop b -> b.color().equals(Color.WHITE) ? "B" : "b";
+            case Knight n -> n.color().equals(Color.WHITE) ? "N" : "n";
+            case Pawn p -> p.color().equals(Color.WHITE) ? "P" : "p";
+        };
     }
 
     /**
@@ -1265,40 +1302,5 @@ public class ChessBoard {
                 default -> fieldMap.put(coordinate, new Field(coordinate, null));
             }
         }
-    }
-
-    public static String renderASCII(String fen) {
-        Objects.requireNonNull(fen);
-
-        if (fen.isEmpty()) {
-            throw new IllegalArgumentException("FEN is empty");
-        }
-
-        StringBuilder view = new StringBuilder();
-
-        int space = fen.indexOf(" ");
-        String fenSubstring = fen.substring(0, space);
-
-        try (Scanner scanner = new Scanner(fenSubstring)) {
-            scanner.useDelimiter("/");
-
-            while (scanner.hasNext()) {
-                char[] row = scanner.next().toCharArray();
-
-                for (char c : row) {
-                    if (Character.isLetter(c)) {
-                        view.append(c);
-                    }
-
-                    if (Character.isDigit(c)) {
-                        view.append("_".repeat(Character.getNumericValue(c)));
-                    }
-                }
-
-                view.append("\n");
-            }
-        }
-
-        return view.toString();
     }
 }

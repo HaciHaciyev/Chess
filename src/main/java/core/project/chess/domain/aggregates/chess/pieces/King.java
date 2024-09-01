@@ -1,6 +1,5 @@
 package core.project.chess.domain.aggregates.chess.pieces;
 
-import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.Castle;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
@@ -281,7 +280,7 @@ public record King(Color color)
         if (piece.color().equals(Color.WHITE)) {
 
             final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(
-                            coordinate.getRow() + 1, coordinate.getColumnAsInt()
+                            coordinate.getRow() + 1, coordinate.columnToInt()
                     );
 
             if (possibleForwardCoordinate.status()) {
@@ -300,7 +299,7 @@ public record King(Color color)
 
             final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate
                     .coordinate(
-                            coordinate.getRow() - 1, coordinate.getColumnAsInt()
+                            coordinate.getRow() - 1, coordinate.columnToInt()
                     );
 
             if (possibleForwardCoordinate.status()) {
@@ -351,8 +350,8 @@ public record King(Color color)
     private boolean isValidKingMovementCoordinates(final ChessBoard chessBoard, final Field startField, final Field endField) {
         final Coordinate from = startField.getCoordinate();
         final Coordinate to = endField.getCoordinate();
-        final int startColumn = columnToInt(from.getColumn());
-        final int endColumn = columnToInt(to.getColumn());
+        final int startColumn = from.columnToInt();
+        final int endColumn = to.columnToInt();
         final int startRow = from.getRow();
         final int endRow = to.getRow();
 
@@ -437,7 +436,7 @@ public record King(Color color)
         if (shortCastling) {
 
             int row = presentKing.getRow();
-            int column = AlgebraicNotation.columnToInt(presentKing.getColumn()) + 1;
+            int column = presentKing.columnToInt() + 1;
 
             do {
                 final Coordinate coordinate = Coordinate
@@ -461,7 +460,7 @@ public record King(Color color)
         if (longCastling) {
 
             int row = presentKing.getRow();
-            int column = AlgebraicNotation.columnToInt(presentKing.getColumn()) - 1;
+            int column = presentKing.columnToInt() - 1;
 
             do {
                 final Coordinate coordinate = Coordinate
@@ -753,16 +752,16 @@ public record King(Color color)
     }
 
     private List<Field> surroundingFields(ChessBoard chessBoard, Coordinate pivot, List<Field> replace) {
-        int row = pivot.getRow();
-        char column = pivot.getColumn();
-        var up = Coordinate.coordinate(row + 1, AlgebraicNotation.columnToInt(column));
-        var down = Coordinate.coordinate(row - 1, AlgebraicNotation.columnToInt(column));
-        var left = Coordinate.coordinate(row, AlgebraicNotation.columnToInt(column) - 1);
-        var right = Coordinate.coordinate(row, AlgebraicNotation.columnToInt(column) + 1);
-        var downLeft = Coordinate.coordinate(row - 1, AlgebraicNotation.columnToInt(column) - 1);
-        var downRight = Coordinate.coordinate(row - 1, AlgebraicNotation.columnToInt(column) + 1);
-        var upperLeft = Coordinate.coordinate(row + 1, AlgebraicNotation.columnToInt(column) - 1);
-        var upperRight = Coordinate.coordinate(row + 1, AlgebraicNotation.columnToInt(column) + 1);
+        final int row = pivot.getRow();
+        final int column = pivot.columnToInt();
+        var up = Coordinate.coordinate(row + 1, column);
+        var down = Coordinate.coordinate(row - 1, column);
+        var left = Coordinate.coordinate(row, column - 1);
+        var right = Coordinate.coordinate(row, column + 1);
+        var downLeft = Coordinate.coordinate(row - 1, column - 1);
+        var downRight = Coordinate.coordinate(row - 1, column + 1);
+        var upperLeft = Coordinate.coordinate(row + 1, column - 1);
+        var upperRight = Coordinate.coordinate(row + 1, column + 1);
 
         return Stream.of(up, down, left, right, upperLeft, upperRight, downLeft, downRight)
                 .filter(StatusPair::status)
@@ -822,9 +821,9 @@ public record King(Color color)
 
             final StatusPair<Coordinate> possibleCoordinate;
             if (Color.WHITE.equals(color)) {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, AlgebraicNotation.columnToInt(currentCoordinate.getColumn()));
+                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
             } else {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, AlgebraicNotation.columnToInt(currentCoordinate.getColumn()));
+                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
             }
 
             if (possibleCoordinate.status()) {
@@ -941,11 +940,11 @@ public record King(Color color)
 
         final List<StatusPair<Coordinate>> coordinates = new ArrayList<>(2);
         if (Color.WHITE.equals(color)) {
-            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumnAsInt() - 1));
-            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumnAsInt() + 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() - 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() + 1));
         } else {
-            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumnAsInt() - 1));
-            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumnAsInt() + 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() - 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() + 1));
         }
 
         return coordinates.stream()

@@ -120,8 +120,8 @@ public class ChessNotationValidator {
     private static void validatePawnCaptureOperation(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
-        final int startColumn = columnToInt(from.getColumn());
-        final int endColumn = columnToInt(to.getColumn());
+        final int startColumn = from.columnToInt();
+        final int endColumn = to.columnToInt();
         final int startRow = from.getRow();
         final int endRow = to.getRow();
 
@@ -141,8 +141,8 @@ public class ChessNotationValidator {
     private static void validatePromotion(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
-        final int startColumn = columnToInt(from.getColumn());
-        final int endColumn = columnToInt(to.getColumn());
+        final int startColumn = from.columnToInt();
+        final int endColumn = to.columnToInt();
         final int startRow = from.getRow();
         final int endRow = to.getRow();
 
@@ -160,8 +160,8 @@ public class ChessNotationValidator {
     private static void validateSimpleFigureMovementOrCapture(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(1, 3));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
-        final int startColumn = columnToInt(from.getColumn());
-        final int endColumn = columnToInt(to.getColumn());
+        final int startColumn = from.columnToInt();
+        final int endColumn = to.columnToInt();
         final int startRow = from.getRow();
         final int endRow = to.getRow();
 
@@ -222,7 +222,7 @@ public class ChessNotationValidator {
         final boolean knight = algebraicNotation.charAt(0) == 'N';
         if (knight) {
             int differenceOfRow = Math.abs(from.getRow() - to.getRow());
-            int differenceOfColumn = Math.abs(columnToInt(from.getColumn()) - columnToInt(to.getColumn()));
+            int differenceOfColumn = Math.abs(from.columnToInt() - to.columnToInt());
             final boolean knightMove =
                     (differenceOfRow == 2 && differenceOfColumn == 1) || (differenceOfRow == 1 && differenceOfColumn == 2);
 

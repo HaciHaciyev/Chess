@@ -320,20 +320,6 @@ public class AlgebraicNotation {
         };
     }
 
-    public static int columnToInt(char startColumn) {
-        return switch (startColumn) {
-            case 'a' -> 1;
-            case 'b' -> 2;
-            case 'c' -> 3;
-            case 'd' -> 4;
-            case 'e' -> 5;
-            case 'f' -> 6;
-            case 'g' -> 7;
-            case 'h' -> 8;
-            default -> throw new IllegalStateException("Unexpected value: " + startColumn);
-        };
-    }
-
     /**
      * Determines the type of castling move (short or long) based on the ending coordinate.
      *

@@ -1,7 +1,6 @@
 package core.project.chess.infrastructure.utilities;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
-import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.pieces.Piece;
 
@@ -31,12 +30,12 @@ public enum Direction {
     }
 
     public StatusPair<Coordinate> apply(Coordinate coordinate) {
-        return Coordinate.coordinate(coordinate.getRow() + rowDelta, AlgebraicNotation.columnToInt(coordinate.getColumn()) + colDelta);
+        return Coordinate.coordinate(coordinate.getRow() + rowDelta, coordinate.columnToInt() + colDelta);
     }
 
     public static Direction ofPath(Coordinate begin, Coordinate end) {
         int rowDiff = Integer.compare(end.getRow(), begin.getRow());
-        int colDiff = Integer.compare(end.getColumnAsInt(), begin.getColumnAsInt());
+        int colDiff = Integer.compare(end.columnToInt(), begin.columnToInt());
 
         return Stream.of(values())
                 .filter(direction -> direction.rowDelta == rowDiff && direction.colDelta == colDiff)
