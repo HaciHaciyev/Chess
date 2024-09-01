@@ -883,11 +883,11 @@ public record King(Color color)
 
         final List<StatusPair<Coordinate>> coordinates = new ArrayList<>(2);
         if (Color.WHITE.equals(color)) {
-            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() - 1));
-            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() + 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumnAsInt() - 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumnAsInt() + 1));
         } else {
-            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() - 1));
-            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() + 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumnAsInt() - 1));
+            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumnAsInt() + 1));
         }
 
         return coordinates.stream()
