@@ -1,5 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
+import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import static core.project.chess.domain.aggregates.chess.enumerations.Coordinate.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ChessGameTest {
@@ -42,6 +44,65 @@ class ChessGameTest {
     @DisplayName("Test chess game with many invalid moves.")
     void testChessGame() {
         chessGameLoad();
+    }
+
+    @Test
+    @DisplayName("Chess game end by pat in 10 move.")
+    void testChessGameEndByPat() {
+        final ChessGame chessGame = chessGameSupplier().get();
+
+        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
+        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
+
+        // 1.
+        chessGame.makeMovement(firstPlayerUsername, E2, E3, null);
+
+        chessGame.makeMovement(secondPlayerUsername, A7, A5, null);
+
+        // 2.
+        chessGame.makeMovement(firstPlayerUsername, D1, H5, null);
+
+        chessGame.makeMovement(secondPlayerUsername, A8, A6, null);
+
+        // 3.
+        chessGame.makeMovement(firstPlayerUsername, H5, A5, null);
+
+        chessGame.makeMovement(secondPlayerUsername, H7, H5, null);
+
+        // 4.
+        chessGame.makeMovement(firstPlayerUsername, A5, C7, null);
+
+        chessGame.makeMovement(secondPlayerUsername, A6, H6, null);
+
+        // 5.
+        chessGame.makeMovement(firstPlayerUsername, H2, H4, null);
+
+        chessGame.makeMovement(secondPlayerUsername, F7, F6, null);
+
+        // 6.
+        chessGame.makeMovement(firstPlayerUsername, C7, D7, null);
+
+        chessGame.makeMovement(secondPlayerUsername, E8, F7, null);
+
+        // 7.
+        chessGame.makeMovement(firstPlayerUsername, D7, B7, null);
+
+        chessGame.makeMovement(secondPlayerUsername, D8, D3, null);
+
+        // 8.
+        chessGame.makeMovement(firstPlayerUsername, B7, B8, null);
+
+        chessGame.makeMovement(secondPlayerUsername, D3, H7, null);
+
+        // 9.
+        chessGame.makeMovement(firstPlayerUsername, B8, C8, null);
+
+        chessGame.makeMovement(secondPlayerUsername, F7, G6, null);
+
+        // 10. STALEMATE
+        chessGame.makeMovement(firstPlayerUsername, C8, E6, null);
+
+        assertEquals(GameResult.DRAW, chessGame.gameResult().orElseThrow());
     }
 
     @Test
