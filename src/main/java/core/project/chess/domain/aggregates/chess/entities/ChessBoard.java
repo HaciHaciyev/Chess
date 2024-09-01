@@ -7,6 +7,7 @@ import core.project.chess.domain.aggregates.chess.pieces.*;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.StatusPair;
 import core.project.chess.infrastructure.utilities.Pair;
+import io.quarkus.runtime.util.StringUtil;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -1264,5 +1265,40 @@ public class ChessBoard {
                 default -> fieldMap.put(coordinate, new Field(coordinate, null));
             }
         }
+    }
+
+    public static String renderASCII(String fen) {
+        Objects.requireNonNull(fen);
+
+        if (fen.isEmpty()) {
+            throw new IllegalArgumentException("FEN is empty");
+        }
+
+        StringBuilder view = new StringBuilder();
+
+        int space = fen.indexOf(" ");
+        String fenSubstring = fen.substring(0, space);
+
+        try (Scanner scanner = new Scanner(fenSubstring)) {
+            scanner.useDelimiter("/");
+
+            while (scanner.hasNext()) {
+                char[] row = scanner.next().toCharArray();
+
+                for (char c : row) {
+                    if (Character.isLetter(c)) {
+                        view.append(c);
+                    }
+
+                    if (Character.isDigit(c)) {
+                        view.append("_".repeat(Character.getNumericValue(c)));
+                    }
+                }
+
+                view.append("\n");
+            }
+        }
+
+        return view.toString();
     }
 }
