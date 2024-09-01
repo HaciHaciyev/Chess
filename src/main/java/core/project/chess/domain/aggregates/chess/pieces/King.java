@@ -927,13 +927,18 @@ public record King(Color color)
             coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() + 1));
         }
 
-        return coordinates.stream()
-                .filter(StatusPair::status)
-                .map(StatusPair::orElseThrow)
-                .map(chessBoard::field)
-                .filter(Field::isPresent)
-                .filter(field -> field.pieceOptional().orElseThrow() instanceof Pawn)
-                .toList();
+        List<Field> list = new ArrayList<>();
+        for (StatusPair<Coordinate> coordinate : coordinates) {
+            if (coordinate.status()) {
+                Coordinate orElseThrow = coordinate.orElseThrow();
+                Field field = chessBoard.field(orElseThrow);
+                if (field.isPresent() && field.pieceOptional().orElseThrow() instanceof Pawn) {
+                        list.add(field);
+                    }
+
+            }
+        }
+        return list;
     }
 
     private List<Field> coordinatesThreatenedByPawn(ChessBoard chessBoard, Coordinate pivot, Color color) {
@@ -947,11 +952,15 @@ public record King(Color color)
             coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() + 1));
         }
 
-        return coordinates.stream()
-                .filter(StatusPair::status)
-                .map(StatusPair::orElseThrow)
-                .map(chessBoard::field)
-                .toList();
+        List<Field> list = new ArrayList<>();
+        for (StatusPair<Coordinate> coordinate : coordinates) {
+            if (coordinate.status()) {
+                Coordinate orElseThrow = coordinate.orElseThrow();
+                Field field = chessBoard.field(orElseThrow);
+                list.add(field);
+            }
+        }
+        return list;
     }
 
     private List<Field> surroundingFields(ChessBoard chessBoard, Coordinate pivot, Field toReplace) {
