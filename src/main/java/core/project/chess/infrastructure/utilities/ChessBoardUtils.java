@@ -169,11 +169,11 @@ public class ChessBoardUtils {
      * Retrieves and maps all the surrounding fields of a given position on the chess board.
      *
      * <p>This method is an extension of the basic {@link #surroundingFields(ChessBoard, Coordinate) surroundingFields} method.
-     * It first finds all surrounding fields, then applies a provided mapping function to each field before returning the result.</p>
+     * It first finds all surrounding fields, then applies a provided predicate function to each field before returning the result.</p>
      *
      * @param chessBoard The {@link ChessBoard} object representing the current state of the chess game.
      * @param pivot      The {@link Coordinate} object representing the central position to find surrounding fields for.
-     * @param mapping    A {@link UnaryOperator<ChessBoard.Field>} that will be applied to each surrounding field.
+     * @param predicate    A {@link Predicate<ChessBoard.Field>} that will be applied to each surrounding field.
      * @return A list of {@link ChessBoard.Field} objects representing all valid surrounding fields, after applying the mapping function.
      * @throws NullPointerException if any of {@code chessBoard}, {@code pivot}, or {@code mapping} is {@code null}.
      * @see ChessBoard
@@ -183,13 +183,13 @@ public class ChessBoardUtils {
      */
     public static List<ChessBoard.Field> surroundingFields(ChessBoard chessBoard,
                                                            Coordinate pivot,
-                                                           UnaryOperator<ChessBoard.Field> mapping) {
+                                                           Predicate<ChessBoard.Field> predicate) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(pivot);
-        Objects.requireNonNull(mapping);
+        Objects.requireNonNull(predicate);
 
         var surroundings = surroundingFields(chessBoard, pivot);
-        surroundings.replaceAll(mapping);
+        surroundings.removeIf(predicate);
 
         return surroundings;
     }
@@ -287,14 +287,23 @@ public class ChessBoardUtils {
 
         List<ChessBoard.Field> fields = new ArrayList<>();
         for (var possibleCoordinate : possibleCoordinates) {
-            if (possibleCoordinate.status()) {
-                Coordinate coordinate = possibleCoordinate.orElseThrow();
-                var field = chessBoard.field(coordinate);
-                if (field.isPresent() && field.pieceOptional().orElseThrow() instanceof Pawn) {
-                    fields.add(field);
-                }
+            if (!possibleCoordinate.status()) {
+                continue;
+            }
+
+            Coordinate coordinate = possibleCoordinate.orElseThrow();
+            var field = chessBoard.field(coordinate);
+
+            if (field.isEmpty()) {
+                continue;
+            }
+
+            Piece piece = field.pieceOptional().get();
+            if (piece instanceof Pawn && piece.color().equals(color)) {
+                fields.add(field);
             }
         }
+
         return fields;
     }
 
@@ -318,7 +327,7 @@ public class ChessBoardUtils {
      * </ul>
      * </p>
      *
-     * <p>Note that this method only returns fields that exist on the board. Any potential
+     * <p>Note that this method only returns fields that exist on the board and are occupied. Any potential
      * moves that would land outside the board's boundaries are automatically excluded.</p>
      *
      * @param chessBoard The {@link ChessBoard} object representing the current state of the chess game.
