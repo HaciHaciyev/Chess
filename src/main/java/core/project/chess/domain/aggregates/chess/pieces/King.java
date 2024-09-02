@@ -1,15 +1,16 @@
 package core.project.chess.domain.aggregates.chess.pieces;
 
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.Castle;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.infrastructure.utilities.ChessBoardUtils;
 import core.project.chess.infrastructure.utilities.Direction;
 import core.project.chess.infrastructure.utilities.StatusPair;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
@@ -107,15 +108,15 @@ public record King(Color color)
      */
     public boolean check(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         final Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
-        final Coordinate king = getKingCoordinate(chessBoard);
+        final Coordinate king = ChessBoardUtils.getKingCoordinate(chessBoard, color);
 
         return switch (piece) {
-            case Pawn x -> !pawnMovedCheck(chessBoard, king, from, to).isEmpty();
-            case Knight x -> !knightMovedCheck(chessBoard, king, from, to).isEmpty();
-            case Bishop x -> !validateDirectionsCheck(chessBoard, king, from, to, Bishop.class).isEmpty();
-            case Rook x -> !validateDirectionsCheck(chessBoard, king, from, to, Rook.class).isEmpty();
-            case Queen x -> !validateDirectionsCheck(chessBoard, king, from, to, Queen.class).isEmpty();
-            case King x -> !validateDirectionsCheck(chessBoard, king, from, to, King.class).isEmpty();
+            case Pawn ignored -> !pawnMovedCheck(chessBoard, king, from, to).isEmpty();
+            case Knight ignored -> !knightMovedCheck(chessBoard, king, from, to).isEmpty();
+            case Bishop ignored -> !validateDirectionsCheck(chessBoard, king, from, to, Bishop.class).isEmpty();
+            case Rook ignored -> !validateDirectionsCheck(chessBoard, king, from, to, Rook.class).isEmpty();
+            case Queen ignored -> !validateDirectionsCheck(chessBoard, king, from, to, Queen.class).isEmpty();
+            case King ignored -> !validateDirectionsCheck(chessBoard, king, from, to, King.class).isEmpty();
         };
     }
 
@@ -133,15 +134,15 @@ public record King(Color color)
      */
     public boolean checkmate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         final Piece piece = chessBoard.field(from).pieceOptional().orElseThrow();
-        final Coordinate king = getKingCoordinate(chessBoard);
+        final Coordinate king = ChessBoardUtils.getKingCoordinate(chessBoard, color);
 
         return switch (piece) {
-            case Pawn x -> pawnMovedCheckmate(chessBoard, king, from, to);
-            case Knight x -> knightMovedCheckmate(chessBoard, king, from, to);
-            case Bishop x -> validateDirectionsCheckmate(chessBoard, king, from, to, Bishop.class);
-            case Rook x -> validateDirectionsCheckmate(chessBoard, king, from, to, Rook.class);
-            case Queen x -> validateDirectionsCheckmate(chessBoard, king, from, to, Queen.class);
-            case King x -> validateDirectionsCheckmate(chessBoard, king, from, to, King.class);
+            case Pawn ignored -> pawnMovedCheckmate(chessBoard, king, from, to);
+            case Knight ignored -> knightMovedCheckmate(chessBoard, king, from, to);
+            case Bishop ignored -> validateDirectionsCheckmate(chessBoard, king, from, to, Bishop.class);
+            case Rook ignored -> validateDirectionsCheckmate(chessBoard, king, from, to, Rook.class);
+            case Queen ignored -> validateDirectionsCheckmate(chessBoard, king, from, to, Queen.class);
+            case King ignored -> validateDirectionsCheckmate(chessBoard, king, from, to, King.class);
         };
     }
 
@@ -158,21 +159,21 @@ public record King(Color color)
      * they are blocked or dangerous, and checks all friendly fields to see if any legal moves are available.
      */
     public boolean stalemate(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        final Coordinate king = getKingCoordinate(chessBoard);
+        final Coordinate king = ChessBoardUtils.getKingCoordinate(chessBoard, color);
 
         final boolean check = check(chessBoard, from, to);
         if (check) {
             return false;
         }
 
-        final List<Field> surroundings = surroundingFields(chessBoard, king);
+        final List<Field> surroundings = ChessBoardUtils.surroundingFields(chessBoard, king);
 
         final boolean surrounded = surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
         if (!surrounded) {
             return false;
         }
 
-        final List<Field> fields = getAllFriendlyFields(chessBoard, to);
+        final List<Field> fields = ChessBoardUtils.getAllFriendlyFields(chessBoard, to, color);
 
         for (final Field field : fields) {
             final boolean result = processFields(chessBoard, king, field, to);
@@ -185,16 +186,16 @@ public record King(Color color)
         return true;
     }
 
-    private boolean processFields(ChessBoard chessBoard, Coordinate king, Field field, Coordinate futureEnemy) {
+    private boolean processFields(ChessBoard chessBoard, Coordinate king, Field friendlyField, Coordinate futureEnemy) {
 
-        final Piece piece = field.pieceOptional().orElseThrow();
-        final Coordinate coordinate = field.getCoordinate();
+        final Piece piece = friendlyField.pieceOptional().orElseThrow();
+        final Coordinate coordinate = friendlyField.getCoordinate();
 
         if (piece instanceof Pawn pawn) {
 
-            final List<Field> pawnCoordinates = coordinatesThreatenedByPawn(chessBoard, coordinate, color);
+            final List<Field> pawnCoordinates = ChessBoardUtils.coordinatesThreatenedByPawn(chessBoard, coordinate, color);
 
-            Optional<Field> forwardMove = getForwardMove(chessBoard, coordinate, futureEnemy);
+            Optional<Field> forwardMove = ChessBoardUtils.getForwardField(chessBoard, coordinate, field -> !field.getCoordinate().equals(futureEnemy));
             forwardMove.ifPresent(pawnCoordinates::add);
 
             for (final Field coord : pawnCoordinates) {
@@ -203,14 +204,14 @@ public record King(Color color)
                     continue;
                 }
 
-                if (pawn.validate(chessBoard, new LinkedHashSet<>(), field, coord).status()) {
-                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
+                if (pawn.validate(chessBoard, new LinkedHashSet<>(), friendlyField, coord).status()) {
+                    return !safeForKing(chessBoard, king, friendlyField.getCoordinate(), coord.getCoordinate());
                 }
             }
         }
 
         if (piece instanceof Knight knight) {
-            final List<Field> coords = knightAttackPositions(chessBoard, king);
+            final List<Field> coords = ChessBoardUtils.knightAttackPositions(chessBoard, king);
 
             for (Field coord : coords) {
 
@@ -218,8 +219,8 @@ public record King(Color color)
                     continue;
                 }
 
-                if (knight.knightMove(field.getCoordinate(), coord.getCoordinate())) {
-                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
+                if (knight.knightMove(friendlyField.getCoordinate(), coord.getCoordinate())) {
+                    return !safeForKing(chessBoard, king, friendlyField.getCoordinate(), coord.getCoordinate());
                 }
             }
         }
@@ -233,8 +234,8 @@ public record King(Color color)
                     continue;
                 }
 
-                if (bishop.validate(chessBoard, field, coord)) {
-                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
+                if (bishop.validate(chessBoard, friendlyField, coord)) {
+                    return !safeForKing(chessBoard, king, friendlyField.getCoordinate(), coord.getCoordinate());
                 }
             }
         }
@@ -249,8 +250,8 @@ public record King(Color color)
                     continue;
                 }
 
-                if (rook.validate(chessBoard, field, coord)) {
-                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
+                if (rook.validate(chessBoard, friendlyField, coord)) {
+                    return !safeForKing(chessBoard, king, friendlyField.getCoordinate(), coord.getCoordinate());
                 }
             }
         }
@@ -264,8 +265,8 @@ public record King(Color color)
                     continue;
                 }
 
-                if (queen.validate(chessBoard, field, coord)) {
-                    return !safeForKing(chessBoard, king, field.getCoordinate(), coord.getCoordinate());
+                if (queen.validate(chessBoard, friendlyField, coord)) {
+                    return !safeForKing(chessBoard, king, friendlyField.getCoordinate(), coord.getCoordinate());
                 }
             }
         }
@@ -273,50 +274,7 @@ public record King(Color color)
         return true;
     }
 
-    private Optional<Field> getForwardMove(ChessBoard chessBoard, Coordinate coordinate, Coordinate ignore) {
-        Field pawnField = chessBoard.field(coordinate);
-        Piece piece = pawnField.pieceOptional().orElseThrow();
 
-        if (piece.color().equals(Color.WHITE)) {
-
-            final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate.coordinate(
-                            coordinate.getRow() + 1, coordinate.columnToInt()
-                    );
-
-            if (possibleForwardCoordinate.status()) {
-
-                Coordinate forward = possibleForwardCoordinate.orElseThrow();
-
-                if (forward.equals(ignore)) {
-                    return Optional.empty();
-                }
-
-                Field field = chessBoard.field(forward);
-                return Optional.of(field);
-            }
-
-        } else {
-
-            final StatusPair<Coordinate> possibleForwardCoordinate = Coordinate
-                    .coordinate(
-                            coordinate.getRow() - 1, coordinate.columnToInt()
-                    );
-
-            if (possibleForwardCoordinate.status()) {
-
-                Coordinate forward = possibleForwardCoordinate.orElseThrow();
-
-                if (forward.equals(ignore)) {
-                    return Optional.empty();
-                }
-
-                Field field = chessBoard.field(forward);
-                return Optional.of(field);
-            }
-        }
-
-        return Optional.empty();
-    }
 
     /**
      * Validates whether the movement from the start field to the end field is a valid move for a King on the chessboard.
@@ -350,8 +308,8 @@ public record King(Color color)
     private boolean isValidKingMovementCoordinates(final ChessBoard chessBoard, final Field startField, final Field endField) {
         final Coordinate from = startField.getCoordinate();
         final Coordinate to = endField.getCoordinate();
-        final int startColumn = from.columnToInt();
-        final int endColumn = to.columnToInt();
+        final int startColumn = columnToInt(from.getColumn());
+        final int endColumn = columnToInt(to.getColumn());
         final int startRow = from.getRow();
         final int endRow = to.getRow();
 
@@ -377,14 +335,14 @@ public record King(Color color)
             return false;
         }
 
-        final List<Field> fieldsToCastle = getCastlingFields(chessBoard, presentKingPosition, futureKingPosition);
+        final List<Field> fieldsToCastle = ChessBoardUtils.getCastlingFields(chessBoard, presentKingPosition, futureKingPosition);
         for (final Field field : fieldsToCastle) {
 
             if (field.isPresent() && !(field.pieceOptional().orElseThrow() instanceof King)) {
                 return false;
             }
 
-            final List<Field> pawns = pawnsThreateningCoordinate(chessBoard, field.getCoordinate(), color);
+            final List<Field> pawns = ChessBoardUtils.pawnsThreateningCoordinate(chessBoard, field.getCoordinate(), color);
             for (final Field fieldWithPawn : pawns) {
                 final Pawn pawn = (Pawn) fieldWithPawn.pieceOptional().orElseThrow();
 
@@ -393,7 +351,7 @@ public record King(Color color)
                 }
             }
 
-            final List<Field> knights = knightAttackPositions(chessBoard, field.getCoordinate());
+            final List<Field> knights = ChessBoardUtils.knightAttackPositions(chessBoard, field.getCoordinate());
             for (final Field fieldWithKnight : knights) {
                 final Piece piece = fieldWithKnight.pieceOptional().orElseThrow();
 
@@ -425,67 +383,9 @@ public record King(Color color)
         return true;
     }
 
-    private List<Field> getCastlingFields(final ChessBoard chessBoard, final Coordinate presentKing, final Coordinate futureKingPosition) {
-        final char from = presentKing.getColumn();
-        final char to = futureKingPosition.getColumn();
-
-        final List<Field> fields = new ArrayList<>();
-        fields.add(chessBoard.field(presentKing));
-
-        final boolean shortCastling = from < to;
-        if (shortCastling) {
-
-            int row = presentKing.getRow();
-            int column = presentKing.columnToInt() + 1;
-
-            do {
-                final Coordinate coordinate = Coordinate
-                        .coordinate(row, column)
-                        .orElseThrow(
-                                () -> new IllegalStateException("Can`t create coordinate. The method needs repair.")
-                        );
-
-                if (coordinate.equals(futureKingPosition)) {
-                    fields.add(chessBoard.field(coordinate));
-                    return fields;
-                }
-
-                fields.add(chessBoard.field(coordinate));
-                column++;
-            } while (true);
-
-        }
-
-        final boolean longCastling = from > to;
-        if (longCastling) {
-
-            int row = presentKing.getRow();
-            int column = presentKing.columnToInt() - 1;
-
-            do {
-                final Coordinate coordinate = Coordinate
-                        .coordinate(row, column)
-                        .orElseThrow(
-                                () -> new IllegalStateException("Can`t create coordinate. The method needs repair.")
-                        );
-
-                if (coordinate.equals(futureKingPosition)) {
-                    fields.add(chessBoard.field(coordinate));
-                    return fields;
-                }
-
-                fields.add(chessBoard.field(coordinate));
-                column--;
-            } while (true);
-
-        }
-
-        return fields;
-    }
-
     private boolean validateKingMovementForSafety(final ChessBoard chessBoard, final Coordinate previousKing, final Coordinate futureKing) {
 
-        final List<ChessBoard.Field> pawns = pawnsThreateningCoordinate(chessBoard, futureKing, color);
+        final List<ChessBoard.Field> pawns = ChessBoardUtils.pawnsThreateningCoordinate(chessBoard, futureKing, color);
         for (final Field possiblePawn : pawns) {
             final Piece pawn = possiblePawn.pieceOptional().orElseThrow();
 
@@ -495,7 +395,7 @@ public record King(Color color)
             }
         }
 
-        final List<ChessBoard.Field> knights = knightAttackPositions(chessBoard, futureKing);
+        final List<ChessBoard.Field> knights = ChessBoardUtils.knightAttackPositions(chessBoard, futureKing);
         for (final Field possibleKnight : knights) {
             final Piece knight = possibleKnight.pieceOptional().orElseThrow();
 
@@ -539,7 +439,7 @@ public record King(Color color)
     private boolean validatePieceMovementForKingSafety(final ChessBoard chessBoard, final Coordinate kingPosition,
                                                        final Coordinate from, final Coordinate to) {
 
-        final List<Field> pawnsThreateningCoordinates = pawnsThreateningCoordinate(chessBoard, kingPosition, color);
+        final List<Field> pawnsThreateningCoordinates = ChessBoardUtils.pawnsThreateningCoordinate(chessBoard, kingPosition, color);
         for (final Field possiblePawn : pawnsThreateningCoordinates) {
             final Pawn pawn = (Pawn) possiblePawn.pieceOptional().orElseThrow();
 
@@ -548,7 +448,7 @@ public record King(Color color)
             }
         }
 
-        final List<Field> potentialKnightAttackPositions = knightAttackPositions(chessBoard, kingPosition);
+        final List<Field> potentialKnightAttackPositions = ChessBoardUtils.knightAttackPositions(chessBoard, kingPosition);
         for (final Field potentialKnightAttackPosition : potentialKnightAttackPositions) {
             final Piece piece = potentialKnightAttackPosition.pieceOptional().orElseThrow();
 
@@ -584,7 +484,7 @@ public record King(Color color)
     private List<Field> pawnMovedCheck(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
         final List<Field> checkFields = new ArrayList<>();
 
-        final List<ChessBoard.Field> possibleKings = coordinatesThreatenedByPawn(chessBoard, to, color);
+        final List<ChessBoard.Field> possibleKings = ChessBoardUtils.coordinatesThreatenedByPawn(chessBoard, to, color);
         for (final Field possibleKing : possibleKings) {
             if (possibleKing.isPresent() && possibleKing.getCoordinate().equals(king)) {
                 checkFields.add(new Field(to, oppositePiece(Pawn.class)));
@@ -603,7 +503,7 @@ public record King(Color color)
     private List<Field> knightMovedCheck(ChessBoard chessBoard, Coordinate king, Coordinate from, Coordinate to) {
         final List<Field> checkFields = new ArrayList<>();
 
-        final List<ChessBoard.Field> possibleKings = knightAttackPositions(chessBoard, to);
+        final List<ChessBoard.Field> possibleKings = ChessBoardUtils.knightAttackPositions(chessBoard, to);
         for (Field possibleKing : possibleKings) {
             if (possibleKing.getCoordinate().equals(king)) {
                 checkFields.add(new Field(to, oppositePiece(Knight.class)));
@@ -663,7 +563,13 @@ public record King(Color color)
             return false;
         }
 
-        final List<Field> surroundings = surroundingFields(chessBoard, king, enemies.getFirst());
+        final List<Field> surroundings = ChessBoardUtils.surroundingFields(chessBoard, king, field -> {
+            if (field.getCoordinate().equals(to)) {
+                return enemies.getFirst();
+            }
+
+            return field;
+        });
 
         final boolean surrounded = surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
         if (!surrounded) {
@@ -696,7 +602,15 @@ public record King(Color color)
             return false;
         }
 
-        final List<Field> surroundings = surroundingFields(chessBoard, king, enemies);
+        final List<Field> surroundings = ChessBoardUtils.surroundingFields(chessBoard, king, field -> {
+            for (var toReplace : enemies) {
+                if (field.getCoordinate().equals(toReplace.getCoordinate())) {
+                    return toReplace;
+                }
+            }
+
+            return field;
+        });
 
         if (enemies.size() > 1) {
             return surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
@@ -724,7 +638,15 @@ public record King(Color color)
             return false;
         }
 
-        final List<Field> surroundings = surroundingFields(chessBoard, king, enemies);
+        final List<Field> surroundings = ChessBoardUtils.surroundingFields(chessBoard, king, field -> {
+            for (var toReplace : enemies) {
+                if (field.getCoordinate().equals(toReplace.getCoordinate())) {
+                    return toReplace;
+                }
+            }
+
+            return field;
+        });
 
         boolean surrounded = surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(chessBoard, field));
         if (enemies.size() > 1) {
@@ -751,42 +673,15 @@ public record King(Color color)
         return false;
     }
 
-    private List<Field> surroundingFields(ChessBoard chessBoard, Coordinate pivot, List<Field> replace) {
-        final int row = pivot.getRow();
-        final int column = pivot.columnToInt();
-        var up = Coordinate.coordinate(row + 1, column);
-        var down = Coordinate.coordinate(row - 1, column);
-        var left = Coordinate.coordinate(row, column - 1);
-        var right = Coordinate.coordinate(row, column + 1);
-        var downLeft = Coordinate.coordinate(row - 1, column - 1);
-        var downRight = Coordinate.coordinate(row - 1, column + 1);
-        var upperLeft = Coordinate.coordinate(row + 1, column - 1);
-        var upperRight = Coordinate.coordinate(row + 1, column + 1);
-
-        return Stream.of(up, down, left, right, upperLeft, upperRight, downLeft, downRight)
-                .filter(StatusPair::status)
-                .map(StatusPair::orElseThrow)
-                .map(chessBoard::field)
-                .map(field -> {
-                    for (Field toReplace : replace) {
-                        if (field.getCoordinate().equals(toReplace.getCoordinate())) {
-                            return toReplace;
-                        }
-                    }
-
-                    return field;
-                }).toList();
-    }
-
     private boolean canEat(ChessBoard chessBoard, Coordinate king, Field enemyField) {
-        final List<Field> possiblePawns = pawnsThreateningCoordinate(chessBoard, enemyField.getCoordinate(), color);
+        final List<Field> possiblePawns = ChessBoardUtils.pawnsThreateningCoordinate(chessBoard, enemyField.getCoordinate(), color);
         for (final Field possiblePawn : possiblePawns) {
             if (safeForKing(chessBoard, king, possiblePawn.getCoordinate(), enemyField.getCoordinate())) {
                 return true;
             }
         }
 
-        final List<Field> knights = knightAttackPositions(chessBoard, enemyField.getCoordinate());
+        final List<Field> knights = ChessBoardUtils.knightAttackPositions(chessBoard, enemyField.getCoordinate());
         for (final Field knight : knights) {
             if (knight.pieceOptional().orElseThrow().color().equals(color)) {
                 return safeForKing(chessBoard, king, knight.getCoordinate(), enemyField.getCoordinate());
@@ -821,9 +716,9 @@ public record King(Color color)
 
             final StatusPair<Coordinate> possibleCoordinate;
             if (Color.WHITE.equals(color)) {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
+                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, AlgebraicNotation.columnToInt(currentCoordinate.getColumn()));
             } else {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
+                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, AlgebraicNotation.columnToInt(currentCoordinate.getColumn()));
             }
 
             if (possibleCoordinate.status()) {
@@ -835,7 +730,7 @@ public record King(Color color)
                 }
             }
 
-            final List<Field> knights = knightAttackPositions(chessBoard, currentCoordinate);
+            final List<Field> knights = ChessBoardUtils.knightAttackPositions(chessBoard, currentCoordinate);
             for (final Field knight : knights) {
                 if (knight.pieceOptional().orElseThrow().color().equals(color)) {
                     return safeForKing(chessBoard, king, knight.getCoordinate(), currentCoordinate);
@@ -864,141 +759,17 @@ public record King(Color color)
         return false;
     }
 
-    private List<Field> getAllFriendlyFields(ChessBoard chessBoard, Coordinate ignore) {
-        final Coordinate kingCoordinate = getKingCoordinate(chessBoard);
-        final Coordinate[] coordinates = Coordinate.values();
-
-        return Arrays.stream(coordinates)
-                .map(chessBoard::field)
-                .filter(Field::isPresent)
-                .filter(field -> !field.getCoordinate().equals(kingCoordinate))
-                .filter(field -> !field.getCoordinate().equals(ignore))
-                .filter(field -> field.pieceOptional().orElseThrow().color().equals(color))
-                .toList();
-    }
-
-    private List<Field> surroundingFields(ChessBoard chessBoard, Coordinate pivot) {
-        int row = pivot.getRow();
-        char column = pivot.getColumn();
-        var up = Coordinate.coordinate(row + 1, column);
-        var down = Coordinate.coordinate(row - 1, column);
-        var left = Coordinate.coordinate(row, column - 1);
-        var right = Coordinate.coordinate(row, column + 1);
-        var downLeft = Coordinate.coordinate(row - 1, column - 1);
-        var downRight = Coordinate.coordinate(row - 1, column + 1);
-        var upperLeft = Coordinate.coordinate(row + 1, column - 1);
-        var upperRight = Coordinate.coordinate(row + 1, column + 1);
-
-        return Stream.of(up, down, left, right, upperLeft, upperRight, downLeft, downRight)
-                .filter(StatusPair::status)
-                .map(StatusPair::orElseThrow)
-                .map(chessBoard::field)
-                .toList();
-    }
-
-    private List<Field> knightAttackPositions(final ChessBoard chessBoard, final Coordinate pivot) {
-        int row = pivot.getRow();
-        char col = pivot.getColumn();
-        var knightPos1 = Coordinate.coordinate(row + 1, col - 2);
-        var knightPos2 = Coordinate.coordinate(row + 2, col - 1);
-        var knightPos3 = Coordinate.coordinate(row + 2, col + 1);
-        var knightPos4 = Coordinate.coordinate(row + 1, col + 2);
-        var knightPos5 = Coordinate.coordinate(row - 1, col + 2);
-        var knightPos6 = Coordinate.coordinate(row - 2, col + 1);
-        var knightPos7 = Coordinate.coordinate(row - 2, col - 1);
-        var knightPos8 = Coordinate.coordinate(row - 1, col - 2);
-
-        return Stream.of(knightPos1, knightPos2, knightPos3, knightPos4, knightPos5, knightPos6, knightPos7, knightPos8)
-                .filter(StatusPair::status)
-                .map(StatusPair::orElseThrow)
-                .map(chessBoard::field)
-                .filter(Field::isPresent)
-                .toList();
-    }
-
-    private List<Field> pawnsThreateningCoordinate(ChessBoard chessBoard, Coordinate pivot, Color color) {
-
-        final List<StatusPair<Coordinate>> coordinates = new ArrayList<>(2);
-        if (Color.WHITE.equals(color)) {
-            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() - 1));
-            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumn() + 1));
-        } else {
-            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() - 1));
-            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumn() + 1));
-        }
-
-        List<Field> list = new ArrayList<>();
-        for (StatusPair<Coordinate> coordinate : coordinates) {
-            if (coordinate.status()) {
-                Coordinate orElseThrow = coordinate.orElseThrow();
-                Field field = chessBoard.field(orElseThrow);
-                if (field.isPresent() && field.pieceOptional().orElseThrow() instanceof Pawn) {
-                        list.add(field);
-                    }
-
-            }
-        }
-        return list;
-    }
-
-    private List<Field> coordinatesThreatenedByPawn(ChessBoard chessBoard, Coordinate pivot, Color color) {
-
-        final List<StatusPair<Coordinate>> coordinates = new ArrayList<>(2);
-        if (Color.WHITE.equals(color)) {
-            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() - 1));
-            coordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() + 1));
-        } else {
-            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() - 1));
-            coordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() + 1));
-        }
-
-        List<Field> list = new ArrayList<>();
-        for (StatusPair<Coordinate> coordinate : coordinates) {
-            if (coordinate.status()) {
-                Coordinate orElseThrow = coordinate.orElseThrow();
-                Field field = chessBoard.field(orElseThrow);
-                list.add(field);
-            }
-        }
-        return list;
-    }
-
-    private List<Field> surroundingFields(ChessBoard chessBoard, Coordinate pivot, Field toReplace) {
-        int row = pivot.getRow();
-        char column = pivot.getColumn();
-        var up = Coordinate.coordinate(row + 1, column);
-        var down = Coordinate.coordinate(row - 1, column);
-        var left = Coordinate.coordinate(row, column - 1);
-        var right = Coordinate.coordinate(row, column + 1);
-        var downLeft = Coordinate.coordinate(row - 1, column - 1);
-        var downRight = Coordinate.coordinate(row - 1, column + 1);
-        var upperLeft = Coordinate.coordinate(row + 1, column - 1);
-        var upperRight = Coordinate.coordinate(row + 1, column + 1);
-
-        return Stream.of(up, down, left, right, upperLeft, upperRight, downLeft, downRight)
-                .filter(StatusPair::status)
-                .map(StatusPair::orElseThrow)
-                .map(chessBoard::field)
-                .map(field -> {
-                    if (toReplace != null && field.getCoordinate().equals(toReplace.getCoordinate())) {
-                        return toReplace;
-                    }
-
-                    return field;
-                }).toList();
-    }
-
     private boolean fieldIsBlockedOrDangerous(ChessBoard chessBoard, Field field) {
         if (field.isPresent() && field.pieceOptional().orElseThrow().color().equals(color)) {
             return true;
         }
 
-        final List<Field> pawns = pawnsThreateningCoordinate(chessBoard, field.getCoordinate(), color);
+        final List<Field> pawns = ChessBoardUtils.pawnsThreateningCoordinate(chessBoard, field.getCoordinate(), color);
         if (!pawns.isEmpty()) {
             return true;
         }
 
-        final List<Field> knights = knightAttackPositions(chessBoard, field.getCoordinate());
+        final List<Field> knights = ChessBoardUtils.knightAttackPositions(chessBoard, field.getCoordinate());
         for (final Field possibleKnight : knights) {
             final Piece piece = possibleKnight.pieceOptional().orElseThrow();
 
@@ -1034,13 +805,6 @@ public record King(Color color)
         return false;
     }
 
-    private Coordinate getKingCoordinate(ChessBoard board) {
-        if (this.color.equals(Color.WHITE)) {
-            return board.currentWhiteKingPosition();
-        } else {
-            return board.currentBlackKingPosition();
-        }
-    }
 
     private Piece oppositePiece(Class<? extends Piece> type) {
         final Color oppositeColor = color.equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
