@@ -92,6 +92,24 @@ public record King(Color color)
         return validatePieceMovementForKingSafety(chessBoard, kingPosition, from, to);
     }
 
+
+    /**
+     * Determines if the current position is a stalemate.
+     *
+     * @param chessBoard The current state of the chess board.
+     * @param from The coordinate from which the piece is being moved.
+     * @param to The target coordinate where the piece is intended to move.
+     * @return true if the position is a stalemate, false otherwise.
+     * <p>
+     * This method checks if the current position is a stalemate, meaning the player has no legal moves
+     * and their king is not in check. It evaluates the surrounding fields of the king to determine if
+     * they are blocked or dangerous, and checks all friendly fields to see if any legal moves are available.
+     */
+    /** TODO for AinGrace.*/
+    public boolean stalemate() {
+        return false;
+    }
+
     /**
      * Evaluates the status of the king after a proposed move.
      *

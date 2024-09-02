@@ -519,23 +519,6 @@ public class ChessBoard {
     }
 
     /**
-     * Determines if the current position is a stalemate.
-     *
-     * @param chessBoard The current state of the chess board.
-     * @param from The coordinate from which the piece is being moved.
-     * @param to The target coordinate where the piece is intended to move.
-     * @return true if the position is a stalemate, false otherwise.
-     * <p>
-     * This method checks if the current position is a stalemate, meaning the player has no legal moves
-     * and their king is not in check. It evaluates the surrounding fields of the king to determine if
-     * they are blocked or dangerous, and checks all friendly fields to see if any legal moves are available.
-     */
-    /** TODO for AinGrace.*/
-    private boolean stalemate() {
-        return false;
-    }
-
-    /**
      * Processes a piece repositioning on the chess board.
      *
      * @param from                  The coordinate the piece is moving from.
@@ -608,7 +591,7 @@ public class ChessBoard {
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
         operations.add(opponentKing.kingStatus(this, opponentKing.color()));
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && stalemate();
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate();
         if (isStalemate) {
             operations.add(Operations.STALEMATE);
         }
@@ -673,7 +656,7 @@ public class ChessBoard {
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
         operations.add(opponentKing.kingStatus(this, opponentKing.color()));
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && stalemate();
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate();
         if (isStalemate) {
             operations.add(Operations.STALEMATE);
         }
