@@ -1021,7 +1021,7 @@ public class ChessBoard {
             return new Bishop(color);
         }
 
-        throw new RuntimeException("Unexpected situation.");
+        throw new RuntimeException("Unexpected situation. what da heeeel💀");
     }
 
     /**
@@ -1197,6 +1197,8 @@ public class ChessBoard {
                 }
             }
         }
+
+        fen.append(countOfEmptyFields);
 
         fen.append(" ");
         if (figuresTurn.equals(Color.WHITE)) {

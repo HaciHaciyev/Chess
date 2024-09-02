@@ -140,7 +140,6 @@ public class ChessGame {
 
         final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
         if (gameOver) {
-            log.info("GAME OVER: {}", operation);
             gameOver(operation);
             return;
         }
