@@ -1,6 +1,5 @@
 package core.project.chess.domain.aggregates.chess.pieces;
 
-import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation.Castle;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
@@ -54,7 +53,6 @@ public record King(Color color)
         }
 
         var setOfOperations = new LinkedHashSet<Operations>();
-        setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && !endField.pieceOptional().get().color().equals(kingColor);
         if (opponentPieceInEndField) {
@@ -92,6 +90,21 @@ public record King(Color color)
         }
 
         return validatePieceMovementForKingSafety(chessBoard, kingPosition, from, to);
+    }
+
+    /**
+     * Evaluates the status of the king after a proposed move.
+     *
+     * @param chessBoard The current state of the chess board.
+     * @param kingColor The color of King that need to be checked for his status(safe, check, checkmate).
+     * @return An instance of the {@link Operations} enum indicating the status of the king:
+     *         - {Operations.CHECK} if the king is in check after the move,
+     *         - {Operations.CHECKMATE} if the king is in checkmate after the move,
+     *         - {Operations.EMPTY} if the king is not in check, checkmate.
+     */
+    /** TODO for AinGrace.*/
+    public Operations kingStatus(final ChessBoard chessBoard, final Color kingColor) {
+        return null;
     }
 
     /**
@@ -308,8 +321,8 @@ public record King(Color color)
     private boolean isValidKingMovementCoordinates(final ChessBoard chessBoard, final Field startField, final Field endField) {
         final Coordinate from = startField.getCoordinate();
         final Coordinate to = endField.getCoordinate();
-        final int startColumn = columnToInt(from.getColumn());
-        final int endColumn = columnToInt(to.getColumn());
+        final int startColumn = from.columnToInt();
+        final int endColumn = to.columnToInt();
         final int startRow = from.getRow();
         final int endRow = to.getRow();
 
@@ -716,9 +729,9 @@ public record King(Color color)
 
             final StatusPair<Coordinate> possibleCoordinate;
             if (Color.WHITE.equals(color)) {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, AlgebraicNotation.columnToInt(currentCoordinate.getColumn()));
+                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
             } else {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, AlgebraicNotation.columnToInt(currentCoordinate.getColumn()));
+                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
             }
 
             if (possibleCoordinate.status()) {

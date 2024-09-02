@@ -65,7 +65,7 @@ public class ChessBoardUtils {
 
     public static List<ChessBoard.Field> surroundingFields(ChessBoard chessBoard, Coordinate pivot) {
         int row = pivot.getRow();
-        int column = pivot.getColumnAsInt();
+        int column = pivot.columnToInt();
 
         int[][] directions = {
                 {1, 0}, {-1, 0}, {0, -1}, {0, 1},   // up, down, left, right
@@ -101,11 +101,11 @@ public class ChessBoardUtils {
         final List<StatusPair<Coordinate>> possibleCoordinates = new ArrayList<>(2);
 
         if (Color.WHITE.equals(color)) {
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumnAsInt() - 1));
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumnAsInt() + 1));
+            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() + 1));
         } else {
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumnAsInt() - 1));
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumnAsInt() + 1));
+            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() + 1));
         }
 
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -124,11 +124,11 @@ public class ChessBoardUtils {
         final List<StatusPair<Coordinate>> possibleCoordinates = new ArrayList<>(2);
 
         if (Color.WHITE.equals(color)) {
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumnAsInt() - 1));
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.getColumnAsInt() + 1));
+            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() + 1));
         } else {
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumnAsInt() - 1));
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.getColumnAsInt() + 1));
+            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() + 1));
         }
 
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -146,7 +146,7 @@ public class ChessBoardUtils {
 
     public static List<ChessBoard.Field> knightAttackPositions(ChessBoard chessBoard, Coordinate pivot) {
         int row = pivot.getRow();
-        int col = pivot.getColumnAsInt();
+        int col = pivot.columnToInt();
 
         int[][] moves = {
                 {1, -2}, {2, -1},   // top-left
@@ -194,7 +194,7 @@ public class ChessBoardUtils {
                                           List<ChessBoard.Field> fields,
                                           int direction) {
         int row = presentKing.getRow();
-        int column = presentKing.getColumnAsInt() + direction;
+        int column = presentKing.columnToInt() + direction;
 
         while (true) {
             final Coordinate coordinate = Coordinate
@@ -216,7 +216,7 @@ public class ChessBoardUtils {
         Piece piece = field.pieceOptional().orElseThrow();
 
         int direction = piece.color().equals(Color.WHITE) ? 1 : -1;
-        final var possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() + direction, coordinate.getColumnAsInt());
+        final var possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() + direction, coordinate.columnToInt());
 
         if (possibleForwardCoordinate.status()) {
             Coordinate forward = possibleForwardCoordinate.orElseThrow();

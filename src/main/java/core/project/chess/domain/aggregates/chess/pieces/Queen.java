@@ -53,8 +53,6 @@ public record Queen(Color color)
             return StatusPair.ofFalse();
         }
 
-        setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
-
         final Color opponentPieceColor = queenColor == Color.WHITE ? Color.BLACK : Color.WHITE;
         final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
         if (opponentPieceInEndField) {

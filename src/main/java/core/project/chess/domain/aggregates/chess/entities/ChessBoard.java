@@ -50,7 +50,7 @@ import java.util.*;
  *
  *
  * @author Hadzhyiev Hadzhy
- * @version 1.5
+ * @version 2.0
  */
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
@@ -165,12 +165,21 @@ public class ChessBoard {
     }
 
     /**
+     * Retrieves a last of algebraic notations representing the moves made on the chess board.
+     *
+     * @return algebraic notations in type of AlgebraicNotation.
+     */
+    public List<String> listOfAlgebraicNotations() {
+        return listOfAlgebraicNotations.stream().map(AlgebraicNotation::algebraicNotation).toList();
+    }
+
+    /**
      * Retrieves a list of algebraic notations representing the moves made on the chess board.
      *
      * @return A list of algebraic notations in type of String.
      */
-    public List<String> listOfAlgebraicNotations() {
-        return listOfAlgebraicNotations.stream().map(AlgebraicNotation::algebraicNotation).toList();
+    public AlgebraicNotation lastAlgebraicNotation() {
+        return listOfAlgebraicNotations.getLast();
     }
 
     /**
@@ -392,173 +401,39 @@ public class ChessBoard {
      * This method is responsible for updating the castling ability of a piece during a revert move.
      *
      * @param piece  The piece being moved.
-     * @param castle The castling ability associated with the move, if any.
      * @throws IllegalStateException if the provided piece is not a King or Rook.
      */
-    private void changeOfCastlingAbilityInRevertMove(
-            final Piece piece, final @OptionalArgument AlgebraicNotation.Castle castle
-    ) {
+    private void changeOfCastlingAbilityInRevertMove(final Piece piece) {
         if (!(piece instanceof King) && !(piece instanceof Rook)) {
             throw new IllegalStateException("Invalid method usage, check documentation. Only kings and rooks available for this function.");
         }
 
-        final Color color = piece.color();
+        final String lastFEN = fenKeysOfHashCodeOfBoard.getLast();
+        final String aboutCastlingAbility = lastFEN.substring(lastFEN.indexOf(' '));
 
-        if (!Objects.isNull(castle)) {
-            assert piece instanceof King;
-            changeOfCastlingAbilityInRevertCastling((King) piece, castle);
-        }
-
-        if (color.equals(Color.BLACK)) {
-            processHistoryForBlackFigures(piece);
+        if (aboutCastlingAbility.contains("K")) {
+            validWhiteShortCasting = true;
         } else {
-            processHistoryForWhiteFigures(piece);
+            validWhiteShortCasting = false;
         }
-    }
 
-    /**
-     * This method is responsible for updating the castling ability of white figures based on the move history.
-     *
-     * @param piece The white piece being moved.
-     */
-    private void processHistoryForWhiteFigures(final Piece piece) {
-        for (int i = 0; i < listOfAlgebraicNotations.size(); i++) {
-            final Color color = i % 10 == 2 ? Color.WHITE : Color.BLACK;
-            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
-
-            if (!color.equals(piece.color())) {
-                continue;
-            }
-
-            final boolean king = algebraicNotation.algebraicNotation().charAt(0) == 'K';
-            if (king) {
-                validWhiteShortCasting = false;
-                validWhiteLongCasting = false;
-            }
-
-            final Coordinate from = algebraicNotation.coordinates().getFirst();
-
-            final boolean leftRookMoved = algebraicNotation.algebraicNotation().charAt(0) == 'R' && from.equals(Coordinate.A1);
-            if (leftRookMoved) {
-                validWhiteLongCasting = false;
-            }
-
-            final boolean rightRookMoved = algebraicNotation.algebraicNotation().charAt(0) == 'R' && from.equals(Coordinate.H1);
-            if (rightRookMoved) {
-                validWhiteShortCasting = false;
-            }
-        }
-    }
-
-    /**
-     * This method is responsible for updating the castling ability of black figures based on the move history.
-     *
-     * @param piece The white piece being moved.
-     */
-    private void processHistoryForBlackFigures(final Piece piece) {
-        for (int i = 0; i < listOfAlgebraicNotations.size(); i++) {
-            final Color color = i % 10 == 2 ? Color.WHITE : Color.BLACK;
-            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
-
-            if (!color.equals(piece.color())) {
-                continue;
-            }
-
-            final boolean king = algebraicNotation.algebraicNotation().charAt(0) == 'K';
-            if (king) {
-                validBlackShortCasting = false;
-                validBlackLongCasting = false;
-            }
-
-            final Coordinate from = algebraicNotation.coordinates().getFirst();
-
-            final boolean leftRookMoved = algebraicNotation.algebraicNotation().charAt(0) == 'R' && from.equals(Coordinate.H8);
-            if (leftRookMoved) {
-                validBlackShortCasting = false;
-            }
-
-            final boolean rightRookMoved = algebraicNotation.algebraicNotation().charAt(0) == 'R' && from.equals(Coordinate.A8);
-            if (rightRookMoved) {
-                validBlackLongCasting = false;
-            }
-        }
-    }
-
-    /**
-     * This method is responsible for updating the castling ability of a King during a revert castling move.
-     *
-     * @param king    The King involved in the castling move.
-     * @param castle  The castling ability associated with the move.
-     */
-    private void changeOfCastlingAbilityInRevertCastling(
-            final King king, final AlgebraicNotation.Castle castle
-    ) {
-        final boolean whiteFigures = king.color().equals(Color.WHITE);
-        final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
-        if (shortCastling) {
-
-            if (whiteFigures) {
-                validWhiteShortCasting = true;
-            } else {
-                validBlackShortCasting = true;
-            }
-
+        if (aboutCastlingAbility.contains("Q")) {
+            validWhiteLongCasting = true;
         } else {
-
-            if (whiteFigures) {
-                validWhiteLongCasting = true;
-            } else {
-                validBlackLongCasting = true;
-            }
-
+            validWhiteLongCasting = false;
         }
 
-        changeCastlingAbilityOfSecondRookInRevertCastling(king.color(), castle);
-    }
-
-    /**
-     * This method is responsible for updating the castling ability of the second Rook involved in a revert castling move.
-     *
-     * @param color   The color of the King involved in the castling move.
-     * @param castle  The castling ability associated with the move.
-     */
-    private void changeCastlingAbilityOfSecondRookInRevertCastling(
-            final Color color, final AlgebraicNotation.Castle castle
-    ) {
-        for (int i = 0; i < listOfAlgebraicNotations.size(); i++) {
-            final Color figureColor = i % 10 == 2 ? Color.WHITE : Color.BLACK;
-            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
-            final boolean rook = algebraicNotation.algebraicNotation().charAt(0) == 'R';
-
-            final boolean ourRookIsMoved = rook && figureColor.equals(color);
-            if (ourRookIsMoved) {
-                return;
-            }
+        if (aboutCastlingAbility.contains("k")) {
+            validBlackShortCasting = true;
+        } else {
+            validBlackShortCasting = false;
         }
 
-        changeAbility(color, castle);
-    }
-
-    /**
-     * This method is responsible for updating the castling ability based on the color of the King and the type of castling.
-     *
-     * @param color   The color of the King.
-     * @param castle  The castling ability associated with the move.
-     */
-    private void changeAbility(final Color color, final AlgebraicNotation.Castle castle) {
-        if (color.equals(Color.WHITE)) {
-            if (castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING)) {
-                validWhiteLongCasting = true;
-            } else {
-                validWhiteShortCasting = true;
-            }
-        }
-
-        if (castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING)) {
+        if (aboutCastlingAbility.contains("q")) {
             validBlackLongCasting = true;
+        } else {
+            validBlackLongCasting = false;
         }
-
-        validBlackShortCasting = true;
     }
 
     /**
@@ -644,6 +519,23 @@ public class ChessBoard {
     }
 
     /**
+     * Determines if the current position is a stalemate.
+     *
+     * @param chessBoard The current state of the chess board.
+     * @param from The coordinate from which the piece is being moved.
+     * @param to The target coordinate where the piece is intended to move.
+     * @return true if the position is a stalemate, false otherwise.
+     * <p>
+     * This method checks if the current position is a stalemate, meaning the player has no legal moves
+     * and their king is not in check. It evaluates the surrounding fields of the king to determine if
+     * they are blocked or dangerous, and checks all friendly fields to see if any legal moves are available.
+     */
+    /** TODO for AinGrace.*/
+    private boolean stalemate() {
+        return false;
+    }
+
+    /**
      * Processes a piece repositioning on the chess board.
      *
      * @param from                  The coordinate the piece is moving from.
@@ -652,9 +544,7 @@ public class ChessBoard {
      * @return The operations performed during the repositioning.
      * @throws IllegalArgumentException If the move is invalid.
      */
-    protected final Operations reposition(
-            final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion
-    ) {
+    protected final Operations reposition(final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion) {
         /** Preparation of necessary data and validation.*/
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
@@ -715,6 +605,14 @@ public class ChessBoard {
             endField.addFigure(piece);
         }
 
+        final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
+        operations.add(opponentKing.kingStatus(this, opponentKing.color()));
+
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && stalemate();
+        if (isStalemate) {
+            operations.add(Operations.STALEMATE);
+        }
+
         /** Monitor opportunities for castling, switch players.*/
         if (piece instanceof King king) {
             changedKingPosition(king, to);
@@ -728,7 +626,6 @@ public class ChessBoard {
         switchFiguresTurn();
 
         /** Recording the move made in algebraic notation and Fen.*/
-
         final String currentPositionHash = this.toString();
         fenKeysOfHashCodeOfBoard.add(currentPositionHash);
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
@@ -772,6 +669,15 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
 
+        final Set<Operations> operations = statusPair.orElseThrow();
+        final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
+        operations.add(opponentKing.kingStatus(this, opponentKing.color()));
+
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && stalemate();
+        if (isStalemate) {
+            operations.add(Operations.STALEMATE);
+        }
+
         /**Process operations from StatusPair. All validation need to be processed before that.*/
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
@@ -794,7 +700,6 @@ public class ChessBoard {
         fenKeysOfHashCodeOfBoard.add(currentPositionHash);
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
-        final Set<Operations> operations = statusPair.orElseThrow();
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
 
         if (hashCodeOfBoard.get(currentPositionHash) == 3) {
@@ -910,15 +815,108 @@ public class ChessBoard {
 
         if (piece instanceof King king) {
             changedKingPosition(king, from);
-            changeOfCastlingAbilityInRevertMove(king, null);
+            changeOfCastlingAbilityInRevertMove(king);
         }
 
         if (piece instanceof Rook rook) {
-            changeOfCastlingAbilityInRevertMove(rook, null);
+            changeOfCastlingAbilityInRevertMove(rook);
         }
 
         switchFiguresTurn();
         return true;
+    }
+
+    /**
+     * Reverts a castling move.
+     *
+     * @param castle the castling information
+     */
+    private void revertCastling(final AlgebraicNotation.Castle castle) {
+        final String currentPositionHash = toString();
+
+        final var movementPair = castlingCoordinates(castle);
+        final Coordinate from = movementPair.getFirst();
+        final Coordinate to = movementPair.getSecond();
+
+        final Field kingStartedField = fieldMap.get(from);
+        final Field kingEndedField = fieldMap.get(to);
+        final King king = (King) kingEndedField.pieceOptional().orElseThrow();
+
+        kingEndedField.removeFigure();
+        kingStartedField.addFigure(king);
+
+        final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(castle);
+        if (shortCasting) {
+            revertRookInShortCastling(to);
+        } else {
+            revertRookInLongCastling(to);
+        }
+
+        listOfAlgebraicNotations.removeLast();
+
+        final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
+        if (newValue == 0) {
+            hashCodeOfBoard.remove(currentPositionHash);
+        } else {
+            hashCodeOfBoard.put(currentPositionHash, newValue);
+        }
+
+        changedKingPosition(king, from);
+        changeOfCastlingAbilityInRevertMove(king);
+
+        switchFiguresTurn();
+    }
+
+    /**
+     * Reverts the rook's move in a short castling.
+     *
+     * @param to the coordinate where the rook ended up after the castling
+     */
+    private void revertRookInShortCastling(Coordinate to) {
+        final boolean isWhiteCastling = to.getRow() == 1;
+
+        if (isWhiteCastling) {
+            final Field startField = fieldMap.get(Coordinate.H1);
+            final Field endField = fieldMap.get(Coordinate.F1);
+            final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
+
+            endField.removeFigure();
+            startField.addFigure(rook);
+            return;
+        }
+
+        final Field startField = fieldMap.get(Coordinate.H8);
+        final Field endField = fieldMap.get(Coordinate.F8);
+        final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
+
+        endField.removeFigure();
+        startField.addFigure(rook);
+    }
+
+    /**
+     * Reverts the rook's move in a long castling.
+     *
+     * @param to the coordinate where the rook ended up after the castling
+     */
+    private void revertRookInLongCastling(Coordinate to) {
+        final boolean isWhiteCastling = to.getRow() == 1;
+
+        if (isWhiteCastling) {
+            final Field startField = fieldMap.get(Coordinate.A1);
+            final Field endField = fieldMap.get(Coordinate.D1);
+            final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
+
+            endField.removeFigure();
+            startField.addFigure(rook);
+            return;
+        }
+
+        final Field startField = fieldMap.get(Coordinate.A8);
+        final Field endField = fieldMap.get(Coordinate.D8);
+        final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
+
+        endField.removeFigure();
+        startField.addFigure(rook);
     }
 
     /**
@@ -1024,99 +1022,6 @@ public class ChessBoard {
         }
 
         throw new RuntimeException("Unexpected situation.");
-    }
-
-    /**
-     * Reverts a castling move.
-     *
-     * @param castle the castling information
-     */
-    private void revertCastling(final AlgebraicNotation.Castle castle) {
-        final String currentPositionHash = toString();
-
-        final var movementPair = castlingCoordinates(castle);
-        final Coordinate from = movementPair.getFirst();
-        final Coordinate to = movementPair.getSecond();
-
-        final Field kingStartedField = fieldMap.get(from);
-        final Field kingEndedField = fieldMap.get(to);
-        final King king = (King) kingEndedField.pieceOptional().orElseThrow();
-
-        kingEndedField.removeFigure();
-        kingStartedField.addFigure(king);
-
-        final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(castle);
-        if (shortCasting) {
-            revertRookInShortCastling(to);
-        } else {
-            revertRookInLongCastling(to);
-        }
-
-        listOfAlgebraicNotations.removeLast();
-
-        final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
-        if (newValue == 0) {
-            hashCodeOfBoard.remove(currentPositionHash);
-        } else {
-            hashCodeOfBoard.put(currentPositionHash, newValue);
-        }
-
-        changedKingPosition(king, from);
-        changeOfCastlingAbilityInRevertMove(king, castle);
-
-        switchFiguresTurn();
-    }
-
-    /**
-     * Reverts the rook's move in a short castling.
-     *
-     * @param to the coordinate where the rook ended up after the castling
-     */
-    private void revertRookInShortCastling(Coordinate to) {
-        final boolean isWhiteCastling = to.getRow() == 1;
-
-        if (isWhiteCastling) {
-            final Field startField = fieldMap.get(Coordinate.H1);
-            final Field endField = fieldMap.get(Coordinate.F1);
-            final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
-
-            endField.removeFigure();
-            startField.addFigure(rook);
-            return;
-        }
-
-        final Field startField = fieldMap.get(Coordinate.H8);
-        final Field endField = fieldMap.get(Coordinate.F8);
-        final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
-
-        endField.removeFigure();
-        startField.addFigure(rook);
-    }
-
-    /**
-     * Reverts the rook's move in a long castling.
-     *
-     * @param to the coordinate where the rook ended up after the castling
-     */
-    private void revertRookInLongCastling(Coordinate to) {
-        final boolean isWhiteCastling = to.getRow() == 1;
-
-        if (isWhiteCastling) {
-            final Field startField = fieldMap.get(Coordinate.A1);
-            final Field endField = fieldMap.get(Coordinate.D1);
-            final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
-
-            endField.removeFigure();
-            startField.addFigure(rook);
-            return;
-        }
-
-        final Field startField = fieldMap.get(Coordinate.A8);
-        final Field endField = fieldMap.get(Coordinate.D8);
-        final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
-
-        endField.removeFigure();
-        startField.addFigure(rook);
     }
 
     /**
@@ -1245,11 +1150,96 @@ public class ChessBoard {
     public final String toString() {
         var fen = new StringBuilder();
 
+        int row = 8;
+        int countOfEmptyFields = 0;
         for (final Coordinate coordinate : Coordinate.values()) {
-            final Field field = fieldMap.get(coordinate);
-            final String pieceRepresentation = field.pieceOptional().isEmpty() ? "" : convertPieceToHash(field.pieceOptional().get());
 
-            fen.append(pieceRepresentation);
+            if (coordinate.getRow() == row - 1) {
+                row -= 1;
+
+                if (countOfEmptyFields == 0) {
+                    fen.append("/");
+                } else {
+                    fen
+                            .append(countOfEmptyFields)
+                            .append("/");
+
+                    countOfEmptyFields = 0;
+                }
+            }
+
+            final Field field = fieldMap.get(coordinate);
+
+            if (field.isEmpty()) {
+                countOfEmptyFields++;
+            }
+
+            if (countOfEmptyFields == 8) {
+                fen.append(countOfEmptyFields);
+                countOfEmptyFields = 0;
+            }
+
+            else if (field.isPresent()) {
+
+                if (countOfEmptyFields != 0) {
+                    fen
+                            .append(countOfEmptyFields)
+                            .append(
+                                    convertPieceToHash(field.pieceOptional().orElseThrow())
+                            );
+
+                    countOfEmptyFields = 0;
+                } else {
+                    fen
+                            .append(
+                                    convertPieceToHash(field.pieceOptional().orElseThrow())
+                            );
+                }
+            }
+        }
+
+        fen.append(" ");
+        if (figuresTurn.equals(Color.WHITE)) {
+            fen.append("w");
+        } else {
+            fen.append("b");
+        }
+
+        fen.append(" ");
+
+        if (validWhiteShortCasting) {
+            fen.append("K");
+        }
+        if (validWhiteLongCasting) {
+            fen.append("Q");
+        }
+        if (!validWhiteShortCasting && !validWhiteLongCasting) {
+            fen.append("- ");
+        }
+
+        if (validBlackShortCasting) {
+            fen.append("k");
+        }
+        if (validBlackLongCasting) {
+            fen.append("q");
+        }
+        if (!validBlackShortCasting && !validBlackLongCasting) {
+            fen.append("- ");
+        }
+
+        if (latestMovement().isPresent() && new Pawn(Color.WHITE).previousMoveWasPassage(this)) {
+            var coordinates = lastAlgebraicNotation().coordinates();
+            final Coordinate to = coordinates.getSecond();
+
+            final Coordinate intermediateFieldOfPassage = Coordinate
+                    .coordinate(
+                            to.getRow() == 4 ? to.getRow() - 1 : to.getRow() + 1,
+                            to.columnToInt()
+                    )
+                    .orElseThrow();
+
+            final String result = " " + intermediateFieldOfPassage.getColumn() + intermediateFieldOfPassage.getRow();
+            fen.append(result);
         }
 
         return fen.toString();

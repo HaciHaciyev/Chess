@@ -21,36 +21,6 @@ public sealed interface Piece
     StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
 
     /**
-     * Determines the influence of a move on the opponent's king.
-     *
-     * @param chessBoard The current state of the chess board.
-     * @param from       The coordinate of the piece being moved.
-     * @param to         The coordinate where the piece is being moved to.
-     * @return The operation that the move has on the opponent's king, which can be one of the following:
-     *         - STALEMATE: The move results in a stalemate.
-     *         - CHECKMATE: The move results in a checkmate.
-     *         - CHECK: The move results in a check.
-     *         - EMPTY: The move has no influence on the opponent's king.
-     */
-    default Operations influenceOnTheOpponentKing(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        final Color figuresColor = chessBoard.field(from).pieceOptional().orElseThrow().color();
-        final Color opponentFiguresColor = figuresColor.equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
-        final King opponentKing = new King(opponentFiguresColor);
-
-        if (opponentKing.check(chessBoard, from, to)) {
-            return Operations.CHECK;
-        }
-        if (opponentKing.checkmate(chessBoard, from, to)) {
-            return Operations.CHECKMATE;
-        }
-        /**if (chessBoard.countOfMovement() >= 10 && opponentKing.stalemate(chessBoard, from, to)) {
-            return Operations.STALEMATE;
-        }*/
-        
-        return Operations.EMPTY;
-    }
-
-    /**
      * Checks if the path between the given start and end coordinates on the chess board is clear.
      * The method checks all fields between the start and end coordinates, but does not check the end coordinate itself.
      * If the end coordinate is a neighbor of the start coordinate, the method always returns true.

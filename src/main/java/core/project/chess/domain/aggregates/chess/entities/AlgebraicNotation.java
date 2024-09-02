@@ -315,7 +315,20 @@ public class AlgebraicNotation {
             case Queen q -> PieceTYPE.Q;
             case Rook r -> PieceTYPE.R;
             case Bishop b -> PieceTYPE.B;
-            case Knight k -> PieceTYPE.N;
+            case Knight n -> PieceTYPE.N;
+            default -> PieceTYPE.P;
+        };
+    }
+
+    public PieceTYPE pieceTYPE() {
+        final char firstChar = this.algebraicNotation.charAt(0);
+
+        return switch (firstChar) {
+            case 'K', 'O' -> PieceTYPE.K;
+            case 'Q' -> PieceTYPE.Q;
+            case 'R' -> PieceTYPE.R;
+            case 'B' -> PieceTYPE.B;
+            case 'N' -> PieceTYPE.N;
             default -> PieceTYPE.P;
         };
     }

@@ -1,5 +1,6 @@
 package core.project.chess.domain.aggregates.chess.pieces;
 
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
@@ -83,8 +84,6 @@ public record Pawn(Color color)
         if (!isSafeForTheKing) {
             return StatusPair.ofFalse();
         }
-
-        setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         return StatusPair.ofTrue(setOfOperations);
     }
@@ -240,10 +239,17 @@ public record Pawn(Color color)
                 (lastMoveCoordinate.get().getRow() - endRow == 1 || lastMoveCoordinate.get().getRow() - endRow == -1);
     }
 
-    private boolean previousMoveWasPassage(ChessBoard chessBoard) {
+    public boolean previousMoveWasPassage(ChessBoard chessBoard) {
         if (chessBoard.latestMovement().isEmpty()) {
             return false;
         }
+
+        final AlgebraicNotation figureType = chessBoard.lastAlgebraicNotation();
+        final boolean isLastMoveWasMadeByPawn = figureType.pieceTYPE().equals(AlgebraicNotation.PieceTYPE.P);
+        if (!isLastMoveWasMadeByPawn) {
+            return false;
+        }
+
         Pair<Coordinate, Coordinate> lastMovement = chessBoard.latestMovement().get();
         Coordinate from = lastMovement.getFirst();
         Coordinate to = lastMovement.getSecond();

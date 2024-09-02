@@ -52,7 +52,6 @@ public record Knight(Color color)
         }
 
         var setOfOperations = new LinkedHashSet<Operations>();
-        setOfOperations.add(influenceOnTheOpponentKing(chessBoard, from, to));
 
         final Color opponentPieceColor = knightColor == Color.WHITE ? Color.BLACK : Color.WHITE;
         final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);

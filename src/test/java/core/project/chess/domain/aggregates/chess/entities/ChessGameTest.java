@@ -45,6 +45,26 @@ class ChessGameTest {
     }
 
     @Test
+    @DisplayName("Simple testing of FEN.")
+    void fenTest() {
+        final ChessGame chessGame = chessGameSupplier().get();
+
+        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
+        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
+
+        System.out.println(chessGame.getChessBoard().toString());
+
+        // 1
+        chessGame.makeMovement(firstPlayerUsername, E2, E4, null);
+
+        System.out.println(chessGame.getChessBoard().toString());
+
+        chessGame.makeMovement(secondPlayerUsername, E7, E5, null);
+
+        System.out.println(chessGame.getChessBoard().toString());
+    }
+
+    @Test
     @DisplayName("Chess game end by pat in 10 move.")
     void testChessGameEndByPat() {
         final ChessGame chessGame = chessGameSupplier().get();
