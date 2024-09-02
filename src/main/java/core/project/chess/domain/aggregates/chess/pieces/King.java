@@ -186,7 +186,7 @@ public record King(Color color)
             return false;
         }
 
-        final List<Field> fields = ChessBoardUtils.getAllFriendlyFields(chessBoard, to, color);
+        final List<Field> fields = ChessBoardUtils.getAllFriendlyFields(chessBoard, color, field -> !(field.pieceOptional().get() instanceof King));
 
         for (final Field field : fields) {
             final boolean result = processFields(chessBoard, king, field, to);
