@@ -80,25 +80,6 @@ public enum Direction {
     }
 
     public static List<ChessBoard.Field> occupiedFieldsFromDiagonalDirections(ChessBoard chessBoard, Coordinate pivot,
-                                                                              Coordinate replace, Piece replacement) {
-        var topLeft = TOP_LEFT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
-        var topRight = TOP_RIGHT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
-
-        var bottomLeft = BOTTOM_LEFT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
-        var bottomRight = BOTTOM_RIGHT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
-
-        return Stream.of(
-                        topLeft,
-                        topRight,
-                        bottomLeft,
-                        bottomRight
-                )
-                .filter(Optional::isPresent)
-                .map(Optional::orElseThrow)
-                .toList();
-    }
-
-    public static List<ChessBoard.Field> occupiedFieldsFromDiagonalDirections(ChessBoard chessBoard, Coordinate pivot,
                                                                               Coordinate ignore, Coordinate end) {
         var topLeft = TOP_LEFT.occupiedFieldFrom(chessBoard, pivot, ignore, end);
         var topRight = TOP_RIGHT.occupiedFieldFrom(chessBoard, pivot, ignore, end);
@@ -161,25 +142,6 @@ public enum Direction {
 
         var left = LEFT.occupiedFieldFrom(chessBoard, pivot, ignore, end);
         var right = RIGHT.occupiedFieldFrom(chessBoard, pivot, ignore, end);
-
-        return Stream.of(
-                        top,
-                        bottom,
-                        left,
-                        right
-                )
-                .filter(Optional::isPresent)
-                .map(Optional::orElseThrow)
-                .toList();
-    }
-
-    public static List<ChessBoard.Field> occupiedFieldsFromHorizontalVerticalDirections(ChessBoard chessBoard, Coordinate pivot,
-                                                                                        Coordinate replace, Piece replacement) {
-        var top = TOP.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
-        var bottom = BOTTOM.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
-
-        var left = LEFT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
-        var right = RIGHT.occupiedFieldFrom(chessBoard, pivot, replace, replacement);
 
         return Stream.of(
                         top,
@@ -330,29 +292,6 @@ public enum Direction {
 
             ChessBoard.Field field = chessBoard.field(coordinate);
             if (predicate.test(field)) {
-                return Optional.of(field);
-            }
-
-            possibleCoordinate = apply(coordinate);
-        }
-
-        return Optional.empty();
-    }
-
-    public Optional<ChessBoard.Field> occupiedFieldFrom(ChessBoard chessBoard, Coordinate pivot,
-                                                        Coordinate replace, Piece replacement) {
-        var possibleCoordinate = apply(pivot);
-
-        while (possibleCoordinate.status()) {
-            Coordinate coordinate = possibleCoordinate.orElseThrow();
-
-            if (coordinate.equals(replace)) {
-                ChessBoard.Field field = new ChessBoard.Field(replace, replacement);
-                return Optional.of(field);
-            }
-
-            ChessBoard.Field field = chessBoard.field(coordinate);
-            if (field.isPresent()) {
                 return Optional.of(field);
             }
 
