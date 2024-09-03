@@ -591,7 +591,7 @@ public class ChessBoard {
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
         operations.add(opponentKing.kingStatus(this, opponentKing.color()));
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate();
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, from, to);
         if (isStalemate) {
             operations.add(Operations.STALEMATE);
         }
@@ -656,7 +656,7 @@ public class ChessBoard {
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
         operations.add(opponentKing.kingStatus(this, opponentKing.color()));
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate();
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, from, to);
         if (isStalemate) {
             operations.add(Operations.STALEMATE);
         }
