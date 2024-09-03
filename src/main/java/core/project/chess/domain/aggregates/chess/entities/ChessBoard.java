@@ -591,7 +591,7 @@ public class ChessBoard {
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
         operations.add(opponentKing.kingStatus(this, opponentKing.color()));
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, from, to);
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color());
         if (isStalemate) {
             operations.add(Operations.STALEMATE);
         }
@@ -656,7 +656,7 @@ public class ChessBoard {
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
         operations.add(opponentKing.kingStatus(this, opponentKing.color()));
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, from, to);
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color());
         if (isStalemate) {
             operations.add(Operations.STALEMATE);
         }
@@ -1232,12 +1232,12 @@ public class ChessBoard {
 
     private String convertPieceToHash(final Piece piece) {
         return switch (piece) {
-            case King k -> k.color().equals(Color.WHITE) ? "K" : "k";
-            case Queen q -> q.color().equals(Color.WHITE) ? "Q" : "q";
-            case Rook r -> r.color().equals(Color.WHITE) ? "R" : "r";
-            case Bishop b -> b.color().equals(Color.WHITE) ? "B" : "b";
-            case Knight n -> n.color().equals(Color.WHITE) ? "N" : "n";
-            case Pawn p -> p.color().equals(Color.WHITE) ? "P" : "p";
+            case King(Color color) -> color.equals(Color.WHITE) ? "K" : "k";
+            case Queen(Color color) -> color.equals(Color.WHITE) ? "Q" : "q";
+            case Rook(Color color) -> color.equals(Color.WHITE) ? "R" : "r";
+            case Bishop(Color color) -> color.equals(Color.WHITE) ? "B" : "b";
+            case Knight(Color color) -> color.equals(Color.WHITE) ? "N" : "n";
+            case Pawn(Color color) -> color.equals(Color.WHITE) ? "P" : "p";
         };
     }
 

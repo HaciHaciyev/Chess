@@ -65,10 +65,10 @@ public record King(Color color)
     /**
      * Checks if the king will be safe after executing the proposed move.
      *
-     * @param chessBoard The current state of the chess board.
+     * @param chessBoard   The current state of the chess board.
      * @param kingPosition The current position of the king.
-     * @param from The coordinate from which the piece is being moved.
-     * @param to The target coordinate where the piece is intended to move.
+     * @param from         The coordinate from which the piece is being moved.
+     * @param to           The target coordinate where the piece is intended to move.
      * @return true if the king will be safe after the move, false otherwise.
      * <p>
      * This method checks whether the king will remain in a safe position after the move is executed.
@@ -95,32 +95,145 @@ public record King(Color color)
     }
 
 
-    // TODO for AinGrace.
     /**
      * Determines if the current position is a stalemate.
      *
      * @param chessBoard The current state of the chess board.
-     * @param from The coordinate from which the piece is being moved.
-     * @param to The target coordinate where the piece is intended to move.
+     * @param color      color of the king
      * @return true if the position is a stalemate, false otherwise.
      * <p>
      * This method checks if the current position is a stalemate, meaning the player has no legal moves
      * and their king is not in check. It evaluates the surrounding fields of the king to determine if
      * they are blocked or dangerous, and checks all friendly fields to see if any legal moves are available.
      */
-    public boolean stalemate(ChessBoard chessBoard, Coordinate from, Coordinate to) {
-        return false;
+    public boolean stalemate(ChessBoard chessBoard, Color color) {
+        ChessBoardNavigator boardNavigator = new ChessBoardNavigator(chessBoard);
+        Coordinate kingCoordinate = boardNavigator.kingCoordinate(color);
+
+        List<Field> enemies = check(boardNavigator, color);
+
+        if (!enemies.isEmpty()) {
+            return false;
+        }
+
+        List<Field> surroundingFieldsOfKing = boardNavigator.surroundingFields(kingCoordinate);
+
+        boolean isSurrounded = surroundingFieldsOfKing.stream().allMatch(field -> fieldIsBlockedOrDangerous(boardNavigator, field, color));
+
+        if (!isSurrounded) {
+            return false;
+        }
+
+
+        List<Field> ourFields = boardNavigator.allFriendlyFields(color, field -> !field.getCoordinate().equals(kingCoordinate));
+
+        for (Field ourField : ourFields) {
+            boolean stalemate = processFields(boardNavigator, kingCoordinate, ourField);
+
+            if (!stalemate) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean processFields(ChessBoardNavigator boardNavigator, Coordinate kingCoordinate, Field ourField) {
+        Piece piece = ourField.pieceOptional().orElseThrow();
+        Coordinate coordinate = ourField.getCoordinate();
+        ChessBoard board = boardNavigator.board();
+
+        if (piece instanceof Pawn pawn) {
+
+            final List<Field> pawnCoordinates = boardNavigator.coordinatesThreatenedByPawn(coordinate, color);
+            Optional<Field> forwardMove = boardNavigator.forwardField(coordinate, Field::isEmpty);
+            forwardMove.ifPresent(pawnCoordinates::add);
+
+            for (final Field coord : pawnCoordinates) {
+
+                if (coord.isPresent() && coord.pieceOptional().orElseThrow().color().equals(color)) {
+                    continue;
+                }
+
+                if (pawn.validate(boardNavigator.board(), new LinkedHashSet<>(), ourField, coord).status()) {
+                    return !safeForKing(board, kingCoordinate, ourField.getCoordinate(), coord.getCoordinate());
+                }
+            }
+        }
+
+        if (piece instanceof Knight knight) {
+            final List<Field> coords = boardNavigator.knightAttackPositions(kingCoordinate);
+
+            for (Field coord : coords) {
+
+                if (coord.isPresent() && coord.pieceOptional().orElseThrow().color().equals(color)) {
+                    continue;
+                }
+
+                if (knight.knightMove(ourField.getCoordinate(), coord.getCoordinate())) {
+                    return !safeForKing(board, kingCoordinate, ourField.getCoordinate(), coord.getCoordinate());
+                }
+            }
+        }
+
+        if (piece instanceof Bishop bishop) {
+            final List<Field> coords = boardNavigator.fieldsInDirections(Direction.diagonalDirections(), coordinate);
+
+            for (final Field coord : coords) {
+
+                if (coord.isPresent() && coord.pieceOptional().orElseThrow().color().equals(color)) {
+                    continue;
+                }
+
+                if (bishop.validate(board, ourField, coord)) {
+                    return !safeForKing(board, kingCoordinate, ourField.getCoordinate(), coord.getCoordinate());
+                }
+            }
+        }
+
+        if (piece instanceof Rook rook) {
+
+            final List<Field> coords = boardNavigator.fieldsInDirections(Direction.horizontalVerticalDirections(), coordinate);
+
+            for (Field coord : coords) {
+
+                if (coord.isPresent() && coord.pieceOptional().orElseThrow().color().equals(color)) {
+                    continue;
+                }
+
+                if (rook.validate(board, ourField, coord)) {
+                    return !safeForKing(board, kingCoordinate, ourField.getCoordinate(), coord.getCoordinate());
+                }
+            }
+        }
+
+        if (piece instanceof Queen queen) {
+            final List<Field> coords = boardNavigator.fieldsInDirections(Direction.allDirections(), coordinate);
+
+            for (final Field coord : coords) {
+
+                if (coord.isPresent() && coord.pieceOptional().orElseThrow().color().equals(color)) {
+                    continue;
+                }
+
+                if (queen.validate(board, ourField, coord)) {
+                    return !safeForKing(board, kingCoordinate, ourField.getCoordinate(), coord.getCoordinate());
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
      * Evaluates the status of the king after a proposed move.
      *
      * @param chessBoard The current state of the chess board.
-     * @param kingColor The color of King that need to be checked for his status(safe, check, checkmate).
+     * @param kingColor  The color of King that need to be checked for his status(safe, check, checkmate).
      * @return An instance of the {@link Operations} enum indicating the status of the king:
-     *         - {Operations.CHECK} if the king is in check after the move,
-     *         - {Operations.CHECKMATE} if the king is in checkmate after the move,
-     *         - {Operations.EMPTY} if the king is not in check or checkmate.
+     * - {Operations.CHECK} if the king is in check after the move,
+     * - {Operations.CHECKMATE} if the king is in checkmate after the move,
+     * - {Operations.EMPTY} if the king is not in check or checkmate.
      */
     public Operations kingStatus(final ChessBoard chessBoard, final Color kingColor) {
         ChessBoardNavigator boardNavigator = new ChessBoardNavigator(chessBoard);
@@ -155,7 +268,7 @@ public record King(Color color)
                 enemies.add(possibleKnight);
             }
         }
-        
+
         List<Field> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), kingCoordinate);
         for (Field diagonalField : diagonalFields) {
             Piece piece = diagonalField.pieceOptional().orElseThrow();
@@ -237,9 +350,7 @@ public record King(Color color)
      *                   including the positions of all pieces.
      * @param startField The field from which the King is moving. This field should contain the King that is being moved.
      * @param endField   The field to which the King is moving. This field is the target location for the move.
-     *
      * @return <code>true</code> if the move is valid (either an adjacent move or a castling move); <code>false</code> otherwise.
-     *
      * @throws NoSuchElementException if the starting field does not contain a piece (the King).
      */
     private boolean isValidKingMovementCoordinates(final ChessBoard chessBoard, final Field startField, final Field endField) {
@@ -343,8 +454,8 @@ public record King(Color color)
         }
 
         final List<ChessBoard.Field> diagonalFields = boardNavigator.occupiedFieldsInDirections(
-                        Direction.diagonalDirections(), futureKing, field -> !field.getCoordinate().equals(previousKing)
-                );
+                Direction.diagonalDirections(), futureKing, field -> !field.getCoordinate().equals(previousKing)
+        );
 
         for (final Field field : diagonalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
@@ -356,8 +467,8 @@ public record King(Color color)
         }
 
         final List<ChessBoard.Field> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(
-                        Direction.horizontalVerticalDirections(), futureKing, field -> !field.getCoordinate().equals(previousKing)
-                );
+                Direction.horizontalVerticalDirections(), futureKing, field -> !field.getCoordinate().equals(previousKing)
+        );
 
         for (final Field field : horizontalVerticalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();

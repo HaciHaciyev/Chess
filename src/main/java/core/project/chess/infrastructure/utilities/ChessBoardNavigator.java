@@ -140,7 +140,6 @@ public record ChessBoardNavigator(ChessBoard board) {
      * <p>This method is an extension of the basic {@link #surroundingFields(Coordinate) surroundingFields} method.
      * It first finds all surrounding fields, then applies a provided predicate function to each field before returning the result.</p>
      *
-     * @param chessBoard The {@link ChessBoard} object representing the current state of the chess game.
      * @param pivot      The {@link Coordinate} object representing the central position to find surrounding fields for.
      * @param predicate  A {@link Predicate<ChessBoard.Field>} that will be applied to each surrounding field.
      * @return A list of {@link ChessBoard.Field} objects representing all valid surrounding fields, after applying the mapping function.
@@ -149,10 +148,7 @@ public record ChessBoardNavigator(ChessBoard board) {
      * @see Coordinate
      * @see ChessBoard.Field
      */
-    public List<ChessBoard.Field> surroundingFields(ChessBoard chessBoard,
-                                                    Coordinate pivot,
-                                                    Predicate<ChessBoard.Field> predicate) {
-        Objects.requireNonNull(chessBoard);
+    public List<ChessBoard.Field> surroundingFields(Coordinate pivot, Predicate<ChessBoard.Field> predicate) {
         Objects.requireNonNull(pivot);
         Objects.requireNonNull(predicate);
 
@@ -500,9 +496,9 @@ public record ChessBoardNavigator(ChessBoard board) {
                 .toList();
     }
 
-    public List<ChessBoard.Field> fieldsInAllDirections(Coordinate pivot) {
-        return Direction.allDirections().stream()
-                .map(direction -> occupiedFieldInDirection(direction, pivot))
+    public List<ChessBoard.Field> fieldsInDirections(List<Direction> directions, Coordinate pivot) {
+        return directions.stream()
+                .map(direction -> fieldInDirection(direction, pivot))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .toList();
@@ -566,6 +562,16 @@ public record ChessBoardNavigator(ChessBoard board) {
             }
 
         }
+        return Optional.empty();
+    }
+
+    public Optional<ChessBoard.Field> fieldInDirection(Direction direction, Coordinate pivot) {
+        Iterator<Coordinate> iterator = new CoordinateIterable(direction, pivot).iterator();
+
+        if (iterator.hasNext()) {
+            return Optional.of(board.field(iterator.next()));
+        }
+
         return Optional.empty();
     }
 
