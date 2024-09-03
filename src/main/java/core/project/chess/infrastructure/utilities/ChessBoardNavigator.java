@@ -471,7 +471,29 @@ public record ChessBoardNavigator(ChessBoard board) {
         return Optional.empty();
     }
 
-
+    /**
+     * Retrieves the fields in specified directions from a given pivot coordinate that are occupied by any piece.
+     *
+     * <p>This method scans the board in each of the provided directions starting from the pivot coordinate,
+     * and collects the first field that contains a piece. The search in each direction stops as soon as an occupied
+     * field is found.</p>
+     *
+     * <p>The result is a list of fields that:
+     * <ol>
+     *   <li>Are in one of the specified directions from the pivot.</li>
+     *   <li>Contain a piece (are occupied).</li>
+     * </ol>
+     * </p>
+     *
+     * @param directions A list of {@link Direction} objects representing the directions to scan from the pivot.
+     * @param pivot      The {@link Coordinate} object representing the starting position.
+     * @return A list of {@link ChessBoard.Field} objects representing the first occupied fields found in each direction.
+     * @throws NullPointerException if any of the parameters {@code directions}, {@code pivot}, or {@code chessBoard} is {@code null}.
+     * @see ChessBoard
+     * @see Coordinate
+     * @see ChessBoard.Field
+     * @see Direction
+     */
     public List<ChessBoard.Field> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot) {
         return directions.stream()
                 .map(direction -> occupiedFieldInDirection(direction, pivot))
@@ -480,7 +502,36 @@ public record ChessBoardNavigator(ChessBoard board) {
                 .toList();
     }
 
-    public List<ChessBoard.Field> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot, Predicate<ChessBoard.Field> occupiedPredicate) {
+    /**
+     * Retrieves the fields in specified directions from a given pivot coordinate that are occupied and satisfy a predicate.
+     *
+     * <p>This method is an extension of the basic {@link #occupiedFieldsInDirections(List, Coordinate)} method.
+     * It scans the board in each of the provided directions starting from the pivot coordinate and collects the first
+     * occupied field that satisfies the provided predicate. The search in each direction stops as soon as an occupied
+     * field is found.</p>
+     *
+     * <p>The result is a list of fields that:
+     * <ol>
+     *   <li>Are in one of the specified directions from the pivot.</li>
+     *   <li>Contain a piece (are occupied).</li>
+     *   <li>Satisfy the provided predicate.</li>
+     * </ol>
+     * </p>
+     *
+     * @param directions        A list of {@link Direction} objects representing the directions to scan from the pivot.
+     * @param pivot             The {@link Coordinate} object representing the starting position.
+     * @param occupiedPredicate A {@link Predicate} used to further filter the occupied fields.
+     * @return A list of {@link ChessBoard.Field} objects representing the first occupied fields that satisfy the predicate in each direction.
+     * @throws NullPointerException if any of the parameters {@code directions}, {@code pivot}, {@code occupiedPredicate}, or {@code chessBoard} is {@code null}.
+     * @see ChessBoard
+     * @see Coordinate
+     * @see ChessBoard.Field
+     * @see Direction
+     * @see Predicate
+     */
+    public List<ChessBoard.Field> occupiedFieldsInDirections(List<Direction> directions,
+                                                             Coordinate pivot,
+                                                             Predicate<ChessBoard.Field> occupiedPredicate) {
         return directions.stream()
                 .map(direction -> occupiedFieldInDirection(direction, pivot, occupiedPredicate))
                 .filter(Optional::isPresent)
@@ -488,7 +539,44 @@ public record ChessBoardNavigator(ChessBoard board) {
                 .toList();
     }
 
-    public List<ChessBoard.Field> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot, Predicate<Coordinate> skipPredicate, Predicate<Coordinate> stopPredicate, Predicate<ChessBoard.Field> occupiedPredicate) {
+
+    /**
+     * Retrieves the fields in specified directions from a given pivot coordinate that are occupied, with advanced filtering.
+     *
+     * <p>This method scans the board in each of the provided directions starting from the pivot coordinate and applies
+     * multiple predicates to determine which fields to skip, where to stop, and which occupied fields to include in the result.
+     * The search in each direction proceeds according to the following steps:</p>
+     * <ol>
+     *   <li>Skip fields that match the {@code skipPredicate}.</li>
+     *   <li>Stop the search in a direction when a field matches the {@code stopPredicate}.</li>
+     *   <li>If an occupied field is found that matches the {@code occupiedPredicate}, it is included in the result.</li>
+     * </ol>
+     *
+     * <p>The result is a list of fields that:
+     * <ul>
+     *   <li>Are in one of the specified directions from the pivot.</li>
+     *   <li>Are occupied by a piece.</li>
+     *   <li>Satisfy all the provided predicates.</li>
+     * </ul>
+     * </p>
+     *
+     * @param directions        A list of {@link Direction} objects representing the directions to scan from the pivot.
+     * @param pivot             The {@link Coordinate} object representing the starting position.
+     * @param skipPredicate     A {@link Predicate} used to determine which fields to skip during the search.
+     * @param stopPredicate     A {@link Predicate} used to determine when to stop the search in a particular direction.
+     * @param occupiedPredicate A {@link Predicate} used to further filter the occupied fields.
+     * @return A list of {@link ChessBoard.Field} objects representing the first occupied fields that satisfy all the predicates in each direction.
+     * @throws NullPointerException if any of the parameters {@code directions}, {@code pivot}, {@code skipPredicate}, {@code stopPredicate}, {@code occupiedPredicate}, or {@code chessBoard} is {@code null}.
+     * @see ChessBoard
+     * @see Coordinate
+     * @see ChessBoard.Field
+     * @see Direction
+     * @see Predicate
+     */
+    public List<ChessBoard.Field> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot,
+                                                             Predicate<Coordinate> skipPredicate,
+                                                             Predicate<Coordinate> stopPredicate,
+                                                             Predicate<ChessBoard.Field> occupiedPredicate) {
         return directions.stream()
                 .map(direction -> occupiedFieldInDirection(direction, pivot, skipPredicate, stopPredicate, occupiedPredicate))
                 .filter(Optional::isPresent)
@@ -496,6 +584,26 @@ public record ChessBoardNavigator(ChessBoard board) {
                 .toList();
     }
 
+    /**
+     * Retrieves a list of fields in specified directions from a given pivot coordinate on the chessboard.
+     *
+     * <p>This method calculates the fields in multiple specified directions starting from the given
+     * pivot coordinate. The directions are defined using the {@link Direction} enum, and the fields
+     * are collected in the order they are encountered along each direction.</p>
+     *
+     * <p>If a field lies outside the chessboard's boundaries, that direction's search stops, and no
+     * more fields are collected from that direction.</p>
+     *
+     * @param directions A list of {@link Direction} values representing the directions in which to search for fields.
+     * @param pivot      The {@link Coordinate} object representing the starting position on the chessboard.
+     * @return A list of {@link ChessBoard.Field} objects representing all the fields found in the specified directions.
+     *         The fields are returned in the order they are encountered along each direction.
+     * @throws NullPointerException if either {@code directions} or {@code pivot} is {@code null}.
+     * @see ChessBoard
+     * @see Coordinate
+     * @see Direction
+     * @see ChessBoard.Field
+     */
     public List<ChessBoard.Field> fieldsInDirections(List<Direction> directions, Coordinate pivot) {
         return directions.stream()
                 .map(direction -> fieldInDirection(direction, pivot))
@@ -504,6 +612,31 @@ public record ChessBoardNavigator(ChessBoard board) {
                 .toList();
     }
 
+
+    /**
+     * Retrieves a list of fields on the chessboard along the straight path between two coordinates.
+     *
+     * <p>This method calculates the fields along a straight path from a starting {@link Coordinate} to an ending
+     * {@link Coordinate}, using the direction determined by these two coordinates. The path is traversed one step at a time,
+     * collecting the fields encountered. The method can include or exclude the starting and ending coordinates based on the
+     * {@code inclusive} parameter.</p>
+     *
+     * <p>If the path between the start and end coordinates is invalid (i.e., not a straight line or outside of the
+     * chessboard's boundaries), {@link IllegalArgumentException} is thrown.</p>
+     *
+     * @param start     The {@link Coordinate} object representing the starting position on the chessboard.
+     * @param end       The {@link Coordinate} object representing the ending position on the chessboard.
+     * @param inclusive A boolean value indicating whether to include the starting and ending coordinates in the
+     *                  list of fields. If {@code true}, both the start and end fields are included.
+     * @return A list of {@link ChessBoard.Field} objects representing the fields along the path from {@code start} to
+     *         {@code end}. The fields are returned in the order they are encountered.
+     * @throws NullPointerException if either {@code start} or {@code end} is {@code null}.
+     * @throws IllegalArgumentException if {@code start} and {@code end} do not define a valid straight path.
+     * @see ChessBoard
+     * @see Coordinate
+     * @see Direction
+     * @see ChessBoard.Field
+     */
     public List<ChessBoard.Field> fieldsInPath(Coordinate start, Coordinate end, boolean inclusive) {
         Direction direction = Direction.ofPath(start, end);
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -535,14 +668,43 @@ public record ChessBoardNavigator(ChessBoard board) {
         return fields;
     }
 
+    /**
+     * Finds the first occupied field in a given direction from a specified pivot coordinate on the chessboard.
+     *
+     *
+     * @param direction The direction in which to search for the occupied field.
+     * @param pivot The starting point on the chessboard from which to search.
+     * @return An `Optional` containing the first `ChessBoard.Field` that is occupied in the specified direction, or `Optional.empty()` if no field is found.
+     */
     public Optional<ChessBoard.Field> occupiedFieldInDirection(Direction direction, Coordinate pivot) {
         return occupiedFieldInDirection(direction, pivot, coordinate -> false, coordinate -> false, field -> true);
     }
 
+    /**
+     * Finds the first occupied field in a given direction from a specified pivot coordinate on the chessboard,
+     * using a custom predicate to determine what constitutes an occupied field.
+     *
+     *
+     * @param direction The direction in which to search for the occupied field.
+     * @param pivot The starting point on the chessboard from which to search.
+     * @param predicate A `Predicate` to test whether a `ChessBoard.Field` is considered occupied.
+     * @return An `Optional` containing the first `ChessBoard.Field` that matches the predicate in the specified direction, or `Optional.empty()` if no field is found.
+     */
     public Optional<ChessBoard.Field> occupiedFieldInDirection(Direction direction, Coordinate pivot, Predicate<ChessBoard.Field> predicate) {
         return occupiedFieldInDirection(direction, pivot, coordinate -> false, coordinate -> false, predicate);
     }
 
+    /**
+     * Finds the first occupied field in a given direction from a specified pivot coordinate on the chessboard,
+     * using custom predicates to control the search process.
+     *
+     * @param direction The direction in which to search for the occupied field.
+     * @param pivot The starting point on the chessboard from which to search.
+     * @param skipPredicate A `Predicate` to determine whether to skip a coordinate.
+     * @param stopPredicate A `Predicate` to determine whether to stop the search at a coordinate.
+     * @param occupiedPredicate A `Predicate` to test whether a `ChessBoard.Field` is considered occupied.
+     * @return An `Optional` containing the first `ChessBoard.Field` that matches the `occupiedPredicate` in the specified direction, or `Optional.empty()` if no field is found.
+     */
     public Optional<ChessBoard.Field> occupiedFieldInDirection(Direction direction, Coordinate pivot,
                                                                Predicate<Coordinate> skipPredicate,
                                                                Predicate<Coordinate> stopPredicate,
@@ -565,6 +727,13 @@ public record ChessBoardNavigator(ChessBoard board) {
         return Optional.empty();
     }
 
+    /**
+     * Finds the field at the first coordinate in a given direction from a specified pivot coordinate on the chessboard.
+     *
+     * @param direction The direction in which to search for the field.
+     * @param pivot The starting point on the chessboard from which to search.
+     * @return An `Optional` containing the `ChessBoard.Field` at the first coordinate in the specified direction, or `Optional.empty()` if no field is found.
+     */
     public Optional<ChessBoard.Field> fieldInDirection(Direction direction, Coordinate pivot) {
         Iterator<Coordinate> iterator = new CoordinateIterable(direction, pivot).iterator();
 
@@ -575,6 +744,18 @@ public record ChessBoardNavigator(ChessBoard board) {
         return Optional.empty();
     }
 
+    /**
+     * An iterable collection of {@link Coordinate} objects that can be traversed
+     * in a specific {@link Direction} starting from a given {@link Coordinate}.
+     *
+     * <p>This class implements the {@link Iterable} interface, allowing instances
+     * to be used in enhanced for-loops and other iterable contexts.</p>
+     *
+     * <p>The iteration is controlled by the provided {@link Direction} which
+     * determines the next {@link Coordinate} in the sequence. The iteration
+     * continues until the {@link Direction} returns a status indicating
+     * that there are no more coordinates to traverse.</p>
+     */
     private record CoordinateIterable(Direction direction, Coordinate start) implements Iterable<Coordinate> {
 
         @Override
