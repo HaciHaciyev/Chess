@@ -25,6 +25,8 @@ import java.util.Set;
  * <p>
  * The class also includes some helper methods, such as `isCastling()` and `castle()`, which are used to determine
  * whether a move is a castling move and to get the appropriate algebraic notation for it.
+ *
+ * @author Hadzhyiev Hadzhy
  */
 public class AlgebraicNotation {
 

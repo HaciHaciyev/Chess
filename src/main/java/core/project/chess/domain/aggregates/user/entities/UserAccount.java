@@ -1,9 +1,11 @@
 package core.project.chess.domain.aggregates.user.entities;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.*;
 import core.project.chess.infrastructure.utilities.Glicko2RatingCalculator;
+import core.project.chess.infrastructure.utilities.Pair;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,11 +31,9 @@ public class UserAccount {
         Objects.requireNonNull(email);
         Objects.requireNonNull(password);
 
-        short defaultRating = 1500;
-
         return new UserAccount(
                 UUID.randomUUID(), username, email, password, UserRole.NONE, false,
-                new Rating(defaultRating), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
+                Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
         );
     }
 
@@ -59,8 +59,7 @@ public class UserAccount {
     }
 
     public Rating getRating() {
-        final short ratingForReturn = this.rating.rating();
-        return new Rating(ratingForReturn);
+        return Rating.fromRepository(this.rating.rating(), this.rating.ratingDeviation(), this.rating.volatility());
     }
 
     public void addPartner(final UserAccount partner) {
@@ -89,30 +88,21 @@ public class UserAccount {
 
     public void changeRating(final ChessGame chessGame) {
         Objects.requireNonNull(chessGame);
-        validateRatingChanging(chessGame);
 
-        final short updatedRating = Glicko2RatingCalculator.calculateRating(chessGame);
-        this.rating = new Rating(updatedRating);
-    }
-
-    private void validateRatingChanging(ChessGame chessGame) {
-        if (chessGame.gameResult().isEmpty()) {
-            throw new IllegalArgumentException("The game is not ended for rating calculation.");
+        final Color color;
+        if (chessGame.getPlayerForWhite().getId().equals(this.id)) {
+            color = Color.WHITE;
+        }
+        else if (chessGame.getPlayerForBlack().getId().equals(this.id)) {
+            color = Color.BLACK;
+        }
+        else {
+            throw new IllegalArgumentException("This user did not participate in this game.");
         }
 
-        short secondPlayerRating = 0;
-
-        final boolean isWhitePlayer = chessGame.getPlayerForWhite().getId().equals(this.id);
-        if (isWhitePlayer) {
-            secondPlayerRating = chessGame.getPlayerForBlackRating().rating();
-        }
-
-        final boolean blackPlayer = chessGame.getPlayerForBlack().getId().equals(this.id);
-        if (blackPlayer) {
-            secondPlayerRating = chessGame.getPlayerForWhiteRating().rating();
-        }
-
-        if (secondPlayerRating == 0) throw new IllegalArgumentException("Invalid method usage, check documentation.");
+        final Pair<Rating, Rating> updatedRatingsPair = Glicko2RatingCalculator.calculateRating(chessGame);
+        final Rating newRating = color.equals(Color.WHITE) ? updatedRatingsPair.getFirst() : updatedRatingsPair.getSecond();
+        this.rating = Rating.fromRepository(newRating.rating(), newRating.ratingDeviation(), newRating.volatility());
     }
 
     @Override
@@ -148,7 +138,7 @@ public class UserAccount {
                     Email : %s,
                     User role : %s,
                     Is enable : %s,
-                    Rating : %d,
+                    Rating : %f,
                     Creation date : %s,
                     Last updated date : %s
                }

@@ -9,6 +9,7 @@ import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.StatusPair;
+import io.quarkus.logging.Log;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -17,9 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter
 public class ChessGame {
     private final UUID chessGameId;
@@ -106,10 +105,8 @@ public class ChessGame {
         }
     }
 
-    public void makeMovement(
-            final String username, final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion
-    ) throws IllegalArgumentException {
-
+    public void makeMovement(final String username, final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion)
+            throws IllegalArgumentException {
         Objects.requireNonNull(username);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
@@ -140,6 +137,7 @@ public class ChessGame {
 
         final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
         if (gameOver) {
+            Log.info("GAME OVER: {%s}".formatted(operation));
             gameOver(operation);
             return;
         }
@@ -175,13 +173,11 @@ public class ChessGame {
         }
 
         if (operation.equals(Operations.STALEMATE)) {
-            log.info("STALEMATE");
             drawEnding();
             return;
         }
 
         if (operation.equals(Operations.CHECKMATE)) {
-            log.info("CHECKMATE");
             winnerEnding();
             return;
         }
@@ -248,8 +244,8 @@ public class ChessGame {
                 Players turn : %s,
                 Player for white figures : %s,
                 Player for black figures : %s,
-                Rating of player for white : %d,
-                Rating of player for black : %d,
+                Rating of player for white : %f,
+                Rating of player for black : %f,
                 Creation date : %s,
                 Last Updated Date : %s.
                 TimeControllingType : %s,

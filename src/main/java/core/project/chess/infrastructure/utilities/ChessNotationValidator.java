@@ -18,6 +18,8 @@ import static core.project.chess.domain.aggregates.chess.entities.AlgebraicNotat
  * <p>
  * The class also provides a set of helper methods that check for specific types of chess moves, such as simple pawn movements,
  * figure movements, capture operations, castling, and promotions.
+ *
+ * @author Hadzhyiev Hadzhy
  */
 public class ChessNotationValidator {
 
