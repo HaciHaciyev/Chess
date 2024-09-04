@@ -165,7 +165,7 @@ public class ChessBoard {
     }
 
     /**
-     * Retrieves a last of algebraic notations representing the moves made on the chess board.
+     * Retrieves a list of algebraic notations representing the moves made on the chess board.
      *
      * @return algebraic notations in type of AlgebraicNotation.
      */
@@ -174,9 +174,9 @@ public class ChessBoard {
     }
 
     /**
-     * Retrieves a list of algebraic notations representing the moves made on the chess board.
+     * Retrieves the last algebraic notation representing the moves made on the chess board.
      *
-     * @return A list of algebraic notations in type of String.
+     * @return An algebraic notation in type of String.
      */
     public AlgebraicNotation lastAlgebraicNotation() {
         return listOfAlgebraicNotations.getLast();
