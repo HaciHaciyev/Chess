@@ -1,7 +1,6 @@
 package core.project.chess.infrastructure.utilities;
 
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
-import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,33 +15,62 @@ class Glicko2RatingCalculatorTest {
         final Rating firstResult = Glicko2RatingCalculator.calculate(firstRating, secondRating, 1);
         final Rating secondResult = Glicko2RatingCalculator.calculate(secondRating, firstRating, 0);
 
-        if (firstResult.volatility() != firstRating.volatility()) {
-            final String message = String.format(
-                    "Volatility of first player changed. Previous volatility : %f. Current volatility : %f.",
-                    firstRating.volatility(),
-                    firstResult.volatility()
-            );
-
-            Log.info(message);
-        }
-
-        if (secondResult.volatility() != secondRating.volatility()) {
-            final String message = String.format(
-                    "Volatility of second player changed. Previous volatility : %f. Current volatility : %f.",
-                    secondRating.volatility(),
-                    secondResult.volatility()
-            );
-
-            Log.info(message);
-        }
-
         assertEquals(1576, firstResult.rating());
         assertEquals(192, firstResult.ratingDeviation());
-        Log.info("Test for player that win ended successfully.");
 
         assertEquals(1380, secondResult.rating());
         assertEquals(105, secondResult.ratingDeviation());
-        Log.info("Test for player that lose ended successfully.");
+    }
+
+    @Test
+    void calculate2() {
+        final Rating firstRating = Rating.fromRepository(1500, 350, 0.6);
+        final Rating secondRating = Rating.fromRepository(1500, 350, 0.6);
+
+        final Rating firstResult = Glicko2RatingCalculator.calculate(firstRating, secondRating, 1);
+        final Rating secondResult = Glicko2RatingCalculator.calculate(secondRating, firstRating, 0);
+
+        assertEquals(1672, firstResult.rating());
+        assertEquals(299, firstResult.ratingDeviation());
+
+        assertEquals(1328, secondResult.rating());
+        assertEquals(299, secondResult.ratingDeviation());
+    }
+
+    @Test
+    void calculate3() {
+        final Rating firstPlayerRating = Rating.fromRepository(1846, 90, 0.45672000);
+        final Rating secondPlayerRating = Rating.fromRepository(2843, 30, 0.34543000);
+
+        /** Player with the biggest rating win.*/
+        final Rating firstResult = Glicko2RatingCalculator.calculate(firstPlayerRating, secondPlayerRating, 0);
+        final Rating secondResult = Glicko2RatingCalculator.calculate(secondPlayerRating, firstPlayerRating, 1);
+
+        assertEquals(1846, firstResult.rating());
+        assertEquals(120, firstResult.ratingDeviation());
+
+        assertEquals(2843, secondResult.rating());
+        assertEquals(67, secondResult.ratingDeviation());
+
+        /** Draw.*/
+        final Rating firstResult2 = Glicko2RatingCalculator.calculate(firstPlayerRating, secondPlayerRating, 0.5);
+        final Rating secondResult2 = Glicko2RatingCalculator.calculate(secondPlayerRating, firstPlayerRating, 0.5);
+
+        assertEquals(1887, firstResult2.rating());
+        assertEquals(120, firstResult2.ratingDeviation());
+
+        assertEquals(2831, secondResult2.rating());
+        assertEquals(67, secondResult2.ratingDeviation());
+
+        /** Player with the smallest rating win.*/
+        final Rating firstResult3 = Glicko2RatingCalculator.calculate(firstPlayerRating, secondPlayerRating, 1);
+        final Rating secondResult3 = Glicko2RatingCalculator.calculate(secondPlayerRating, firstPlayerRating, 0);
+
+        assertEquals(1929, firstResult3.rating());
+        assertEquals(121, firstResult3.ratingDeviation());
+
+        assertEquals(2818, secondResult3.rating());
+        assertEquals(67, secondResult3.ratingDeviation());
     }
 
     @Test
@@ -53,32 +81,10 @@ class Glicko2RatingCalculatorTest {
         final Rating firstResult = Glicko2RatingCalculator.calculate(firstRating, secondRating, 0.5);
         final Rating secondResult = Glicko2RatingCalculator.calculate(secondRating, firstRating, 0.5);
 
-        if (firstResult.volatility() != firstRating.volatility()) {
-            final String message = String.format(
-                    "Volatility of first player changed. Previous volatility : %f. Current volatility : %f.",
-                    firstRating.volatility(),
-                    firstResult.volatility()
-            );
-
-            Log.info(message);
-        }
-
-        if (secondResult.volatility() != secondRating.volatility()) {
-            final String message = String.format(
-                    "Volatility of second player changed. Previous volatility : %f. Current volatility : %f.",
-                    secondRating.volatility(),
-                    secondResult.volatility()
-            );
-
-            Log.info(message);
-        }
-
         assertEquals(1455, firstResult.rating());
         assertEquals(167, firstResult.ratingDeviation());
-        Log.info("Test for player that end game with draw ended successfully.");
 
         assertEquals(1345, secondResult.rating());
         assertEquals(221, secondResult.ratingDeviation());
-        Log.info("Test for player that end game with draw ended successfully.");
     }
 }
