@@ -10,16 +10,6 @@ Create Table ChessGame (
     primary key (id)
 );
 
-Create Table ChessGameHistory (
-    id char(36) not null,
-    chess_session_id char(36) not null,
-    algebraic_chess_notations text[] not null,
-    primary key (id),
-    constraint board_game_fk foreign key (chess_session_id) references ChessGame (id)
-);
-
-Alter table ChessGame add constraint game_board_fk foreign key (chess_board_id) references ChessGameHistory (id);
-
 Create Table GamePlayers (
     chess_game_id char(36) not null,
     player_for_white_id char(36) not null,

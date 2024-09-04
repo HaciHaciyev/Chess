@@ -1,6 +1,8 @@
 package core.project.chess.application.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.chess.application.model.ChessGameMessage;
 import core.project.chess.application.model.ChessMovementForm;
 import core.project.chess.application.model.GameParameters;
 import core.project.chess.application.service.ChessGameService;
@@ -59,8 +61,6 @@ public class ChessGameHandler {
         Objects.requireNonNull(gameParameters);
 
         final Username username = new Username(securityIdentity.getPrincipal().getName());
-        Objects.requireNonNull(username);
-
         final UserAccount firstPlayer = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
@@ -86,21 +86,23 @@ public class ChessGameHandler {
     }
 
     @OnOpen
-    public void onOpen(final Session session, @PathParam("gameId") final String gameId) {
+    public void onOpen(final Session session, @PathParam("gameId") final String gameId) throws JsonProcessingException {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
 
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(UUID.fromString(gameId));
-        Objects.requireNonNull(pair);
-
         pair.getSecond().add(session);
 
-        final String chessBoardMessage = pair.getFirst().getChessBoard().toString();
-        sendMessage(session, chessBoardMessage);
+        final ChessGameMessage chessBoardMessage = new ChessGameMessage(
+                pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(),
+                pair.getFirst().getChessBoard().pgn()
+        );
+
+        sendMessage(session, objectMapper.writeValueAsString(chessBoardMessage));
     }
 
     @OnMessage
-    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) {
+    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) throws JsonProcessingException {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
         Objects.requireNonNull(message);
@@ -117,10 +119,13 @@ public class ChessGameHandler {
 
         chessGame.makeMovement(username, chessMovementForm.from(), chessMovementForm.to(), chessMovementForm.inCaseOfPromotion());
 
-        final String chessBoardMessage = pair.getFirst().getChessBoard().toString();
+        final ChessGameMessage chessBoardMessage = new ChessGameMessage(
+                pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(),
+                pair.getFirst().getChessBoard().pgn()
+        );
 
         for (Session currentSession : pair.getSecond()) {
-            sendMessage(currentSession, chessBoardMessage);
+            sendMessage(currentSession, objectMapper.writeValueAsString(chessBoardMessage));
 
             if (chessGame.gameResult().isPresent()) {
                 final String messageInCaseOfGameEnding = "Game ended. Because of %s".formatted(chessGame.gameResult().get().toString());
