@@ -2,15 +2,19 @@ package core.project.chess.domain.aggregates.user.entities;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
 import core.project.chess.domain.aggregates.user.events.AccountEvents;
 import core.project.chess.domain.aggregates.user.value_objects.*;
 import core.project.chess.infrastructure.utilities.Glicko2RatingCalculator;
-import core.project.chess.infrastructure.utilities.Pair;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.*;
+
+import static core.project.chess.domain.aggregates.chess.enumerations.Color.BLACK;
+import static core.project.chess.domain.aggregates.chess.enumerations.Color.WHITE;
+import static core.project.chess.domain.aggregates.chess.enumerations.GameResult.WHITE_WIN;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -40,9 +44,8 @@ public class UserAccount {
     /**
      * this method is used to call only from repository
      */
-    public static UserAccount fromRepository(
-            UUID id, Username username, Email email, Password password, UserRole userRole, boolean enabled, Rating rating, AccountEvents events
-    ) {
+    public static UserAccount fromRepository(UUID id, Username username, Email email, Password password,
+                                             UserRole userRole, boolean enabled, Rating rating, AccountEvents events) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(username);
         Objects.requireNonNull(email);
@@ -88,10 +91,13 @@ public class UserAccount {
 
     public void changeRating(final ChessGame chessGame) {
         Objects.requireNonNull(chessGame);
+        if (chessGame.gameResult().isEmpty()) {
+            throw new IllegalArgumentException("Game result is empty.");
+        }
 
         final Color color;
         if (chessGame.getPlayerForWhite().getId().equals(this.id)) {
-            color = Color.WHITE;
+            color = WHITE;
         }
         else if (chessGame.getPlayerForBlack().getId().equals(this.id)) {
             color = Color.BLACK;
@@ -100,9 +106,22 @@ public class UserAccount {
             throw new IllegalArgumentException("This user did not participate in this game.");
         }
 
-        final Pair<Rating, Rating> updatedRatingsPair = Glicko2RatingCalculator.calculateRating(chessGame);
-        final Rating newRating = color.equals(Color.WHITE) ? updatedRatingsPair.getFirst() : updatedRatingsPair.getSecond();
-        this.rating = Rating.fromRepository(newRating.rating(), newRating.ratingDeviation(), newRating.volatility());
+        final double result = getResult(chessGame.gameResult().get(), color);
+        final Rating opponentRating = color.equals(WHITE) ? chessGame.getPlayerForBlack().getRating() : chessGame.getPlayerForWhite().getRating();
+
+        this.rating = Glicko2RatingCalculator.calculate(this.rating, opponentRating, result);
+    }
+
+    private double getResult(final GameResult gameResult, final Color color) {
+        if (gameResult.equals(GameResult.DRAW)) {
+            return 0.5;
+        }
+
+        if (gameResult.equals(WHITE_WIN)) {
+            return color.equals(WHITE) ? 1 : 0;
+        }
+
+        return color.equals(BLACK) ? 1 : 0;
     }
 
     @Override
