@@ -64,11 +64,11 @@ public record Pawn(Color color)
             return StatusPair.ofFalse();
         }
 
-        if (!(startField.pieceOptional().get() instanceof Pawn (var pawnColor))) {
+        if (!(startField.pieceOptional().orElseThrow() instanceof Pawn (var pawnColor))) {
             throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
-        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(pawnColor);
+        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().orElseThrow().color().equals(pawnColor);
         if (endFieldOccupiedBySameColorPiece) {
             return StatusPair.ofFalse();
         }

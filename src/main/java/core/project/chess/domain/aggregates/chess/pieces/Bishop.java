@@ -32,7 +32,7 @@ public record Bishop(Color color)
             return StatusPair.ofFalse();
         }
 
-        if (!(startField.pieceOptional().get() instanceof Bishop (var bishopColor))) {
+        if (!(startField.pieceOptional().orElseThrow() instanceof Bishop (var bishopColor))) {
             throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
@@ -54,7 +54,7 @@ public record Bishop(Color color)
         }
 
         final Color opponentPieceColor = bishopColor == Color.WHITE ? Color.BLACK : Color.WHITE;
-        final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
+        final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && endField.pieceOptional().orElseThrow().color().equals(opponentPieceColor);
         if (opponentPieceInEndField) {
             setOfOperations.add(Operations.CAPTURE);
         }
