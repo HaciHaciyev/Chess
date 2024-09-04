@@ -55,37 +55,37 @@ public class ChessNotationValidator {
         throw new IllegalArgumentException("Invalid algebraic notation format.");
     }
 
-    private static boolean isSimplePawnMovement(final String algebraicNotation) {
+    public static boolean isSimplePawnMovement(final String algebraicNotation) {
         final String regex = SIMPLE_PAWN_MOVEMENT_FORMAT.formatted(PAWN_START_MOVEMENT_COORDINATES, COORDINATES, INFLUENCE_ON_OPPONENT_KING);
         return Pattern.matches(regex, algebraicNotation);
     }
 
-    private static boolean isSimpleFigureMovement(final String algebraicNotation) {
+    public static boolean isSimpleFigureMovement(final String algebraicNotation) {
         final String regex = SIMPLE_FIGURE_MOVEMENT_FORMAT.formatted("[RNBQK]", COORDINATES, COORDINATES, INFLUENCE_ON_OPPONENT_KING);
         return Pattern.matches(regex, algebraicNotation);
     }
 
-    private static boolean isPawnCaptureOperation(final String algebraicNotation) {
+    public static boolean isPawnCaptureOperation(final String algebraicNotation) {
         final String regex = PAWN_CAPTURE_OPERATION_FORMAT.formatted(PAWN_START_MOVEMENT_COORDINATES, "X", COORDINATES, INFLUENCE_ON_OPPONENT_KING);
         return Pattern.matches(regex, algebraicNotation);
     }
 
-    private static boolean isFigureCaptureOperation(final String algebraicNotation) {
+    public static boolean isFigureCaptureOperation(final String algebraicNotation) {
         final String regex = FIGURE_CAPTURE_OPERATION_FORMAT.formatted("[RNBQK]", COORDINATES, "X", COORDINATES, INFLUENCE_ON_OPPONENT_KING);
         return Pattern.matches(regex, algebraicNotation);
     }
 
-    private static boolean isCastlePlusOperation(final String algebraicNotation) {
+    public static boolean isCastlePlusOperation(final String algebraicNotation) {
         final String regex = CASTLE_PLUS_OPERATION_FORMAT.formatted("O-O(-O)?", INFLUENCE_ON_OPPONENT_KING);
         return Pattern.matches(regex, algebraicNotation);
     }
 
-    private static boolean isPromotion(final String algebraicNotation) {
+    public static boolean isPromotion(final String algebraicNotation) {
         final String regex = PROMOTION_FORMAT.formatted(PAWN_START_MOVEMENT_COORDINATES, COORDINATES, "[QRBN]", INFLUENCE_ON_OPPONENT_KING);
         return Pattern.matches(regex, algebraicNotation);
     }
 
-    private static boolean isPromotionPlusOperation(final String algebraicNotation) {
+    public static boolean isPromotionPlusOperation(final String algebraicNotation) {
         final String regex = PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT.formatted(
                 PAWN_START_MOVEMENT_COORDINATES, "X", COORDINATES, "[QRBN]", INFLUENCE_ON_OPPONENT_KING
         );
@@ -93,7 +93,7 @@ public class ChessNotationValidator {
         return Pattern.matches(regex, algebraicNotation);
     }
 
-    private static void validateSimplePawnMovement(final String algebraicNotation) {
+    public static void validateSimplePawnMovement(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
 
@@ -119,7 +119,7 @@ public class ChessNotationValidator {
         throw new IllegalArgumentException("Invalid pawn movement.");
     }
 
-    private static void validatePawnCaptureOperation(final String algebraicNotation) {
+    public static void validatePawnCaptureOperation(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
         final int startColumn = from.columnToInt();
@@ -140,7 +140,7 @@ public class ChessNotationValidator {
         throw new IllegalArgumentException("Invalid pawn capture operation.");
     }
 
-    private static void validatePromotion(final String algebraicNotation) {
+    public static void validatePromotion(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
         final int startColumn = from.columnToInt();
@@ -159,7 +159,7 @@ public class ChessNotationValidator {
         }
     }
 
-    private static void validateSimpleFigureMovementOrCapture(final String algebraicNotation) {
+    public static void validateSimpleFigureMovementOrCapture(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(1, 3));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
         final int startColumn = from.columnToInt();

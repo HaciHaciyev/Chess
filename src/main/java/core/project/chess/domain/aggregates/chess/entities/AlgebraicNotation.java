@@ -401,6 +401,29 @@ public class AlgebraicNotation {
     }
 
     /**
+     * Determines the type of promotion for a chess move in algebraic notation.
+     *
+     * @return a {@link StatusPair<PieceTYPE>} indicating the promotion type (Q, R, B, N) if valid,
+     *         or {@link StatusPair#ofFalse()} if not a promotion.
+     * @throws IllegalStateException if the promotion type is unexpected.
+     */
+    public StatusPair<PieceTYPE> promotionType() {
+        if (ChessNotationValidator.isPromotion(this.algebraicNotation) && ChessNotationValidator.isPromotionPlusOperation(this.algebraicNotation)) {
+            final char promotionType = this.algebraicNotation.charAt(6);
+
+            return switch (promotionType) {
+                case 'Q' -> StatusPair.ofTrue(PieceTYPE.Q);
+                case 'R' -> StatusPair.ofTrue(PieceTYPE.R);
+                case 'B' -> StatusPair.ofTrue(PieceTYPE.B);
+                case 'N' -> StatusPair.ofTrue(PieceTYPE.N);
+                default -> throw new IllegalStateException("Unexpected value: " + promotionType);
+            };
+        }
+
+        return StatusPair.ofFalse();
+    }
+
+    /**
      * Extracts the "from" and "to" coordinates from the algebraic notation of a chess move. Use isCastling(...) function before.
      *
      * @return a {@link Pair} containing the "from" and "to" coordinates of the move.
