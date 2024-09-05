@@ -80,7 +80,7 @@ public class ChessGameHandler {
         waitingForTheGame.remove(secondPlayer.getUsername());
         final ChessGame chessGame = chessGameService.loadChessGame(firstPlayer, gameParameters, secondPlayer, secondGameParameters);
         gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>()));
-        inboundChessRepository.saveStartedChessGame(chessGame);
+        inboundChessRepository.completelySaveStartedChessGame(chessGame);
 
         return "You partner for chess successfully founded. Starting to create websocket connection for the game.";
     }
@@ -135,7 +135,7 @@ public class ChessGameHandler {
         }
 
         if (chessGame.gameResult().isPresent()) {
-            inboundChessRepository.updateCompletedGame(chessGame);
+            inboundChessRepository.completelyUpdateCompletedGame(chessGame);
             gameSessions.remove(chessGame.getChessGameId());
         }
     }

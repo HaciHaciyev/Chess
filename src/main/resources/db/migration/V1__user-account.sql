@@ -3,8 +3,11 @@ Create Table UserAccount (
     username varchar(32) not null,
     email varchar(255) not null,
     password varchar(128) not null,
-    rating smallint not null,
+    user_role varchar not null,
     is_enable boolean not null,
+    rating real not null,
+    rating_deviation real not null,
+    rating_volatility real not null,
     creation_date timestamp not null,
     last_updated_date timestamp not null,
     primary key (id)

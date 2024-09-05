@@ -1,13 +1,15 @@
 package core.project.chess.infrastructure.repository.outbound;
 
-import core.project.chess.domain.aggregates.user.entities.UserAccount;
+import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
+import core.project.chess.infrastructure.utilities.Result;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
+@Transactional
 @ApplicationScoped
 public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
@@ -18,7 +20,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
     }
 
     @Override
-    public Optional<UserAccount> findById(UUID chessGameId) {
-        return Optional.empty();
+    public Result<ChessGame, Throwable> findById(UUID chessGameId) {
+        return Result.failure(new Throwable());
     }
 }

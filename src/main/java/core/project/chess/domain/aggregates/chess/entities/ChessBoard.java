@@ -233,6 +233,23 @@ public class ChessBoard {
     }
 
     /**
+     * Converts the collection of FEN (Forsyth-Edwards Notation) keys
+     * associated with the hash code of the board into an array of strings.
+     *
+     * <p>This method retrieves the current FEN keys stored in the
+     * {@code fenKeysOfHashCodeOfBoard} collection and converts them
+     * into a standard Java array of strings. The resulting array can
+     * be used for various purposes, such as exporting the FEN
+     * representations of the board state or for further processing.</p>
+     *
+     * @return an array of strings containing the FEN keys. If the
+     *         collection is empty, an empty array will be returned.
+     */
+    public String[] arrayOfFEN() {
+        return fenKeysOfHashCodeOfBoard.toArray(String[]::new);
+    }
+
+    /**
      * Retrieves the latest movement on the chess board, represented as a pair of coordinates.
      * <p>
      * If the latest movement was a castling move, the method will return the coordinates of the King's position before and after the castling move.

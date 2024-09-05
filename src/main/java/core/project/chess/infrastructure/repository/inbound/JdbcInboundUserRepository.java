@@ -4,9 +4,11 @@ import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
-import core.project.chess.infrastructure.utilities.Result;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
+@Transactional
 @ApplicationScoped
 public class JdbcInboundUserRepository implements InboundUserRepository {
 
@@ -21,33 +23,94 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
         final String sql = """
                     INSERT INTO UserAccount
                         (id, username, email, password,
-                        rating, is_enable, creation_date,
-                        last_updated_date)
+                        rating, rating_deviation, rating_volatility,
+                        is_enable, creation_date, last_updated_date)
                         VALUES (?,?,?,?,?,?,?,?)
                     """;
 
-        Result<Boolean, Throwable> result = jdbc.update(sql, userAccount.getId().toString(), userAccount.getUsername().username(),
-                userAccount.getEmail().email(), userAccount.getPassword().password(),
-                userAccount.getRating().rating(), userAccount.isEnable(),
-                userAccount.getAccountEvents().creationDate(),
-                userAccount.getAccountEvents().lastUpdateDate()
-        );
+        jdbc.update(sql,
+            userAccount.getId().toString(),
+            userAccount.getUsername().username(),
+            userAccount.getEmail().email(),
+            userAccount.getPassword().password(),
+            userAccount.getRating().rating(),
+            userAccount.getRating().ratingDeviation(),
+            userAccount.getRating().volatility(),
+            userAccount.isEnable(),
+            userAccount.getAccountEvents().creationDate(),
+            userAccount.getAccountEvents().lastUpdateDate()
+        )
 
-        result.ifFailure(Throwable::printStackTrace);
+        .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
     public void saveUserToken(EmailConfirmationToken token) {
+        final String sql = """
+                    INSERT INTO UserToken
+                        (id, user_id, token, is_confirmed,
+                        creation_date, expiration_date)
+                        VALUES (?,?,?,?,?,?)
+                    """;
 
+        jdbc.update(sql,
+            token.getTokenId().toString(),
+            token.getUserAccount().getId().toString(),
+            token.getToken().token().toString(),
+            Boolean.FALSE,
+            token.getTokenEvents().getCreationDate(),
+            token.getTokenEvents().getExpirationDate()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
     public void enable(EmailConfirmationToken token) {
+        if (!token.isConfirmed() || !token.getUserAccount().isEnable()) {
+            throw new IllegalArgumentException("Token need to be confirmed & UserAccount need to be enabled");
+        }
 
+        final String sql = """
+                    UPDATE UserToken SET
+                            is_confirmed = ?
+                            Where id = ?;
+                    
+                    UPDATE UserAccount SET
+                            is_enable = ?
+                            WHERE id = ?;
+                    """;
+
+        jdbc.update(sql,
+            token.isConfirmed(),
+            token.getTokenId().toString(),
+            token.getUserAccount().isEnable(),
+            token.getUserAccount().getId().toString()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
+
+        Log.info("User account {%s} has became available".formatted(token));
     }
 
     @Override
     public void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException {
+        final Boolean isEnable = token.getUserAccount().isEnable();
 
+        if (Boolean.TRUE.equals(isEnable) || token.isConfirmed()) {
+            throw new IllegalAccessException("It is prohibited to delete an accessible account");
+        }
+
+        final String sql = """
+                    DELETE FROM UserToken WHERE id = ?;
+                    DELETE FROM UserAccount WHERE id = ?;
+                    """;
+
+        jdbc.update(sql,
+            token.getTokenId().toString(),
+            token.getUserAccount().getId().toString()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
     }
 }

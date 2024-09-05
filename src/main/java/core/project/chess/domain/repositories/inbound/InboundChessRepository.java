@@ -4,7 +4,7 @@ import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 
 public interface InboundChessRepository {
 
-    void saveStartedChessGame(ChessGame chessGame);
+    void completelySaveStartedChessGame(ChessGame chessGame);
 
-    void updateCompletedGame(ChessGame chessGame);
+    void completelyUpdateCompletedGame(ChessGame chessGame);
 }

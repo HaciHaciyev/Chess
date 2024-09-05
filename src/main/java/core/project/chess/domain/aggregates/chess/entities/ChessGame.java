@@ -32,10 +32,10 @@ public class ChessGame {
     private final TimeControllingTYPE timeControllingTYPE;
     private @Getter(AccessLevel.NONE) StatusPair<GameResult> isGameOver;
 
-    private ChessGame(
-            UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack, Rating playerForWhiteRating,
-            Rating playerForBlackRating, SessionEvents sessionEvents, TimeControllingTYPE timeControllingTYPE, StatusPair<GameResult> statusPair
-    ) {
+    private ChessGame(UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack,
+                      Rating playerForWhiteRating, Rating playerForBlackRating, SessionEvents sessionEvents,
+                      TimeControllingTYPE timeControllingTYPE, StatusPair<GameResult> statusPair) {
+
         Objects.requireNonNull(chessGameId);
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(playerForWhite);
@@ -59,6 +59,18 @@ public class ChessGame {
         this.sessionEvents = sessionEvents;
         this.timeControllingTYPE = timeControllingTYPE;
         this.isGameOver = statusPair;
+
+        playerForWhite.addGame(this);
+        playerForBlack.addGame(this);
+    }
+
+    public static ChessGame fromRepository(UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite,
+                                           UserAccount playerForBlack, Rating whitePlayerRating, Rating blackPlayerRating,
+                                           SessionEvents sessionEvents, TimeControllingTYPE timeControllingTYPE, StatusPair<GameResult> statusPair
+    ) {
+        return new ChessGame(
+                chessGameId, chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating, sessionEvents, timeControllingTYPE, statusPair
+        );
     }
 
     public static ChessGame of(
@@ -68,16 +80,6 @@ public class ChessGame {
         return new ChessGame(
                 chessGameId, chessBoard, playerForWhite, playerForBlack, playerForWhite.getRating(),
                 playerForBlack.getRating(), sessionEvents, timeControllingTYPE, StatusPair.ofFalse()
-        );
-    }
-
-    public static ChessGame fromRepository(
-            UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack,
-            Rating whitePlayerRating, Rating blackPlayerRating, SessionEvents sessionEvents,
-            TimeControllingTYPE timeControllingTYPE, StatusPair<GameResult> statusPair
-    ) {
-        return new ChessGame(
-                chessGameId, chessBoard, playerForWhite, playerForBlack, whitePlayerRating, blackPlayerRating, sessionEvents, timeControllingTYPE, statusPair
         );
     }
 
