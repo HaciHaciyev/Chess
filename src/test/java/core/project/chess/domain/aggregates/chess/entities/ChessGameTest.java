@@ -9,6 +9,7 @@ import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.ChessMove;
 import core.project.chess.infrastructure.utilities.SimplePGNReader;
+import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -65,11 +65,11 @@ class ChessGameTest {
         System.out.println(chessGame.getChessBoard().toString());
 
         // 1
-        chessGame.makeMovement(firstPlayerUsername, E2, E4, null);
+        chessGame.makeMovement(firstPlayerUsername, e2, e4, null);
 
         System.out.println(chessGame.getChessBoard().toString());
 
-        chessGame.makeMovement(secondPlayerUsername, E7, E5, null);
+        chessGame.makeMovement(secondPlayerUsername, e7, e5, null);
 
         System.out.println(chessGame.getChessBoard().toString());
     }
@@ -87,19 +87,32 @@ class ChessGameTest {
             List<ChessMove> moves = pgnReader.readAll();
 
             for (ChessMove move : moves) {
-                log.info("white: " + move.white().from() + " -> " + move.white().to());
+
+                Log.info(move.white());
+
                 game.makeMovement(white, move.white().from(), move.white().to(), null);
 
+                Log.info("White : " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
+                Log.info(game.getChessBoard().actualRepresentationOfChessBoard());
+                Log.info(game.getChessBoard().pgn());
 
-                log.info("black: " + move.black().from() + " -> " + move.black().to());
-                game.makeMovement(black, move.black().from(), move.black().to(), null);
                 System.out.println();
+
+                Log.info(move.black());
+
+                game.makeMovement(black, move.black().from(), move.black().to(), null);
+                Log.info("Black : " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
+                Log.info(game.getChessBoard().actualRepresentationOfChessBoard());
+                Log.info(game.getChessBoard().pgn());
+
+                System.out.println();
+
             }
         }
     }
 
     private static String[] extractPGN() {
-        File file = new File("src/main/resources/test/Berliner_lalg.pgn");
+        File file = new File("src/main/resources/chess/pgn/Berliner_lalg.pgn");
 
         StringBuilder sb;
         String[] pgnArr;
@@ -135,52 +148,52 @@ class ChessGameTest {
         final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
 
         // 1.
-        chessGame.makeMovement(firstPlayerUsername, E2, E3, null);
+        chessGame.makeMovement(firstPlayerUsername, e2, e3, null);
 
-        chessGame.makeMovement(secondPlayerUsername, A7, A5, null);
+        chessGame.makeMovement(secondPlayerUsername, a7, a5, null);
 
         // 2.
-        chessGame.makeMovement(firstPlayerUsername, D1, H5, null);
+        chessGame.makeMovement(firstPlayerUsername, d1, h5, null);
 
-        chessGame.makeMovement(secondPlayerUsername, A8, A6, null);
+        chessGame.makeMovement(secondPlayerUsername, a8, a6, null);
 
         // 3.
-        chessGame.makeMovement(firstPlayerUsername, H5, A5, null);
+        chessGame.makeMovement(firstPlayerUsername, h5, a5, null);
 
-        chessGame.makeMovement(secondPlayerUsername, H7, H5, null);
+        chessGame.makeMovement(secondPlayerUsername, h7, h5, null);
 
         // 4.
-        chessGame.makeMovement(firstPlayerUsername, A5, C7, null);
+        chessGame.makeMovement(firstPlayerUsername, a5, c7, null);
 
-        chessGame.makeMovement(secondPlayerUsername, A6, H6, null);
+        chessGame.makeMovement(secondPlayerUsername, a6, h6, null);
 
         // 5.
-        chessGame.makeMovement(firstPlayerUsername, H2, H4, null);
+        chessGame.makeMovement(firstPlayerUsername, h2, h4, null);
 
-        chessGame.makeMovement(secondPlayerUsername, F7, F6, null);
+        chessGame.makeMovement(secondPlayerUsername, f7, f6, null);
 
         // 6.
-        chessGame.makeMovement(firstPlayerUsername, C7, D7, null);
+        chessGame.makeMovement(firstPlayerUsername, c7, d7, null);
 
-        chessGame.makeMovement(secondPlayerUsername, E8, F7, null);
+        chessGame.makeMovement(secondPlayerUsername, e8, f7, null);
 
         // 7.
-        chessGame.makeMovement(firstPlayerUsername, D7, B7, null);
+        chessGame.makeMovement(firstPlayerUsername, d7, b7, null);
 
-        chessGame.makeMovement(secondPlayerUsername, D8, D3, null);
+        chessGame.makeMovement(secondPlayerUsername, d8, d3, null);
 
         // 8.
-        chessGame.makeMovement(firstPlayerUsername, B7, B8, null);
+        chessGame.makeMovement(firstPlayerUsername, b7, b8, null);
 
-        chessGame.makeMovement(secondPlayerUsername, D3, H7, null);
+        chessGame.makeMovement(secondPlayerUsername, d3, h7, null);
 
         // 9.
-        chessGame.makeMovement(firstPlayerUsername, B8, C8, null);
+        chessGame.makeMovement(firstPlayerUsername, b8, c8, null);
 
-        chessGame.makeMovement(secondPlayerUsername, F7, G6, null);
+        chessGame.makeMovement(secondPlayerUsername, f7, g6, null);
 
         // 10. STALEMATE
-        chessGame.makeMovement(firstPlayerUsername, C8, E6, null);
+        chessGame.makeMovement(firstPlayerUsername, c8, e6, null);
 
         assertEquals(GameResult.DRAW, chessGame.gameResult().orElseThrow());
     }
@@ -194,214 +207,214 @@ class ChessGameTest {
         String blackPlayer = game.getPlayerForBlack().getUsername().username();
 
         //1.
-        game.makeMovement(whitePlayer, E2, E4, null);
+        game.makeMovement(whitePlayer, e2, e4, null);
 
-        game.makeMovement(blackPlayer, E7, E5, null);
+        game.makeMovement(blackPlayer, e7, e5, null);
 
         //2.
-        game.makeMovement(whitePlayer, G1, F3, null);
+        game.makeMovement(whitePlayer, g1, f3, null);
 
-        game.makeMovement(blackPlayer, B8, C6, null);
+        game.makeMovement(blackPlayer, b8, c6, null);
 
         //3.
-        game.makeMovement(whitePlayer, B1, C3, null);
+        game.makeMovement(whitePlayer, b1, c3, null);
 
-        game.makeMovement(blackPlayer, G8, F6, null);
+        game.makeMovement(blackPlayer, g8, f6, null);
 
         //4.
-        game.makeMovement(whitePlayer, D2, D3, null);
+        game.makeMovement(whitePlayer, d2, d3, null);
 
-        game.makeMovement(blackPlayer, F8, C5, null);
+        game.makeMovement(blackPlayer, f8, c5, null);
 
         //5.
-        game.makeMovement(whitePlayer, C1, G5, null);
+        game.makeMovement(whitePlayer, c1, g5, null);
 
-        game.makeMovement(blackPlayer, H7, H6, null);
+        game.makeMovement(blackPlayer, h7, h6, null);
 
         //6.
-        game.makeMovement(whitePlayer, G5, F6, null);
+        game.makeMovement(whitePlayer, g5, f6, null);
 
-        game.makeMovement(blackPlayer, D8, F6, null);
+        game.makeMovement(blackPlayer, d8, f6, null);
 
         //7.
-        game.makeMovement(whitePlayer, A2, A3, null);
+        game.makeMovement(whitePlayer, a2, a3, null);
 
-        game.makeMovement(blackPlayer, D7, D6, null);
+        game.makeMovement(blackPlayer, d7, d6, null);
 
         //8.
-        game.makeMovement(whitePlayer, C3, D5, null);
+        game.makeMovement(whitePlayer, c3, d5, null);
 
-        game.makeMovement(blackPlayer, F6, D8, null);
+        game.makeMovement(blackPlayer, f6, d8, null);
 
         //9.
-        game.makeMovement(whitePlayer, C2, C3, null);
+        game.makeMovement(whitePlayer, c2, c3, null);
 
-        game.makeMovement(blackPlayer, C8, E6, null);
+        game.makeMovement(blackPlayer, c8, e6, null);
 
         //10.
-        game.makeMovement(whitePlayer, D1, A4, null);
+        game.makeMovement(whitePlayer, d1, a4, null);
 
-        game.makeMovement(blackPlayer, D8, D7, null);
+        game.makeMovement(blackPlayer, d8, d7, null);
 
         //11.
-        game.makeMovement(whitePlayer, D5, E3, null);
+        game.makeMovement(whitePlayer, d5, e3, null);
 
-        game.makeMovement(blackPlayer, C5, E3, null);
+        game.makeMovement(blackPlayer, c5, e3, null);
 
         //12.
-        game.makeMovement(whitePlayer, F2, E3, null);
+        game.makeMovement(whitePlayer, f2, e3, null);
 
-        game.makeMovement(blackPlayer, E8, G8, null);
+        game.makeMovement(blackPlayer, e8, g8, null);
 
         //13.
-        game.makeMovement(whitePlayer, D3, D4, null);
+        game.makeMovement(whitePlayer, d3, d4, null);
 
-        game.makeMovement(blackPlayer, E6, G4, null);
+        game.makeMovement(blackPlayer, e6, g4, null);
 
         //14.
-        game.makeMovement(whitePlayer, F3, D2, null);
+        game.makeMovement(whitePlayer, f3, d2, null);
 
-        game.makeMovement(blackPlayer, D7, E7, null);
+        game.makeMovement(blackPlayer, d7, e7, null);
 
         //15.
-        game.makeMovement(whitePlayer, D4, E5, null);
+        game.makeMovement(whitePlayer, d4, e5, null);
 
-        game.makeMovement(blackPlayer, D6, E5, null);
+        game.makeMovement(blackPlayer, d6, e5, null);
 
         //16.
-        game.makeMovement(whitePlayer, D2, C4, null);
+        game.makeMovement(whitePlayer, d2, c4, null);
 
-        game.makeMovement(blackPlayer, E7, G5, null);
+        game.makeMovement(blackPlayer, e7, g5, null);
 
         //17.
-        game.makeMovement(whitePlayer, F1, D3, null);
+        game.makeMovement(whitePlayer, f1, d3, null);
 
-        game.makeMovement(blackPlayer, G4, E6, null);
+        game.makeMovement(blackPlayer, g4, e6, null);
 
         //18.
-        game.makeMovement(whitePlayer, G2, G3, null);
+        game.makeMovement(whitePlayer, g2, g3, null);
 
-        game.makeMovement(blackPlayer, E6, C4, null);
+        game.makeMovement(blackPlayer, e6, c4, null);
 
         //19.
-        game.makeMovement(whitePlayer, D3, C4, null);
+        game.makeMovement(whitePlayer, d3, c4, null);
 
-        game.makeMovement(blackPlayer, G5, E3, null);
+        game.makeMovement(blackPlayer, g5, e3, null);
 
         //20. fixed
-        game.makeMovement(whitePlayer, C4, E2, null);
+        game.makeMovement(whitePlayer, c4, e2, null);
 
-        game.makeMovement(blackPlayer, A7, A6, null);
+        game.makeMovement(blackPlayer, a7, a6, null);
 
         //21.
-        game.makeMovement(whitePlayer, H1, F1, null);
+        game.makeMovement(whitePlayer, h1, f1, null);
 
-        game.makeMovement(blackPlayer, B7, B5, null);
+        game.makeMovement(blackPlayer, b7, b5, null);
 
         //22.
-        game.makeMovement(whitePlayer, A4, C2, null);
+        game.makeMovement(whitePlayer, a4, c2, null);
 
-        game.makeMovement(blackPlayer, A6, A5, null);
+        game.makeMovement(blackPlayer, a6, a5, null);
 
         //23.
-        game.makeMovement(whitePlayer, C3, C4, null);
+        game.makeMovement(whitePlayer, c3, c4, null);
 
-        game.makeMovement(blackPlayer, B5, B4, null);
+        game.makeMovement(blackPlayer, b5, b4, null);
 
         //24.
-        game.makeMovement(whitePlayer, A3, B4, null);
+        game.makeMovement(whitePlayer, a3, b4, null);
 
-        game.makeMovement(blackPlayer, C6, B4, null);
+        game.makeMovement(blackPlayer, c6, b4, null);
 
         //25.
-        game.makeMovement(whitePlayer, C2, B1, null);
+        game.makeMovement(whitePlayer, c2, b1, null);
 
-        game.makeMovement(blackPlayer, F8, D8, null);
+        game.makeMovement(blackPlayer, f8, d8, null);
 
         //26.
-        game.makeMovement(whitePlayer, F1, F5, null);
+        game.makeMovement(whitePlayer, f1, f5, null);
 
-        game.makeMovement(blackPlayer, F7, F6, null);
+        game.makeMovement(blackPlayer, f7, f6, null);
 
         //27.
-        game.makeMovement(whitePlayer, A1, A3, null);
+        game.makeMovement(whitePlayer, a1, a3, null);
 
-        game.makeMovement(blackPlayer, E3, D2, null);
+        game.makeMovement(blackPlayer, e3, d2, null);
 
         //28.
-        game.makeMovement(whitePlayer, E1, F1, null);
+        game.makeMovement(whitePlayer, e1, f1, null);
 
-        game.makeMovement(blackPlayer, D2, C2, null);
+        game.makeMovement(blackPlayer, d2, c2, null);
 
         //29.
-        game.makeMovement(whitePlayer, A3, A1, null);
+        game.makeMovement(whitePlayer, a3, a1, null);
 
-        game.makeMovement(blackPlayer, D8, D4, null);
+        game.makeMovement(blackPlayer, d8, d4, null);
 
         //30.
-        game.makeMovement(whitePlayer, E2, F3, null);
+        game.makeMovement(whitePlayer, e2, f3, null);
 
-        game.makeMovement(blackPlayer, C2, C4, null);
+        game.makeMovement(blackPlayer, c2, c4, null);
 
         //31.
-        game.makeMovement(whitePlayer, F1, G2, null);
+        game.makeMovement(whitePlayer, f1, g2, null);
 
-        game.makeMovement(blackPlayer, D4, D2, null);
+        game.makeMovement(blackPlayer, d4, d2, null);
 
         //32.
-        game.makeMovement(whitePlayer, G2, G1, null);
+        game.makeMovement(whitePlayer, g2, g1, null);
 
-        game.makeMovement(blackPlayer, G8, F7, null);
+        game.makeMovement(blackPlayer, g8, f7, null);
 
         //33.
-        game.makeMovement(whitePlayer, B1, F1, null);
+        game.makeMovement(whitePlayer, b1, f1, null);
 
-        game.makeMovement(blackPlayer, C4, F1, null);
+        game.makeMovement(blackPlayer, c4, f1, null);
 
         //34.
-        game.makeMovement(whitePlayer, G1, F1, null);
+        game.makeMovement(whitePlayer, g1, f1, null);
 
-        game.makeMovement(blackPlayer, G7, G6, null);
+        game.makeMovement(blackPlayer, g7, g6, null);
 
         //35.
-        game.makeMovement(whitePlayer, F1, E1, null);
+        game.makeMovement(whitePlayer, f1, e1, null);
 
-        game.makeMovement(blackPlayer, D2, B2, null);
+        game.makeMovement(blackPlayer, d2, b2, null);
 
         //36.
-        game.makeMovement(whitePlayer, F3, H5, null);
+        game.makeMovement(whitePlayer, f3, h5, null);
 
-        game.makeMovement(blackPlayer, B4, C2, null);
+        game.makeMovement(blackPlayer, b4, c2, null);
 
         //37.
-        game.makeMovement(whitePlayer, E1, F2, null);
+        game.makeMovement(whitePlayer, e1, f2, null);
 
-        game.makeMovement(blackPlayer, C2, A1, null);
+        game.makeMovement(blackPlayer, c2, a1, null);
 
         //38.
-        game.makeMovement(whitePlayer, F2, F3, null);
+        game.makeMovement(whitePlayer, f2, f3, null);
 
-        game.makeMovement(blackPlayer, A8, D8, null);
+        game.makeMovement(blackPlayer, a8, d8, null);
 
         //39.
-        game.makeMovement(whitePlayer, F3, G4, null);
+        game.makeMovement(whitePlayer, f3, g4, null);
 
-        game.makeMovement(blackPlayer, C7, C5, null);
+        game.makeMovement(blackPlayer, c7, c5, null);
 
         //40.
-        game.makeMovement(whitePlayer, H2, H4, null);
+        game.makeMovement(whitePlayer, h2, h4, null);
 
-        game.makeMovement(blackPlayer, C5, C4, null);
+        game.makeMovement(blackPlayer, c5, c4, null);
 
         //41.
-        game.makeMovement(whitePlayer, G4, F3, null);
+        game.makeMovement(whitePlayer, g4, f3, null);
 
-        game.makeMovement(blackPlayer, C4, C3, null);
+        game.makeMovement(blackPlayer, c4, c3, null);
 
         //42. checkmate
-        game.makeMovement(whitePlayer, G3, G4, null);
+        game.makeMovement(whitePlayer, g3, g4, null);
 
-        game.makeMovement(blackPlayer, D8, D3, null);
+        game.makeMovement(blackPlayer, d8, d3, null);
     }
 
     public void chessGameLoad() {
@@ -413,242 +426,242 @@ class ChessGameTest {
         // INVALID. Invalid players turn.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, E7, E5, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, e7, e5, null)
         );
 
         // INVALID. Valid players turn but invalid pieces usage.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, E7, E5, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, e7, e5, null)
         );
 
         // INVALID. Piece not exists.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, E3, E4, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, e3, e4, null)
         );
 
         // INVALID. Invalid Pawn move distance.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, E2, E5, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, e2, e5, null)
         );
 
         // INVALID. Invalid Pawn move, can`t capture void.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, E2, D3, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, e2, d3, null)
         );
 
         // VALID. First valid move, pawn passage.
-        chessGame.makeMovement(firstPlayerUsername, E2, E4, null);
+        chessGame.makeMovement(firstPlayerUsername, e2, e4, null);
 
         // INVALID. Invalid players turn.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, C8, F5, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, c8, f5, null)
         );
 
         // INVALID. Valid players turn, but invalid figures turn.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, C1, F4, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, c1, f4, null)
         );
 
         // INVALID. Bishop can`t move when path is not clear.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, C8, F5, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, c8, f5, null)
         );
 
         // VALID. Valid pawn passage.
-        chessGame.makeMovement(secondPlayerUsername, E7, E5, null);
+        chessGame.makeMovement(secondPlayerUsername, e7, e5, null);
 
         // INVALID. King can`t long castle, path is not clear.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, E1, C1, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, e1, c1, null)
         );
 
         // INVALID. King can`t short castle, path is not clear.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, E1, G1, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, e1, g1, null)
         );
 
         // INVALID. Rook can`t move, path is not clear.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, A1, A5, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, a1, a5, null)
         );
 
         // INVALID. Invalid Knight movement.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, B1, B3, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, b1, b3, null)
         );
 
         // VALID. Valid Knight movement.
-        chessGame.makeMovement(firstPlayerUsername, B1, C3, null);
+        chessGame.makeMovement(firstPlayerUsername, b1, c3, null);
 
         // INVALID. Rook can`t move, path is not clear.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, A8, A4, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, a8, a4, null)
         );
 
         // INVALID. Invalid Knight movement.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, B8, B6, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, b8, b6, null)
         );
 
         // VALID. Valid Knight movement.
-        chessGame.makeMovement(secondPlayerUsername, G8, F6, null);
+        chessGame.makeMovement(secondPlayerUsername, g8, f6, null);
 
         // INVALID. Invalid pawn passage, path is not clear.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, C2, C3, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, c2, c3, null)
         );
 
         // INVALID. Invalid pawn move, end field is not.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, C2, C3, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, c2, c3, null)
         );
 
         // INVALID. Invalid pawn capture operation, nothing to capture and it is not a capture on passage.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, C2, D3, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, c2, d3, null)
         );
 
         // INVALID. Invalid pawn move, can`t move back.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, E4, E3, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, e4, e3, null)
         );
 
         // INVALID. Invalid pawn move, can`t move diagonal-back.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, E4, F3, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, e4, f3, null)
         );
 
         // INVALID. Invalid Queen move.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, D1, E3, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, d1, e3, null)
         );
 
         // VALID. Knight move.
-        chessGame.makeMovement(firstPlayerUsername, G1, F3, null);
+        chessGame.makeMovement(firstPlayerUsername, g1, f3, null);
 
         // VALID. Knight move.
-        chessGame.makeMovement(secondPlayerUsername, B8, C6, null);
+        chessGame.makeMovement(secondPlayerUsername, b8, c6, null);
 
         // VALID. Bishop move.
-        chessGame.makeMovement(firstPlayerUsername, F1, B5, null);
+        chessGame.makeMovement(firstPlayerUsername, f1, b5, null);
 
         // VALID. Pawn move.
-        chessGame.makeMovement(secondPlayerUsername, A7, A6, null);
+        chessGame.makeMovement(secondPlayerUsername, a7, a6, null);
 
         // INVALID. Invalid Bishop move.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(firstPlayerUsername, B5, D5, null)
+                () -> chessGame.makeMovement(firstPlayerUsername, b5, d5, null)
         );
 
         // VALID. Pawn move.
-        chessGame.makeMovement(firstPlayerUsername, D2, D3, null);
+        chessGame.makeMovement(firstPlayerUsername, d2, d3, null);
 
         // VALID. Pawn move.
-        chessGame.makeMovement(secondPlayerUsername, D7, D6, null);
+        chessGame.makeMovement(secondPlayerUsername, d7, d6, null);
 
         // VALID. Bishop capture Knight.
-        chessGame.makeMovement(firstPlayerUsername, B5, C6, null);
+        chessGame.makeMovement(firstPlayerUsername, b5, c6, null);
 
         // INVALID. Valid Bishop move but it`s not safety for King.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, F8, E7, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, f8, e7, null)
         );
 
         // VALID. Pawn captures enemy bishop threatening King.
-        chessGame.makeMovement(secondPlayerUsername, B7, C6, null);
+        chessGame.makeMovement(secondPlayerUsername, b7, c6, null);
 
         // VALID. Short castle.
-        chessGame.makeMovement(firstPlayerUsername, E1, G1, null);
+        chessGame.makeMovement(firstPlayerUsername, e1, g1, null);
 
         // INVALID. Invalid rook move.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, A8, B6, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, a8, b6, null)
         );
 
         // INVALID. Invalid pawn move distance.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, C6, C4, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, c6, c4, null)
         );
 
         // INVALID. Valid Knight move but end field occupied by same color piece.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, F6, H7, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, f6, h7, null)
         );
 
         // INVALID. Invalid King move distance.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, E8, E6, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, e8, e6, null)
         );
 
         // INVALID. Invalid pawn movement, pawn can`t move back.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.G7, Coordinate.G8, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.g7, Coordinate.g8, null)
         );
 
         // INVALID. Invalid Knight move.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.F6, Coordinate.F5, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.f6, Coordinate.f5, null)
         );
 
         // INVALID. Invalid diagonal pawn movement distance.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.D3, Coordinate.E4, null)
+                () -> chessGame.makeMovement(secondPlayerUsername, Coordinate.d3, Coordinate.e4, null)
         );
 
         // VALID. Bishop move.
-        chessGame.makeMovement(secondPlayerUsername, Coordinate.C8, Coordinate.G4, null);
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.c8, Coordinate.g4, null);
 
         // VALID. Pawn move.
-        chessGame.makeMovement(firstPlayerUsername, Coordinate.H2, Coordinate.H3, null);
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.h2, Coordinate.h3, null);
 
         // VALID. Bishop capture Knight.
-        chessGame.makeMovement(secondPlayerUsername, Coordinate.G4, Coordinate.F3, null);
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.g4, Coordinate.f3, null);
 
         // VALID. Queen capture Bishop.
-        chessGame.makeMovement(firstPlayerUsername, Coordinate.D1, Coordinate.F3, null);
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.d1, Coordinate.f3, null);
 
         // VALID. Knight move.
-        chessGame.makeMovement(secondPlayerUsername, Coordinate.F6, Coordinate.D7, null);
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.f6, Coordinate.d7, null);
 
         // VALID. Bishop move.
-        chessGame.makeMovement(firstPlayerUsername, Coordinate.C1, Coordinate.E3, null);
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.c1, Coordinate.e3, null);
 
         // VALID. Pawn move.
-        chessGame.makeMovement(secondPlayerUsername, Coordinate.F7, Coordinate.F6, null);
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.f7, Coordinate.f6, null);
 
         // VALID. Pawn move.
-        chessGame.makeMovement(firstPlayerUsername, Coordinate.A2, Coordinate.A3, null);
+        chessGame.makeMovement(firstPlayerUsername, Coordinate.a2, Coordinate.a3, null);
 
         // VALID, Rook move.
-        chessGame.makeMovement(secondPlayerUsername, Coordinate.A8, Coordinate.B8, null);
+        chessGame.makeMovement(secondPlayerUsername, Coordinate.a8, Coordinate.b8, null);
     }
 
     public final Supplier<ChessGame> chessGameSupplier() {

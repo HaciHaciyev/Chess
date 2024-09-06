@@ -65,8 +65,8 @@ public class ChessBoard {
     private final Map<String, Byte> hashCodeOfBoard;
     private final ArrayList<String> fenKeysOfHashCodeOfBoard;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
-    private static final Coordinate initialWhiteKingPosition = Coordinate.E1;
-    private static final Coordinate initialBlackKingPosition = Coordinate.E8;
+    private static final Coordinate initialWhiteKingPosition = Coordinate.e1;
+    private static final Coordinate initialBlackKingPosition = Coordinate.e8;
     private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
 
     /**
@@ -217,7 +217,13 @@ public class ChessBoard {
         int number = 1;
         for (int i = 0; i < listOfAlgebraicNotations.size(); i += 2) {
             final String notation = listOfAlgebraicNotations.get(i).algebraicNotation();
-            final String secondNotation = listOfAlgebraicNotations.get(i + 1).algebraicNotation();
+
+            final String secondNotation;
+            if (i + 1 <= listOfAlgebraicNotations.size() - 1) {
+                secondNotation = listOfAlgebraicNotations.get(i + 1).algebraicNotation();
+            } else {
+                secondNotation = "...";
+            }
 
             stringBuilder.append(number)
                     .append(". ")
@@ -365,6 +371,34 @@ public class ChessBoard {
     }
 
     /**
+     * Determines if a pawn can perform a capture en passant on the specified coordinate.
+     *
+     * <p>This method checks if the given piece is a pawn and if its previous move was a
+     * double advance (two squares forward) from its starting position. If so, it verifies
+     * whether the target coordinate is directly adjacent to the pawn's last move's ending
+     * position, allowing for an en passant capture.</p>
+     *
+     * @param piece The piece to check, which should be an instance of {@link Pawn}.
+     * @param to The target coordinate where the pawn is attempting to capture en passant.
+     * @return {@code true} if the pawn can capture en passant at the specified coordinate;
+     *         {@code false} otherwise.
+     *
+     * @throws NoSuchElementException if there is no latest movement recorded.
+     */
+    private boolean isCaptureOnPassage(final Piece piece, final Coordinate to) {
+        if (piece instanceof Pawn pawn && pawn.previousMoveWasPassage(this)) {
+            final Coordinate lastMoveEnd = latestMovement().orElseThrow().getSecond();
+
+            final boolean captureOnPassage = lastMoveEnd.columnToInt() == to.columnToInt() && Math.abs(lastMoveEnd.getRow() - to.getRow()) == 1;
+            if (captureOnPassage) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Updates the castling ability based on the movement of a Rook or King piece.
      * <p>
      * This method modifies the following class-level variables:
@@ -392,7 +426,7 @@ public class ChessBoard {
                 this.validWhiteLongCasting = false;
             }
 
-            if (from.equals(Coordinate.A1)) {
+            if (from.equals(Coordinate.a1)) {
                 validWhiteLongCasting = false;
             } else {
                 validWhiteShortCasting = false;
@@ -405,7 +439,7 @@ public class ChessBoard {
                 this.validBlackLongCasting = false;
             }
 
-            if (from.equals(Coordinate.A8)) {
+            if (from.equals(Coordinate.a8)) {
                 validBlackLongCasting = false;
             } else {
                 validBlackShortCasting = false;
@@ -463,16 +497,16 @@ public class ChessBoard {
         final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
         if (shortCastling) {
             if (figuresTurn.equals(Color.WHITE)) {
-                return Pair.of(Coordinate.E1, Coordinate.H1);
+                return Pair.of(Coordinate.e1, Coordinate.h1);
             } else {
-                return Pair.of(Coordinate.E8, Coordinate.H8);
+                return Pair.of(Coordinate.e8, Coordinate.h8);
             }
         }
 
         if (figuresTurn.equals(Color.WHITE)) {
-            return Pair.of(Coordinate.E1, Coordinate.A1);
+            return Pair.of(Coordinate.e1, Coordinate.a1);
         } else {
-            return Pair.of(Coordinate.E1, Coordinate.A8);
+            return Pair.of(Coordinate.e1, Coordinate.a8);
         }
     }
 
@@ -494,8 +528,8 @@ public class ChessBoard {
             return false;
         }
 
-        return from.equals(Coordinate.E1) && (to.equals(Coordinate.G1) || to.equals(Coordinate.C1))
-                || from.equals(Coordinate.E8) && (to.equals(Coordinate.G8) || to.equals(Coordinate.C8));
+        return from.equals(Coordinate.e1) && (to.equals(Coordinate.g1) || to.equals(Coordinate.c1))
+                || from.equals(Coordinate.e8) && (to.equals(Coordinate.g8) || to.equals(Coordinate.c8));
     }
 
     /**
@@ -571,7 +605,7 @@ public class ChessBoard {
         /** Validation.*/
         final StatusPair<Set<Operations>> statusPair = piece.isValidMove(this, from, to);
         if (!statusPair.status()) {
-            throw new IllegalArgumentException("Invalid move. Failed validation.");
+            throw new IllegalArgumentException("Invalid move. Failed validation for %s movement.".formatted(piece.toString()));
         }
 
         final boolean promotionOperation = statusPair.orElseThrow().contains(Operations.PROMOTION);
@@ -592,6 +626,11 @@ public class ChessBoard {
         startField.removeFigure();
 
         if (operations.contains(Operations.CAPTURE)) {
+
+            if (isCaptureOnPassage(piece, to)) {
+                fieldMap.get(latestMovement().orElseThrow().getSecond()).removeFigure();
+            }
+
             endField.removeFigure();
         }
 
@@ -718,8 +757,8 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            final Field startField = fieldMap.get(Coordinate.H1);
-            final Field endField = fieldMap.get(Coordinate.F1);
+            final Field startField = fieldMap.get(Coordinate.h1);
+            final Field endField = fieldMap.get(Coordinate.f1);
             final Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
             startField.removeFigure();
@@ -727,8 +766,8 @@ public class ChessBoard {
             return;
         }
 
-        final Field startField = fieldMap.get(Coordinate.H8);
-        final Field endField = fieldMap.get(Coordinate.F8);
+        final Field startField = fieldMap.get(Coordinate.h8);
+        final Field endField = fieldMap.get(Coordinate.f8);
         final Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
         startField.removeFigure();
@@ -744,8 +783,8 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            final Field startField = fieldMap.get(Coordinate.A1);
-            final Field endField = fieldMap.get(Coordinate.D1);
+            final Field startField = fieldMap.get(Coordinate.a1);
+            final Field endField = fieldMap.get(Coordinate.d1);
             final Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
             startField.removeFigure();
@@ -753,8 +792,8 @@ public class ChessBoard {
             return;
         }
 
-        final Field startField = fieldMap.get(Coordinate.A8);
-        final Field endField = fieldMap.get(Coordinate.D8);
+        final Field startField = fieldMap.get(Coordinate.a8);
+        final Field endField = fieldMap.get(Coordinate.d8);
         final Rook rook = (Rook) startField.pieceOptional().orElseThrow();
 
         startField.removeFigure();
@@ -876,8 +915,8 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            final Field startField = fieldMap.get(Coordinate.H1);
-            final Field endField = fieldMap.get(Coordinate.F1);
+            final Field startField = fieldMap.get(Coordinate.h1);
+            final Field endField = fieldMap.get(Coordinate.f1);
             final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
             endField.removeFigure();
@@ -885,8 +924,8 @@ public class ChessBoard {
             return;
         }
 
-        final Field startField = fieldMap.get(Coordinate.H8);
-        final Field endField = fieldMap.get(Coordinate.F8);
+        final Field startField = fieldMap.get(Coordinate.h8);
+        final Field endField = fieldMap.get(Coordinate.f8);
         final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
         endField.removeFigure();
@@ -902,8 +941,8 @@ public class ChessBoard {
         final boolean isWhiteCastling = to.getRow() == 1;
 
         if (isWhiteCastling) {
-            final Field startField = fieldMap.get(Coordinate.A1);
-            final Field endField = fieldMap.get(Coordinate.D1);
+            final Field startField = fieldMap.get(Coordinate.a1);
+            final Field endField = fieldMap.get(Coordinate.d1);
             final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
             endField.removeFigure();
@@ -911,8 +950,8 @@ public class ChessBoard {
             return;
         }
 
-        final Field startField = fieldMap.get(Coordinate.A8);
-        final Field endField = fieldMap.get(Coordinate.D8);
+        final Field startField = fieldMap.get(Coordinate.a8);
+        final Field endField = fieldMap.get(Coordinate.d8);
         final Rook rook = (Rook) endField.pieceOptional().orElseThrow();
 
         endField.removeFigure();
@@ -983,19 +1022,19 @@ public class ChessBoard {
                 return new Pawn(color);
             }
 
-            if (coordinate.equals(Coordinate.D1)) {
+            if (coordinate.equals(Coordinate.d1)) {
                 return new Queen(color);
             }
 
-            if (coordinate.equals(Coordinate.A1) || coordinate.equals(Coordinate.H1)) {
+            if (coordinate.equals(Coordinate.a1) || coordinate.equals(Coordinate.h1)) {
                 return new Rook(color);
             }
 
-            if (coordinate.equals(Coordinate.B1) || coordinate.equals(Coordinate.G1)) {
+            if (coordinate.equals(Coordinate.b1) || coordinate.equals(Coordinate.g1)) {
                 return new Knight(color);
             }
 
-            if (coordinate.equals(Coordinate.C1) || coordinate.equals(Coordinate.F1)) {
+            if (coordinate.equals(Coordinate.c1) || coordinate.equals(Coordinate.f1)) {
                 return new Bishop(color);
             }
 
@@ -1005,19 +1044,19 @@ public class ChessBoard {
             return new Pawn(color);
         }
 
-        if (coordinate.equals(Coordinate.D8)) {
+        if (coordinate.equals(Coordinate.d8)) {
             return new Queen(color);
         }
 
-        if (coordinate.equals(Coordinate.A8) || coordinate.equals(Coordinate.H8)) {
+        if (coordinate.equals(Coordinate.a8) || coordinate.equals(Coordinate.h8)) {
             return new Rook(color);
         }
 
-        if (coordinate.equals(Coordinate.B8) || coordinate.equals(Coordinate.G8)) {
+        if (coordinate.equals(Coordinate.b8) || coordinate.equals(Coordinate.g8)) {
             return new Knight(color);
         }
 
-        if (coordinate.equals(Coordinate.C8) || coordinate.equals(Coordinate.F8)) {
+        if (coordinate.equals(Coordinate.c8) || coordinate.equals(Coordinate.f8)) {
             return new Bishop(color);
         }
 
@@ -1038,7 +1077,7 @@ public class ChessBoard {
     @Getter
     public enum Operations {
         PROMOTION("="),
-        CAPTURE("X"),
+        CAPTURE("x"),
         CHECK("+"),
         STALEMATE("."),
         CHECKMATE("#"),
@@ -1198,7 +1237,9 @@ public class ChessBoard {
             }
         }
 
-        fen.append(countOfEmptyFields);
+        if (countOfEmptyFields != 0) {
+            fen.append(countOfEmptyFields);
+        }
 
         fen.append(" ");
         if (figuresTurn.equals(Color.WHITE)) {
@@ -1266,22 +1307,22 @@ public class ChessBoard {
      * The remaining fields are left empty.
      */
     private void standardInitializer() {
-        fieldMap.put(Coordinate.A1, new Field(Coordinate.A1, new Rook(Color.WHITE)));
-        fieldMap.put(Coordinate.B1, new Field(Coordinate.B1, new Knight(Color.WHITE)));
-        fieldMap.put(Coordinate.C1, new Field(Coordinate.C1, new Bishop(Color.WHITE)));
-        fieldMap.put(Coordinate.D1, new Field(Coordinate.D1, new Queen(Color.WHITE)));
-        fieldMap.put(Coordinate.E1, new Field(Coordinate.E1, new King(Color.WHITE)));
-        fieldMap.put(Coordinate.F1, new Field(Coordinate.F1, new Bishop(Color.WHITE)));
-        fieldMap.put(Coordinate.G1, new Field(Coordinate.G1, new Knight(Color.WHITE)));
-        fieldMap.put(Coordinate.H1, new Field(Coordinate.H1, new Rook(Color.WHITE)));
-        fieldMap.put(Coordinate.A8, new Field(Coordinate.A8, new Rook(Color.BLACK)));
-        fieldMap.put(Coordinate.B8, new Field(Coordinate.B8, new Knight(Color.BLACK)));
-        fieldMap.put(Coordinate.C8, new Field(Coordinate.C8, new Bishop(Color.BLACK)));
-        fieldMap.put(Coordinate.D8, new Field(Coordinate.D8, new Queen(Color.BLACK)));
-        fieldMap.put(Coordinate.E8, new Field(Coordinate.E8, new King(Color.BLACK)));
-        fieldMap.put(Coordinate.F8, new Field(Coordinate.F8, new Bishop(Color.BLACK)));
-        fieldMap.put(Coordinate.G8, new Field(Coordinate.G8, new Knight(Color.BLACK)));
-        fieldMap.put(Coordinate.H8, new Field(Coordinate.H8, new Rook(Color.BLACK)));
+        fieldMap.put(Coordinate.a1, new Field(Coordinate.a1, new Rook(Color.WHITE)));
+        fieldMap.put(Coordinate.b1, new Field(Coordinate.b1, new Knight(Color.WHITE)));
+        fieldMap.put(Coordinate.c1, new Field(Coordinate.c1, new Bishop(Color.WHITE)));
+        fieldMap.put(Coordinate.d1, new Field(Coordinate.d1, new Queen(Color.WHITE)));
+        fieldMap.put(Coordinate.e1, new Field(Coordinate.e1, new King(Color.WHITE)));
+        fieldMap.put(Coordinate.f1, new Field(Coordinate.f1, new Bishop(Color.WHITE)));
+        fieldMap.put(Coordinate.g1, new Field(Coordinate.g1, new Knight(Color.WHITE)));
+        fieldMap.put(Coordinate.h1, new Field(Coordinate.h1, new Rook(Color.WHITE)));
+        fieldMap.put(Coordinate.a8, new Field(Coordinate.a8, new Rook(Color.BLACK)));
+        fieldMap.put(Coordinate.b8, new Field(Coordinate.b8, new Knight(Color.BLACK)));
+        fieldMap.put(Coordinate.c8, new Field(Coordinate.c8, new Bishop(Color.BLACK)));
+        fieldMap.put(Coordinate.d8, new Field(Coordinate.d8, new Queen(Color.BLACK)));
+        fieldMap.put(Coordinate.e8, new Field(Coordinate.e8, new King(Color.BLACK)));
+        fieldMap.put(Coordinate.f8, new Field(Coordinate.f8, new Bishop(Color.BLACK)));
+        fieldMap.put(Coordinate.g8, new Field(Coordinate.g8, new Knight(Color.BLACK)));
+        fieldMap.put(Coordinate.h8, new Field(Coordinate.h8, new Rook(Color.BLACK)));
 
         for (Coordinate coordinate : Coordinate.values()) {
             if (coordinate.getRow() == 1 || coordinate.getRow() == 8) {

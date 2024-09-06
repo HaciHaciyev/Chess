@@ -342,7 +342,7 @@ public class AlgebraicNotation {
      * @return The type of castling move (short or long).
      */
     static Castle castle(final Coordinate to) {
-        final boolean isShortCasting = to.equals(Coordinate.G1) || to.equals(Coordinate.G8);
+        final boolean isShortCasting = to.equals(Coordinate.g1) || to.equals(Coordinate.g8);
         if (isShortCasting) {
             return Castle.SHORT_CASTLING;
         }
@@ -391,13 +391,13 @@ public class AlgebraicNotation {
             return false;
         }
 
-        final boolean isValidKingPosition = from.equals(Coordinate.E1) || from.equals(Coordinate.E8);
+        final boolean isValidKingPosition = from.equals(Coordinate.e1) || from.equals(Coordinate.e8);
         if (!isValidKingPosition) {
             return false;
         }
 
-        return to.equals(Coordinate.C1) || to.equals(Coordinate.G1) ||
-                to.equals(Coordinate.C8) || to.equals(Coordinate.G8);
+        return to.equals(Coordinate.c1) || to.equals(Coordinate.g1) ||
+                to.equals(Coordinate.c8) || to.equals(Coordinate.g8);
     }
 
     /**
@@ -463,17 +463,17 @@ public class AlgebraicNotation {
         if (shortCastling) {
 
             if (color.equals(Color.WHITE)) {
-                return Pair.of(Coordinate.E1, Coordinate.H1);
+                return Pair.of(Coordinate.e1, Coordinate.h1);
             } else {
-                return Pair.of(Coordinate.E8, Coordinate.H8);
+                return Pair.of(Coordinate.e8, Coordinate.h8);
             }
 
         }
 
         if (color.equals(Color.WHITE)) {
-            return Pair.of(Coordinate.E1, Coordinate.A1);
+            return Pair.of(Coordinate.e1, Coordinate.a1);
         } else {
-            return Pair.of(Coordinate.E1, Coordinate.A8);
+            return Pair.of(Coordinate.e1, Coordinate.a8);
         }
     }
 
