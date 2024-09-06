@@ -7,10 +7,20 @@ import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.infrastructure.utilities.ChessMove;
+import core.project.chess.infrastructure.utilities.SimplePGNReader;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -19,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ChessGameTest {
+
+    private static final Logger log = LoggerFactory.getLogger(ChessGameTest.class);
 
     @Test /** In this method, a full-fledged game is played with its logic, and both valid and invalid moves are present.*/
     @Disabled("For single performance checks.")
@@ -60,6 +72,58 @@ class ChessGameTest {
         chessGame.makeMovement(secondPlayerUsername, E7, E5, null);
 
         System.out.println(chessGame.getChessBoard().toString());
+    }
+
+    @Test
+    @DisplayName("game from pgn")
+    void gameFromPGNTest() {
+        ChessGame game = chessGameSupplier().get();
+
+        String white = game.getPlayerForWhite().getUsername().username();
+        String black = game.getPlayerForBlack().getUsername().username();
+
+        for (String pgn : extractPGN()) {
+            SimplePGNReader pgnReader = new SimplePGNReader(pgn);
+            List<ChessMove> moves = pgnReader.readAll();
+
+            for (ChessMove move : moves) {
+                log.info("white: " + move.white().from() + " -> " + move.white().to());
+                game.makeMovement(white, move.white().from(), move.white().to(), null);
+
+
+                log.info("black: " + move.black().from() + " -> " + move.black().to());
+                game.makeMovement(black, move.black().from(), move.black().to(), null);
+                System.out.println();
+            }
+        }
+    }
+
+    private static String[] extractPGN() {
+        File file = new File("src/main/resources/test/Berliner_lalg.pgn");
+
+        StringBuilder sb;
+        String[] pgnArr;
+        try (FileReader fileReader = new FileReader(file)) {
+            sb = new StringBuilder();
+
+            int i = 0;
+            while (fileReader.ready()) {
+                char ch = (char) fileReader.read();
+                if (!sb.isEmpty() && sb.charAt(sb.length() - 1) == '\n' && ch == '\n') {
+                    i++;
+                    if (i % 2 == 0) {
+                        sb.append("---");
+                    }
+                }
+
+                sb.append(ch);
+            }
+
+            pgnArr = sb.toString().split("---");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return pgnArr;
     }
 
     @Test
