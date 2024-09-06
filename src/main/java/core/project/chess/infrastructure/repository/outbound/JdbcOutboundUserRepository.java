@@ -118,7 +118,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
         return jdbc.query(selectUserToken, this::userTokenMapper, token.toString());
     }
 
-    private EmailConfirmationToken userTokenMapper(ResultSet rs) throws SQLException {
+    private EmailConfirmationToken userTokenMapper(final ResultSet rs) throws SQLException {
         var tokenEvents = new TokenEvents(rs.getObject("token_creation_date", Timestamp.class).toLocalDateTime());
 
         return EmailConfirmationToken.fromRepository(
@@ -127,7 +127,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
         );
     }
 
-    private UserAccount userAccountMapper(ResultSet rs) throws SQLException {
+    private UserAccount userAccountMapper(final ResultSet rs) throws SQLException {
         Log.info("The user account {%s} was taken from the database".formatted(rs.getString("username")));
 
         var events = new AccountEvents(

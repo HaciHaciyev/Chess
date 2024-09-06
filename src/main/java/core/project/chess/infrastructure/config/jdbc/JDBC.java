@@ -26,14 +26,14 @@ public class JDBC {
         this.dataSourceProvider = dataSourceProvider;
     }
 
-    public <T> Result<T, Throwable> queryForObject(final String sql, final Class<T> clazz, @OptionalArgument final Object... params) {
+    public <T> Result<T, Throwable> queryForObject(final String sql, final Class<T> type, @OptionalArgument final Object... params) {
         Objects.requireNonNull(sql);
-        Objects.requireNonNull(clazz);
+        Objects.requireNonNull(type);
         Objects.requireNonNull(params);
         if (!validateObjectParams(params)) {
             return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
         }
-        if (!clazz.isPrimitive() || clazz == void.class) {
+        if (!type.isPrimitive() || type == void.class) {
             return Result.failure(new InvalidDataArgumentException("Invalid class type. Function jdbc.queryForObjets() can only provide primitive wrappers"));
         }
 
@@ -49,7 +49,7 @@ public class JDBC {
             try (final ResultSet resultSet = statement.executeQuery()) {
 
                 resultSet.first();
-                return Result.success(mapPrimitiveWrapper(clazz, resultSet));
+                return Result.success(mapPrimitiveWrapper(type, resultSet));
 
             }
 
@@ -72,47 +72,6 @@ public class JDBC {
         Objects.requireNonNull(extractor);
         if (!validateObjectParams(params)) {
             return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
-        }
-
-        Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
-
-        try (
-                final Connection connection = dataSourceProvider.dataSource().getConnection();
-                final PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
-
-            setParameters(statement, params);
-
-            try (final ResultSet resultSet = statement.executeQuery()) {
-
-                resultSet.first();
-                return Result.success(extractor.extractData(resultSet));
-
-            }
-
-        } catch (SQLException e) {
-
-            final String sqlStatus = e.getSQLState();
-
-            if (sqlStatus.equals("02000")) {
-                return Result.failure(new DataNotFoundException("Data was not found."));
-            }
-
-            return Result.failure(new RepositoryDataException(e.getMessage()));
-
-        }
-
-    }
-
-    public <T> Result<T, Throwable> queryWithArray(final String sql, final byte arrayIndex, final Class<T> typeOfArray,
-                                                   final ResultSetExtractor<T> extractor, @OptionalArgument final Object... params) {
-        Objects.requireNonNull(sql);
-        Objects.requireNonNull(extractor);
-        if (!validateObjectParams(params)) {
-            return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
-        }
-        if (!typeOfArray.isPrimitive() || typeOfArray == void.class) {
-            return Result.failure(new InvalidDataArgumentException("Invalid class type. Function jdbc.queryForObjets() can only provide primitive wrappers"));
         }
 
         Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));

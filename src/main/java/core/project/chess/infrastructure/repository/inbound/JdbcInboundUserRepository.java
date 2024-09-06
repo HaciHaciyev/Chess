@@ -19,7 +19,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void save(UserAccount userAccount) {
+    public void save(final UserAccount userAccount) {
         final String sql = """
                     INSERT INTO UserAccount
                         (id, username, email, password,
@@ -45,7 +45,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void saveUserToken(EmailConfirmationToken token) {
+    public void saveUserToken(final EmailConfirmationToken token) {
         final String sql = """
                     INSERT INTO UserToken
                         (id, user_id, token, is_confirmed,
@@ -66,7 +66,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void enable(EmailConfirmationToken token) {
+    public void enable(final EmailConfirmationToken token) {
         if (!token.isConfirmed() || !token.getUserAccount().isEnable()) {
             throw new IllegalArgumentException("Token need to be confirmed & UserAccount need to be enabled");
         }
@@ -94,7 +94,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException {
+    public void deleteByToken(final EmailConfirmationToken token) throws IllegalAccessException {
         final Boolean isEnable = token.getUserAccount().isEnable();
 
         if (Boolean.TRUE.equals(isEnable) || token.isConfirmed()) {
