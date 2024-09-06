@@ -482,7 +482,17 @@ public record King(Color color)
         for (final Field field : diagonalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
-            final boolean isDangerPiece = (piece instanceof Bishop || piece instanceof Queen || piece instanceof King) && !piece.color().equals(color);
+            final int enemyRow = field.getCoordinate().getRow();
+            final int enemyColumn = field.getCoordinate().columnToInt();
+
+            final boolean surroundField = Math.abs(futureKing.getRow() - enemyRow) <= 1 && Math.abs(futureKing.columnToInt() - enemyColumn) <= 1;
+
+            final boolean isOppositionOfKing = (piece instanceof King) && !piece.color().equals(this.color) && surroundField;
+            if (isOppositionOfKing) {
+                return false;
+            }
+
+            final boolean isDangerPiece = (piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color);
             if (isDangerPiece) {
                 return false;
             }
@@ -495,7 +505,17 @@ public record King(Color color)
         for (final Field field : horizontalVerticalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
-            final boolean isEnemyRookOrQueenOrKing = (piece instanceof Rook || piece instanceof Queen || piece instanceof King) && !piece.color().equals(color);
+            final int enemyRow = field.getCoordinate().getRow();
+            final int enemyColumn = field.getCoordinate().columnToInt();
+
+            final boolean surroundField = Math.abs(futureKing.getRow() - enemyRow) <= 1 && Math.abs(futureKing.columnToInt() - enemyColumn) <= 1;
+
+            final boolean isOppositionOfKing = (piece instanceof King) && !piece.color().equals(this.color) && surroundField;
+            if (isOppositionOfKing) {
+                return false;
+            }
+
+            final boolean isEnemyRookOrQueenOrKing = (piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color);
             if (isEnemyRookOrQueenOrKing) {
                 return false;
             }
