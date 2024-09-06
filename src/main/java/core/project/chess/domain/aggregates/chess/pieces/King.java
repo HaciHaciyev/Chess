@@ -521,8 +521,10 @@ public record King(Color color)
         for (final Field potentialKnightAttackPosition : potentialKnightAttackPositions) {
             final Piece piece = potentialKnightAttackPosition.pieceOptional().orElseThrow();
 
+            boolean isEaten = potentialKnightAttackPosition.getCoordinate().equals(to);
+
             final boolean isEnemyKnight = piece instanceof Knight && !piece.color().equals(color);
-            if (isEnemyKnight) {
+            if (isEnemyKnight && !isEaten) {
                 return false;
             }
         }

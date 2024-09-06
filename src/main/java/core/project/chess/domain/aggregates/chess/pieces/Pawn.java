@@ -235,7 +235,7 @@ public record Pawn(Color color)
 
         return previousMoveWasPassage(chessBoard) &&
                 lastMoveCoordinate.isPresent() &&
-                lastMoveCoordinate.get().getColumn() == endColumn &&
+                lastMoveCoordinate.get().columnToInt() == endColumn &&
                 (lastMoveCoordinate.get().getRow() - endRow == 1 || lastMoveCoordinate.get().getRow() - endRow == -1);
     }
 
