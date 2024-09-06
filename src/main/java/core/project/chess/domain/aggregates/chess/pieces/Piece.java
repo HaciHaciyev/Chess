@@ -51,7 +51,7 @@ public sealed interface Piece
 
         do {
             final Coordinate coordinate = Coordinate
-                    .coordinate(row, column)
+                    .of(row, column)
                     .orElseThrow(
                             () -> new IllegalStateException("Can`t create coordinate. The method needs repair.")
                     );

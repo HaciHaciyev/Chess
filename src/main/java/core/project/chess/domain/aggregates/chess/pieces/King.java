@@ -607,9 +607,9 @@ public record King(Color color)
 
             final StatusPair<Coordinate> possibleCoordinate;
             if (Color.WHITE.equals(kingColor)) {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
+                possibleCoordinate = Coordinate.of(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
             } else {
-                possibleCoordinate = Coordinate.coordinate(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
+                possibleCoordinate = Coordinate.of(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
             }
 
             if (possibleCoordinate.status()) {

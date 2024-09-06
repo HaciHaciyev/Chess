@@ -122,7 +122,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         List<ChessBoard.Field> list = new ArrayList<>();
 
         for (int[] direction : directions) {
-            var possibleCoordinate = Coordinate.coordinate(row + direction[0], column + direction[1]);
+            var possibleCoordinate = Coordinate.of(row + direction[0], column + direction[1]);
 
             if (possibleCoordinate.status()) {
                 Coordinate coordinate = possibleCoordinate.orElseThrow();
@@ -186,11 +186,11 @@ public record ChessBoardNavigator(ChessBoard board) {
         final List<StatusPair<Coordinate>> possibleCoordinates = new ArrayList<>(2);
 
         if (Color.WHITE.equals(color)) {
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() + 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() + 1));
         } else {
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() + 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() + 1));
         }
 
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -238,11 +238,11 @@ public record ChessBoardNavigator(ChessBoard board) {
         final List<StatusPair<Coordinate>> possibleCoordinates = new ArrayList<>(2);
 
         if (Color.WHITE.equals(color)) {
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() - 1, pivot.columnToInt() + 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() + 1));
         } else {
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.coordinate(pivot.getRow() + 1, pivot.columnToInt() + 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() + 1));
         }
 
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -313,7 +313,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         List<ChessBoard.Field> fields = new ArrayList<>();
 
         for (int[] move : moves) {
-            var possibleCoordinate = Coordinate.coordinate(row + move[0], col + move[1]);
+            var possibleCoordinate = Coordinate.of(row + move[0], col + move[1]);
 
             if (possibleCoordinate.status()) {
                 Coordinate coordinate = possibleCoordinate.orElseThrow();
@@ -381,7 +381,7 @@ public record ChessBoardNavigator(ChessBoard board) {
 
         while (true) {
             final Coordinate coordinate = Coordinate
-                    .coordinate(row, column)
+                    .of(row, column)
                     .orElseThrow(() -> new IllegalStateException("Can't create coordinate. The method needs repair."));
 
             fields.add(board.field(coordinate));
@@ -421,7 +421,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         Piece piece = field.pieceOptional().orElseThrow();
 
         int direction = piece.color().equals(Color.WHITE) ? 1 : -1;
-        final var possibleForwardCoordinate = Coordinate.coordinate(coordinate.getRow() + direction, coordinate.columnToInt());
+        final var possibleForwardCoordinate = Coordinate.of(coordinate.getRow() + direction, coordinate.columnToInt());
 
         if (possibleForwardCoordinate.status()) {
             Coordinate forward = possibleForwardCoordinate.orElseThrow();

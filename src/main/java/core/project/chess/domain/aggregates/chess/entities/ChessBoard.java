@@ -1234,7 +1234,7 @@ public class ChessBoard {
             final Coordinate to = coordinates.getSecond();
 
             final Coordinate intermediateFieldOfPassage = Coordinate
-                    .coordinate(
+                    .of(
                             to.getRow() == 4 ? to.getRow() - 1 : to.getRow() + 1,
                             to.columnToInt()
                     )

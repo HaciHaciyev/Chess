@@ -31,7 +31,7 @@ public enum Coordinate {
      * @param column the column number (1-8)
      * @return a StatusPair containing the Coordinate object if the row and column are valid, or a StatusPair with a false status if the row or column is out of bounds
      */
-    public static StatusPair<Coordinate> coordinate(int row, int column) {
+    public static StatusPair<Coordinate> of(int row, int column) {
         if (row > 8 || column > 8 || row < 1 || column < 1) {
             return StatusPair.ofFalse();
         }

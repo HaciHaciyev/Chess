@@ -193,7 +193,7 @@ public record Pawn(Color color)
             intermediateRow = endRow + 1;
         }
 
-        final Coordinate intermediateCoordinate = Coordinate.coordinate(intermediateRow, column).orElseThrow();
+        final Coordinate intermediateCoordinate = Coordinate.of(intermediateRow, column).orElseThrow();
         Field interMediateField = chessBoard.field(intermediateCoordinate);
         if (!interMediateField.isEmpty()) {
             return StatusPair.ofFalse();

@@ -57,6 +57,6 @@ public enum Direction {
     }
 
     public StatusPair<Coordinate> apply(Coordinate coordinate) {
-        return Coordinate.coordinate(coordinate.getRow() + rowDelta, coordinate.columnToInt() + colDelta);
+        return Coordinate.of(coordinate.getRow() + rowDelta, coordinate.columnToInt() + colDelta);
     }
 }
