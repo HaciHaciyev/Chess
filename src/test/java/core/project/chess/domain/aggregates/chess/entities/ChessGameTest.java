@@ -98,6 +98,10 @@ class ChessGameTest {
 
                 System.out.println();
 
+                if (move.black() == null) {
+                    break;
+                }
+
                 Log.info(move.black());
 
                 game.makeMovement(black, move.black().from(), move.black().to(), null);

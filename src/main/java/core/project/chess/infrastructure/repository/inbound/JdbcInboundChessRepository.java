@@ -37,6 +37,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         jdbc.update(sql,
 
             chessGame.getChessGameId().toString(),
+            chessGame.getChessBoard().getChessBoardId().toString(),
             chessGame.getPlayerForBlackRating().rating(),
             chessGame.getPlayerForBlackRating().rating(),
             chessGame.getTimeControllingTYPE(),
@@ -74,12 +75,15 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         final String arrayDefinition = "fen_representations_of_board";
         final byte arrayIndex = 6;
 
-        jdbc.updateAndArray(sql, arrayDefinition, arrayIndex, chessGame.getChessBoard().arrayOfFEN(),
+        jdbc.updateAndArrayStoring(sql, arrayDefinition, arrayIndex, chessGame.getChessBoard().arrayOfFEN(),
+
             chessGame.gameResult().isPresent(),
             chessGame.getChessGameId().toString(),
             chessGame.getChessBoard().getChessBoardId().toString(),
             chessGame.getChessGameId().toString(),
             chessGame.getChessBoard().pgn()
-        );
+        )
+
+        .ifFailure(Throwable::printStackTrace);
     }
 }

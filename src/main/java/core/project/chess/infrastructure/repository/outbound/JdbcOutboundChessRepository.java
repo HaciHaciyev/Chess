@@ -21,6 +21,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     @Override
     public Result<ChessGame, Throwable> findById(UUID chessGameId) {
+
+
         return Result.failure(new Throwable());
     }
 }

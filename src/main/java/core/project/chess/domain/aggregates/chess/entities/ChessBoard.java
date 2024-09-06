@@ -424,11 +424,14 @@ public class ChessBoard {
             if (piece instanceof King) {
                 this.validWhiteShortCasting = false;
                 this.validWhiteLongCasting = false;
+                return;
             }
 
             if (from.equals(Coordinate.a1)) {
                 validWhiteLongCasting = false;
-            } else {
+            }
+
+            if (from.equals(Coordinate.h1)) {
                 validWhiteShortCasting = false;
             }
 
@@ -437,11 +440,14 @@ public class ChessBoard {
             if (piece instanceof King) {
                 this.validBlackShortCasting = false;
                 this.validBlackLongCasting = false;
+                return;
             }
 
             if (from.equals(Coordinate.a8)) {
                 validBlackLongCasting = false;
-            } else {
+            }
+
+            if (from.equals(Coordinate.h8)) {
                 validBlackShortCasting = false;
             }
 

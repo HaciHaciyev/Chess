@@ -104,6 +104,47 @@ public class JDBC {
 
     }
 
+    public <T> Result<T, Throwable> queryWithArray(final String sql, final byte arrayIndex, final Class<T> typeOfArray,
+                                                   final ResultSetExtractor<T> extractor, @OptionalArgument final Object... params) {
+        Objects.requireNonNull(sql);
+        Objects.requireNonNull(extractor);
+        if (!validateObjectParams(params)) {
+            return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
+        }
+        if (!typeOfArray.isPrimitive() || typeOfArray == void.class) {
+            return Result.failure(new InvalidDataArgumentException("Invalid class type. Function jdbc.queryForObjets() can only provide primitive wrappers"));
+        }
+
+        Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
+
+        try (
+                final Connection connection = dataSourceProvider.dataSource().getConnection();
+                final PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+
+            setParameters(statement, params);
+
+            try (final ResultSet resultSet = statement.executeQuery()) {
+
+                resultSet.first();
+                return Result.success(extractor.extractData(resultSet));
+
+            }
+
+        } catch (SQLException e) {
+
+            final String sqlStatus = e.getSQLState();
+
+            if (sqlStatus.equals("02000")) {
+                return Result.failure(new DataNotFoundException("Data was not found."));
+            }
+
+            return Result.failure(new RepositoryDataException(e.getMessage()));
+
+        }
+
+    }
+
     public <T> Result<List<T>, Throwable> queryForList(final String sql, final RowMapper<T> rowMapper) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(rowMapper);
@@ -166,8 +207,8 @@ public class JDBC {
         }
     }
 
-    public Result<Boolean, Throwable> updateAndArray(final String sql, final String arrayDefinition, final byte arrayIndex,
-                                                     final Object[] array, final Object... args) {
+    public Result<Boolean, Throwable> updateAndArrayStoring(final String sql, final String arrayDefinition, final byte arrayIndex,
+                                                            final Object[] array, final Object... args) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(args);
         if (!validateObjectParams(args)) {
@@ -183,7 +224,7 @@ public class JDBC {
 
             setParameters(statement, args);
 
-            Array createdArray = connection.createArrayOf(arrayDefinition, array);
+            final Array createdArray = connection.createArrayOf(arrayDefinition, array);
             statement.setArray(arrayIndex, createdArray);
 
             statement.executeUpdate();
