@@ -762,15 +762,11 @@ public record ChessBoardNavigator(ChessBoard board) {
         @NonNull
         public Iterator<Coordinate> iterator() {
             return new Iterator<>() {
-                private StatusPair<Coordinate> current = direction.apply(start);
+                private Coordinate current = start;
 
                 @Override
                 public boolean hasNext() {
-                    if (!current.status()) {
-                        return false;
-                    }
-
-                    return direction.apply(current.orElseThrow()).status();
+                    return direction.apply(current).status();
                 }
 
                 @Override
@@ -778,8 +774,8 @@ public record ChessBoardNavigator(ChessBoard board) {
                     if (!hasNext()) {
                         throw new NoSuchElementException();
                     }
-                    Coordinate result = current.orElseThrow();
-                    current = direction.apply(result);
+                    var result = direction.apply(current).orElseThrow();
+                    current = result;
                     return result;
                 }
             };

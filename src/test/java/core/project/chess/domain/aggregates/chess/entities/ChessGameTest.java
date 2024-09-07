@@ -75,48 +75,77 @@ class ChessGameTest {
     }
 
     @Test
-    @DisplayName("game from pgn")
-    void gameFromPGNTest() {
-        ChessGame game = chessGameSupplier().get();
+    @DisplayName("Berliner_PGN_Archive_64")
+    void berliner64() {
+        executeGameFromPGN("src/main/resources/chess/pgn/Berliner_lalg.pgn");
+    }
 
-        String white = game.getPlayerForWhite().getUsername().username();
-        String black = game.getPlayerForBlack().getUsername().username();
+    @Test
+    @DisplayName("Mamedyarov_PGN_Archive_4684")
+    void mamedyarov4684() {
+        executeGameFromPGN("src/main/resources/chess/pgn/Mamedyarov_lalg.pgn");
+    }
 
-        for (String pgn : extractPGN()) {
+    private void executeGameFromPGN(String path) {
+        int pgnNum = 0;
+        for (String pgn : extractPGN(path)) {
+            pgnNum++;
+            ChessGame game = chessGameSupplier().get();
+
+            String white = game.getPlayerForWhite().getUsername().username();
+            String black = game.getPlayerForBlack().getUsername().username();
+
             SimplePGNReader pgnReader = new SimplePGNReader(pgn);
             List<ChessMove> moves = pgnReader.readAll();
 
+            String event = pgnReader.tag("Event");
+            String date = pgnReader.tag("Date");
+            String whiteName = pgnReader.tag("White");
+            String blackName = pgnReader.tag("Black");
+
+            Log.info("""
+                    
+                    Event: %s
+                    Date: %s
+                    White: %s
+                    Black: %s
+                    """.formatted(event, date, whiteName, blackName));
+            int moveNum = 0;
             for (ChessMove move : moves) {
+                if (move.white() == null) {
+                    break;
+                }
 
-                Log.info(move.white());
+                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
+                Log.info("White: " + move.white());
 
-                game.makeMovement(white, move.white().from(), move.white().to(), null);
-
-                Log.info("White : " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
-                Log.info(game.getChessBoard().actualRepresentationOfChessBoard());
-                Log.info(game.getChessBoard().pgn());
-
+                game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
+                Log.info("White_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
+                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
+                Log.info("Board_PGN: " + game.getChessBoard().pgn());
                 System.out.println();
 
                 if (move.black() == null) {
                     break;
                 }
 
-                Log.info(move.black());
+                Log.info("Black: " + move.black());
 
-                game.makeMovement(black, move.black().from(), move.black().to(), null);
-                Log.info("Black : " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
-                Log.info(game.getChessBoard().actualRepresentationOfChessBoard());
-                Log.info(game.getChessBoard().pgn());
-
+                game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+                Log.info("Black_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
+                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
+                Log.info("Board_PGN: " + game.getChessBoard().pgn());
                 System.out.println();
-
             }
+
+            Log.info("Result: " + pgnReader.tag("Result"));
+            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
+            System.out.println();
         }
     }
 
-    private static String[] extractPGN() {
-        File file = new File("src/main/resources/chess/pgn/Berliner_lalg.pgn");
+    private static String[] extractPGN(String path) {
+        File file = new File(path);
 
         StringBuilder sb;
         String[] pgnArr;
@@ -130,11 +159,13 @@ class ChessGameTest {
                     i++;
                     if (i % 2 == 0) {
                         sb.append("---");
+                        continue;
                     }
                 }
 
                 sb.append(ch);
             }
+
 
             pgnArr = sb.toString().split("---");
         } catch (IOException e) {

@@ -1,6 +1,9 @@
 package core.project.chess.infrastructure.utilities;
 
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.domain.aggregates.chess.pieces.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -11,9 +14,10 @@ public class SimplePGNReader {
     private final Map<String, String> tags;
 
     public SimplePGNReader(String pgn) {
-        this.pgn = pgn;
-        this.tags = extractTags(pgn);
-        this.moves = extractMoves(pgn);
+        String pgnStrip = pgn.strip();
+        this.pgn = pgnStrip;
+        this.tags = extractTags(pgnStrip);
+        this.moves = extractMoves(pgnStrip);
     }
 
     private Map<String, String> extractTags(String pgn) {
@@ -49,7 +53,7 @@ public class SimplePGNReader {
 
             move = move.replaceAll("\\{.+}", " ");
             move = move.strip();
-            move = move.replaceAll(" \\w-\\w", "");
+            move = move.replaceAll(" (\\w-\\w)|(1/2-1/2)", "");
 
             moves.add(move);
         }
@@ -81,29 +85,61 @@ public class SimplePGNReader {
     public ChessMove read(int i) {
         String rawMove = moves.get(i);
         String move = rawMove.replaceAll("[+x#]", "");
+
         String[] splitMove = move.split(" ");
 
+
         PlayerMove white = splitMove[0].transform(s -> {
+            String promotion = Character.isUpperCase(s.charAt(s.length() - 1)) ? String.valueOf(s.charAt(s.length() - 1)) : null;
+            Piece promotionPiece = null;
+            if (promotion != null) {
+                s = s.substring(0, s.length() - 1);
+
+                promotionPiece = switch (promotion) {
+                    case "N" -> new Knight(Color.WHITE);
+                    case "B" -> new Bishop(Color.WHITE);
+                    case "R" -> new Rook(Color.WHITE);
+                    case "Q" -> new Queen(Color.WHITE);
+                    default -> null;
+                };
+            }
+
+
+
             String strStart = s.substring(0, 2);
             String strEnd = s.substring(2);
 
             Coordinate start = Coordinate.valueOf(strStart);
             Coordinate end = Coordinate.valueOf(strEnd);
 
-            return new PlayerMove(start, end, null);
+            return new PlayerMove(start, end, promotionPiece);
         });
 
         PlayerMove black = null;
 
         if (splitMove.length > 1) {
             black = splitMove[1].transform(s -> {
+                String promotion = Character.isUpperCase(s.charAt(s.length() - 1)) ? String.valueOf(s.charAt(s.length() - 1)) : null;
+                Piece promotionPiece = null;
+                if (promotion != null) {
+                    s = s.substring(0, s.length() - 1);
+
+                    promotionPiece = switch (promotion) {
+                        case "K" -> new Knight(Color.BLACK);
+                        case "B" -> new Bishop(Color.BLACK);
+                        case "R" -> new Rook(Color.BLACK);
+                        case "Q" -> new Queen(Color.BLACK);
+                        default -> null;
+                    };
+                }
+
                 String strStart = s.substring(0, 2);
                 String strEnd = s.substring(2);
 
                 Coordinate start = Coordinate.valueOf(strStart);
                 Coordinate end = Coordinate.valueOf(strEnd);
 
-                return new PlayerMove(start, end, null);
+                return new PlayerMove(start, end, promotionPiece);
             });
         }
 

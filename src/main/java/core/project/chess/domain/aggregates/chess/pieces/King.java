@@ -360,6 +360,10 @@ public record King(Color color)
             return true;
         }
 
+        if (enemies.size() > 1) {
+            return false;
+        }
+
         if (enemies.size() == 1 && !surrounded) {
             return false;
         }
@@ -637,7 +641,7 @@ public record King(Color color)
                 final Coordinate pawnCoordinate = possibleCoordinate.orElseThrow();
                 final Field possiblePawn = boardNavigator.board().field(pawnCoordinate);
 
-                if (possiblePawn.isPresent() && possiblePawn.pieceOptional().orElseThrow().color().equals(kingColor)) {
+                if (possiblePawn.isPresent() && possiblePawn.pieceOptional().orElseThrow() instanceof Pawn && possiblePawn.pieceOptional().orElseThrow().color().equals(kingColor)) {
                     return safeForKing(boardNavigator.board(), king, pawnCoordinate, currentCoordinate);
                 }
             }
@@ -650,7 +654,7 @@ public record King(Color color)
                 }
             }
 
-            final List<Field> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), enemyField.getCoordinate());
+            final List<Field> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), currentCoordinate);
             for (final Field diagonalField : diagonalFields) {
                 final Piece piece = diagonalField.pieceOptional().orElseThrow();
 
@@ -659,7 +663,7 @@ public record King(Color color)
                 }
             }
 
-            final List<Field> horizontalVertical = boardNavigator.occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), enemyField.getCoordinate());
+            final List<Field> horizontalVertical = boardNavigator.occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), currentCoordinate);
             for (final Field horizontalVerticalField : horizontalVertical) {
                 final Piece piece = horizontalVerticalField.pieceOptional().orElseThrow();
 
