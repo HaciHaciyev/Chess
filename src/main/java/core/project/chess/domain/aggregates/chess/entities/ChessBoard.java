@@ -677,10 +677,10 @@ public class ChessBoard {
 
         final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType));
-// ignore repetition stalemate for the time being
-//        if (hashCodeOfBoard.get(currentPositionHash) == 4) {
-//            return Operations.STALEMATE;
-//        }
+
+        if (hashCodeOfBoard.get(currentPositionHash) == 3 && !operations.contains(Operations.CHECK) && !operations.contains(Operations.CHECKMATE)) {
+            return Operations.STALEMATE;
+        }
 
         return AlgebraicNotation.opponentKingStatus(operations);
     }
@@ -747,7 +747,7 @@ public class ChessBoard {
 
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
 
-        if (hashCodeOfBoard.get(currentPositionHash) == 3) {
+        if (hashCodeOfBoard.get(currentPositionHash) == 3 && !operations.contains(Operations.CHECK) && !operations.contains(Operations.CHECKMATE)) {
             return Operations.STALEMATE;
         }
 

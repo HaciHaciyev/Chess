@@ -32,6 +32,25 @@ class ChessGameTest {
 
     private static final Logger log = LoggerFactory.getLogger(ChessGameTest.class);
 
+    @Test
+    @Disabled("Utility function.")
+    void removeDashes() {
+        final String pgn = """
+                1. c2-c4 e7-e5 2. Nb1-c3 Nb8-c6 3. g2-g3 g7-g6 4. Bf1-g2 Bf8-g7 5. e2-e4 d7-d6 6. Ng1-e2 Ng8-e7 7. d2-d3 O-O 8. O-O Bc8-g4 
+                9. f2-f3 Bg4-e6 10. Nc3-d5 f7-f5 11. Bc1-e3 Qd8-d7 12. Qd1-d2 Rf8-f7 13. Ra1-d1 Ra8-f8 14. b2-b3 Ne7-c8 15. Kg1-h1 Nc6-d8 
+                16. Nd5-c3 c7-c5 17. e4xf5 Be6xf5 18. g3-g4 Bf5-e6 19. Nc3-e4 Nc8-e7 20. Ne4-g5 Rf7-f6 21. Ng5-e4 Rf6-f7 22. Ne4-g5 Rf7-f6 
+                23. h2-h3 Ne7-c6 24. f3-f4 Nc6-d4 25. Ne2-c3 e5xf4 26. Be3xd4 c5xd4 27. Nc3-d5 Be6xd5 28. Bg2xd5+ Kg8-h8 29. Ng5-e4 g6-g5 
+                30. Ne4xf6 Bg7xf6 31. Rd1-e1 Kh8-g7 32. Qd2-e2 Rf8-h8 33. Kh1-g2 Nd8-c6 34. Bd5xc6 Qd7xc6+ 35. Qe2-f3 Qc6xf3+ 36. Kg2xf3 h7-h5 
+                37. Rf1-h1 a7-a5 38. Kf3-e4 b7-b6 39. Ke4-f5 h5-h4 40. Kf5-e4 Rh8-e8+ 41. Ke4-d5 Re8-e3 42. Re1xe3 d4xe3 43. d3-d4 Kg7-f7 
+                44. Rh1-b1 Kf7-e7 45. a2-a3 Ke7-d7 46. b3-b4 a5-a4 47. Kd5-e4 Kd7-c6 48. b4-b5+ Kc6-c7 49. Ke4-d3 Kc7-b7 50. Rb1-b4 Bf6-g7 
+                51. d4-d5 Bg7-e5 52. Rb4xa4 Be5-d4 53. Kd3-e2 Bd4-c3 54. Ra4-a6 Bc3-a5 55. a3-a4 Ba5-b4 56. Ke2-f3 Bb4-c3 
+                57. Kf3-e2 Bc3-b4 58. Ke2-d3 Bb4-a5 59. Kd3-e2 Ba5-b4
+                """;
+
+        String result = pgn.replaceAll("-", "");
+        Log.info(result);
+    }
+
     @Test /** In this method, a full-fledged game is played with its logic, and both valid and invalid moves are present.*/
     @Disabled("For single performance checks.")
     void testChessGamePerformance() {
