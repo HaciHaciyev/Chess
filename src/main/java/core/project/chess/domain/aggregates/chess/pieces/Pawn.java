@@ -231,6 +231,11 @@ public record Pawn(Color color)
     }
 
     boolean captureOnPassage(ChessBoard chessBoard, int endColumn, int endRow) {
+        Objects.requireNonNull(chessBoard);
+        if (endColumn < 1 || endColumn > 8 || endRow < 1 || endRow > 8) {
+            throw new IllegalArgumentException("Illegal column or (and) row.");
+        }
+
         Optional<Coordinate> lastMoveCoordinate = previousMoveCoordinate(chessBoard);
 
         if (!previousMoveWasPassage(chessBoard)) {
@@ -253,6 +258,8 @@ public record Pawn(Color color)
     }
 
     public boolean previousMoveWasPassage(ChessBoard chessBoard) {
+        Objects.requireNonNull(chessBoard);
+
         if (chessBoard.latestMovement().isEmpty()) {
             return false;
         }

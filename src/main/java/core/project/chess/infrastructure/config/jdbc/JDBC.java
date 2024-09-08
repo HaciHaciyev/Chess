@@ -1,8 +1,8 @@
 package core.project.chess.infrastructure.config.jdbc;
 
-import core.project.chess.infrastructure.exceptions.DataNotFoundException;
-import core.project.chess.infrastructure.exceptions.InvalidDataArgumentException;
-import core.project.chess.infrastructure.exceptions.RepositoryDataException;
+import core.project.chess.infrastructure.exceptions.persistant.DataNotFoundException;
+import core.project.chess.infrastructure.exceptions.persistant.InvalidDataArgumentException;
+import core.project.chess.infrastructure.exceptions.persistant.RepositoryDataException;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.repository.ResultSetExtractor;

@@ -5,8 +5,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public record Email(String email) {
-      private static final String emailRegex = "^(\\S+)@(\\S+)$";
-      private static final Pattern pattern = Pattern.compile(emailRegex);
+
+    private static final String emailRegex = "^(\\S+)@(\\S+)$";
+
+    private static final Pattern pattern = Pattern.compile(emailRegex);
 
     public Email {
         if (Objects.isNull(email)) {

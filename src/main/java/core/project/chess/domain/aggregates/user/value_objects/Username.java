@@ -5,8 +5,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public record Username(String username) {
-        private static final String usernameRegex = "^[a-zA-Z0-9 ]*$";
-        private static final Pattern pattern = Pattern.compile(usernameRegex);
+
+    private static final String usernameRegex = "^[a-zA-Z0-9 ]*$";
+
+    private static final Pattern pattern = Pattern.compile(usernameRegex);
 
     public Username {
         if (Objects.isNull(username)) {

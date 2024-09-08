@@ -1,4 +1,4 @@
-package core.project.chess.infrastructure.exceptions;
+package core.project.chess.infrastructure.exceptions.persistant;
 
 public class DataNotFoundException extends RepositoryDataException {
 
