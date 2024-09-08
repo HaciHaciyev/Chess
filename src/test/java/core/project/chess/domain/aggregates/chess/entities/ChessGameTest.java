@@ -13,8 +13,6 @@ import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -33,17 +31,14 @@ class ChessGameTest {
     @Disabled("Utility function.")
     void removeDashes() {
         final String pgn = """
-                1. d2-d4 Ng8-f6 2. Bc1-g5 Nf6-e4 3. Bg5-f4 c7-c5 4. f2-f3 Qd8-a5+ 5. c2-c3 Ne4-f6 6. d4-d5 e7-e6 7. e2-e4 e6xd5 8. e4xd5 d7-d6 
-                9. Nb1-d2 Bf8-e7 10. c3-c4 O-O 11. Bf1-d3 b7-b5 12. Ng1-e2 b5xc4 13. Bd3xc4 Nb8-d7 14. O-O Nd7-b6 15. Ne2-c3 Bc8-a6 
-                16. Bc4xa6 Qa5xa6 17. Nd2-e4 Ra8-d8 18. Rf1-e1 Qa6-b7 19. Qd1-b3 Nf6xd5 20. Nc3xd5 Qb7xd5 21. Ra1-d1 Qd5-c6 
-                22. Ne4-g3 Be7-f6 23. Ng3-f5 d6-d5 24. g2-g4 c5-c4 25. Qb3-c2 d5-d4 26. g4-g5 Qc6xf3 27. g5xf6 Qf3xf4 
-                28. Re1-f1 Qf4-g5+ 29. Kg1-h1 Qg5xf6 30. Qc2-g2 Kg8-h8 31. Nf5xd4 Qf6-g6 32. Qg2xg6 h7xg6 33. Nd4-c6 Rd8xd1 
-                34. Rf1xd1 Nb6-a4 35. b2-b3 Na4-b2 36. Rd1-d2 c4-c3 37. Rd2-c2 Rf8-c8 38. Nc6xa7 Rc8-a8 39. Na7-b5 Ra8xa2 
-                40. Rc2xc3 Nb2-d1 41. Rc3-c8+ Kh8-h7 42. Nb5-d6 f7-f6 43. h2-h4 Nd1-f2+ 44. Kh1-g1 Nf2-h3+ 45. Kg1-h1 g6-g5 
-                46. h4xg5 Nh3xg5 47. Rc8-c3 Ra2-d2 48. Nd6-c4 Rd2-d1+ 49. Kh1-g2 Kh7-g6 50. b3-b4 Rd1-b1 51. Nc4-d6 Rb1xb4 
-                52. Rc3-c7 Rb4-b2+ 53. Kg2-f1 Rb2-d2 54. Nd6-e8 Ng5-f7 55. Rc7-e7 Rd2-d8 56. Kf1-f2 f6-f5 57. Kf2-g2 Rd8-d3 
-                58. Re7-e6+ Kg6-h7 59. Re6-e7 Kh7-g8 60. Re7-a7 Rd3-e3 61. Ne8-c7 Nf7-g5 62. Nc7-d5 Re3-e4 63. Nd5-e7+ Kg8-h7 
-                64. Ne7xf5 Re4-g4+ 65. Kg2-h2 Ng5-f3+ 66. Kh2-h3 Rg4-g5 67. Ra7xg7+ Rg5xg7.
+                1. e2-e4 c7-c5 2. Ng1-f3 d7-d6 3. Bf1-b5+ Nb8-d7 4. d2-d4 c5xd4 5. Qd1xd4 Qd8-c7 6. Nb1-c3 e7-e6 7. O-O Ng8-e7 8. Bb5xd7+ Bc8xd7 
+                9. Rf1-d1 Ne7-g6 10. Bc1-e3 a7-a6 11. a2-a4 Ra8-c8 12. a4-a5 Ng6-e5 13. Nf3xe5 d6xe5 14. Qd4-d3 Bd7-c6 15. Be3-b6 Qc7-e7 16. Ra1-b1 Qe7-b4 
+                17. Qd3-h3 Bf8-d6 18. Qh3-e3 Bd6-e7 19. f2-f3 O-O 20. Kg1-h1 Bc6-b5 21. Nc3xb5 Qb4xb5 22. c2-c3 Be7-c5 23. Bb6xc5 Rc8xc5 24. b2-b4 Rc5-c7 
+                25. h2-h3 Rf8-c8 26. Rd1-d3 h7-h6 27. Rb1-d1 Kg8-h7 28. Qe3-d2 Rc7-c4 29. Rd3-d7 Rc8-c7 30. Qd2-d6 Qb5-a4 31. Rd7xc7 Rc4xc7 32. Qd6xc7 Qa4xd1+ 
+                33. Kh1-h2 Qd1-d2 34. Qc7xf7 Qd2xc3 35. Qf7xb7 Qc3-d2 36. Qb7-b6 Qd2-f4+ 37. Kh2-h1 Qf4-c1+ 38. Qb6-g1 Qc1-b2 39. Qg1-c5 h6-h5 40. Kh1-h2 h5-h4 
+                41. Qc5-d6 Qb2-b3 42. Qd6xa6 Qb3xb4 43. Qa6-b6 Qb4-e1 44. a5-a6 Qe1-g3+ 45. Kh2-h1 Qg3-e1+ 46. Qb6-g1 Qe1-a5 47. a6-a7 g7-g5 48. Kh1-h2 Kh7-g6 
+                49. Qg1-f2 Kg6-h6 50. Qf2-e3 Kh6-h5 51. Qe3-g1 Kh5-h6 52. Qg1-f2 Kh6-g6 53. Qf2-e3 Kg6-h5 54. Qe3-b3 Qa5xa7 55. Qb3xe6 Qa7-c5 
+                56. Qe6-f7+ Kh5-h6 57. Qf7-f6+ Kh6-h5 58. Qf6-g7 Qc5-d6 59. g2-g4#
                 """;
 
         String result = pgn.replaceAll("-", "");
@@ -122,10 +117,11 @@ class ChessGameTest {
             SimplePGNReader pgnReader = new SimplePGNReader(pgn);
             List<ChessMove> moves = pgnReader.readAll();
 
-            Log.info("""
+            /*Log.info("""
                     Simulating the game of:
                     %s
-                    """.formatted(pgn));
+                    """.formatted(pgn));*/
+
             int moveNum = 0;
             for (ChessMove move : moves) {
                 if (move.white() == null) {
@@ -133,29 +129,25 @@ class ChessGameTest {
                 }
 
                 Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
-                Log.info("White: " + move.white());
+
+                if (game.getChessBoard().lastAlgebraicNotation().isPresent()) {
+                    //Log.info("Last algebraic notation before white moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
+                }
 
                 game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
-//                Log.info("White_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
-//                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
-//                Log.info("Board_PGN: " + game.getChessBoard().pgn());
 
                 if (move.black() == null) {
                     break;
                 }
 
-                Log.info("Black: " + move.black());
+                //Log.info("Last algebraic notation before black moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
 
                 game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
-//                Log.info("Black_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
-//                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
-//                Log.info("Board_PGN: " + game.getChessBoard().pgn());
-                System.out.println();
             }
 
-            Log.info("Result: " + pgnReader.tag("Result"));
-            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
-            System.out.println();
+//            Log.info("Result: " + pgnReader.tag("Result"));
+//            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
+//            System.out.println();
         }
     }
 
@@ -207,30 +199,14 @@ class ChessGameTest {
                 break;
             }
 
-            Log.info("Move#" + ++moveNum);
-            Log.info("White: " + move.white());
-
             game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
-            Log.info("White_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
-            Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
-            Log.info("Board_PGN: " + game.getChessBoard().pgn());
 
             if (move.black() == null) {
                 break;
             }
 
-            Log.info("Black: " + move.black());
-
             game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
-            Log.info("Black_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
-            Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
-            Log.info("Board_PGN: " + game.getChessBoard().pgn());
-            System.out.println();
         }
-
-        Log.info("Result: " + pgnReader.tag("Result"));
-        Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
-        System.out.println();
     }
 
     private static List<String> extractPGN(String path) {

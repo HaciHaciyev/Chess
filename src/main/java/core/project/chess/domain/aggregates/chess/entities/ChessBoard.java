@@ -190,8 +190,12 @@ public class ChessBoard {
      *
      * @return An algebraic notation in type of String.
      */
-    public AlgebraicNotation lastAlgebraicNotation() {
-        return listOfAlgebraicNotations.getLast();
+    public Optional<AlgebraicNotation> lastAlgebraicNotation() {
+        if (listOfAlgebraicNotations.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(listOfAlgebraicNotations.getLast());
     }
 
     /**
@@ -802,7 +806,10 @@ public class ChessBoard {
         }
 
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
-        operations.add(opponentKing.kingStatus(this, opponentKing.color()));
+
+        operations.add(
+                opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
+        );
 
         final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color());
         if (isStalemate) {
@@ -891,7 +898,11 @@ public class ChessBoard {
 
         final Set<Operations> operations = statusPair.orElseThrow();
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
-        operations.add(opponentKing.kingStatus(this, opponentKing.color()));
+
+        operations.add(
+                opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
+        );
+
 
         final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color());
         if (isStalemate) {
@@ -1467,9 +1478,9 @@ public class ChessBoard {
             fen.append("- ");
         }
 
+        final var lastMovement = latestMovement();
         if (latestMovement().isPresent() && new Pawn(Color.WHITE).previousMoveWasPassage(this)) {
-            var coordinates = lastAlgebraicNotation().coordinates();
-            final Coordinate to = coordinates.getSecond();
+            final Coordinate to = lastMovement.orElseThrow().getSecond();
 
             final Coordinate intermediateFieldOfPassage = Coordinate
                     .of(

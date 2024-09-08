@@ -230,7 +230,7 @@ public record Pawn(Color color)
         return StatusPair.ofTrue(setOfOperations);
     }
 
-    boolean captureOnPassage(ChessBoard chessBoard, int endColumn, int endRow) {
+    private boolean captureOnPassage(ChessBoard chessBoard, int endColumn, int endRow) {
         Objects.requireNonNull(chessBoard);
         if (endColumn < 1 || endColumn > 8 || endRow < 1 || endRow > 8) {
             throw new IllegalArgumentException("Illegal column or (and) row.");
@@ -264,7 +264,13 @@ public record Pawn(Color color)
             return false;
         }
 
-        final AlgebraicNotation figureType = chessBoard.lastAlgebraicNotation();
+        final Optional<AlgebraicNotation> figureTypeOptional = chessBoard.lastAlgebraicNotation();
+
+        if (figureTypeOptional.isEmpty()) {
+            return false;
+        }
+
+        final AlgebraicNotation figureType = figureTypeOptional.get();
         final boolean isLastMoveWasMadeByPawn = figureType.pieceTYPE().equals(AlgebraicNotation.PieceTYPE.P);
         if (!isLastMoveWasMadeByPawn) {
             return false;
