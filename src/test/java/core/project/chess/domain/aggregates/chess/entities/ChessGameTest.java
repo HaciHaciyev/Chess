@@ -16,10 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -117,18 +118,10 @@ class ChessGameTest {
             SimplePGNReader pgnReader = new SimplePGNReader(pgn);
             List<ChessMove> moves = pgnReader.readAll();
 
-            String event = pgnReader.tag("Event");
-            String date = pgnReader.tag("Date");
-            String whiteName = pgnReader.tag("White");
-            String blackName = pgnReader.tag("Black");
-
             Log.info("""
-                    
-                    Event: %s
-                    Date: %s
-                    White: %s
-                    Black: %s
-                    """.formatted(event, date, whiteName, blackName));
+                    Simulating the game of:
+                    %s
+                    """.formatted(pgn));
             int moveNum = 0;
             for (ChessMove move : moves) {
                 if (move.white() == null) {
@@ -142,7 +135,6 @@ class ChessGameTest {
                 Log.info("White_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
                 Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
                 Log.info("Board_PGN: " + game.getChessBoard().pgn());
-                System.out.println();
 
                 if (move.black() == null) {
                     break;
@@ -163,34 +155,41 @@ class ChessGameTest {
         }
     }
 
-    private static String[] extractPGN(String path) {
+    private static List<String> extractPGN(String path) {
         File file = new File(path);
+        List<String> pgnList = new ArrayList<>();
 
-        StringBuilder sb;
-        String[] pgnArr;
-        try (FileReader fileReader = new FileReader(file)) {
-            sb = new StringBuilder();
+        try (var reader = new BufferedReader(new FileReader(file))) {
+            StringBuilder sb = new StringBuilder();
+            int emptyLineOccurence = 0;
+            String line;
 
-            int i = 0;
-            while (fileReader.ready()) {
-                char ch = (char) fileReader.read();
-                if (!sb.isEmpty() && sb.charAt(sb.length() - 1) == '\n' && ch == '\n') {
-                    i++;
-                    if (i % 2 == 0) {
-                        sb.append("---");
-                        continue;
-                    }
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty()) emptyLineOccurence++;
+
+                /* tags and moves in PGN are separated by new line character
+                    as in: [Tag value]
+                           [AnotherTag value]
+                           \n
+                           1. e4 e5 etc.
+
+                   and PGNs themselves are also separated by new line
+                   so it means that every second new line is separating not tags and moves but 2 PGNs
+                 */
+                if (!sb.isEmpty() && emptyLineOccurence == 2) {
+                    emptyLineOccurence = 0;
+                    pgnList.add(sb.toString());
+                    sb.delete(0, sb.length());
+                    continue;
                 }
 
-                sb.append(ch);
+                sb.append(line).append("\n");
             }
 
-
-            pgnArr = sb.toString().split("---");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return pgnArr;
+        return pgnList;
     }
 
     @Test
