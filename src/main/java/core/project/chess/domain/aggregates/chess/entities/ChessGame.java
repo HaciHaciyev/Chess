@@ -20,6 +20,8 @@ import java.util.UUID;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
+import static core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage.*;
+
 @Getter
 public class ChessGame {
     private final UUID chessGameId;
@@ -31,6 +33,7 @@ public class ChessGame {
     private final Rating playerForBlackRating;
     private final SessionEvents sessionEvents;
     private final TimeControllingTYPE timeControllingTYPE;
+    private @Getter(AccessLevel.NONE) boolean isTheOptionToEndTheGameDueToThreeFoldActive;
     private @Getter(AccessLevel.NONE) StatusPair<GameResult> isGameOver;
 
     private ChessGame(UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack,
@@ -53,6 +56,7 @@ public class ChessGame {
         this.chessGameId = chessGameId;
         this.chessBoard = chessBoard;
         this.playersTurn = Color.WHITE;
+        this.isTheOptionToEndTheGameDueToThreeFoldActive = false;
         this.playerForWhite = playerForWhite;
         this.playerForBlack = playerForBlack;
         this.playerForWhiteRating = playerForWhiteRating;
@@ -108,6 +112,24 @@ public class ChessGame {
         }
     }
 
+    public void endGameByThreeFold(final String username) {
+        Objects.requireNonNull(username);
+
+        if (isGameOver.status()) {
+            throw new IllegalArgumentException("Game is over.");
+        }
+
+        if (!username.equals(playerForWhite.getUsername().username()) || !username.equals(playerForBlack.getUsername().username())) {
+            throw new IllegalArgumentException("Not legal user access.");
+        }
+
+        if (!isTheOptionToEndTheGameDueToThreeFoldActive) {
+            throw new IllegalArgumentException("Game can`t be ended. ThreeFold rule is not active.");
+        }
+
+        gameOver(Operations.STALEMATE);
+    }
+
     public void makeMovement(final String username, final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion)
             throws IllegalArgumentException {
         Objects.requireNonNull(username);
@@ -139,19 +161,20 @@ public class ChessGame {
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
 
         if (message.equals(GameResultMessage.RuleOf3EqualsPositions)) {
-            // TODO implement optional game draw ending.
+            isTheOptionToEndTheGameDueToThreeFoldActive = true;
         }
 
         final boolean gameOver =
-                message.equals(GameResultMessage.Checkmate) || message.equals(GameResultMessage.Stalemate) || message.equals(GameResultMessage.RuleOf50Moves);
+                message.equals(Checkmate) || message.equals(Stalemate) || message.equals(RuleOf50Moves) || message.equals(InsufficientMatingMaterial);
+
         if (gameOver) {
             Log.info("GAME OVER: {%s}".formatted(message));
 
-            if (message.equals(GameResultMessage.Checkmate)) {
+            if (message.equals(Checkmate)) {
                 gameOver(Operations.CHECKMATE);
             }
 
-            if (message.equals(GameResultMessage.Stalemate) || message.equals(GameResultMessage.RuleOf50Moves)) {
+            if (message.equals(Stalemate) || message.equals(RuleOf50Moves) || message.equals(InsufficientMatingMaterial)) {
                 gameOver(Operations.STALEMATE);
             }
 

@@ -17,9 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -37,15 +34,17 @@ class ChessGameTest {
     @Disabled("Utility function.")
     void removeDashes() {
         final String pgn = """
-                1. c2-c4 e7-e5 2. Nb1-c3 Nb8-c6 3. g2-g3 g7-g6 4. Bf1-g2 Bf8-g7 5. e2-e4 d7-d6 6. Ng1-e2 Ng8-e7 7. d2-d3 O-O 8. O-O Bc8-g4 
-                9. f2-f3 Bg4-e6 10. Nc3-d5 f7-f5 11. Bc1-e3 Qd8-d7 12. Qd1-d2 Rf8-f7 13. Ra1-d1 Ra8-f8 14. b2-b3 Ne7-c8 15. Kg1-h1 Nc6-d8 
-                16. Nd5-c3 c7-c5 17. e4xf5 Be6xf5 18. g3-g4 Bf5-e6 19. Nc3-e4 Nc8-e7 20. Ne4-g5 Rf7-f6 21. Ng5-e4 Rf6-f7 22. Ne4-g5 Rf7-f6 
-                23. h2-h3 Ne7-c6 24. f3-f4 Nc6-d4 25. Ne2-c3 e5xf4 26. Be3xd4 c5xd4 27. Nc3-d5 Be6xd5 28. Bg2xd5+ Kg8-h8 29. Ng5-e4 g6-g5 
-                30. Ne4xf6 Bg7xf6 31. Rd1-e1 Kh8-g7 32. Qd2-e2 Rf8-h8 33. Kh1-g2 Nd8-c6 34. Bd5xc6 Qd7xc6+ 35. Qe2-f3 Qc6xf3+ 36. Kg2xf3 h7-h5 
-                37. Rf1-h1 a7-a5 38. Kf3-e4 b7-b6 39. Ke4-f5 h5-h4 40. Kf5-e4 Rh8-e8+ 41. Ke4-d5 Re8-e3 42. Re1xe3 d4xe3 43. d3-d4 Kg7-f7 
-                44. Rh1-b1 Kf7-e7 45. a2-a3 Ke7-d7 46. b3-b4 a5-a4 47. Kd5-e4 Kd7-c6 48. b4-b5+ Kc6-c7 49. Ke4-d3 Kc7-b7 50. Rb1-b4 Bf6-g7 
-                51. d4-d5 Bg7-e5 52. Rb4xa4 Be5-d4 53. Kd3-e2 Bd4-c3 54. Ra4-a6 Bc3-a5 55. a3-a4 Ba5-b4 56. Ke2-f3 Bb4-c3 57. Kf3-e2 Bc3-b4 
-                58. Ke2-d3 Bb4-a5 59. Kd3-e2 Ba5-b4
+                1. d2-d4 Ng8-f6 2. Bc1-g5 Nf6-e4 3. Bg5-f4 c7-c5 4. f2-f3 Qd8-a5+ 5. c2-c3 Ne4-f6 6. d4-d5 e7-e6 7. e2-e4 e6xd5 8. e4xd5 d7-d6 
+                9. Nb1-d2 Bf8-e7 10. c3-c4 O-O 11. Bf1-d3 b7-b5 12. Ng1-e2 b5xc4 13. Bd3xc4 Nb8-d7 14. O-O Nd7-b6 15. Ne2-c3 Bc8-a6 
+                16. Bc4xa6 Qa5xa6 17. Nd2-e4 Ra8-d8 18. Rf1-e1 Qa6-b7 19. Qd1-b3 Nf6xd5 20. Nc3xd5 Qb7xd5 21. Ra1-d1 Qd5-c6 
+                22. Ne4-g3 Be7-f6 23. Ng3-f5 d6-d5 24. g2-g4 c5-c4 25. Qb3-c2 d5-d4 26. g4-g5 Qc6xf3 27. g5xf6 Qf3xf4 
+                28. Re1-f1 Qf4-g5+ 29. Kg1-h1 Qg5xf6 30. Qc2-g2 Kg8-h8 31. Nf5xd4 Qf6-g6 32. Qg2xg6 h7xg6 33. Nd4-c6 Rd8xd1 
+                34. Rf1xd1 Nb6-a4 35. b2-b3 Na4-b2 36. Rd1-d2 c4-c3 37. Rd2-c2 Rf8-c8 38. Nc6xa7 Rc8-a8 39. Na7-b5 Ra8xa2 
+                40. Rc2xc3 Nb2-d1 41. Rc3-c8+ Kh8-h7 42. Nb5-d6 f7-f6 43. h2-h4 Nd1-f2+ 44. Kh1-g1 Nf2-h3+ 45. Kg1-h1 g6-g5 
+                46. h4xg5 Nh3xg5 47. Rc8-c3 Ra2-d2 48. Nd6-c4 Rd2-d1+ 49. Kh1-g2 Kh7-g6 50. b3-b4 Rd1-b1 51. Nc4-d6 Rb1xb4 
+                52. Rc3-c7 Rb4-b2+ 53. Kg2-f1 Rb2-d2 54. Nd6-e8 Ng5-f7 55. Rc7-e7 Rd2-d8 56. Kf1-f2 f6-f5 57. Kf2-g2 Rd8-d3 
+                58. Re7-e6+ Kg6-h7 59. Re6-e7 Kh7-g8 60. Re7-a7 Rd3-e3 61. Ne8-c7 Nf7-g5 62. Nc7-d5 Re3-e4 63. Nd5-e7+ Kg8-h7 
+                64. Ne7xf5 Re4-g4+ 65. Kg2-h2 Ng5-f3+ 66. Kh2-h3 Rg4-g5 67. Ra7xg7+ Rg5xg7.
                 """;
 
         String result = pgn.replaceAll("-", "");

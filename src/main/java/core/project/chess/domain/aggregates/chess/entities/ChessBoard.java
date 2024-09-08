@@ -53,13 +53,15 @@ import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Ope
  *
  *
  * @author Hadzhyiev Hadzhy
- * @version 2.1
+ * @version 2.2
  */
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
     private Color figuresTurn;
     private byte ruleOf50MovesForWhite;
     private byte ruleOf50MovesForBlack;
+    private byte materialAdvantageOfWhite;
+    private byte materialAdvantageOfBlack;
     private boolean validWhiteShortCasting;
     private boolean validWhiteLongCasting;
     private boolean validBlackShortCasting;
@@ -103,6 +105,11 @@ public class ChessBoard {
         this.figuresTurn = Color.WHITE;
         this.currentWhiteKingPosition = initialWhiteKingPosition;
         this.currentBlackKingPosition = initialBlackKingPosition;
+
+        this.ruleOf50MovesForWhite = 0;
+        this.ruleOf50MovesForBlack = 0;
+        this.materialAdvantageOfWhite = 39;
+        this.materialAdvantageOfBlack = 39;
 
         /** These fields are intended to determine whether castling is possible from the point of view
          * of the pieces intended for castling not having been used earlier in the movement.
@@ -376,6 +383,66 @@ public class ChessBoard {
     }
 
     /**
+     * Updates the material advantage based on the removal of a piece from the board.
+     * <p>
+     * This method adjusts the material advantage for the player whose piece has been removed.
+     * It calculates the price of the removed piece using the materialAdvantageOfFigure method
+     * and subtracts that value from the respective player's material advantage.
+     *
+     * @param removedPiece the piece that has been removed from the board.
+     */
+    private void changeInMaterialAdvantage(final Piece removedPiece) {
+        final byte price = materialAdvantageOfFigure(removedPiece);
+
+        if (removedPiece.color().equals(Color.WHITE)) {
+            materialAdvantageOfWhite -= price;
+        }
+
+        if (removedPiece.color().equals(Color.BLACK)) {
+            materialAdvantageOfBlack -= price;
+        }
+    }
+
+    /**
+     * Updates the material advantage in case of a pawn promotion.
+     * <p>
+     * This method adjusts the material advantage for both players when a pawn is promoted
+     * to another piece. It ensures that the promoted piece is neither a King nor a Pawn,
+     * and then updates the material advantages accordingly.
+     *
+     * @param promotionFigure the piece that the pawn is promoted to.
+     * @throws IllegalArgumentException if the promotionFigure is a King or a Pawn.
+     */
+    private void changeInMaterialAdvantageInCaseOfPromotion(final Piece promotionFigure) {
+        if (promotionFigure instanceof King || promotionFigure instanceof Pawn) {
+            throw new IllegalArgumentException("Unexpected situation.");
+        }
+
+        final byte price = materialAdvantageOfFigure(promotionFigure);
+
+        if (promotionFigure.color().equals(Color.WHITE)) {
+            materialAdvantageOfWhite -= 1;
+            materialAdvantageOfBlack += price;
+        }
+
+        if (promotionFigure.color().equals(Color.BLACK)) {
+            materialAdvantageOfBlack -= 1;
+            materialAdvantageOfWhite += price;
+        }
+    }
+
+    public byte materialAdvantageOfFigure(final Piece piece) {
+        return switch (piece) {
+            case Queen q -> 9;
+            case Rook r -> 5;
+            case Knight n -> 3;
+            case Bishop b -> 3;
+            case Pawn p -> 1;
+            default -> throw new IllegalStateException("Unexpected value: " + piece);
+        };
+    }
+
+    /**
      * Determines if a pawn can perform a capture en passant on the specified coordinate.
      *
      * <p>This method checks if the given piece is a pawn and if its previous move was a
@@ -394,9 +461,6 @@ public class ChessBoard {
         if (piece instanceof Pawn pawn && pawn.previousMoveWasPassage(this)) {
             final Coordinate lastMoveEnd = latestMovement().orElseThrow().getSecond();
 
-
-            // tbh my brain is frying rn, so im not sure how this code works, but seems like it kinda works
-
             if (lastMoveEnd.columnToInt() != to.columnToInt()) {
                 return false;
             }
@@ -408,11 +472,6 @@ public class ChessBoard {
             if (piece.color().equals(Color.BLACK) && lastMoveEnd.getRow() - to.getRow() == 1) {
                 return true;
             }
-
-//            final boolean captureOnPassage = lastMoveEnd.columnToInt() == to.columnToInt() && Math.abs(lastMoveEnd.getRow() - to.getRow()) == 1;
-//            if (captureOnPassage) {
-//                return true;
-//            }
         }
 
         return false;
@@ -540,7 +599,7 @@ public class ChessBoard {
      * </p>
      */
     private void ruleOf50MovesAbility(final Piece piece, final Set<Operations> operations) {
-        if (!operations.contains(Operations.CAPTURE) && piece instanceof Pawn) {
+        if (!operations.contains(CAPTURE) && piece instanceof Pawn) {
 
             if (figuresTurn.equals(Color.WHITE)) {
                 ruleOf50MovesForWhite++;
@@ -551,7 +610,7 @@ public class ChessBoard {
             }
         }
 
-        if (piece instanceof Pawn || operations.contains(Operations.CAPTURE)) {
+        if (piece instanceof Pawn || operations.contains(CAPTURE)) {
 
             if (figuresTurn.equals(Color.WHITE)) {
                 ruleOf50MovesForWhite = 0;
@@ -606,6 +665,28 @@ public class ChessBoard {
 
         return from.equals(Coordinate.e1) && (to.equals(Coordinate.g1) || to.equals(Coordinate.c1))
                 || from.equals(Coordinate.e8) && (to.equals(Coordinate.g8) || to.equals(Coordinate.c8));
+    }
+
+    /**
+     * Checks if there is at least one pawn on the chessboard.
+     * <p>
+     * This method iterates through all possible coordinates on the board,
+     * checking each field to see if it contains a piece. If it finds a piece
+     * that is an instance of the Pawn class, it returns true. If no pawns
+     * are found after checking all fields, it returns false.
+     *
+     * @return true if at least one pawn is present on the board, false otherwise.
+     */
+    public boolean isAtLeastOnePawnOnBoard() {
+        for (final Coordinate coordinate : Coordinate.values()) {
+            final Field field = fieldMap.get(coordinate);
+
+            if (field.isPresent() && field.pieceOptional().orElseThrow() instanceof Pawn) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -684,7 +765,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move. Failed validation for %s movement.".formatted(piece.toString()));
         }
 
-        final boolean promotionOperation = statusPair.orElseThrow().contains(Operations.PROMOTION);
+        final boolean promotionOperation = statusPair.orElseThrow().contains(PROMOTION);
         if (promotionOperation) {
 
             Pawn pawn = (Pawn) piece;
@@ -701,7 +782,7 @@ public class ChessBoard {
 
         startField.removeFigure();
 
-        if (operations.contains(Operations.CAPTURE)) {
+        if (operations.contains(CAPTURE)) {
 
             if (isCaptureOnPassage(piece, to)) {
                 fieldMap.get(latestMovement().orElseThrow().getSecond()).removeFigure();
@@ -710,7 +791,7 @@ public class ChessBoard {
             endField.removeFigure();
         }
 
-        if (operations.contains(Operations.PROMOTION)) {
+        if (operations.contains(PROMOTION)) {
             if (!endField.isEmpty()) {
                 endField.removeFigure();
             }
@@ -725,7 +806,7 @@ public class ChessBoard {
 
         final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color());
         if (isStalemate) {
-            operations.add(Operations.STALEMATE);
+            operations.add(STALEMATE);
         }
 
         /** Monitor opportunities for castling, switch players.*/
@@ -750,14 +831,6 @@ public class ChessBoard {
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType));
 
         /** Retrieve message about game result.*/
-        if (ruleOf50MovesForWhite == 50 && ruleOf50MovesForBlack == 50 && !operations.contains(CHECK) && !operations.contains(CHECKMATE)) {
-            return GameResultMessage.RuleOf50Moves;
-        }
-
-        if (hashCodeOfBoard.get(currentPositionHash) == 3 && !operations.contains(CHECK) && !operations.contains(CHECKMATE)) {
-            return GameResultMessage.RuleOf3EqualsPositions;
-        }
-
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
 
         if (opponentKingStatus.equals(STALEMATE)) {
@@ -766,6 +839,22 @@ public class ChessBoard {
 
         if (opponentKingStatus.equals(CHECKMATE)) {
             return GameResultMessage.Checkmate;
+        }
+
+        if (opponentKingStatus.equals(CHECK)) {
+            return GameResultMessage.Continue;
+        }
+
+        if (materialAdvantageOfWhite <= 3 && materialAdvantageOfBlack <= 3 && !isAtLeastOnePawnOnBoard()) {
+            return GameResultMessage.InsufficientMatingMaterial;
+        }
+
+        if (ruleOf50MovesForWhite == 50 && ruleOf50MovesForBlack == 50) {
+            return GameResultMessage.RuleOf50Moves;
+        }
+
+        if (hashCodeOfBoard.get(currentPositionHash) == 3) {
+            return GameResultMessage.RuleOf3EqualsPositions;
         }
 
         return GameResultMessage.Continue;
@@ -806,7 +895,7 @@ public class ChessBoard {
 
         final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color());
         if (isStalemate) {
-            operations.add(Operations.STALEMATE);
+            operations.add(STALEMATE);
         }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/

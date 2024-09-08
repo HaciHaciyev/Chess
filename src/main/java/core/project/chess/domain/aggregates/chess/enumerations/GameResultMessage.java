@@ -6,5 +6,6 @@ public enum GameResultMessage {
     Stalemate,
     RuleOf50Moves,
     RuleOf3EqualsPositions,
+    InsufficientMatingMaterial,
     Continue
 }
