@@ -36,15 +36,7 @@ public enum Coordinate {
             return StatusPair.ofFalse();
         }
 
-        final char charColumn = intToColumn(column);
-
-        for (Coordinate coordinate : Coordinate.values()) {
-            if (coordinate.row == row && coordinate.column == charColumn) {
-                return StatusPair.ofTrue(coordinate);
-            }
-        }
-
-        return StatusPair.ofFalse();
+        return StatusPair.ofTrue(Coordinate.valueOf(String.valueOf(intToColumn(column)) + row));
     }
 
     /**

@@ -95,14 +95,20 @@ class ChessGameTest {
 
     @Test
     @DisplayName("Mamedyarov_PGN_Archive_4684")
-    void mamedyarov4684() {
+    void mamedyarov_ALL() {
         executeGameFromPGN("src/main/resources/chess/pgn/Mamedyarov_lalg.pgn");
     }
 
     @Test
     @DisplayName("Hikaru_PGN_Archive_8025")
-    void nakamura8025() {
+    void nakamura_ALL() {
         executeGameFromPGN("src/main/resources/chess/pgn/Hikaru_lalg.pgn");
+    }
+
+    @Test
+    @DisplayName("Magnus ALL")
+    void magnus_ALL() {
+        executeGameFromPGN("src/main/resources/chess/pgn/Magnus_lalg.pgn");
     }
 
     private void executeGameFromPGN(String path) {
@@ -128,10 +134,10 @@ class ChessGameTest {
                     break;
                 }
 
-                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
+//                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
 
                 if (game.getChessBoard().lastAlgebraicNotation().isPresent()) {
-                    //Log.info("Last algebraic notation before white moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
+//                    Log.info("Last algebraic notation before white moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
                 }
 
                 game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
@@ -148,130 +154,6 @@ class ChessGameTest {
 //            Log.info("Result: " + pgnReader.tag("Result"));
 //            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
 //            System.out.println();
-        }
-    }
-
-    @Test
-    @DisplayName("Nakamura_5117")
-    void nakamura_5117() {
-        String pgn = """
-                [Event "Titled Tue 26th Apr Late"]
-                [Site "chess.com INT"]
-                [Date "2022.04.26"]
-                [Round "1"]
-                [White "Nakamura,Hi"]
-                [Black "Guz,Ari"]
-                [Result "1-0"]
-                [WhiteElo "2750"]
-                [BlackElo "2332"]
-                [ECO "A05"]
-                
-                1. g1f3 g8f6 2. b2b3 b7b6 3. c1b2 c8b7 4. g2g3 e7e6 5. f1g2 f8e7 6. d2d4
-                e8g8 7. e1g1 d7d6 8. c2c4 b8d7 9. b1c3 f6e4 10. d1c2 d7f6 11. c3d1 c7c5 12.
-                d4c5 e4c5 13. b3b4 c5d7 14. d1e3 a8c8 15. c2b3 d6d5 16. c4d5 f6d5 17. a2a3
-                e7f6 18. e3g4 f6b2 19. b3b2 h7h5 20. g4e5 d8f6 21. e2e4 d7e5 22. f3e5 d5c3
-                23. e5d7 f6d4 24. d7f8 g8f8 25. a1c1 b7a6 26. c1c2 a6f1 27. g2f1 e6e5 28.
-                b2c1 h5h4 29. c1e1 h4g3 30. h2g3 c8c7 31. f1g2 f8g8 32. c2d2 d4c4 33. d2d8+
-                g8h7 34. g2f3 g7g6 35. g1g2 h7g7 36. e1h1 g7f6 37. h1h4+ f6e6 38. f3g4+
-                f7f5 39. g4f5+ g6f5 40. h4h6+ e6f7 41. d8f8+ f7e7 42. h6f6+ 1-0
-                """;
-
-        ChessGame game = defaultChessGameFactory();
-
-        String white = game.getPlayerForWhite().getUsername().username();
-        String black = game.getPlayerForBlack().getUsername().username();
-
-        SimplePGNReader pgnReader = new SimplePGNReader(pgn);
-        List<ChessMove> moves = pgnReader.readAll();
-
-            /*Log.info("""
-                    Simulating the game of:
-                    %s
-                    """.formatted(pgn));*/
-
-        int moveNum = 0;
-        for (ChessMove move : moves) {
-            if (move.white() == null) {
-                break;
-            }
-
-            Log.info("Move#" + ++moveNum);
-
-            if (game.getChessBoard().lastAlgebraicNotation().isPresent()) {
-                //Log.info("Last algebraic notation before white moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
-            }
-
-            game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
-
-            if (move.black() == null) {
-                break;
-            }
-
-            //Log.info("Last algebraic notation before black moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
-
-            game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
-        }
-
-//            Log.info("Result: " + pgnReader.tag("Result"));
-//            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
-//            System.out.println();
-    }
-
-    @Test
-    @DisplayName("Mamedyarov_4674")
-    void mamedyarov_4674() {
-        String pgn = """
-                [Event "Titled Tue 4th Jun Early"]
-                [Site "chess.com INT"]
-                [Date "2024.06.04"]
-                [Round "10"]
-                [White "Mamedyarov,S"]
-                [Black "Bharath,Subramaniyam H"]
-                [Result "1/2-1/2"]
-                [WhiteElo "2734"]
-                [BlackElo "2550"]
-                [ECO "A45"]
-                
-                1. d2d4 g8f6 2. c1g5 f6e4 3. g5f4 c7c5 4. f2f3 d8a5+ 5. c2c3 e4f6 6. d4d5
-                e7e6 7. e2e4 e6d5 8. e4d5 d7d6 9. b1d2 f8e7 10. c3c4 e8g8 11. f1d3 b7b5 12.
-                g1e2 b5c4 13. d3c4 b8d7 14. e1g1 d7b6 15. e2c3 c8a6 16. c4a6 a5a6 17. d2e4
-                a8d8 18. f1e1 a6b7 19. d1b3 f6d5 20. c3d5 b7d5 21. a1d1 d5c6 22. e4g3 e7f6
-                23. g3f5 d6d5 24. g2g4 c5c4 25. b3c2 d5d4 26. g4g5 c6f3 27. g5f6 f3f4 28.
-                e1f1 f4g5+ 29. g1h1 g5f6 30. c2g2 g8h8 31. f5d4 f6g6 32. g2g6 h7g6 33. d4c6
-                d8d1 34. f1d1 b6a4 35. b2b3 a4b2 36. d1d2 c4c3 37. d2c2 f8c8 38. c6a7 c8a8
-                39. a7b5 a8a2 40. c2c3 b2d1 41. c3c8+ h8h7 42. b5d6 f7f6 43. h2h4 d1f2+ 44.
-                h1g1 f2h3+ 45. g1h1 g6g5 46. h4g5 h3g5 47. c8c3 a2d2 48. d6c4 d2d1+ 49.
-                h1g2 h7g6 50. b3b4 d1b1 51. c4d6 b1b4 52. c3c7 b4b2+ 53. g2f1 b2d2 54. d6e8
-                g5f7 55. c7e7 d2d8 56. f1f2 f6f5 57. f2g2 d8d3 58. e7e6+ g6h7 59. e6e7 h7g8
-                60. e7a7 d3e3 61. e8c7 f7g5 62. c7d5 e3e4 63. d5e7+ g8h7 64. e7f5 e4g4+ 65.
-                g2h2 g5f3+ 66. h2h3 g4g5 67. a7g7+ g5g7 68. f5g7 1/2-1/2
-                """;
-
-        ChessGame game = defaultChessGameFactory();
-
-        String white = game.getPlayerForWhite().getUsername().username();
-        String black = game.getPlayerForBlack().getUsername().username();
-
-        SimplePGNReader pgnReader = new SimplePGNReader(pgn);
-        List<ChessMove> moves = pgnReader.readAll();
-
-        Log.info("""
-                    Simulating the game of:
-                    %s
-                    """.formatted(pgn));
-        int moveNum = 0;
-        for (ChessMove move : moves) {
-            if (move.white() == null) {
-                break;
-            }
-
-            game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
-
-            if (move.black() == null) {
-                break;
-            }
-
-            game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
         }
     }
 

@@ -168,7 +168,6 @@ public class ChessGame {
                 message.equals(Checkmate) || message.equals(Stalemate) || message.equals(RuleOf50Moves) || message.equals(InsufficientMatingMaterial);
 
         if (gameOver) {
-            Log.info("GAME OVER: {%s}".formatted(message));
 
             if (message.equals(Checkmate)) {
                 gameOver(Operations.CHECKMATE);

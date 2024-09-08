@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.utilities.chess;
 
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
@@ -300,6 +301,7 @@ public record ChessBoardNavigator(ChessBoard board) {
      */
     public List<ChessBoard.Field> knightAttackPositions(Coordinate pivot, Predicate<ChessBoard.Field> predicate) {
         Objects.requireNonNull(pivot);
+        Objects.requireNonNull(predicate);
 
         int row = pivot.getRow();
         int col = pivot.columnToInt();
@@ -348,8 +350,7 @@ public record ChessBoardNavigator(ChessBoard board) {
      * or ensuring the king and rook have not moved before). It simply identifies the fields that
      * would be involved in the move.</p>
      *
-     * @param presentKing        The {@link Coordinate} object representing the current position of the king.
-     * @param futureKingPosition The {@link Coordinate} object representing the intended position of the king after castling.
+     * @param color
      * @return A list of {@link ChessBoard.Field} objects representing all fields involved in the castling move, including the king's path.
      * @throws NullPointerException  if any of {@code chessBoard}, {@code presentKing}, or {@code futureKingPosition} is {@code null}.
      * @throws IllegalStateException if an invalid coordinate is encountered during calculation.
@@ -357,42 +358,24 @@ public record ChessBoardNavigator(ChessBoard board) {
      * @see Coordinate
      * @see ChessBoard.Field
      */
-    public List<ChessBoard.Field> castlingFields(Coordinate presentKing, Coordinate futureKingPosition) {
-        Objects.requireNonNull(presentKing);
-        Objects.requireNonNull(futureKingPosition);
+    public List<ChessBoard.Field> castlingFields(AlgebraicNotation.Castle castle, Color color) {
+        Objects.requireNonNull(castle);
+        Objects.requireNonNull(color);
 
-        final char from = presentKing.getColumn();
-        final char to = futureKingPosition.getColumn();
-
-        final List<ChessBoard.Field> fields = new ArrayList<>();
-        fields.add(board.field(presentKing));
-
-        int direction = from < to ? 1 : -1;
-        addCastlingFields(presentKing, futureKingPosition, fields, direction);
-
-        return fields;
-    }
-
-    private void addCastlingFields(Coordinate presentKing,
-                                   Coordinate futureKingPosition,
-                                   List<ChessBoard.Field> fields,
-                                   int direction) {
-        int row = presentKing.getRow();
-        int column = presentKing.columnToInt() + direction;
-
-        while (true) {
-            final Coordinate coordinate = Coordinate
-                    .of(row, column)
-                    .orElseThrow(() -> new IllegalStateException("Can't create coordinate. The method needs repair."));
-
-            fields.add(board.field(coordinate));
-
-            if (coordinate.equals(futureKingPosition)) {
-                return;
+        return switch (color) {
+            case WHITE -> {
+                if (castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING)) {
+                    yield  List.of(board.field(Coordinate.e1), board.field(Coordinate.f1), board.field(Coordinate.g1));
+                }
+                yield  List.of(board.field(Coordinate.e1), board.field(Coordinate.d1), board.field(Coordinate.c1));
             }
-
-            column += direction;
-        }
+            case BLACK -> {
+                if (castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING)) {
+                    yield  List.of(board.field(Coordinate.e8), board.field(Coordinate.f8), board.field(Coordinate.g8));
+                }
+                yield  List.of(board.field(Coordinate.e8), board.field(Coordinate.d8), board.field(Coordinate.c8));
+            }
+        };
     }
 
     /**
@@ -496,11 +479,18 @@ public record ChessBoardNavigator(ChessBoard board) {
      * @see Direction
      */
     public List<ChessBoard.Field> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot) {
-        return directions.stream()
-                .map(direction -> occupiedFieldInDirection(direction, pivot))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .toList();
+        List<ChessBoard.Field> list = new ArrayList<>();
+
+        for (Direction direction : directions) {
+            Optional<ChessBoard.Field> possibleField = occupiedFieldInDirection(direction, pivot);
+
+            if (possibleField.isPresent()) {
+                ChessBoard.Field field = possibleField.get();
+                list.add(field);
+            }
+        }
+
+        return list;
     }
 
     /**
@@ -533,11 +523,16 @@ public record ChessBoardNavigator(ChessBoard board) {
     public List<ChessBoard.Field> occupiedFieldsInDirections(List<Direction> directions,
                                                              Coordinate pivot,
                                                              Predicate<ChessBoard.Field> occupiedPredicate) {
-        return directions.stream()
-                .map(direction -> occupiedFieldInDirection(direction, pivot, occupiedPredicate))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .toList();
+        List<ChessBoard.Field> list = new ArrayList<>();
+        for (Direction direction : directions) {
+            Optional<ChessBoard.Field> optionalField = occupiedFieldInDirection(direction, pivot, occupiedPredicate);
+
+            if (optionalField.isPresent()) {
+                ChessBoard.Field field = optionalField.get();
+                list.add(field);
+            }
+        }
+        return list;
     }
 
 

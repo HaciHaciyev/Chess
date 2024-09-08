@@ -276,7 +276,7 @@ public record Pawn(Color color)
             return false;
         }
 
-        Pair<Coordinate, Coordinate> lastMovement = chessBoard.latestMovement().get();
+        Pair<Coordinate, Coordinate> lastMovement = chessBoard.latestMovement().orElseThrow();
         Coordinate from = lastMovement.getFirst();
         Coordinate to = lastMovement.getSecond();
 
@@ -285,7 +285,7 @@ public record Pawn(Color color)
 
     private Optional<Coordinate> previousMoveCoordinate(ChessBoard chessBoard) {
         return Optional.ofNullable(
-                chessBoard.latestMovement().isPresent() ? chessBoard.latestMovement().get().getSecond() : null
+                chessBoard.latestMovement().isPresent() ? chessBoard.latestMovement().orElseThrow().getSecond() : null
         );
     }
 }

@@ -394,7 +394,7 @@ public record King(Color color)
             return false;
         }
 
-        final List<Field> fieldsToCastle = boardNavigator.castlingFields(presentKingPosition, futureKingPosition);
+        final List<Field> fieldsToCastle = boardNavigator.castlingFields(castle, color);
         for (final Field field : fieldsToCastle) {
             boolean canCastle = processCastling(boardNavigator, field);
 
@@ -720,7 +720,6 @@ public record King(Color color)
                 if (canBlockByPassage) {
                     return true;
                 }
-
             }
 
             final List<Field> knights = boardNavigator.knightAttackPositions(currentCoordinate, Field::isPresent);
