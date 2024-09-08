@@ -394,10 +394,25 @@ public class ChessBoard {
         if (piece instanceof Pawn pawn && pawn.previousMoveWasPassage(this)) {
             final Coordinate lastMoveEnd = latestMovement().orElseThrow().getSecond();
 
-            final boolean captureOnPassage = lastMoveEnd.columnToInt() == to.columnToInt() && Math.abs(lastMoveEnd.getRow() - to.getRow()) == 1;
-            if (captureOnPassage) {
+
+            // tbh my brain is frying rn, so im not sure how this code works, but seems like it kinda works
+
+            if (lastMoveEnd.columnToInt() != to.columnToInt()) {
+                return false;
+            }
+
+            if (piece.color().equals(Color.WHITE) && lastMoveEnd.getRow() - to.getRow() == -1) {
                 return true;
             }
+
+            if (piece.color().equals(Color.BLACK) && lastMoveEnd.getRow() - to.getRow() == 1) {
+                return true;
+            }
+
+//            final boolean captureOnPassage = lastMoveEnd.columnToInt() == to.columnToInt() && Math.abs(lastMoveEnd.getRow() - to.getRow()) == 1;
+//            if (captureOnPassage) {
+//                return true;
+//            }
         }
 
         return false;

@@ -233,10 +233,29 @@ public record Pawn(Color color)
     private boolean captureOnPassage(ChessBoard chessBoard, int endColumn, int endRow) {
         Optional<Coordinate> lastMoveCoordinate = previousMoveCoordinate(chessBoard);
 
-        return previousMoveWasPassage(chessBoard) &&
-                lastMoveCoordinate.isPresent() &&
-                lastMoveCoordinate.get().columnToInt() == endColumn &&
-                (lastMoveCoordinate.get().getRow() - endRow == 1 || lastMoveCoordinate.get().getRow() - endRow == -1);
+        // tbh my brain is frying rn, so im not sure how this code works, but seems like it kinda works
+        if (!previousMoveWasPassage(chessBoard)) {
+            return false;
+        }
+
+        if (lastMoveCoordinate.isEmpty()) {
+            return false;
+        }
+
+        if (lastMoveCoordinate.orElseThrow().columnToInt() != endColumn) {
+            return false;
+        }
+
+        if (this.color.equals(Color.WHITE) && lastMoveCoordinate.orElseThrow().getRow() - endRow == -1) {
+            return true;
+        }
+
+        return this.color.equals(Color.BLACK) && lastMoveCoordinate.orElseThrow().getRow() - endRow == 1;
+
+//        return previousMoveWasPassage(chessBoard) &&
+//                lastMoveCoordinate.isPresent() &&
+//                lastMoveCoordinate.get().columnToInt() == endColumn &&
+//                (lastMoveCoordinate.get().getRow() - endRow == 1 || lastMoveCoordinate.get().getRow() - endRow == -1);
     }
 
     public boolean previousMoveWasPassage(ChessBoard chessBoard) {
