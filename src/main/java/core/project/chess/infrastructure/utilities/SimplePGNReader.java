@@ -125,7 +125,7 @@ public class SimplePGNReader {
                     s = s.substring(0, s.length() - 1);
 
                     promotionPiece = switch (promotion) {
-                        case "K" -> new Knight(Color.BLACK);
+                        case "N" -> new Knight(Color.BLACK);
                         case "B" -> new Bishop(Color.BLACK);
                         case "R" -> new Rook(Color.BLACK);
                         case "Q" -> new Queen(Color.BLACK);
