@@ -152,6 +152,72 @@ class ChessGameTest {
     }
 
     @Test
+    @DisplayName("Nakamura_5117")
+    void nakamura_5117() {
+        String pgn = """
+                [Event "Titled Tue 26th Apr Late"]
+                [Site "chess.com INT"]
+                [Date "2022.04.26"]
+                [Round "1"]
+                [White "Nakamura,Hi"]
+                [Black "Guz,Ari"]
+                [Result "1-0"]
+                [WhiteElo "2750"]
+                [BlackElo "2332"]
+                [ECO "A05"]
+                
+                1. g1f3 g8f6 2. b2b3 b7b6 3. c1b2 c8b7 4. g2g3 e7e6 5. f1g2 f8e7 6. d2d4
+                e8g8 7. e1g1 d7d6 8. c2c4 b8d7 9. b1c3 f6e4 10. d1c2 d7f6 11. c3d1 c7c5 12.
+                d4c5 e4c5 13. b3b4 c5d7 14. d1e3 a8c8 15. c2b3 d6d5 16. c4d5 f6d5 17. a2a3
+                e7f6 18. e3g4 f6b2 19. b3b2 h7h5 20. g4e5 d8f6 21. e2e4 d7e5 22. f3e5 d5c3
+                23. e5d7 f6d4 24. d7f8 g8f8 25. a1c1 b7a6 26. c1c2 a6f1 27. g2f1 e6e5 28.
+                b2c1 h5h4 29. c1e1 h4g3 30. h2g3 c8c7 31. f1g2 f8g8 32. c2d2 d4c4 33. d2d8+
+                g8h7 34. g2f3 g7g6 35. g1g2 h7g7 36. e1h1 g7f6 37. h1h4+ f6e6 38. f3g4+
+                f7f5 39. g4f5+ g6f5 40. h4h6+ e6f7 41. d8f8+ f7e7 42. h6f6+ 1-0
+                """;
+
+        ChessGame game = defaultChessGameFactory();
+
+        String white = game.getPlayerForWhite().getUsername().username();
+        String black = game.getPlayerForBlack().getUsername().username();
+
+        SimplePGNReader pgnReader = new SimplePGNReader(pgn);
+        List<ChessMove> moves = pgnReader.readAll();
+
+            /*Log.info("""
+                    Simulating the game of:
+                    %s
+                    """.formatted(pgn));*/
+
+        int moveNum = 0;
+        for (ChessMove move : moves) {
+            if (move.white() == null) {
+                break;
+            }
+
+            Log.info("Move#" + ++moveNum);
+
+            if (game.getChessBoard().lastAlgebraicNotation().isPresent()) {
+                //Log.info("Last algebraic notation before white moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
+            }
+
+            game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
+
+            if (move.black() == null) {
+                break;
+            }
+
+            //Log.info("Last algebraic notation before black moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
+
+            game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+        }
+
+//            Log.info("Result: " + pgnReader.tag("Result"));
+//            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
+//            System.out.println();
+    }
+
+    @Test
     @DisplayName("Mamedyarov_4674")
     void mamedyarov_4674() {
         String pgn = """
