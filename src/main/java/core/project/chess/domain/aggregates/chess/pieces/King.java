@@ -677,22 +677,47 @@ public record King(Color color)
         for (final Field field : path) {
             final Coordinate currentCoordinate = field.getCoordinate();
 
-            final StatusPair<Coordinate> possibleCoordinate;
+            final StatusPair<Coordinate> potentialPawnThatCanBlockAttackBySimpleMove;
             if (Color.WHITE.equals(kingColor)) {
-                possibleCoordinate = Coordinate.of(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
+                potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
             } else {
-                possibleCoordinate = Coordinate.of(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
+                potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
             }
 
-            if (possibleCoordinate.status()) {
-                final Coordinate pawnCoordinate = possibleCoordinate.orElseThrow();
+            if (potentialPawnThatCanBlockAttackBySimpleMove.status()) {
+                final Coordinate pawnCoordinate = potentialPawnThatCanBlockAttackBySimpleMove.orElseThrow();
                 final Field possiblePawn = boardNavigator.board().field(pawnCoordinate);
 
-                final boolean pawnCanBeBlocked = possiblePawn.isPresent() &&
-                        possiblePawn.pieceOptional().orElseThrow() instanceof Pawn &&
-                        possiblePawn.pieceOptional().orElseThrow().color().equals(kingColor) &&
-                        safeForKing(boardNavigator.board(), king, pawnCoordinate, currentCoordinate);
-                if (pawnCanBeBlocked) {
+                if (possiblePawn.isPresent()) {
+                    final boolean isPawn = possiblePawn.pieceOptional().orElseThrow() instanceof Pawn;
+
+                    final boolean isFriendly = possiblePawn.pieceOptional().orElseThrow().color().equals(kingColor);
+
+                    final boolean pawnCanBlock = isPawn && isFriendly && safeForKing(boardNavigator.board(), king, pawnCoordinate, currentCoordinate);
+                    if (pawnCanBlock) {
+                        return true;
+                    }
+
+                }
+            }
+
+            final boolean potentiallyCanBeBlockedByPawnPassage = currentCoordinate.getRow() == 5 || currentCoordinate.getRow() == 4;
+            if (potentiallyCanBeBlockedByPawnPassage) {
+
+                final Coordinate potentialPawnCoordinate;
+                if (Color.WHITE.equals(kingColor)) {
+                    potentialPawnCoordinate = Coordinate.of(2, currentCoordinate.columnToInt()).orElseThrow();
+                } else {
+                    potentialPawnCoordinate = Coordinate.of(7, currentCoordinate.columnToInt()).orElseThrow();
+                }
+
+                final Field field2 = boardNavigator.board().field(potentialPawnCoordinate);
+
+                final boolean isFriendlyPawnExists =
+                        field2.isPresent() && field2.pieceOptional().orElseThrow() instanceof Pawn pawn && pawn.color().equals(kingColor);
+
+                final boolean canBlockByPassage = isFriendlyPawnExists && safeForKing(boardNavigator.board(), king, potentialPawnCoordinate, currentCoordinate);
+                if (canBlockByPassage) {
                     return true;
                 }
 
@@ -702,7 +727,8 @@ public record King(Color color)
             for (final Field knight : knights) {
                 final Piece piece = knight.pieceOptional().orElseThrow();
 
-                if (piece instanceof Knight && piece.color().equals(kingColor) && safeForKing(boardNavigator.board(), king, knight.getCoordinate(), currentCoordinate)) {
+                final boolean isOurKnight = piece instanceof Knight && piece.color().equals(kingColor);
+                if (isOurKnight && safeForKing(boardNavigator.board(), king, knight.getCoordinate(), currentCoordinate)) {
                     return true;
                 }
 
@@ -767,7 +793,8 @@ public record King(Color color)
             }
         }
 
-        final List<Field> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), field.getCoordinate(), field1 -> {
+        final List<Field> horizontalVerticalFields = boardNavigator
+                .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), field.getCoordinate(), field1 -> {
             Piece piece = field1.pieceOptional().orElseThrow();
 
             return !(piece instanceof King) || !piece.color().equals(kingColor);
