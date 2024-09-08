@@ -9,7 +9,7 @@ import core.project.chess.domain.aggregates.chess.pieces.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
-import core.project.chess.infrastructure.utilities.StatusPair;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
 import lombok.AccessLevel;
 import lombok.Getter;

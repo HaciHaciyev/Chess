@@ -6,8 +6,8 @@ import core.project.chess.domain.aggregates.chess.pieces.Bishop;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.pieces.*;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
-import core.project.chess.infrastructure.utilities.StatusPair;
-import core.project.chess.infrastructure.utilities.Pair;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import lombok.AccessLevel;
 import lombok.Getter;
 

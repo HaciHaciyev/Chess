@@ -4,7 +4,7 @@ import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
-import core.project.chess.infrastructure.utilities.Result;
+import core.project.chess.infrastructure.utilities.containers.Result;
 
 import java.util.UUID;
 

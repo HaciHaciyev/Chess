@@ -1,4 +1,4 @@
-package core.project.chess.infrastructure.utilities;
+package core.project.chess.infrastructure.utilities.containers;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;

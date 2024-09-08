@@ -1,4 +1,4 @@
-package core.project.chess.infrastructure.utilities;
+package core.project.chess.infrastructure.utilities.rating;
 
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 

@@ -1,6 +1,6 @@
 package core.project.chess.domain.aggregates.chess.enumerations;
 
-import core.project.chess.infrastructure.utilities.StatusPair;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import lombok.Getter;
 
 @Getter

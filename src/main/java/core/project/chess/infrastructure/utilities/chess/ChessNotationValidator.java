@@ -1,4 +1,4 @@
-package core.project.chess.infrastructure.utilities;
+package core.project.chess.infrastructure.utilities.chess;
 
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 

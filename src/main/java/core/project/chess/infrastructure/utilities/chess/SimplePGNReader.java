@@ -1,6 +1,5 @@
-package core.project.chess.infrastructure.utilities;
+package core.project.chess.infrastructure.utilities.chess;
 
-import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.pieces.*;

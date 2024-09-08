@@ -1,6 +1,7 @@
-package core.project.chess.infrastructure.utilities;
+package core.project.chess.infrastructure.utilities.chess;
 
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
 import java.util.List;
 import java.util.stream.Stream;

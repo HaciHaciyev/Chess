@@ -1,10 +1,11 @@
-package core.project.chess.infrastructure.utilities;
+package core.project.chess.infrastructure.utilities.chess;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.pieces.Pawn;
 import core.project.chess.domain.aggregates.chess.pieces.Piece;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import lombok.NonNull;
 
 import java.util.*;

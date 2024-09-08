@@ -4,9 +4,9 @@ import core.project.chess.infrastructure.exceptions.DataNotFoundException;
 import core.project.chess.infrastructure.exceptions.InvalidDataArgumentException;
 import core.project.chess.infrastructure.exceptions.RepositoryDataException;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
-import core.project.chess.infrastructure.utilities.Result;
-import core.project.chess.infrastructure.utilities.ResultSetExtractor;
-import core.project.chess.infrastructure.utilities.RowMapper;
+import core.project.chess.infrastructure.utilities.containers.Result;
+import core.project.chess.infrastructure.utilities.repository.ResultSetExtractor;
+import core.project.chess.infrastructure.utilities.repository.RowMapper;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 

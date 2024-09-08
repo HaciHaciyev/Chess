@@ -5,8 +5,8 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.utilities.Pair;
-import core.project.chess.infrastructure.utilities.StatusPair;
+import core.project.chess.infrastructure.utilities.containers.Pair;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
 import java.util.*;
 

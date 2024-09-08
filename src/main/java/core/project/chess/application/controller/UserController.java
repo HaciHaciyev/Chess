@@ -12,7 +12,7 @@ import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.config.security.PasswordEncoder;
-import core.project.chess.infrastructure.utilities.Result;
+import core.project.chess.infrastructure.utilities.containers.Result;
 import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;

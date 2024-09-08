@@ -1,7 +1,7 @@
 package core.project.chess.domain.repositories.outbound;
 
 import core.project.chess.application.model.ChessGameHistory;
-import core.project.chess.infrastructure.utilities.Result;
+import core.project.chess.infrastructure.utilities.containers.Result;
 
 import java.util.UUID;
 

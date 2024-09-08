@@ -9,7 +9,7 @@ import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
 import core.project.chess.infrastructure.exceptions.DataNotFoundException;
 import core.project.chess.infrastructure.exceptions.RepositoryDataException;
-import core.project.chess.infrastructure.utilities.Result;
+import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;

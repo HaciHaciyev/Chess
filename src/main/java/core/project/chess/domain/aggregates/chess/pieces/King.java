@@ -5,9 +5,9 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.utilities.ChessBoardNavigator;
-import core.project.chess.infrastructure.utilities.Direction;
-import core.project.chess.infrastructure.utilities.StatusPair;
+import core.project.chess.infrastructure.utilities.chess.ChessBoardNavigator;
+import core.project.chess.infrastructure.utilities.chess.Direction;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
 import java.util.*;
 

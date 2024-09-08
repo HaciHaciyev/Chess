@@ -6,7 +6,7 @@ import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
-import core.project.chess.infrastructure.utilities.Result;
+import core.project.chess.infrastructure.utilities.containers.Result;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;

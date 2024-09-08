@@ -3,7 +3,7 @@ package core.project.chess.domain.aggregates.chess.pieces;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.utilities.StatusPair;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;

@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.repository.outbound;
 import core.project.chess.application.model.ChessGameHistory;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
-import core.project.chess.infrastructure.utilities.Result;
+import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
