@@ -228,7 +228,7 @@ public record King(Color color)
         }
 
         if (piece instanceof Knight knight) {
-            final List<Field> coords = boardNavigator.knightAttackPositions(kingCoordinate);
+            final List<Field> coords = boardNavigator.knightAttackPositions(coordinate);
 
             for (Field coord : coords) {
 

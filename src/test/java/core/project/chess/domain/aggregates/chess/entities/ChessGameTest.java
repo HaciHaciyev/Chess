@@ -117,41 +117,115 @@ class ChessGameTest {
             SimplePGNReader pgnReader = new SimplePGNReader(pgn);
             List<ChessMove> moves = pgnReader.readAll();
 
-            Log.info("""
-                    Simulating the game of:
-                    %s
-                    """.formatted(pgn));
+//            Log.info("""
+//                    Simulating the game of:
+//                    %s
+//                    """.formatted(pgn));
             int moveNum = 0;
             for (ChessMove move : moves) {
                 if (move.white() == null) {
                     break;
                 }
 
-                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
-                Log.info("White: " + move.white());
+//                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
+//                Log.info("White: " + move.white());
 
                 game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
-                Log.info("White_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
-                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
-                Log.info("Board_PGN: " + game.getChessBoard().pgn());
+//                Log.info("White_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
+//                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
+//                Log.info("Board_PGN: " + game.getChessBoard().pgn());
 
                 if (move.black() == null) {
                     break;
                 }
 
-                Log.info("Black: " + move.black());
+//                Log.info("Black: " + move.black());
 
                 game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
-                Log.info("Black_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
-                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
-                Log.info("Board_PGN: " + game.getChessBoard().pgn());
-                System.out.println();
+//                Log.info("Black_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
+//                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
+//                Log.info("Board_PGN: " + game.getChessBoard().pgn());
+//                System.out.println();
             }
 
-            Log.info("Result: " + pgnReader.tag("Result"));
-            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
+//            Log.info("Result: " + pgnReader.tag("Result"));
+//            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
+//            System.out.println();
+        }
+    }
+
+    @Test
+    @DisplayName("Mamedyarov_4674")
+    void mamedyarov_4674() {
+        String pgn = """
+                [Event "Titled Tue 4th Jun Early"]
+                [Site "chess.com INT"]
+                [Date "2024.06.04"]
+                [Round "10"]
+                [White "Mamedyarov,S"]
+                [Black "Bharath,Subramaniyam H"]
+                [Result "1/2-1/2"]
+                [WhiteElo "2734"]
+                [BlackElo "2550"]
+                [ECO "A45"]
+                
+                1. d2d4 g8f6 2. c1g5 f6e4 3. g5f4 c7c5 4. f2f3 d8a5+ 5. c2c3 e4f6 6. d4d5
+                e7e6 7. e2e4 e6d5 8. e4d5 d7d6 9. b1d2 f8e7 10. c3c4 e8g8 11. f1d3 b7b5 12.
+                g1e2 b5c4 13. d3c4 b8d7 14. e1g1 d7b6 15. e2c3 c8a6 16. c4a6 a5a6 17. d2e4
+                a8d8 18. f1e1 a6b7 19. d1b3 f6d5 20. c3d5 b7d5 21. a1d1 d5c6 22. e4g3 e7f6
+                23. g3f5 d6d5 24. g2g4 c5c4 25. b3c2 d5d4 26. g4g5 c6f3 27. g5f6 f3f4 28.
+                e1f1 f4g5+ 29. g1h1 g5f6 30. c2g2 g8h8 31. f5d4 f6g6 32. g2g6 h7g6 33. d4c6
+                d8d1 34. f1d1 b6a4 35. b2b3 a4b2 36. d1d2 c4c3 37. d2c2 f8c8 38. c6a7 c8a8
+                39. a7b5 a8a2 40. c2c3 b2d1 41. c3c8+ h8h7 42. b5d6 f7f6 43. h2h4 d1f2+ 44.
+                h1g1 f2h3+ 45. g1h1 g6g5 46. h4g5 h3g5 47. c8c3 a2d2 48. d6c4 d2d1+ 49.
+                h1g2 h7g6 50. b3b4 d1b1 51. c4d6 b1b4 52. c3c7 b4b2+ 53. g2f1 b2d2 54. d6e8
+                g5f7 55. c7e7 d2d8 56. f1f2 f6f5 57. f2g2 d8d3 58. e7e6+ g6h7 59. e6e7 h7g8
+                60. e7a7 d3e3 61. e8c7 f7g5 62. c7d5 e3e4 63. d5e7+ g8h7 64. e7f5 e4g4+ 65.
+                g2h2 g5f3+ 66. h2h3 g4g5 67. a7g7+ g5g7 68. f5g7 1/2-1/2
+                """;
+
+        ChessGame game = chessGameSupplier().get();
+
+        String white = game.getPlayerForWhite().getUsername().username();
+        String black = game.getPlayerForBlack().getUsername().username();
+
+        SimplePGNReader pgnReader = new SimplePGNReader(pgn);
+        List<ChessMove> moves = pgnReader.readAll();
+
+        Log.info("""
+                    Simulating the game of:
+                    %s
+                    """.formatted(pgn));
+        int moveNum = 0;
+        for (ChessMove move : moves) {
+            if (move.white() == null) {
+                break;
+            }
+
+            Log.info("Move#" + ++moveNum);
+            Log.info("White: " + move.white());
+
+            game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
+            Log.info("White_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
+            Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
+            Log.info("Board_PGN: " + game.getChessBoard().pgn());
+
+            if (move.black() == null) {
+                break;
+            }
+
+            Log.info("Black: " + move.black());
+
+            game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+            Log.info("Black_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
+            Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
+            Log.info("Board_PGN: " + game.getChessBoard().pgn());
             System.out.println();
         }
+
+        Log.info("Result: " + pgnReader.tag("Result"));
+        Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
+        System.out.println();
     }
 
     private static List<String> extractPGN(String path) {
