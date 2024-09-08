@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ChessGameTest {
 
-    private static final Logger log = LoggerFactory.getLogger(ChessGameTest.class);
 
     @Test
     @Disabled("Utility function.")
@@ -76,7 +75,7 @@ class ChessGameTest {
     @Test
     @DisplayName("Simple testing of FEN.")
     void fenTest() {
-        final ChessGame chessGame = chessGameSupplier().get();
+        final ChessGame chessGame = defaultChessGameFactory();
 
         final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
         final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
@@ -105,11 +104,17 @@ class ChessGameTest {
         executeGameFromPGN("src/main/resources/chess/pgn/Mamedyarov_lalg.pgn");
     }
 
+    @Test
+    @DisplayName("Hikaru_PGN_Archive_8025")
+    void nakamura8025() {
+        executeGameFromPGN("src/main/resources/chess/pgn/Hikaru_lalg.pgn");
+    }
+
     private void executeGameFromPGN(String path) {
         int pgnNum = 0;
         for (String pgn : extractPGN(path)) {
             pgnNum++;
-            ChessGame game = chessGameSupplier().get();
+            ChessGame game = defaultChessGameFactory();
 
             String white = game.getPlayerForWhite().getUsername().username();
             String black = game.getPlayerForBlack().getUsername().username();
@@ -117,18 +122,18 @@ class ChessGameTest {
             SimplePGNReader pgnReader = new SimplePGNReader(pgn);
             List<ChessMove> moves = pgnReader.readAll();
 
-//            Log.info("""
-//                    Simulating the game of:
-//                    %s
-//                    """.formatted(pgn));
+            Log.info("""
+                    Simulating the game of:
+                    %s
+                    """.formatted(pgn));
             int moveNum = 0;
             for (ChessMove move : moves) {
                 if (move.white() == null) {
                     break;
                 }
 
-//                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
-//                Log.info("White: " + move.white());
+                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
+                Log.info("White: " + move.white());
 
                 game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
 //                Log.info("White_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
@@ -139,18 +144,18 @@ class ChessGameTest {
                     break;
                 }
 
-//                Log.info("Black: " + move.black());
+                Log.info("Black: " + move.black());
 
                 game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
 //                Log.info("Black_AN: " + game.getChessBoard().lastAlgebraicNotation().algebraicNotation());
 //                Log.info("Board_FEN: " + game.getChessBoard().actualRepresentationOfChessBoard());
 //                Log.info("Board_PGN: " + game.getChessBoard().pgn());
-//                System.out.println();
+                System.out.println();
             }
 
-//            Log.info("Result: " + pgnReader.tag("Result"));
-//            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
-//            System.out.println();
+            Log.info("Result: " + pgnReader.tag("Result"));
+            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
+            System.out.println();
         }
     }
 
@@ -184,7 +189,7 @@ class ChessGameTest {
                 g2h2 g5f3+ 66. h2h3 g4g5 67. a7g7+ g5g7 68. f5g7 1/2-1/2
                 """;
 
-        ChessGame game = chessGameSupplier().get();
+        ChessGame game = defaultChessGameFactory();
 
         String white = game.getPlayerForWhite().getUsername().username();
         String black = game.getPlayerForBlack().getUsername().username();
@@ -268,7 +273,7 @@ class ChessGameTest {
     @Test
     @DisplayName("Chess game end by pat in 10 move.")
     void testChessGameEndByPat() {
-        final ChessGame chessGame = chessGameSupplier().get();
+        final ChessGame chessGame = defaultChessGameFactory();
 
         final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
         final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
@@ -327,7 +332,7 @@ class ChessGameTest {
     @Test
     @DisplayName("Game between AinGrace and Hadzhy98 on 2024.08.04\nhttps://lichess.org/zuOBpEUY#11")
     void gameOn_2024_08_04() {
-        ChessGame game = chessGameSupplier().get();
+        ChessGame game = defaultChessGameFactory();
 
         String whitePlayer = game.getPlayerForWhite().getUsername().username();
         String blackPlayer = game.getPlayerForBlack().getUsername().username();
@@ -544,7 +549,7 @@ class ChessGameTest {
     }
 
     public void chessGameLoad() {
-        final ChessGame chessGame = chessGameSupplier().get();
+        final ChessGame chessGame = defaultChessGameFactory();
 
         final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
         final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
@@ -790,19 +795,16 @@ class ChessGameTest {
         chessGame.makeMovement(secondPlayerUsername, Coordinate.a8, Coordinate.b8, null);
     }
 
-    public final Supplier<ChessGame> chessGameSupplier() {
-        return () -> {
+    public final ChessGame defaultChessGameFactory() {
             final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
 
-            return ChessGame.of(
-                    UUID.randomUUID(),
-                    chessBoard,
-                    userAccountSupplier("firstPlayer").get(),
-                    userAccountSupplier("secondPlayer").get(),
-                    SessionEvents.defaultEvents(),
-                    ChessGame.TimeControllingTYPE.DEFAULT
-            );
-        };
+        return ChessGame.of(
+                UUID.randomUUID(),
+                chessBoard,
+                userAccountSupplier("firstPlayer").get(),
+                userAccountSupplier("secondPlayer").get(),
+                SessionEvents.defaultEvents(),
+                ChessGame.TimeControllingTYPE.DEFAULT);
     }
 
     public final Supplier<UserAccount> userAccountSupplier(String username) {

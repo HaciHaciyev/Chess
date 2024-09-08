@@ -298,7 +298,7 @@ public record ChessBoardNavigator(ChessBoard board) {
      * @see Coordinate
      * @see ChessBoard.Field
      */
-    public List<ChessBoard.Field> knightAttackPositions(Coordinate pivot) {
+    public List<ChessBoard.Field> knightAttackPositions(Coordinate pivot, Predicate<ChessBoard.Field> predicate) {
         Objects.requireNonNull(pivot);
 
         int row = pivot.getRow();
@@ -320,7 +320,7 @@ public record ChessBoardNavigator(ChessBoard board) {
                 Coordinate coordinate = possibleCoordinate.orElseThrow();
                 ChessBoard.Field field = board.field(coordinate);
 
-                if (field.isPresent()) {
+                if (predicate.test(field)) {
                     fields.add(field);
                 }
             }

@@ -5,6 +5,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public record Email(String email) {
+      private static final String emailRegex = "^(\\S+)@(\\S+)$";
+      private static final Pattern pattern = Pattern.compile(emailRegex);
 
     public Email {
         if (Objects.isNull(email)) {
@@ -14,8 +16,6 @@ public record Email(String email) {
             throw new IllegalArgumentException("Email can`t be blank");
         }
 
-        String emailRegex = "^(\\S+)@(\\S+)$";
-        Pattern pattern = Pattern.compile(emailRegex);
         Matcher matcher = pattern.matcher(email);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Email format error");

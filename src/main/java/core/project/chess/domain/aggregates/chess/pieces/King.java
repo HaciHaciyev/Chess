@@ -228,7 +228,7 @@ public record King(Color color)
         }
 
         if (piece instanceof Knight knight) {
-            final List<Field> coords = boardNavigator.knightAttackPositions(coordinate);
+            final List<Field> coords = boardNavigator.knightAttackPositions(coordinate, f -> true);
 
             for (Field coord : coords) {
 
@@ -301,7 +301,7 @@ public record King(Color color)
             enemies.addAll(pawns);
         }
 
-        List<Field> knights = boardNavigator.knightAttackPositions(kingCoordinate);
+        List<Field> knights = boardNavigator.knightAttackPositions(kingCoordinate, Field::isPresent);
         for (Field possibleKnight : knights) {
             Piece piece = possibleKnight.pieceOptional().orElseThrow();
 
@@ -419,7 +419,7 @@ public record King(Color color)
             }
         }
 
-        List<Field> knights = boardNavigator.knightAttackPositions(field.getCoordinate());
+        List<Field> knights = boardNavigator.knightAttackPositions(field.getCoordinate(), Field::isPresent);
         for (Field knight : knights) {
             Piece piece = knight.pieceOptional().orElseThrow();
 
@@ -469,7 +469,7 @@ public record King(Color color)
             }
         }
 
-        final List<ChessBoard.Field> knights = boardNavigator.knightAttackPositions(futureKing);
+        final List<ChessBoard.Field> knights = boardNavigator.knightAttackPositions(futureKing, Field::isPresent);
         for (final Field possibleKnight : knights) {
             final Piece knight = possibleKnight.pieceOptional().orElseThrow();
 
@@ -540,7 +540,7 @@ public record King(Color color)
             }
         }
 
-        final List<Field> potentialKnightAttackPositions = boardNavigator.knightAttackPositions(kingPosition);
+        final List<Field> potentialKnightAttackPositions = boardNavigator.knightAttackPositions(kingPosition, Field::isPresent);
         for (final Field potentialKnightAttackPosition : potentialKnightAttackPositions) {
             final Piece piece = potentialKnightAttackPosition.pieceOptional().orElseThrow();
 
@@ -589,14 +589,42 @@ public record King(Color color)
     }
 
     private boolean canEat(ChessBoardNavigator boardNavigator, Coordinate king, Field enemyField, Color kingColor) {
+
+        if (enemyField.pieceOptional().orElseThrow() instanceof Pawn) {
+            Coordinate enPassaunt;
+            StatusPair<Coordinate> coord;
+            if (kingColor.equals(Color.WHITE)) {
+                coord = Coordinate.of(enemyField.getCoordinate().getRow() + 1, enemyField.getCoordinate().columnToInt());
+            } else {
+                coord = Coordinate.of(enemyField.getCoordinate().getRow() - 1, enemyField.getCoordinate().columnToInt());
+            }
+
+            if (coord.status()) {
+                enPassaunt = coord.orElseThrow();
+
+                List<Field> enPassauntPawns = boardNavigator.pawnsThreateningCoordinate(enPassaunt, kingColor);
+
+
+                for (Field enPassauntPawn : enPassauntPawns) {
+                    Pawn pawn = (Pawn) enPassauntPawn.pieceOptional().orElseThrow();
+                    boolean captureOnPassage = pawn.captureOnPassage(boardNavigator.board(), enemyField.getCoordinate().columnToInt(), enemyField.getCoordinate().getRow());
+
+                    if (captureOnPassage && safeForKing(boardNavigator.board(), king, enPassauntPawn.getCoordinate(), enPassaunt)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
         final List<Field> possiblePawns = boardNavigator.pawnsThreateningCoordinate(enemyField.getCoordinate(), kingColor);
         for (final Field possiblePawn : possiblePawns) {
+
             if (safeForKing(boardNavigator.board(), king, possiblePawn.getCoordinate(), enemyField.getCoordinate())) {
                 return true;
             }
         }
 
-        final List<Field> knights = boardNavigator.knightAttackPositions(enemyField.getCoordinate());
+        final List<Field> knights = boardNavigator.knightAttackPositions(enemyField.getCoordinate(), Field::isPresent);
         for (final Field knight : knights) {
             Piece piece = knight.pieceOptional().orElseThrow();
             if (piece instanceof Knight && piece.color().equals(kingColor) && safeForKing(boardNavigator.board(), king, knight.getCoordinate(), enemyField.getCoordinate())) {
@@ -650,7 +678,7 @@ public record King(Color color)
 
             }
 
-            final List<Field> knights = boardNavigator.knightAttackPositions(currentCoordinate);
+            final List<Field> knights = boardNavigator.knightAttackPositions(currentCoordinate, Field::isPresent);
             for (final Field knight : knights) {
                 Piece piece = knight.pieceOptional().orElseThrow();
                 if (piece instanceof Knight && piece.color().equals(kingColor) && safeForKing(boardNavigator.board(), king, knight.getCoordinate(), currentCoordinate)) {
@@ -695,7 +723,7 @@ public record King(Color color)
             return true;
         }
 
-        final List<Field> knights = boardNavigator.knightAttackPositions(field.getCoordinate());
+        final List<Field> knights = boardNavigator.knightAttackPositions(field.getCoordinate(), Field::isPresent);
         for (final Field possibleKnight : knights) {
             final Piece piece = possibleKnight.pieceOptional().orElseThrow();
 

@@ -230,7 +230,7 @@ public record Pawn(Color color)
         return StatusPair.ofTrue(setOfOperations);
     }
 
-    private boolean captureOnPassage(ChessBoard chessBoard, int endColumn, int endRow) {
+    boolean captureOnPassage(ChessBoard chessBoard, int endColumn, int endRow) {
         Optional<Coordinate> lastMoveCoordinate = previousMoveCoordinate(chessBoard);
 
         if (!previousMoveWasPassage(chessBoard)) {
