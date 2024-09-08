@@ -1,5 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
+import core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
@@ -135,12 +136,25 @@ public class ChessGame {
             throw new IllegalArgumentException("It`s opponent move turn.");
         }
 
-        final Operations operation = chessBoard.reposition(from, to, inCaseOfPromotion);
+        final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
 
-        final boolean gameOver = operation.equals(Operations.STALEMATE) || operation.equals(Operations.CHECKMATE);
+        if (message.equals(GameResultMessage.RuleOf3EqualsPositions)) {
+            // TODO implement optional game draw ending.
+        }
+
+        final boolean gameOver =
+                message.equals(GameResultMessage.Checkmate) || message.equals(GameResultMessage.Stalemate) || message.equals(GameResultMessage.RuleOf50Moves);
         if (gameOver) {
-            Log.info("GAME OVER: {%s}".formatted(operation));
-            gameOver(operation);
+            Log.info("GAME OVER: {%s}".formatted(message));
+
+            if (message.equals(GameResultMessage.Checkmate)) {
+                gameOver(Operations.CHECKMATE);
+            }
+
+            if (message.equals(GameResultMessage.Stalemate) || message.equals(GameResultMessage.RuleOf50Moves)) {
+                gameOver(Operations.STALEMATE);
+            }
+
             return;
         }
 

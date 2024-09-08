@@ -1,6 +1,7 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.aggregates.chess.pieces.Bishop;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.pieces.*;
@@ -11,6 +12,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.util.*;
+
+import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations.*;
 
 /**
  * The `ChessBoard` class represents the central entity of the Chess Aggregate. It encapsulates the state and behavior of a chess board,
@@ -50,11 +53,13 @@ import java.util.*;
  *
  *
  * @author Hadzhyiev Hadzhy
- * @version 2.0
+ * @version 2.1
  */
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
     private Color figuresTurn;
+    private byte ruleOf50MovesForWhite;
+    private byte ruleOf50MovesForBlack;
     private boolean validWhiteShortCasting;
     private boolean validWhiteLongCasting;
     private boolean validBlackShortCasting;
@@ -494,6 +499,56 @@ public class ChessBoard {
     }
 
     /**
+     * Updates the count of moves for the 50-move rule based on the current piece and operations performed.
+     * <p>
+     * The 50-move rule states that a player can claim a draw if no pawn has been moved and no capture has been made
+     * in the last 50 moves. This method checks the current piece and the operations performed during the turn to
+     * determine whether to increment the move counters for the respective player (White or Black).
+     *
+     * @param piece The piece that is currently being moved. This is used to check if the piece is a pawn.
+     * @param operations A set of operations that were performed during the turn. This is used to check if a capture
+     *                   occurred.
+     *
+     * <p>
+     * The method works as follows:
+     * <ul>
+     *     <li>If the current piece is a pawn and no capture operation is present, the method increments the move
+     *         counter for the respective player (White or Black).</li>
+     *     <li>If the current piece is a pawn or a capture operation has occurred, the method resets the move counter
+     *         for the respective player to zero.</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Note: The counters for the 50-move rule are maintained separately for White and Black, allowing each player
+     * to track their own move counts independently.
+     * </p>
+     */
+    private void ruleOf50MovesAbility(final Piece piece, final Set<Operations> operations) {
+        if (!operations.contains(Operations.CAPTURE) && piece instanceof Pawn) {
+
+            if (figuresTurn.equals(Color.WHITE)) {
+                ruleOf50MovesForWhite++;
+            }
+
+            if (figuresTurn.equals(Color.BLACK)) {
+                ruleOf50MovesForBlack++;
+            }
+        }
+
+        if (piece instanceof Pawn || operations.contains(Operations.CAPTURE)) {
+
+            if (figuresTurn.equals(Color.WHITE)) {
+                ruleOf50MovesForWhite = 0;
+            }
+
+            if (figuresTurn.equals(Color.BLACK)) {
+                ruleOf50MovesForBlack = 0;
+            }
+        }
+    }
+
+    /**
      * Retrieves the pair of coordinates representing a castling move.
      *
      * @param castle The type of castling move (short or long).
@@ -584,7 +639,7 @@ public class ChessBoard {
      * @return The operations performed during the repositioning.
      * @throws IllegalArgumentException If the move is invalid.
      */
-    protected final Operations reposition(final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion) {
+    protected final GameResultMessage reposition(final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion) {
         /** Preparation of necessary data and validation.*/
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
@@ -669,6 +724,7 @@ public class ChessBoard {
         }
 
         switchFiguresTurn();
+        ruleOf50MovesAbility(piece, operations);
 
         /** Recording the move made in algebraic notation and Fen.*/
         final String currentPositionHash = this.toString();
@@ -678,11 +734,26 @@ public class ChessBoard {
         final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType));
 
-        if (hashCodeOfBoard.get(currentPositionHash) == 3 && !operations.contains(Operations.CHECK) && !operations.contains(Operations.CHECKMATE)) {
-            return Operations.STALEMATE;
+        /** Retrieve message about game result.*/
+        if (ruleOf50MovesForWhite == 50 && ruleOf50MovesForBlack == 50 && !operations.contains(CHECK) && !operations.contains(CHECKMATE)) {
+            return GameResultMessage.RuleOf50Moves;
         }
 
-        return AlgebraicNotation.opponentKingStatus(operations);
+        if (hashCodeOfBoard.get(currentPositionHash) == 3 && !operations.contains(CHECK) && !operations.contains(CHECKMATE)) {
+            return GameResultMessage.RuleOf3EqualsPositions;
+        }
+
+        final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
+
+        if (opponentKingStatus.equals(STALEMATE)) {
+            return GameResultMessage.Stalemate;
+        }
+
+        if (opponentKingStatus.equals(CHECKMATE)) {
+            return GameResultMessage.Checkmate;
+        }
+
+        return GameResultMessage.Continue;
     }
 
     /**
@@ -694,7 +765,7 @@ public class ChessBoard {
      * @throws IllegalArgumentException If the castling move is invalid.
      * @throws IllegalStateException    If the method is used incorrectly.
      */
-    private Operations castling(final Coordinate from, final Coordinate to) {
+    private GameResultMessage castling(final Coordinate from, final Coordinate to) {
         /** Preparation of necessary data and validation.*/
         final Field kingStartedField = fieldMap.get(from);
         final Field kingEndField = fieldMap.get(to);
@@ -739,6 +810,7 @@ public class ChessBoard {
         changeOfCastlingAbility(from, king);
 
         switchFiguresTurn();
+        ruleOf50MovesAbility(piece, operations);
 
         /** Recording the move made in algebraic notation.*/
         final String currentPositionHash = toString();
@@ -747,11 +819,26 @@ public class ChessBoard {
 
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
 
-        if (hashCodeOfBoard.get(currentPositionHash) == 3 && !operations.contains(Operations.CHECK) && !operations.contains(Operations.CHECKMATE)) {
-            return Operations.STALEMATE;
+        /** Retrieve message about game result.*/
+        if (ruleOf50MovesForWhite == 50 && ruleOf50MovesForBlack == 50 && !operations.contains(CHECK) && !operations.contains(CHECKMATE)) {
+            return GameResultMessage.RuleOf50Moves;
         }
 
-        return AlgebraicNotation.opponentKingStatus(operations);
+        if (hashCodeOfBoard.get(currentPositionHash) == 3 && !operations.contains(CHECK) && !operations.contains(CHECKMATE)) {
+            return GameResultMessage.RuleOf3EqualsPositions;
+        }
+
+        final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
+
+        if (opponentKingStatus.equals(STALEMATE)) {
+            return GameResultMessage.Stalemate;
+        }
+
+        if (opponentKingStatus.equals(CHECKMATE)) {
+            return GameResultMessage.Checkmate;
+        }
+
+        return GameResultMessage.Continue;
     }
 
     /**

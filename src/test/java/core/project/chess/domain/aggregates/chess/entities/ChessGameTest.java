@@ -43,8 +43,8 @@ class ChessGameTest {
                 30. Ne4xf6 Bg7xf6 31. Rd1-e1 Kh8-g7 32. Qd2-e2 Rf8-h8 33. Kh1-g2 Nd8-c6 34. Bd5xc6 Qd7xc6+ 35. Qe2-f3 Qc6xf3+ 36. Kg2xf3 h7-h5 
                 37. Rf1-h1 a7-a5 38. Kf3-e4 b7-b6 39. Ke4-f5 h5-h4 40. Kf5-e4 Rh8-e8+ 41. Ke4-d5 Re8-e3 42. Re1xe3 d4xe3 43. d3-d4 Kg7-f7 
                 44. Rh1-b1 Kf7-e7 45. a2-a3 Ke7-d7 46. b3-b4 a5-a4 47. Kd5-e4 Kd7-c6 48. b4-b5+ Kc6-c7 49. Ke4-d3 Kc7-b7 50. Rb1-b4 Bf6-g7 
-                51. d4-d5 Bg7-e5 52. Rb4xa4 Be5-d4 53. Kd3-e2 Bd4-c3 54. Ra4-a6 Bc3-a5 55. a3-a4 Ba5-b4 56. Ke2-f3 Bb4-c3 
-                57. Kf3-e2 Bc3-b4 58. Ke2-d3 Bb4-a5 59. Kd3-e2 Ba5-b4
+                51. d4-d5 Bg7-e5 52. Rb4xa4 Be5-d4 53. Kd3-e2 Bd4-c3 54. Ra4-a6 Bc3-a5 55. a3-a4 Ba5-b4 56. Ke2-f3 Bb4-c3 57. Kf3-e2 Bc3-b4 
+                58. Ke2-d3 Bb4-a5 59. Kd3-e2 Ba5-b4
                 """;
 
         String result = pgn.replaceAll("-", "");
