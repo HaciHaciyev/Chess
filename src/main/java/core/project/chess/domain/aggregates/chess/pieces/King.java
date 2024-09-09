@@ -786,6 +786,13 @@ public record King(Color color)
             }
         }
 
+        List<Field> surroundings = boardNavigator.surroundingFields(field.getCoordinate(),
+                f -> !(f.isPresent() && f.pieceOptional().orElseThrow() instanceof King && !f.pieceOptional().orElseThrow().color().equals(kingColor)));
+
+        if (!surroundings.isEmpty()) {
+            return true;
+        }
+
         final List<Field> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), field.getCoordinate());
         for (final Field diagonalField : diagonalFields) {
             final Piece piece = diagonalField.pieceOptional().orElseThrow();
