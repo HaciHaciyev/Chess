@@ -1544,42 +1544,4 @@ public class ChessBoard {
             }
         }
     }
-
-    public static String renderASCII(String fen) {
-        Objects.requireNonNull(fen);
-
-        if (fen.isEmpty()) {
-            throw new IllegalArgumentException("FEN is empty");
-        }
-
-        StringBuilder view = new StringBuilder();
-
-        int space = fen.indexOf(" ");
-        String fenSubstring = fen.substring(0, space);
-
-//        char[] columns = {'8', '7', '6', '5', '4', '3', '2', '1'};
-        int columnIndex = 8;
-
-        try (Scanner scanner = new Scanner(fenSubstring)) {
-            scanner.useDelimiter("/");
-
-            while (scanner.hasNext()) {
-                char[] row = scanner.next().toCharArray();
-
-                for (char c : row) {
-                    if (Character.isLetter(c)) {
-                        view.append(c);
-                    }
-
-                    if (Character.isDigit(c)) {
-                        view.append("_".repeat(Character.getNumericValue(c)));
-                    }
-                }
-                view.append(" ").append(columnIndex--).append("\n");
-            }
-        }
-        view.append("ABCDEFGH");
-
-        return view.toString();
-    }
 }

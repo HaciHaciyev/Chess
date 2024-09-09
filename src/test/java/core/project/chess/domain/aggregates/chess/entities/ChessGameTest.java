@@ -15,8 +15,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -27,19 +25,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ChessGameTest {
 
-
     @Test
     @Disabled("Utility function.")
     void removeDashes() {
         final String pgn = """
-                1. e2-e4 c7-c5 2. Ng1-f3 d7-d6 3. Bf1-b5+ Nb8-d7 4. d2-d4 c5xd4 5. Qd1xd4 Qd8-c7 6. Nb1-c3 e7-e6 7. O-O Ng8-e7 8. Bb5xd7+ Bc8xd7 
-                9. Rf1-d1 Ne7-g6 10. Bc1-e3 a7-a6 11. a2-a4 Ra8-c8 12. a4-a5 Ng6-e5 13. Nf3xe5 d6xe5 14. Qd4-d3 Bd7-c6 15. Be3-b6 Qc7-e7 16. Ra1-b1 Qe7-b4 
-                17. Qd3-h3 Bf8-d6 18. Qh3-e3 Bd6-e7 19. f2-f3 O-O 20. Kg1-h1 Bc6-b5 21. Nc3xb5 Qb4xb5 22. c2-c3 Be7-c5 23. Bb6xc5 Rc8xc5 24. b2-b4 Rc5-c7 
-                25. h2-h3 Rf8-c8 26. Rd1-d3 h7-h6 27. Rb1-d1 Kg8-h7 28. Qe3-d2 Rc7-c4 29. Rd3-d7 Rc8-c7 30. Qd2-d6 Qb5-a4 31. Rd7xc7 Rc4xc7 32. Qd6xc7 Qa4xd1+ 
-                33. Kh1-h2 Qd1-d2 34. Qc7xf7 Qd2xc3 35. Qf7xb7 Qc3-d2 36. Qb7-b6 Qd2-f4+ 37. Kh2-h1 Qf4-c1+ 38. Qb6-g1 Qc1-b2 39. Qg1-c5 h6-h5 40. Kh1-h2 h5-h4 
-                41. Qc5-d6 Qb2-b3 42. Qd6xa6 Qb3xb4 43. Qa6-b6 Qb4-e1 44. a5-a6 Qe1-g3+ 45. Kh2-h1 Qg3-e1+ 46. Qb6-g1 Qe1-a5 47. a6-a7 g7-g5 48. Kh1-h2 Kh7-g6 
-                49. Qg1-f2 Kg6-h6 50. Qf2-e3 Kh6-h5 51. Qe3-g1 Kh5-h6 52. Qg1-f2 Kh6-g6 53. Qf2-e3 Kg6-h5 54. Qe3-b3 Qa5xa7 55. Qb3xe6 Qa7-c5 
-                56. Qe6-f7+ Kh5-h6 57. Qf7-f6+ Kh6-h5 58. Qf6-g7 Qc5-d6 59. g2-g4#
+                1. e2-e4 e7-e6 2. Bf1-c4 d7-d5 3. e4xd5 e6xd5 4. Bc4-b3 Ng8-f6 5. d2-d4 Bf8-e7 6. Ng1-f3 O-O 7. Bc1-g5 h7-h6 
+                8. Bg5xf6 Be7xf6 9. O-O c7-c6 10. Rf1-e1 Bc8-f5 11. c2-c4 d5xc4 12. Bb3xc4 Nb8-d7 13. Nb1-c3 Nd7-b6 14. b2-b3 Nb6xc4 
+                15. b3xc4 Qd8-a5 16. Ra1-c1 Ra8-d8 17. d4-d5 Bf6xc3 18. Re1-e5 Bc3xe5 19. Nf3xe5 c6xd5 20. Qd1-e1 Bf5-e6 21. Rc1-d1 d5xc4 
+                22. Rd1xd8 Rf8xd8 23. Qe1-c3 Qa5xc3 24. g2-g3 Rd8-d1+ 25. Kg1-g2 Qc3-e1 26. Kg2-f3 Qe1xe5 27. Kf3-g2 Be6-d5+ 28. Kg2-h3 Qe5-h5+
                 """;
 
         String result = pgn.replaceAll("-", "");
@@ -181,12 +174,23 @@ class ChessGameTest {
                 System.out.println();
             }
 
+            if (result.equals("\"1/2-1/2\"")) {
+                Log.info(game.getChessBoard().pgn());
+
+                Assertions.assertTrue(game.gameResult().isPresent());
+                assertEquals(GameResult.DRAW, game.gameResult().orElseThrow());
+            }
+
             if (result.equals("\"1-0\"")) {
+                Log.info(game.getChessBoard().pgn());
+
                 Assertions.assertTrue(game.gameResult().isPresent());
                 assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow());
             }
 
             if (result.equals("\"0-1\"")) {
+                Log.info(game.getChessBoard().pgn());
+
                 Assertions.assertTrue(game.gameResult().isPresent());
                 assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow());
             }

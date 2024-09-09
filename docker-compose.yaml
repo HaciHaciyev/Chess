@@ -3,7 +3,7 @@ services:
     container_name: chess
     image: postgres:16.0
     env_file:
-      - dbinit.env
+      - datasource.env
     volumes:
       - postgres:/data/postgres
     ports:
