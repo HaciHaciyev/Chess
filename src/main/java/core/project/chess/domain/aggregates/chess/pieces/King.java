@@ -659,9 +659,13 @@ public record King(Color color)
     }
 
     private boolean canBlock(ChessBoardNavigator boardNavigator, Coordinate king, Field enemyField, Color kingColor) {
-        List<Field> path = boardNavigator.fieldsInPath(king, enemyField.getCoordinate(), false);
+        final List<Field> path = boardNavigator.fieldsInPath(king, enemyField.getCoordinate(), false);
 
         if (enemyField.isPresent() && enemyField.pieceOptional().orElseThrow() instanceof Knight) {
+            return false;
+        }
+
+        if (enemyField.isPresent() && enemyField.pieceOptional().orElseThrow() instanceof Pawn) {
             return false;
         }
 
