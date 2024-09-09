@@ -67,26 +67,6 @@ class ChessGameTest {
     }
 
     @Test
-    @DisplayName("Simple testing of FEN.")
-    void fenTest() {
-        final ChessGame chessGame = defaultChessGameFactory();
-
-        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
-        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
-
-        System.out.println(chessGame.getChessBoard().toString());
-
-        // 1
-        chessGame.makeMovement(firstPlayerUsername, e2, e4, null);
-
-        System.out.println(chessGame.getChessBoard().toString());
-
-        chessGame.makeMovement(secondPlayerUsername, e7, e5, null);
-
-        System.out.println(chessGame.getChessBoard().toString());
-    }
-
-    @Test
     @DisplayName("Berliner_PGN_Archive_64")
     void berliner64() {
         executeGameFromPGN("src/main/resources/chess/pgn/Berliner_lalg.pgn", true);
@@ -114,12 +94,6 @@ class ChessGameTest {
     @DisplayName("Checkmates from Lichess 2013 January")
     void lichessCheckmates() {
         executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn", true);
-    }
-
-    @Test
-    @DisplayName("Checkmate 13 Lichess 2013 January")
-    void lichessCheckmate13() {
-        executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_13_lalg.pgn", true);
     }
 
     private void executeGameFromPGN(String path, boolean log) {
@@ -205,6 +179,26 @@ class ChessGameTest {
             }
 
         }
+    }
+
+    @Test
+    @DisplayName("Simple testing of FEN.")
+    void fenTest() {
+        final ChessGame chessGame = defaultChessGameFactory();
+
+        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
+        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
+
+        System.out.println(chessGame.getChessBoard().toString());
+
+        // 1
+        chessGame.makeMovement(firstPlayerUsername, e2, e4, null);
+
+        System.out.println(chessGame.getChessBoard().toString());
+
+        chessGame.makeMovement(secondPlayerUsername, e7, e5, null);
+
+        System.out.println(chessGame.getChessBoard().toString());
     }
 
     @Test
