@@ -10,6 +10,7 @@ import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.chess.ChessMove;
 import core.project.chess.infrastructure.utilities.chess.SimplePGNReader;
 import io.quarkus.logging.Log;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,6 +69,12 @@ class ChessGameTest {
     }
 
     @Test
+    @DisplayName("100k+ games from lichess")
+    void lichess_100k() {
+        executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn");
+    }
+
+    @Test
     @DisplayName("Simple testing of FEN.")
     void fenTest() {
         final ChessGame chessGame = defaultChessGameFactory();
@@ -111,6 +118,62 @@ class ChessGameTest {
         executeGameFromPGN("src/main/resources/chess/pgn/Magnus_lalg.pgn");
     }
 
+    @Test
+    @DisplayName("Checkmates from Lichess 2013 January")
+    void lichessCheckmates() {
+        int pgnNum = 0;
+        for (String pgn : extractPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn")) {
+            pgnNum++;
+            ChessGame game = defaultChessGameFactory();
+
+            String white = game.getPlayerForWhite().getUsername().username();
+            String black = game.getPlayerForBlack().getUsername().username();
+
+            Log.info("reading game#" + pgnNum);
+            SimplePGNReader pgnReader = new SimplePGNReader(pgn);
+            List<ChessMove> moves = pgnReader.readAll();
+
+            Log.info("""
+                    Simulating the game of:
+                    %s
+                    """.formatted(pgn));
+
+            int moveNum = 0;
+            for (ChessMove move : moves) {
+                if (move.white() == null) {
+                    break;
+                }
+
+                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
+                Log.info("White: " + move.white());
+                game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
+
+                if (move.black() == null) {
+                    break;
+                }
+
+                Log.info("Black: " + move.black());
+                game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+
+                System.out.println();
+            }
+
+            String result = pgnReader.tag("Result");
+            Log.info("Result: " + result);
+            if (result.equals("\"1-0\"")) {
+                Assertions.assertTrue(game.gameResult().isPresent());
+                assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow());
+            }
+
+            if (result.equals("\"0-1\"")) {
+                Assertions.assertTrue(game.gameResult().isPresent());
+                assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow());
+            }
+
+            System.out.println();
+        }
+    }
+
     private void executeGameFromPGN(String path) {
         int pgnNum = 0;
         for (String pgn : extractPGN(path)) {
@@ -120,13 +183,14 @@ class ChessGameTest {
             String white = game.getPlayerForWhite().getUsername().username();
             String black = game.getPlayerForBlack().getUsername().username();
 
+            Log.info("reading game#" + pgnNum);
             SimplePGNReader pgnReader = new SimplePGNReader(pgn);
             List<ChessMove> moves = pgnReader.readAll();
 
-            /*Log.info("""
+            Log.info("""
                     Simulating the game of:
                     %s
-                    """.formatted(pgn));*/
+                    """.formatted(pgn));
 
             int moveNum = 0;
             for (ChessMove move : moves) {
@@ -139,7 +203,7 @@ class ChessGameTest {
                 if (game.getChessBoard().lastAlgebraicNotation().isPresent()) {
 //                    Log.info("Last algebraic notation before white moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
                 }
-
+//                Log.info("White: " + move.white());
                 game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
 
                 if (move.black() == null) {
@@ -147,13 +211,15 @@ class ChessGameTest {
                 }
 
                 //Log.info("Last algebraic notation before black moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
-
+//                Log.info("Black: " + move.black());
                 game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+
+                System.out.println();
             }
 
-//            Log.info("Result: " + pgnReader.tag("Result"));
-//            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
-//            System.out.println();
+            Log.info("Result: " + pgnReader.tag("Result"));
+            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
+            System.out.println();
         }
     }
 
