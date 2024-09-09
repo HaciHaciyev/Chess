@@ -698,7 +698,8 @@ public record King(Color color)
                 }
             }
 
-            final boolean potentiallyCanBeBlockedByPawnPassage = currentCoordinate.getRow() == 5 || currentCoordinate.getRow() == 4;
+            final boolean potentiallyCanBeBlockedByPawnPassage = currentCoordinate.getRow() == 5 && kingColor.equals(Color.BLACK)
+                    || currentCoordinate.getRow() == 4 && kingColor.equals(Color.WHITE);
             if (potentiallyCanBeBlockedByPawnPassage) {
 
                 final Coordinate potentialPawnCoordinate;

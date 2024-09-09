@@ -96,6 +96,12 @@ class ChessGameTest {
         executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn", true);
     }
 
+    @Test
+    @DisplayName("Temp")
+    void temp() {
+        executeGameFromPGN("src/main/resources/chess/pgn/temp.pgn", true);
+    }
+
     private void executeGameFromPGN(String path, boolean log) {
         int pgnNum = 0;
         for (String pgn : SimplePGNReader.extractFromPGN(path)) {
