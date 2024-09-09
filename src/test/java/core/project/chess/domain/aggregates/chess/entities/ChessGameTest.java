@@ -71,7 +71,7 @@ class ChessGameTest {
     @Test
     @DisplayName("100k+ games from lichess")
     void lichess_100k() {
-        executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn");
+        executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn", true);
     }
 
     @Test
@@ -97,46 +97,55 @@ class ChessGameTest {
     @Test
     @DisplayName("Berliner_PGN_Archive_64")
     void berliner64() {
-        executeGameFromPGN("src/main/resources/chess/pgn/Berliner_lalg.pgn");
+        executeGameFromPGN("src/main/resources/chess/pgn/Berliner_lalg.pgn", true);
     }
 
     @Test
     @DisplayName("Mamedyarov_PGN_Archive_4684")
     void mamedyarov_ALL() {
-        executeGameFromPGN("src/main/resources/chess/pgn/Mamedyarov_lalg.pgn");
+        executeGameFromPGN("src/main/resources/chess/pgn/Mamedyarov_lalg.pgn", true);
     }
 
     @Test
     @DisplayName("Hikaru_PGN_Archive_8025")
     void nakamura_ALL() {
-        executeGameFromPGN("src/main/resources/chess/pgn/Hikaru_lalg.pgn");
+        executeGameFromPGN("src/main/resources/chess/pgn/Hikaru_lalg.pgn", true);
     }
 
     @Test
     @DisplayName("Magnus ALL")
     void magnus_ALL() {
-        executeGameFromPGN("src/main/resources/chess/pgn/Magnus_lalg.pgn");
+        executeGameFromPGN("src/main/resources/chess/pgn/Magnus_lalg.pgn", true);
     }
 
     @Test
     @DisplayName("Checkmates from Lichess 2013 January")
     void lichessCheckmates() {
+        executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn", true);
+    }
+
+    private void executeGameFromPGN(String path, boolean log) {
         int pgnNum = 0;
-        for (String pgn : extractPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn")) {
+        for (String pgn : SimplePGNReader.extractFromPGN(path)) {
             pgnNum++;
             ChessGame game = defaultChessGameFactory();
 
             String white = game.getPlayerForWhite().getUsername().username();
             String black = game.getPlayerForBlack().getUsername().username();
 
-            Log.info("reading game#" + pgnNum);
+            if (log) {
+                Log.info("reading game#" + pgnNum);
+            }
+
             SimplePGNReader pgnReader = new SimplePGNReader(pgn);
             List<ChessMove> moves = pgnReader.readAll();
 
-            Log.info("""
-                    Simulating the game of:
-                    %s
-                    """.formatted(pgn));
+            if (log) {
+                Log.info("""
+                        Simulating the game of:
+                        %s
+                        """.formatted(pgn));
+            }
 
             int moveNum = 0;
             for (ChessMove move : moves) {
@@ -144,22 +153,34 @@ class ChessGameTest {
                     break;
                 }
 
-                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
-                Log.info("White: " + move.white());
+                if (log) {
+                    Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
+
+                    Log.info("White: " + move.white());
+                }
                 game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
 
                 if (move.black() == null) {
                     break;
                 }
 
-                Log.info("Black: " + move.black());
+                if (log) {
+                    Log.info("Black: " + move.black());
+                    System.out.println();
+                }
+
                 game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
 
-                System.out.println();
             }
 
             String result = pgnReader.tag("Result");
-            Log.info("Result: " + result);
+
+            if (log) {
+                Log.info("Result of PGN: " + result);
+                Log.info("Game status: " + game.gameResult());
+                System.out.println();
+            }
+
             if (result.equals("\"1-0\"")) {
                 Assertions.assertTrue(game.gameResult().isPresent());
                 assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow());
@@ -170,94 +191,7 @@ class ChessGameTest {
                 assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow());
             }
 
-            System.out.println();
         }
-    }
-
-    private void executeGameFromPGN(String path) {
-        int pgnNum = 0;
-        for (String pgn : extractPGN(path)) {
-            pgnNum++;
-            ChessGame game = defaultChessGameFactory();
-
-            String white = game.getPlayerForWhite().getUsername().username();
-            String black = game.getPlayerForBlack().getUsername().username();
-
-            Log.info("reading game#" + pgnNum);
-            SimplePGNReader pgnReader = new SimplePGNReader(pgn);
-            List<ChessMove> moves = pgnReader.readAll();
-
-            Log.info("""
-                    Simulating the game of:
-                    %s
-                    """.formatted(pgn));
-
-            int moveNum = 0;
-            for (ChessMove move : moves) {
-                if (move.white() == null) {
-                    break;
-                }
-
-//                Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
-
-                if (game.getChessBoard().lastAlgebraicNotation().isPresent()) {
-//                    Log.info("Last algebraic notation before white moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
-                }
-//                Log.info("White: " + move.white());
-                game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
-
-                if (move.black() == null) {
-                    break;
-                }
-
-                //Log.info("Last algebraic notation before black moving : " + game.getChessBoard().lastAlgebraicNotation().orElseThrow().algebraicNotation());
-//                Log.info("Black: " + move.black());
-                game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
-
-                System.out.println();
-            }
-
-            Log.info("Result: " + pgnReader.tag("Result"));
-            Log.info("Game status: " + (game.gameResult().isEmpty() ? "EMPTY_STATUS" : game.gameResult().orElseThrow()));
-            System.out.println();
-        }
-    }
-
-    private static List<String> extractPGN(String path) {
-        File file = new File(path);
-        List<String> pgnList = new ArrayList<>();
-
-        try (var reader = new BufferedReader(new FileReader(file))) {
-            StringBuilder sb = new StringBuilder();
-            int emptyLineOccurence = 0;
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty()) emptyLineOccurence++;
-
-                /* tags and moves in PGN are separated by new line character
-                    as in: [Tag value]
-                           [AnotherTag value]
-                           \n
-                           1. e4 e5 etc.
-
-                   and PGNs themselves are also separated by new line
-                   so it means that every second new line is separating not tags and moves but 2 PGNs
-                 */
-                if (!sb.isEmpty() && emptyLineOccurence == 2) {
-                    emptyLineOccurence = 0;
-                    pgnList.add(sb.toString());
-                    sb.delete(0, sb.length());
-                    continue;
-                }
-
-                sb.append(line).append("\n");
-            }
-
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return pgnList;
     }
 
     @Test

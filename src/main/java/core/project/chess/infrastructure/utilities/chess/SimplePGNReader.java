@@ -4,6 +4,7 @@ import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.pieces.*;
 
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,43 @@ public class SimplePGNReader {
         this.pgn = pgnStrip;
         this.tags = extractTags(pgnStrip);
         this.moves = extractMoves(pgnStrip);
+    }
+
+    public static List<String> extractFromPGN(String path) {
+        File file = new File(path);
+        List<String> pgnList = new ArrayList<>();
+
+        try (var reader = new BufferedReader(new FileReader(file))) {
+            StringBuilder sb = new StringBuilder();
+            int emptyLineOccurence = 0;
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty()) emptyLineOccurence++;
+
+                /* tags and moves in PGN are separated by new line character
+                    as in: [Tag value]
+                           [AnotherTag value]
+                           \n
+                           1. e4 e5 etc.
+
+                   and PGNs themselves are also separated by new line
+                   so it means that every second new line is separating not tags and moves but 2 PGNs
+                 */
+                if (!sb.isEmpty() && emptyLineOccurence == 2) {
+                    emptyLineOccurence = 0;
+                    pgnList.add(sb.toString());
+                    sb.delete(0, sb.length());
+                    continue;
+                }
+
+                sb.append(line).append("\n");
+            }
+
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return pgnList;
     }
 
     private Map<String, String> extractTags(String pgn) {
