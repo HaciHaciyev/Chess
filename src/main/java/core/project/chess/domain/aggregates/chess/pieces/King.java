@@ -355,7 +355,13 @@ public record King(Color color)
         final Coordinate kingCoordinate = boardNavigator.kingCoordinate(kingColor);
 
         final List<Field> surroundings = boardNavigator.surroundingFields(kingCoordinate);
-        final boolean surrounded = surroundings.stream().allMatch(field -> fieldIsBlockedOrDangerous(boardNavigator, field, kingColor));
+        boolean surrounded = true;
+        for (Field field : surroundings) {
+            if (!fieldIsBlockedOrDangerous(boardNavigator, field, kingColor)) {
+                surrounded = false;
+                break;
+            }
+        }
 
         if (enemies.size() > 1 && surrounded) {
             return true;
