@@ -21,8 +21,8 @@ public sealed interface Piece
     StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
 
     /**
-     * Checks if the path between the given start and end coordinates on the chess board is clear.
-     * The method checks all fields between the start and end coordinates, but does not check the end coordinate itself.
+     * Checks if the path between the given 'start' and 'end' coordinates on the chess board is clear.
+     * The method checks all fields between the 'start' and 'end' coordinates, but does not check the 'end' coordinate itself.
      * If the end coordinate is a neighbor of the start coordinate, the method always returns true.
      *
      * @param chessBoard the chess board to check the path on

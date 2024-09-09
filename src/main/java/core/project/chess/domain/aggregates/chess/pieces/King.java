@@ -661,6 +661,10 @@ public record King(Color color)
     private boolean canBlock(ChessBoardNavigator boardNavigator, Coordinate king, Field enemyField, Color kingColor) {
         List<Field> path = boardNavigator.fieldsInPath(king, enemyField.getCoordinate(), false);
 
+        if (enemyField.isPresent() && enemyField.pieceOptional().orElseThrow() instanceof Knight) {
+            return false;
+        }
+
         for (final Field field : path) {
             final Coordinate currentCoordinate = field.getCoordinate();
 
@@ -692,10 +696,18 @@ public record King(Color color)
             if (potentiallyCanBeBlockedByPawnPassage) {
 
                 final Coordinate potentialPawnCoordinate;
+                final Coordinate secondPassageCoordinate;
+
                 if (Color.WHITE.equals(kingColor)) {
+
                     potentialPawnCoordinate = Coordinate.of(2, currentCoordinate.columnToInt()).orElseThrow();
+                    secondPassageCoordinate = Coordinate.of(5, currentCoordinate.columnToInt()).orElseThrow();
+
                 } else {
+
                     potentialPawnCoordinate = Coordinate.of(7, currentCoordinate.columnToInt()).orElseThrow();
+                    secondPassageCoordinate = Coordinate.of(4, currentCoordinate.columnToInt()).orElseThrow();
+
                 }
 
                 final Field field2 = boardNavigator.board().field(potentialPawnCoordinate);
@@ -703,7 +715,11 @@ public record King(Color color)
                 final boolean isFriendlyPawnExists =
                         field2.isPresent() && field2.pieceOptional().orElseThrow() instanceof Pawn pawn && pawn.color().equals(kingColor);
 
-                final boolean canBlockByPassage = isFriendlyPawnExists && safeForKing(boardNavigator.board(), king, potentialPawnCoordinate, currentCoordinate);
+                final boolean isPathClear = clearPath(boardNavigator.board(), potentialPawnCoordinate, secondPassageCoordinate);
+
+                final boolean canBlockByPassage =
+                        isFriendlyPawnExists && isPathClear && safeForKing(boardNavigator.board(), king, potentialPawnCoordinate, currentCoordinate);
+
                 if (canBlockByPassage) {
                     return true;
                 }

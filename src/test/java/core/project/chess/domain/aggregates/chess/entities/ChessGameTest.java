@@ -29,10 +29,9 @@ class ChessGameTest {
     @Disabled("Utility function.")
     void removeDashes() {
         final String pgn = """
-                1. e2-e4 e7-e6 2. Bf1-c4 d7-d5 3. e4xd5 e6xd5 4. Bc4-b3 Ng8-f6 5. d2-d4 Bf8-e7 6. Ng1-f3 O-O 7. Bc1-g5 h7-h6 
-                8. Bg5xf6 Be7xf6 9. O-O c7-c6 10. Rf1-e1 Bc8-f5 11. c2-c4 d5xc4 12. Bb3xc4 Nb8-d7 13. Nb1-c3 Nd7-b6 14. b2-b3 Nb6xc4 
-                15. b3xc4 Qd8-a5 16. Ra1-c1 Ra8-d8 17. d4-d5 Bf6xc3 18. Re1-e5 Bc3xe5 19. Nf3xe5 c6xd5 20. Qd1-e1 Bf5-e6 21. Rc1-d1 d5xc4 
-                22. Rd1xd8 Rf8xd8 23. Qe1-c3 Qa5xc3 24. g2-g3 Rd8-d1+ 25. Kg1-g2 Qc3-e1 26. Kg2-f3 Qe1xe5 27. Kf3-g2 Be6-d5+ 28. Kg2-h3 Qe5-h5+
+                1. e2-e3 c7-c5 2. Bf1-e2 e7-e6 3. f2-f3 d7-d5 4. g2-g3 Ng8-f6 5. h2-h3 Bf8-e7 6. Ke1-f2 O-O 7. Kf2-g2 Nb8-c6 8. Qd1-e1 e6-e5 
+                9. Nb1-c3 e5-e4 10. Nc3-d1 e4xf3+ 11. Be2xf3 Bc8-f5 12. Bf3-e2 Bf5-e4+ 13. Ng1-f3 Nf6-h5 14. d2-d3 Be4xf3+ 15. Be2xf3 Nh5-f6 
+                16. Qe1-f2 Be7-d6 17. e3-e4 d5xe4 18. d3xe4 Nc6-d4 19. c2-c3 Nd4xf3 20. Kg2xf3 Qd8-e7 21. Bc1-f4 Qe7xe4+
                 """;
 
         String result = pgn.replaceAll("-", "");
@@ -117,6 +116,12 @@ class ChessGameTest {
         executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn", true);
     }
 
+    @Test
+    @DisplayName("Checkmate 13 Lichess 2013 January")
+    void lichessCheckmate13() {
+        executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_13_lalg.pgn", true);
+    }
+
     private void executeGameFromPGN(String path, boolean log) {
         int pgnNum = 0;
         for (String pgn : SimplePGNReader.extractFromPGN(path)) {
@@ -153,16 +158,20 @@ class ChessGameTest {
                 }
                 game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
 
+                Log.info(game.getChessBoard().pgn());
+
                 if (move.black() == null) {
                     break;
                 }
 
                 if (log) {
                     Log.info("Black: " + move.black());
-                    System.out.println();
                 }
 
                 game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+
+                Log.info(game.getChessBoard().pgn());
+                System.out.println();
 
             }
 
