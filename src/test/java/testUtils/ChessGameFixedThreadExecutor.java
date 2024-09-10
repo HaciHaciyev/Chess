@@ -213,7 +213,7 @@ public final class ChessGameFixedThreadExecutor {
                     Partition partition = queue.poll(100, TimeUnit.MILLISECONDS);
 
                     if (partition != null) {
-                        consume(partition.pgnList, gameExecutions, totalGameFailures, enableGameLogging, enableAssertions, verbose);
+                        consume(partition.pgnList, gameExecutions, enableGameLogging, enableAssertions, verbose);
                         log("Processed partition#" + partition.partitionNum);
                         partitionExecutions++;
                     }
@@ -235,7 +235,6 @@ public final class ChessGameFixedThreadExecutor {
 
         void consume(List<String> pgnList,
                      AtomicInteger pgnNum,
-                     AtomicInteger gameFailures,
                      boolean enableLogging,
                      boolean enableAssertions,
                      boolean verbose) {
