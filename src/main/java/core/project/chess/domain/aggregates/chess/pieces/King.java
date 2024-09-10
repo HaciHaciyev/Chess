@@ -333,14 +333,15 @@ public record King(Color color)
         }
 
         if (enemies.size() == 2) {
+            final Field fieldWithKing = boardNavigator.board().field(kingCoordinate);
 
-            final boolean kingCanCaptureFirstFigure = !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getFirst(), kingColor);
-            if (kingCanCaptureFirstFigure) {
+            final boolean kingCanCaptureFirstFigure = !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getFirst(), kingColor) ;
+            if (kingCanCaptureFirstFigure && isValidKingMovementCoordinates(boardNavigator.board(), fieldWithKing, enemies.getFirst())) {
                 return Operations.CHECK;
             }
 
             final boolean kingCanCaptureSecondFigure = !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getLast(), kingColor);
-            if (kingCanCaptureSecondFigure) {
+            if (kingCanCaptureSecondFigure && isValidKingMovementCoordinates(boardNavigator.board(), fieldWithKing, enemies.getLast())) {
                 return Operations.CHECK;
             }
 
