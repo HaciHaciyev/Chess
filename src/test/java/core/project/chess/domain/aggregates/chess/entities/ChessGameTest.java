@@ -34,7 +34,7 @@ public class ChessGameTest {
     void lichess_100k() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -44,7 +44,7 @@ public class ChessGameTest {
     void berliner64() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Berliner_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -54,7 +54,7 @@ public class ChessGameTest {
     void mamedyarov_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -64,7 +64,7 @@ public class ChessGameTest {
     void nakamura_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -74,7 +74,7 @@ public class ChessGameTest {
     void magnus_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Magnus_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -84,8 +84,8 @@ public class ChessGameTest {
     void lichessCheckmates() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn",
-                true,
-                false
+                false,
+                true
         );
     }
 
@@ -112,66 +112,60 @@ public class ChessGameTest {
         SimplePGNReader pgnReader = new SimplePGNReader(pgn);
         List<ChessMove> moves = pgnReader.readAll();
 
-        if (enableLogging) {
-            Log.info("""
-                        Simulating the game of:
-                        %s
-                        """.formatted(pgn));
-        }
+        Log.info("""
+                 Simulating the game of:
+                  %s
+                 """.formatted(pgn)
+        );
 
-        int moveNum = 0;
+        int moveNum = 1;
         for (ChessMove move : moves) {
             if (move.white() == null) {
                 break;
             }
 
+            Log.info(
+                    String.format("Cite: %s. Game: %d. Movement: %d.", pgnReader.tag("Site"), gameNum, moveNum)
+            );
+
             if (enableLogging) {
-                Log.info("Move#" + ++moveNum + " | " + "Game#" + gameNum);
                 Log.info("White: " + move.white());
             }
+
             game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
 
-            Log.info(game.getChessBoard().pgn());if (move.black() == null) {
+            if (move.black() == null) {
                 break;
             }
 
             if (enableLogging) {
                 Log.info("Black: " + move.black());
-
             }
 
             game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
-            Log.info(game.getChessBoard().pgn());
-            System.out.println();
 
+            moveNum++;
         }
 
         String result = pgnReader.tag("Result");
 
         if (enableLogging) {
-            Log.info("Result of PGN: " + result);
             Log.info("Game status: " + game.gameResult());
             System.out.println();
         }
 
         if (enableAssertions) {
             if (result.equals("\"1/2-1/2\"")) {
-                Log.info(game.getChessBoard().pgn());
-
                 Assertions.assertTrue(game.gameResult().isPresent());
                 assertEquals(GameResult.DRAW, game.gameResult().orElseThrow());
             }
 
             if (result.equals("\"1-0\"")) {
-                Log.info(game.getChessBoard().pgn());
-
                 Assertions.assertTrue(game.gameResult().isPresent());
                 assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow());
             }
 
             if (result.equals("\"0-1\"")) {
-                Log.info(game.getChessBoard().pgn());
-
                 Assertions.assertTrue(game.gameResult().isPresent());
                 assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow());
             }

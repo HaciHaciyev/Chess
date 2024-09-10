@@ -935,14 +935,6 @@ public class ChessBoard {
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
 
         /** Retrieve message about game result.*/
-        if (ruleOf50MovesForWhite == 50 && ruleOf50MovesForBlack == 50 && !operations.contains(CHECK) && !operations.contains(CHECKMATE)) {
-            return GameResultMessage.RuleOf50Moves;
-        }
-
-        if (hashCodeOfBoard.get(currentPositionHash) == 3 && !operations.contains(CHECK) && !operations.contains(CHECKMATE)) {
-            return GameResultMessage.RuleOf3EqualsPositions;
-        }
-
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
 
         if (opponentKingStatus.equals(STALEMATE)) {
@@ -951,6 +943,14 @@ public class ChessBoard {
 
         if (opponentKingStatus.equals(CHECKMATE)) {
             return GameResultMessage.Checkmate;
+        }
+
+        if (ruleOf50MovesForWhite == 50 && ruleOf50MovesForBlack == 50) {
+            return GameResultMessage.RuleOf50Moves;
+        }
+
+        if (hashCodeOfBoard.get(currentPositionHash) == 3) {
+            return GameResultMessage.RuleOf3EqualsPositions;
         }
 
         return GameResultMessage.Continue;

@@ -10,7 +10,6 @@ import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
-import io.quarkus.logging.Log;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -137,7 +136,7 @@ public class ChessGame {
         Objects.requireNonNull(to);
 
         if (isGameOver.status()) {
-            throw new IllegalArgumentException("Game is over.");
+            throw new IllegalArgumentException("Game is over. Because of: %s".formatted(isGameOver.orElseThrow()));
         }
 
         final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
