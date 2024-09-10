@@ -319,7 +319,14 @@ public record King(Color color)
 
             final boolean isPassage = isPassage(ourField.getCoordinate(), currentCoordinate, pawn.color());
             if (isPassage && !endFieldOccupied && safeForKing(chessBoard, kingCoordinate, ourField.getCoordinate(), currentCoordinate)) {
-                return false;
+
+                final int passageIntermediateRow = startRow < endRow ? startRow + 1 : startRow - 1;
+                final Coordinate passageIntermediateCoord = Coordinate.of(passageIntermediateRow, startColumn).orElseThrow();
+
+                final boolean isPassageIntermediateFieldNotOccupied = chessBoard.field(passageIntermediateCoord).isEmpty();
+                if (isPassageIntermediateFieldNotOccupied) {
+                    return false;
+                }
             }
 
             final boolean isCaptureOnPassage = isValidCaptureOnPassage(latestMovement, currentCoordinate, pawn.color());
