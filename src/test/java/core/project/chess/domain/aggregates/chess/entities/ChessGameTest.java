@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
+import testUtils.ChessGameFixedThreadExecutor;
 
 import java.util.List;
 import java.util.UUID;
@@ -86,6 +87,23 @@ public class ChessGameTest {
     }
 
     @Test
+    @DisplayName("Magnus ALL Concurrent fixed thread")
+    void magnus_ALL_Concurrent() {
+        ChessGameFixedThreadExecutor executor = new ChessGameFixedThreadExecutor(
+                "src/main/resources/chess/pgn/Magnus_lalg.pgn",
+                4,
+                4,
+                true,
+                false,
+                true,
+                false
+        );
+
+
+        executor.start();
+    }
+
+    @Test
     @DisplayName("Checkmates from Lichess 2013 January")
     void lichessCheckmates() {
         executeGamesFromPGN(
@@ -94,6 +112,22 @@ public class ChessGameTest {
                 true,
                 false
         );
+    }
+
+    @Test
+    @DisplayName("Checkmates from Lichess 2013 January Concurrent")
+    void lichessCheckmates_Concurrent() {
+        ChessGameFixedThreadExecutor executor = new ChessGameFixedThreadExecutor(
+                "src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn",
+                8,
+                8,
+                true,
+                false,
+                true,
+                false
+        );
+
+        executor.start();
     }
 
     @Test
