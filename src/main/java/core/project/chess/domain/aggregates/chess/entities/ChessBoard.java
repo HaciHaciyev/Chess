@@ -805,6 +805,7 @@ public class ChessBoard {
             endField.addFigure(piece);
         }
 
+        /** Check for Checkmate, Stalemate, Check after move executed...*/
         final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
 
         operations.add(
@@ -897,17 +898,6 @@ public class ChessBoard {
         }
 
         final Set<Operations> operations = statusPair.orElseThrow();
-        final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
-
-        operations.add(
-                opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
-        );
-
-
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color(), Pair.of(from, to));
-        if (isStalemate) {
-            operations.add(STALEMATE);
-        }
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
         kingStartedField.removeFigure();
@@ -918,6 +908,18 @@ public class ChessBoard {
             moveRookInShortCastling(to);
         } else {
             moveRookInLongCastling(to);
+        }
+
+        /** Check for Checkmate, Stalemate, Check after move executed...*/
+        final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
+
+        operations.add(
+                opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
+        );
+
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color(), Pair.of(from, to));
+        if (isStalemate) {
+            operations.add(STALEMATE);
         }
 
         /** Monitor opportunities for castling and switch players.*/

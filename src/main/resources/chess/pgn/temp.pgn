@@ -1,57 +1,43 @@
 [Event "Rated Classical game"]
-[Site "https://lichess.org/my5tapxu"]
+[Site "https://lichess.org/hwhgwdox"]
 [Date "????.??.??"]
 [Round "?"]
-[White "marciogyn"]
-[Black "frenchnovice"]
+[White "WinChesster"]
+[Black "yooh_"]
 [Result "0-1"]
-[WhiteElo "1472"]
-[BlackElo "1479"]
-[ECO "C20"]
-[Opening "King's Pawn Game: Wayward Queen Attack"]
-[TimeControl "360+8"]
-[UTCDate "2013.01.07"]
-[UTCTime "01:00:09"]
+[WhiteElo "1529"]
+[BlackElo "1670"]
+[ECO "B00"]
+[Opening "Nimzowitsch Defense"]
+[TimeControl "480+3"]
+[UTCDate "2013.01.05"]
+[UTCTime "01:23:57"]
 [Termination "Normal"]
-[WhiteRatingDiff "-17"]
-[BlackRatingDiff "+11"]
+[WhiteRatingDiff "-7"]
+[BlackRatingDiff "+21"]
 
-1. e2e4 e7e5 2. d1h5 d8e7 3. f1c4 g8f6 4. h5f3 b8c6 5. c2c3 d7d6 6. d2d3
-a7a6 7. c1g5 b7b5 8. c4b3 b5b4 9. b3a4 b4c3 10. b1c3 c8d7 11. g5f6 g7f6 12.
-g1e2 f8h6 13. h2h4 e8c8 14. g2g4 h8g8 15. g4g5 f6g5 16. h4g5 h6g5 17. h1h7
-g5f6 18. a4c6 d7c6 19. d3d4 e5d4 20. c3d5 c6d5 21. e4d5 d8e8 22. f3f5+ c8d8
-23. f5f3 d4d3 24. f3e3 f6b2 25. a1b1 e7f6 26. e3d3 g8g1+ 27. e1d2 f6g5+ 28.
-f2f4 e8e2+ 29. d3e2 g5f4+ 30. e2e3 b2c3+ 31. d2c3 f4e3+ 32. c3c4 g1b1 33.
-h7h8+ d8e7 34. a2a4 e3b3+ 35. c4d4 b3b2+ 36. d4c4 b2h8 37. a4a5 b1c1+ 38.
-c4b4 h8d4+ 39. b4a3 d4c3+ 40. a3a2 c3a1+ 41. a2b3 c7c5 42. d5c6 c1c3+ 43.
-b3b4 c3c6 44. b4b3 a1b1+ 45. b3a4 c6c4+ 46. a4a3 c4c5 47. a3a4 d6d5 48.
-a4a3 c5a5# 0-1
+1. e2e4 b8c6 2. f1c4 g8f6 3. b1c3 f6e4 4. c3e4 d7d5 5. c4d5 d8d5 6. d1e2
+c8f5 7. d2d3 c6d4 8. c2c4 d5c6 9. e2d1 f5e4 10. d3e4 c6c4 11. b2b3 d4c2+
+12. e1d2 e8c8# 0-1
 
 [Event "Rated Classical game"]
-[Site "https://lichess.org/my5tapxu"]
+[Site "https://lichess.org/hwhgwdox"]
 [Date "????.??.??"]
 [Round "?"]
-[White "marciogyn"]
-[Black "frenchnovice"]
+[White "WinChesster"]
+[Black "yooh_"]
 [Result "0-1"]
-[WhiteElo "1472"]
-[BlackElo "1479"]
-[ECO "C20"]
-[Opening "King's Pawn Game: Wayward Queen Attack"]
-[TimeControl "360+8"]
-[UTCDate "2013.01.07"]
-[UTCTime "01:00:09"]
+[WhiteElo "1529"]
+[BlackElo "1670"]
+[ECO "B00"]
+[Opening "Nimzowitsch Defense"]
+[TimeControl "480+3"]
+[UTCDate "2013.01.05"]
+[UTCTime "01:23:57"]
 [Termination "Normal"]
-[WhiteRatingDiff "-17"]
-[BlackRatingDiff "+11"]
+[WhiteRatingDiff "-7"]
+[BlackRatingDiff "+21"]
 
-1. e2e4 e7e5 2. d1h5 d8e7 3. f1c4 g8f6 4. h5f3 b8c6 5. c2c3 d7d6 6. d2d3
-a7a6 7. c1g5 b7b5 8. c4b3 b5b4 9. b3a4 b4c3 10. b1c3 c8d7 11. g5f6 g7f6 12.
-g1e2 f8h6 13. h2h4 e8c8 14. g2g4 h8g8 15. g4g5 f6g5 16. h4g5 h6g5 17. h1h7
-g5f6 18. a4c6 d7c6 19. d3d4 e5d4 20. c3d5 c6d5 21. e4d5 d8e8 22. f3f5+ c8d8
-23. f5f3 d4d3 24. f3e3 f6b2 25. a1b1 e7f6 26. e3d3 g8g1+ 27. e1d2 f6g5+ 28.
-f2f4 e8e2+ 29. d3e2 g5f4+ 30. e2e3 b2c3+ 31. d2c3 f4e3+ 32. c3c4 g1b1 33.
-h7h8+ d8e7 34. a2a4 e3b3+ 35. c4d4 b3b2+ 36. d4c4 b2h8 37. a4a5 b1c1+ 38.
-c4b4 h8d4+ 39. b4a3 d4c3+ 40. a3a2 c3a1+ 41. a2b3 c7c5 42. d5c6 c1c3+ 43.
-b3b4 c3c6 44. b4b3 a1b1+ 45. b3a4 c6c4+ 46. a4a3 c4c5 47. a3a4 d6d5 48.
-a4a3 c5a5# 0-1
+1. e2e4 b8c6 2. f1c4 g8f6 3. b1c3 f6e4 4. c3e4 d7d5 5. c4d5 d8d5 6. d1e2
+c8f5 7. d2d3 c6d4 8. c2c4 d5c6 9. e2d1 f5e4 10. d3e4 c6c4 11. b2b3 d4c2+
+12. e1d2 e8c8# 0-1
