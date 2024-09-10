@@ -458,12 +458,28 @@ public record King(Color color)
 
             final boolean kingCanCaptureFirstFigure = !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getFirst(), kingColor) ;
             if (kingCanCaptureFirstFigure && isValidKingMovementCoordinates(boardNavigator.board(), fieldWithKing, enemies.getFirst())) {
-                return Operations.CHECK;
+
+                final boolean isCastling = boardNavigator.board().isCastling(this, fieldWithKing.getCoordinate(), enemies.getFirst().getCoordinate());
+                if (isCastling && safeToCastle(boardNavigator, fieldWithKing.getCoordinate(), enemies.getFirst().getCoordinate())) {
+                    return Operations.CHECK;
+                }
+
+                if (!isCastling) {
+                    return Operations.CHECK;
+                }
             }
 
             final boolean kingCanCaptureSecondFigure = !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getLast(), kingColor);
             if (kingCanCaptureSecondFigure && isValidKingMovementCoordinates(boardNavigator.board(), fieldWithKing, enemies.getLast())) {
-                return Operations.CHECK;
+
+                final boolean isCastling = boardNavigator.board().isCastling(this, fieldWithKing.getCoordinate(), enemies.getLast().getCoordinate());
+                if (isCastling && safeToCastle(boardNavigator, fieldWithKing.getCoordinate(), enemies.getLast().getCoordinate())) {
+                    return Operations.CHECK;
+                }
+
+                if (!isCastling) {
+                    return Operations.CHECK;
+                }
             }
 
             final List<Field> surroundings = boardNavigator.surroundingFields(kingCoordinate);
