@@ -79,7 +79,7 @@ public final class ChessGameFixedThreadExecutor {
     public boolean start() {
         if (!isRunning.compareAndSet(false, true)) {
             Log.info("Executor is already running");
-            return false;
+            throw new IllegalStateException("Eee");
         }
 
         Log.info("Launching the executor");
@@ -96,9 +96,8 @@ public final class ChessGameFixedThreadExecutor {
 
         Log.info("Total game executions: " + totalGameExecutions);
         Log.info("Failures: " + totalGameFailures);
-        gameFailures.forEach(Log::info);
 
-        return true;
+        return gameFailures.isEmpty();
     }
 
     /**

@@ -1,7 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
-import core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
@@ -12,6 +11,7 @@ import core.project.chess.infrastructure.utilities.chess.ChessMove;
 import core.project.chess.infrastructure.utilities.chess.SimplePGNReader;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
@@ -43,7 +43,24 @@ public class ChessGameTest {
     }
 
     @Test
+    @DisplayName("100k+ games from lichess Concurrent")
+    void lichess_100k_Concurrent() {
+
+        ChessGameFixedThreadExecutor executor = new ChessGameFixedThreadExecutor(
+                "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
+                8,
+                8,
+                true,
+                true,
+                false
+        );
+
+        assertTrue(executor.start());
+    }
+
+    @Test
     @DisplayName("Berliner_PGN_Archive_64")
+    @Disabled
     void berliner64() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Berliner_lalg.pgn",
@@ -53,7 +70,26 @@ public class ChessGameTest {
     }
 
     @Test
+    @DisplayName("Berliner_PGN_Archive_64 Concurrent")
+    void berliner64_Concurrent() {
+
+        ChessGameFixedThreadExecutor executor = new ChessGameFixedThreadExecutor(
+                "src/main/resources/chess/pgn/Berliner_lalg.pgn",
+                8,
+                8,
+                true,
+                false,
+                false
+
+        );
+
+
+        assertTrue(executor.start());
+    }
+
+    @Test
     @DisplayName("Mamedyarov_PGN_Archive_4684")
+    @Disabled
     void mamedyarov_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
@@ -63,7 +99,24 @@ public class ChessGameTest {
     }
 
     @Test
+    @DisplayName("Mamedyarov_PGN_Archive_4684 Concurrent")
+    void mamedyarov_ALL_Concurrent() {
+
+        ChessGameFixedThreadExecutor executor = new ChessGameFixedThreadExecutor(
+                "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
+                8,
+                8,
+                true,
+                false,
+                false
+        );
+
+        assertTrue(executor.start());
+    }
+
+    @Test
     @DisplayName("Hikaru_PGN_Archive_8025")
+    @Disabled
     void nakamura_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
@@ -73,7 +126,24 @@ public class ChessGameTest {
     }
 
     @Test
+    @DisplayName("Hikaru_PGN_Archive_8025 Concurrent")
+    void nakamura_ALL_Concurrent() {
+        ChessGameFixedThreadExecutor executor = new ChessGameFixedThreadExecutor(
+        "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
+                8,
+                8,
+                true,
+                false,
+                false
+
+        );
+
+        assertTrue(executor.start());
+    }
+
+    @Test
     @DisplayName("Magnus ALL")
+    @Disabled
     void magnus_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Magnus_lalg.pgn",
@@ -91,11 +161,10 @@ public class ChessGameTest {
                 4,
                 true,
                 false,
-                true
+                false
         );
 
-
-        executor.start();
+        assertTrue(executor.start());
     }
 
     @Test
@@ -120,11 +189,22 @@ public class ChessGameTest {
                 true
         );
 
-        boolean start = executor.start();
+        assertTrue(executor.start());
+    }
+
+    @Test
+    @DisplayName("Stalemates from Lichess 2013 January")
+    void lichessStalemates() {
+        executeGamesFromPGN(
+                "src/main/resources/chess/pgn/lichess_2013_january_stalemates_lalg.pgn",
+                true,
+                true
+        );
     }
 
     @Test
     @DisplayName("Temp")
+    @Disabled
     void temp() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/temp.pgn",
