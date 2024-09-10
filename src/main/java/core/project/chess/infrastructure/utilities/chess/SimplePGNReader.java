@@ -51,6 +51,10 @@ public class SimplePGNReader {
                 sb.append(line).append("\n");
             }
 
+            if (pgnList.isEmpty()) {
+                pgnList.add(sb.toString());
+            }
+
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
