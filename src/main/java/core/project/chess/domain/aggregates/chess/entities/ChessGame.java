@@ -137,7 +137,7 @@ public class ChessGame {
         Objects.requireNonNull(to);
 
         if (isGameOver.status()) {
-            throw new IllegalArgumentException("Game is over. Because of: %s".formatted(isGameOver.orElseThrow()));
+            throw new IllegalArgumentException("Game is over by %s | last move %s".formatted(isGameOver.orElseThrow(), chessBoard.latestMovement().orElseThrow()));
         }
 
         final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
