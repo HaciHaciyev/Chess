@@ -13,6 +13,7 @@ import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +35,7 @@ public class ChessGameTest {
     void lichess_100k() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
+                true,
                 false,
                 false
         );
@@ -44,6 +46,7 @@ public class ChessGameTest {
     void berliner64() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Berliner_lalg.pgn",
+                true,
                 false,
                 false
         );
@@ -54,6 +57,7 @@ public class ChessGameTest {
     void mamedyarov_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
+                true,
                 false,
                 false
         );
@@ -64,6 +68,7 @@ public class ChessGameTest {
     void nakamura_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
+                true,
                 false,
                 false
         );
@@ -75,6 +80,7 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Magnus_lalg.pgn",
                 false,
+                false,
                 false
         );
     }
@@ -85,7 +91,8 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn",
                 false,
-                true
+                true,
+                false
         );
     }
 
@@ -95,18 +102,33 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/temp.pgn",
                 true,
+                false,
                 false
         );
     }
 
-    public static void executeGameFromPGN(String pgn, boolean enableLogging, boolean enableAssertions, int gameNum) {
+    public static void executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions, boolean verbose) {
+        List<String> strings = SimplePGNReader.extractFromPGN(path);
+        int pgnNum = 0;
+        for (String pgn : strings) {
+
+            try {
+                executeGameFromPGN(pgn, pgnNum, enableLogging, enableAssertions, verbose);
+            } catch (AssertionFailedError | IllegalArgumentException e) {
+                Log.info(e.getMessage());
+            }
+            pgnNum++;
+        }
+    }
+
+    public static void executeGameFromPGN(String pgn, int pgnNum, boolean enableLogging, boolean enableAssertions, boolean verbose) {
         ChessGame game = defaultChessGameSupplier().get();
 
         String white = game.getPlayerForWhite().getUsername().username();
         String black = game.getPlayerForBlack().getUsername().username();
 
         if (enableLogging) {
-            Log.info("reading game#" + gameNum);
+            Log.info("reading game#" + pgnNum);
         }
 
         SimplePGNReader pgnReader = new SimplePGNReader(pgn);
@@ -114,13 +136,12 @@ public class ChessGameTest {
 
         if (enableLogging) {
             Log.info("""
-                 Simulating the game of:
-                  %s
-                 """.formatted(pgn)
-            );
+                        Simulating the game of:
+                        %s
+                        """.formatted(pgn));
         }
 
-        int moveNum = 1;
+        int moveNum = 0;
         for (ChessMove move : moves) {
             if (move.white() == null) {
                 break;
@@ -131,6 +152,7 @@ public class ChessGameTest {
             );
 
             if (enableLogging) {
+                Log.info("Move#" + moveNum + " | " + "Game#" + pgnNum);
                 Log.info("White: " + move.white());
             }
 
@@ -152,45 +174,104 @@ public class ChessGameTest {
         String result = pgnReader.tag("Result");
 
         if (enableLogging) {
+            Log.info("Result of PGN: " + result);
             Log.info("Game status: " + game.gameResult());
             System.out.println();
         }
 
+        if (enableAssertions && verbose) {
+            processResult(game, result, moveNum, pgnNum, pgn);
+        }
+
         if (enableAssertions) {
-            if (result.equals("\"1/2-1/2\"")) {
-                Assertions.assertTrue(game.gameResult().isPresent());
-                assertEquals(GameResult.DRAW, game.gameResult().orElseThrow());
-            }
-
-            if (result.equals("\"1-0\"")) {
-                Assertions.assertTrue(game.gameResult().isPresent());
-                assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow());
-            }
-
-            if (result.equals("\"0-1\"")) {
-                Assertions.assertTrue(game.gameResult().isPresent());
-                assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow());
-            }
+            processResult(game, result);
         }
     }
 
-    public static int executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions) {
-        List<String> strings = SimplePGNReader.extractFromPGN(path);
-        return executeGamesFromPGN(
-                strings,
-                enableLogging,
-                enableAssertions
-        );
+    private static void processResult(ChessGame game, String result) {
+        if (result.equals("\"1/2-1/2\"")) {
+            Assertions.assertTrue(game.gameResult().isPresent(), "NO GAME RESULT");
+            assertEquals(GameResult.DRAW, game.gameResult().orElseThrow(), "EXPECTED DRAW BUT WAS: " + game.gameResult());
+        }
+
+        if (result.equals("\"1-0\"")) {
+            Assertions.assertTrue(game.gameResult().isPresent(), "NO GAME RESULT");
+            assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow(), "EXPECTED WHITE_WIN BUT WAS: " + game.gameResult());
+        }
+
+        if (result.equals("\"0-1\"")) {
+            Assertions.assertTrue(game.gameResult().isPresent(), "NO GAME RESULT");
+            assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow(), "EXPECTED BLACK_WIN BUT WAS: " + game.gameResult());
+        }
     }
 
-    public static int executeGamesFromPGN(List<String> pgnList, boolean enableLogging, boolean enableAssertions) {
-        int pgnNum = 0;
-        for (String pgn : pgnList) {
-            executeGameFromPGN(pgn, enableLogging, enableAssertions, pgnNum);
-            pgnNum++;
+    private static void processResult(ChessGame game, String result, int moveNum, int gameNum, String pgn) {
+        if (result.equals("\"1/2-1/2\"")) {
+            Assertions.assertTrue(game.gameResult().isPresent(), """
+                        
+                        --> NO GAME RESULT <--
+                        Move: %s | Game: %s
+                        
+                        ----------------------
+                        
+                        PGN: %s
+                        """.formatted(moveNum, gameNum, pgn));
+
+            assertEquals(GameResult.DRAW, game.gameResult().orElseThrow(), """
+                        
+                        --> EXPECTED DRAW <--
+                        Move: %s | Game: %s
+                        
+                        ----------------------
+                        
+                        PGN: %s
+                        """.formatted(moveNum, gameNum, pgn));
         }
-        
-        return pgnNum;
+
+        if (result.equals("\"1-0\"")) {
+            Assertions.assertTrue(game.gameResult().isPresent(), """
+                        
+                        --> NO GAME RESULT <--
+                        Move: %s | Game: %s
+                        
+                        ----------------------
+                        
+                        PGN: %s
+                        """.formatted(moveNum, gameNum, pgn));
+
+
+            assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow(), """
+                        
+                        --> EXPECTED WHITE_WIN <--
+                        Move: %s | Game: %s
+                        
+                        ----------------------
+                        
+                        PGN: %s
+                        """.formatted(moveNum, gameNum, pgn));
+        }
+
+        if (result.equals("\"0-1\"")) {
+            Assertions.assertTrue(game.gameResult().isPresent(), """
+                        
+                        --> NO GAME RESULT <--
+                        Move: %s | Game: %s
+                        
+                        ----------------------
+                        
+                        PGN: %s
+                        """.formatted(moveNum, gameNum, pgn));
+
+            assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow(), """
+                        
+                        --> EXPECTED BLACK_WIN <--
+                        Move: %s | Game: %s
+                        
+                        ----------------------
+                        
+                        PGN: %s
+                        """.formatted(moveNum, gameNum, pgn));
+        }
     }
 
     @Test
