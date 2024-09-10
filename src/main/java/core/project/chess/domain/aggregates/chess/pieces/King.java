@@ -377,7 +377,7 @@ public record King(Color color)
     }
 
     private boolean isValidCaptureOnPassage(final Pair<Coordinate, Coordinate> previousPassageMove, final Coordinate endCoord, final Color color) {
-        if (!previousMoveWasPassage(previousPassageMove, color)) {
+        if (!previousMoveWasPassage(previousPassageMove, color.equals(WHITE) ? BLACK : WHITE)) {
             return false;
         }
 
