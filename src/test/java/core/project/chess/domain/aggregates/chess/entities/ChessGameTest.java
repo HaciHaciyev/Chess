@@ -120,7 +120,7 @@ public class ChessGameTest {
                 true
         );
 
-        executor.start();
+        boolean start = executor.start();
     }
 
     @Test
@@ -202,7 +202,7 @@ public class ChessGameTest {
                 var blackMessage = game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
 
                 if (enableLogging) {
-                    Log.info("Movement result for white: " + blackMessage);
+                    Log.info("Movement result for black: " + blackMessage);
                 }
             } catch (IllegalStateException e) {
                 String err = """
