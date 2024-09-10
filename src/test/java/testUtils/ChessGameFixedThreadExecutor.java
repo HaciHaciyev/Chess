@@ -29,7 +29,6 @@ public final class ChessGameFixedThreadExecutor {
     private final boolean enableGameLogging;
     private final boolean enableExecutorLogging;
     private final boolean enableAssertions;
-    private final boolean verbose;
 
     private final int NUM_CONSUMERS;
     private final int NUM_PARTITIONS;
@@ -44,8 +43,7 @@ public final class ChessGameFixedThreadExecutor {
                                         int partitions,
                                         boolean enableExecutorLogging,
                                         boolean enableGameLogging,
-                                        boolean enableAssertions,
-                                        boolean verbose) {
+                                        boolean enableAssertions) {
         this.producer = new Producer(path);
         this.consumer = new Consumer();
         this.NUM_CONSUMERS = consumers;
@@ -53,7 +51,6 @@ public final class ChessGameFixedThreadExecutor {
         this.enableGameLogging = enableGameLogging;
         this.enableExecutorLogging = enableExecutorLogging;
         this.enableAssertions = enableAssertions;
-        this.verbose = verbose;
 
 
         this.producerService = Executors.newSingleThreadExecutor(r -> new Thread(r, "producer"));
@@ -61,10 +58,10 @@ public final class ChessGameFixedThreadExecutor {
         this.consumerService = Executors.newFixedThreadPool(NUM_CONSUMERS, r -> new Thread(r, "consumer#" + counter.incrementAndGet()));
     }
 
-    public int start() {
+    public boolean start() {
         if (!runningProducer.compareAndSet(false, true) || !runningConsumer.compareAndSet(false, true)) {
             Log.info("Executor is already running");
-            return -1;
+            return false;
         }
 
         Log.info("Launching the executor");
@@ -88,12 +85,9 @@ public final class ChessGameFixedThreadExecutor {
 
         Log.info("Total game executions: " + totalGameExecutions);
         Log.info("Failures: " + totalGameFailures);
-        if (verbose) {
-            gameFailures.forEachKey(1, Log::info);
-        } else {
-            gameFailures.forEach((s, i) -> Log.info("Error: %s | Occurred %d times".formatted(s, i)));
-        }
-        return totalGameExecutions.get();
+        gameFailures.forEachKey(1, Log::info);
+
+        return true;
     }
 
     private void shutdownConsumer() {
@@ -138,7 +132,7 @@ public final class ChessGameFixedThreadExecutor {
         }
     }
 
-    private record Partition(List<String> pgnList, int partitionNum) {
+    private record Partition(List<String> pgnList, int num, int size) {
     }
 
     private class Producer implements Runnable {
@@ -166,12 +160,12 @@ public final class ChessGameFixedThreadExecutor {
                 List<Partition> partitions = partitionBasedOnSize(pgnList, partitionSize);
 
                 for (Partition partition : partitions) {
-                    log("Partition#%d | Size#%d".formatted(partition.partitionNum, partition.pgnList.size()));
+                    log("Partition#%d | Size#%d".formatted(partition.num, partition.pgnList.size()));
                 }
 
                 for (Partition partition : partitions) {
                     queue.put(partition);
-                    log("Put partition#%d into queue".formatted(partition.partitionNum));
+                    log("Put partition#%d into queue".formatted(partition.num));
                 }
 
                 log("All partitions have been delivered, shutting down...");
@@ -192,7 +186,8 @@ public final class ChessGameFixedThreadExecutor {
 
                 Partition partition = new Partition(
                         pgnSubList,
-                        num++
+                        num++,
+                        partSize
                 );
 
                 parts.add(partition);
@@ -213,8 +208,8 @@ public final class ChessGameFixedThreadExecutor {
                     Partition partition = queue.poll(100, TimeUnit.MILLISECONDS);
 
                     if (partition != null) {
-                        consume(partition.pgnList, gameExecutions, enableGameLogging, enableAssertions, verbose);
-                        log("Processed partition#" + partition.partitionNum);
+                        consume(partition, gameExecutions, totalGameFailures, enableGameLogging, enableAssertions);
+                        log("Processed partition#" + partition.num);
                         partitionExecutions++;
                     }
 
@@ -230,22 +225,29 @@ public final class ChessGameFixedThreadExecutor {
                     Log.error("Error in consumer", e);
                 }
             }
-            totalGameExecutions.addAndGet(gameExecutions.get());
         }
 
-        void consume(List<String> pgnList,
-                     AtomicInteger pgnNum,
+        void consume(Partition partition,
+                     AtomicInteger gameExecutions,
+                     AtomicInteger failures,
                      boolean enableLogging,
-                     boolean enableAssertions,
-                     boolean verbose) {
-            for (String pgn : pgnList) {
+                     boolean enableAssertions) {
+
+            int gameNum = (partition.num - 1) * partition.size;
+
+            for (String pgn : partition.pgnList) {
+                gameExecutions.incrementAndGet();
+                totalGameExecutions.incrementAndGet();
+
                 try {
-                    executeGameFromPGN(pgn, pgnNum.getAndIncrement(), enableLogging, enableAssertions, verbose);
-                } catch (AssertionFailedError | IllegalArgumentException e) {
-                    if (ChessGameFixedThreadExecutor.this.gameFailures.containsKey(e.getMessage())) {
-                        ChessGameFixedThreadExecutor.this.gameFailures.computeIfPresent(e.getMessage(), (k, v) -> v + 1);
+                    executeGameFromPGN(pgn, gameNum++, enableLogging, enableAssertions);
+                } catch (AssertionFailedError | IllegalStateException e) {
+                    failures.incrementAndGet();
+
+                    if (gameFailures.containsKey(e.getMessage())) {
+                        gameFailures.computeIfPresent(e.getMessage(), (k, v) -> v + 1);
                     } else {
-                        ChessGameFixedThreadExecutor.this.gameFailures.put(e.getMessage(), 1);
+                        gameFailures.put(e.getMessage(), 1);
                     }
                 }
             }

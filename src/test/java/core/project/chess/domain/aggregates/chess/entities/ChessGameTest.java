@@ -1,6 +1,7 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
+import core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
@@ -37,7 +38,6 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
                 true,
-                false,
                 false
         );
     }
@@ -48,7 +48,6 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Berliner_lalg.pgn",
                 true,
-                false,
                 false
         );
     }
@@ -59,7 +58,6 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
                 true,
-                false,
                 false
         );
     }
@@ -70,7 +68,6 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
                 true,
-                false,
                 false
         );
     }
@@ -80,7 +77,6 @@ public class ChessGameTest {
     void magnus_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Magnus_lalg.pgn",
-                false,
                 false,
                 false
         );
@@ -95,8 +91,7 @@ public class ChessGameTest {
                 4,
                 true,
                 false,
-                true,
-                false
+                true
         );
 
 
@@ -109,8 +104,7 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn",
                 false,
-                true,
-                false
+                true
         );
     }
 
@@ -123,8 +117,7 @@ public class ChessGameTest {
                 8,
                 true,
                 false,
-                true,
-                false
+                true
         );
 
         executor.start();
@@ -136,26 +129,25 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/temp.pgn",
                 true,
-                false,
                 false
         );
     }
 
-    public static void executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions, boolean verbose) {
+    public static void executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions) {
         List<String> strings = SimplePGNReader.extractFromPGN(path);
-        int pgnNum = 0;
+        int pgnNum = 1;
         for (String pgn : strings) {
 
             try {
-                executeGameFromPGN(pgn, pgnNum, enableLogging, enableAssertions, verbose);
-            } catch (AssertionFailedError | IllegalArgumentException e) {
+                executeGameFromPGN(pgn, pgnNum, enableLogging, enableAssertions);
+            } catch (AssertionFailedError | IllegalStateException e) {
                 Log.info(e.getMessage());
             }
             pgnNum++;
         }
     }
 
-    public static void executeGameFromPGN(String pgn, int pgnNum, boolean enableLogging, boolean enableAssertions, boolean verbose) {
+    public static void executeGameFromPGN(String pgn, int pgnNum, boolean enableLogging, boolean enableAssertions) {
         ChessGame game = defaultChessGameSupplier().get();
 
         String white = game.getPlayerForWhite().getUsername().username();
@@ -168,12 +160,12 @@ public class ChessGameTest {
         SimplePGNReader pgnReader = new SimplePGNReader(pgn);
         List<ChessMove> moves = pgnReader.readAll();
 
-        if (enableLogging) {
-            Log.info("""
-                        Simulating the game of:
-                        %s
-                        """.formatted(pgn));
-        }
+//        if (enableLogging && verbose) {
+//            Log.info("""
+//                        Simulating the game of:
+//                        %s
+//                        """.formatted(pgn));
+//        }
 
         int moveNum = 0;
         for (ChessMove move : moves) {
@@ -181,28 +173,46 @@ public class ChessGameTest {
                 break;
             }
 
-            Log.info(
-                    String.format("Cite: %s. Game: %d. Movement: %d.", pgnReader.tag("Site"), gameNum, moveNum)
-            );
+            moveNum++;
+            if (enableLogging) {
+                Log.info(
+                        String.format("Cite: %s. Game: %d. Movement: %d.", pgnReader.tag("Site"), pgnNum, moveNum)
+                );
+            }
 
             if (enableLogging) {
                 Log.info("Move#" + moveNum + " | " + "Game#" + pgnNum);
                 Log.info("White: " + move.white());
             }
+            try {
+                var whiteMessage = game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
 
-            game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
+                if (enableLogging) {
+                    Log.info("Movement result for white: " + whiteMessage);
+                }
 
-            if (move.black() == null) {
-                break;
+                if (move.black() == null) {
+                    break;
+                }
+
+                if (enableLogging) {
+                    Log.info("Black: " + move.black());
+                }
+
+                var blackMessage = game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+
+                if (enableLogging) {
+                    Log.info("Movement result for white: " + blackMessage);
+                }
+            } catch (IllegalStateException e) {
+                String err = """
+                
+                %s | Move: %d | Game: %d
+                
+                %s
+                """.formatted(e.getMessage(), moveNum, pgnNum, pgn);
+                throw new IllegalStateException(err);
             }
-
-            if (enableLogging) {
-                Log.info("Black: " + move.black());
-            }
-
-            game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
-
-            moveNum++;
         }
 
         String result = pgnReader.tag("Result");
@@ -213,29 +223,8 @@ public class ChessGameTest {
             System.out.println();
         }
 
-        if (enableAssertions && verbose) {
-            processResult(game, result, moveNum, pgnNum, pgn);
-        }
-
         if (enableAssertions) {
-            processResult(game, result);
-        }
-    }
-
-    private static void processResult(ChessGame game, String result) {
-        if (result.equals("\"1/2-1/2\"")) {
-            Assertions.assertTrue(game.gameResult().isPresent(), "NO GAME RESULT");
-            assertEquals(GameResult.DRAW, game.gameResult().orElseThrow(), "EXPECTED DRAW BUT WAS: " + game.gameResult());
-        }
-
-        if (result.equals("\"1-0\"")) {
-            Assertions.assertTrue(game.gameResult().isPresent(), "NO GAME RESULT");
-            assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow(), "EXPECTED WHITE_WIN BUT WAS: " + game.gameResult());
-        }
-
-        if (result.equals("\"0-1\"")) {
-            Assertions.assertTrue(game.gameResult().isPresent(), "NO GAME RESULT");
-            assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow(), "EXPECTED BLACK_WIN BUT WAS: " + game.gameResult());
+            processResult(game, result, moveNum, pgnNum, pgn);
         }
     }
 
@@ -248,7 +237,7 @@ public class ChessGameTest {
                         
                         ----------------------
                         
-                        PGN: %s
+                        %s
                         """.formatted(moveNum, gameNum, pgn));
 
             assertEquals(GameResult.DRAW, game.gameResult().orElseThrow(), """
@@ -258,7 +247,7 @@ public class ChessGameTest {
                         
                         ----------------------
                         
-                        PGN: %s
+                        %s
                         """.formatted(moveNum, gameNum, pgn));
         }
 
@@ -270,7 +259,7 @@ public class ChessGameTest {
                         
                         ----------------------
                         
-                        PGN: %s
+                        %s
                         """.formatted(moveNum, gameNum, pgn));
 
 
@@ -281,7 +270,7 @@ public class ChessGameTest {
                         
                         ----------------------
                         
-                        PGN: %s
+                        %s
                         """.formatted(moveNum, gameNum, pgn));
         }
 
@@ -293,7 +282,7 @@ public class ChessGameTest {
                         
                         ----------------------
                         
-                        PGN: %s
+                        %s
                         """.formatted(moveNum, gameNum, pgn));
 
             assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow(), """
@@ -303,7 +292,7 @@ public class ChessGameTest {
                         
                         ----------------------
                         
-                        PGN: %s
+                        %s
                         """.formatted(moveNum, gameNum, pgn));
         }
     }

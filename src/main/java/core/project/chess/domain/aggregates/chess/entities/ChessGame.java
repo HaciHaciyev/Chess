@@ -130,14 +130,14 @@ public class ChessGame {
         gameOver(Operations.STALEMATE);
     }
 
-    public void makeMovement(final String username, final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion)
+    public GameResultMessage makeMovement(final String username, final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion)
             throws IllegalArgumentException {
         Objects.requireNonNull(username);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
         if (isGameOver.status()) {
-            throw new IllegalArgumentException("Game is over by %s | last move %s".formatted(isGameOver.orElseThrow(), chessBoard.latestMovement().orElseThrow()));
+            throw new IllegalStateException("Game is over by %s".formatted(isGameOver.orElseThrow()));
         }
 
         final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
@@ -159,7 +159,6 @@ public class ChessGame {
         }
 
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
-        Log.info(message);
 
         if (message.equals(GameResultMessage.RuleOf3EqualsPositions)) {
             isTheOptionToEndTheGameDueToThreeFoldActive = true;
@@ -178,10 +177,11 @@ public class ChessGame {
                 gameOver(Operations.STALEMATE);
             }
 
-            return;
+            return message;
         }
 
         switchPlayersTurn();
+        return message;
     }
 
     public void returnMovement(final UUID userId) throws IllegalAccessException {
