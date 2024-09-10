@@ -126,7 +126,7 @@ public record Pawn(Color color)
      *
      * @throws NoSuchElementException if the starting field does not contain a piece (the Pawn).
      */
-    StatusPair<Set<Operations>> validate(
+    private StatusPair<Set<Operations>> validate(
             final ChessBoard chessBoard, final Set<Operations> setOfOperations, final Field startField, final Field endField
     ) {
         final Color pawnColor = startField.pieceOptional().orElseThrow().color();

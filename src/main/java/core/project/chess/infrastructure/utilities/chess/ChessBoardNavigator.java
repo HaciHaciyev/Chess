@@ -11,6 +11,7 @@ import lombok.NonNull;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public record ChessBoardNavigator(ChessBoard board) {
 
@@ -738,6 +739,36 @@ public record ChessBoardNavigator(ChessBoard board) {
         }
 
         return Optional.empty();
+    }
+
+    public List<Coordinate> fieldsForPawnMovement(Coordinate pivot, Color color) {
+        Objects.requireNonNull(pivot);
+        Objects.requireNonNull(color);
+
+        final int column = pivot.columnToInt();
+        final int row = pivot.getRow();
+
+        if (color.equals(Color.WHITE)) {
+            final var top = Coordinate.of(row + 1, column);
+            final var topLeft = Coordinate.of(row + 1, column - 1);
+            final var topRight = Coordinate.of(row + 1, column + 1);
+            final var topTop = Coordinate.of(row + 2, column);
+
+            return Stream.of(top, topLeft, topRight, topTop)
+                    .filter(StatusPair::status)
+                    .map(StatusPair::orElseThrow)
+                    .toList();
+        }
+
+        final var bottom = Coordinate.of(row - 1, column);
+        final var bottomLeft = Coordinate.of(row - 1, column - 1);
+        final var bottomRight = Coordinate.of(row - 1, column + 1);
+        final var bottomBottom = Coordinate.of(row - 2, column);
+
+        return Stream.of(bottom, bottomLeft, bottomRight, bottomBottom)
+                .filter(StatusPair::status)
+                .map(StatusPair::orElseThrow)
+                .toList();
     }
 
     /**

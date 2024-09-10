@@ -10,6 +10,7 @@ import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import io.quarkus.logging.Log;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -158,6 +159,7 @@ public class ChessGame {
         }
 
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
+        Log.info(message);
 
         if (message.equals(GameResultMessage.RuleOf3EqualsPositions)) {
             isTheOptionToEndTheGameDueToThreeFoldActive = true;

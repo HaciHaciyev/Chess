@@ -811,7 +811,7 @@ public class ChessBoard {
                 opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
         );
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color());
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color(), Pair.of(from, to));
         if (isStalemate) {
             operations.add(STALEMATE);
         }
@@ -904,7 +904,7 @@ public class ChessBoard {
         );
 
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color());
+        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color(), Pair.of(from, to));
         if (isStalemate) {
             operations.add(STALEMATE);
         }

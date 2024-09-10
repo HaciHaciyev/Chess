@@ -112,11 +112,13 @@ public class ChessGameTest {
         SimplePGNReader pgnReader = new SimplePGNReader(pgn);
         List<ChessMove> moves = pgnReader.readAll();
 
-        Log.info("""
+        if (enableLogging) {
+            Log.info("""
                  Simulating the game of:
                   %s
                  """.formatted(pgn)
-        );
+            );
+        }
 
         int moveNum = 1;
         for (ChessMove move : moves) {
