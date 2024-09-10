@@ -11,7 +11,6 @@ import core.project.chess.infrastructure.utilities.chess.ChessMove;
 import core.project.chess.infrastructure.utilities.chess.SimplePGNReader;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -20,39 +19,9 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import static core.project.chess.domain.aggregates.chess.enumerations.Coordinate.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
-class ChessGameTest {
-
-    @Test
-    @Disabled("Utility function.")
-    void removeDashes() {
-        final String pgn = """
-                1. e2-e3 c7-c5 2. Bf1-e2 e7-e6 3. f2-f3 d7-d5 4. g2-g3 Ng8-f6 5. h2-h3 Bf8-e7 6. Ke1-f2 O-O 7. Kf2-g2 Nb8-c6 8. Qd1-e1 e6-e5 
-                9. Nb1-c3 e5-e4 10. Nc3-d1 e4xf3+ 11. Be2xf3 Bc8-f5 12. Bf3-e2 Bf5-e4+ 13. Ng1-f3 Nf6-h5 14. d2-d3 Be4xf3+ 15. Be2xf3 Nh5-f6 
-                16. Qe1-f2 Be7-d6 17. e3-e4 d5xe4 18. d3xe4 Nc6-d4 19. c2-c3 Nd4xf3 20. Kg2xf3 Qd8-e7 21. Bc1-f4 Qe7xe4+
-                """;
-
-        String result = pgn.replaceAll("-", "");
-        Log.info(result);
-    }
-
-    @Test /** In this method, a full-fledged game is played with its logic, and both valid and invalid moves are present.*/
-    @Disabled("For single performance checks.")
-    void testChessGamePerformance() {
-
-        long startTime = System.nanoTime();
-
-        for (int i = 0; i < 150_000; i++) {
-
-            chessGameLoad();
-        }
-
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime;
-        System.out.println(duration);
-    }
+public class ChessGameTest {
 
     @Test
     @DisplayName("Test chess game with many invalid moves.")
@@ -63,106 +32,129 @@ class ChessGameTest {
     @Test
     @DisplayName("100k+ games from lichess")
     void lichess_100k() {
-        executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn", true);
+        executeGamesFromPGN(
+                "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
+                true,
+                false
+        );
     }
 
     @Test
     @DisplayName("Berliner_PGN_Archive_64")
     void berliner64() {
-        executeGameFromPGN("src/main/resources/chess/pgn/Berliner_lalg.pgn", true);
+        executeGamesFromPGN(
+                "src/main/resources/chess/pgn/Berliner_lalg.pgn",
+                true,
+                false
+        );
     }
 
     @Test
     @DisplayName("Mamedyarov_PGN_Archive_4684")
     void mamedyarov_ALL() {
-        executeGameFromPGN("src/main/resources/chess/pgn/Mamedyarov_lalg.pgn", true);
+        executeGamesFromPGN(
+                "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
+                true,
+                false
+        );
     }
 
     @Test
     @DisplayName("Hikaru_PGN_Archive_8025")
     void nakamura_ALL() {
-        executeGameFromPGN("src/main/resources/chess/pgn/Hikaru_lalg.pgn", true);
+        executeGamesFromPGN(
+                "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
+                true,
+                false
+        );
     }
 
     @Test
     @DisplayName("Magnus ALL")
     void magnus_ALL() {
-        executeGameFromPGN("src/main/resources/chess/pgn/Magnus_lalg.pgn", true);
+        executeGamesFromPGN(
+                "src/main/resources/chess/pgn/Magnus_lalg.pgn",
+                true,
+                false
+        );
     }
 
     @Test
     @DisplayName("Checkmates from Lichess 2013 January")
     void lichessCheckmates() {
-        executeGameFromPGN("src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn", true);
+        executeGamesFromPGN(
+                "src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn",
+                true,
+                false
+        );
     }
 
     @Test
     @DisplayName("Temp")
     void temp() {
-        executeGameFromPGN("src/main/resources/chess/pgn/temp.pgn", true);
+        executeGamesFromPGN(
+                "src/main/resources/chess/pgn/temp.pgn",
+                true,
+                false
+        );
     }
 
-    private void executeGameFromPGN(String path, boolean log) {
-        int pgnNum = 0;
-        for (String pgn : SimplePGNReader.extractFromPGN(path)) {
-            pgnNum++;
-            ChessGame game = defaultChessGameFactory();
+    public static void executeGameFromPGN(String pgn, boolean enableLogging, boolean enableAssertions, int gameNum) {
+        ChessGame game = defaultChessGameSupplier().get();
 
-            String white = game.getPlayerForWhite().getUsername().username();
-            String black = game.getPlayerForBlack().getUsername().username();
+        String white = game.getPlayerForWhite().getUsername().username();
+        String black = game.getPlayerForBlack().getUsername().username();
 
-            if (log) {
-                Log.info("reading game#" + pgnNum);
-            }
+        if (enableLogging) {
+            Log.info("reading game#" + gameNum);
+        }
 
-            SimplePGNReader pgnReader = new SimplePGNReader(pgn);
-            List<ChessMove> moves = pgnReader.readAll();
+        SimplePGNReader pgnReader = new SimplePGNReader(pgn);
+        List<ChessMove> moves = pgnReader.readAll();
 
-            if (log) {
-                Log.info("""
+        if (enableLogging) {
+            Log.info("""
                         Simulating the game of:
                         %s
                         """.formatted(pgn));
+        }
+
+        int moveNum = 0;
+        for (ChessMove move : moves) {
+            if (move.white() == null) {
+                break;
             }
 
-            int moveNum = 0;
-            for (ChessMove move : moves) {
-                if (move.white() == null) {
-                    break;
-                }
+            if (enableLogging) {
+                Log.info("Move#" + ++moveNum + " | " + "Game#" + gameNum);
+                Log.info("White: " + move.white());
+            }
+            game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
 
-                if (log) {
-                    Log.info("Move#" + ++moveNum + " | " + "Game#" + pgnNum);
+            Log.info(game.getChessBoard().pgn());if (move.black() == null) {
+                break;
+            }
 
-                    Log.info("White: " + move.white());
-                }
-                game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
-
-                Log.info(game.getChessBoard().pgn());
-
-                if (move.black() == null) {
-                    break;
-                }
-
-                if (log) {
-                    Log.info("Black: " + move.black());
-                }
-
-                game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
-
-                Log.info(game.getChessBoard().pgn());
-                System.out.println();
+            if (enableLogging) {
+                Log.info("Black: " + move.black());
 
             }
 
-            String result = pgnReader.tag("Result");
+            game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+            Log.info(game.getChessBoard().pgn());
+            System.out.println();
 
-            if (log) {
-                Log.info("Result of PGN: " + result);
-                Log.info("Game status: " + game.gameResult());
-                System.out.println();
-            }
+        }
 
+        String result = pgnReader.tag("Result");
+
+        if (enableLogging) {
+            Log.info("Result of PGN: " + result);
+            Log.info("Game status: " + game.gameResult());
+            System.out.println();
+        }
+
+        if (enableAssertions) {
             if (result.equals("\"1/2-1/2\"")) {
                 Log.info(game.getChessBoard().pgn());
 
@@ -183,14 +175,32 @@ class ChessGameTest {
                 Assertions.assertTrue(game.gameResult().isPresent());
                 assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow());
             }
-
         }
+    }
+
+    public static int executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions) {
+        List<String> strings = SimplePGNReader.extractFromPGN(path);
+        return executeGamesFromPGN(
+                strings,
+                enableLogging,
+                enableAssertions
+        );
+    }
+
+    public static int executeGamesFromPGN(List<String> pgnList, boolean enableLogging, boolean enableAssertions) {
+        int pgnNum = 0;
+        for (String pgn : pgnList) {
+            executeGameFromPGN(pgn, enableLogging, enableAssertions, pgnNum);
+            pgnNum++;
+        }
+        
+        return pgnNum;
     }
 
     @Test
     @DisplayName("Simple testing of FEN.")
     void fenTest() {
-        final ChessGame chessGame = defaultChessGameFactory();
+        final ChessGame chessGame = defaultChessGameSupplier().get();
 
         final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
         final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
@@ -210,7 +220,7 @@ class ChessGameTest {
     @Test
     @DisplayName("Chess game end by pat in 10 move.")
     void testChessGameEndByPat() {
-        final ChessGame chessGame = defaultChessGameFactory();
+        final ChessGame chessGame = defaultChessGameSupplier().get();
 
         final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
         final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
@@ -269,7 +279,7 @@ class ChessGameTest {
     @Test
     @DisplayName("Game between AinGrace and Hadzhy98 on 2024.08.04\nhttps://lichess.org/zuOBpEUY#11")
     void gameOn_2024_08_04() {
-        ChessGame game = defaultChessGameFactory();
+        ChessGame game = defaultChessGameSupplier().get();
 
         String whitePlayer = game.getPlayerForWhite().getUsername().username();
         String blackPlayer = game.getPlayerForBlack().getUsername().username();
@@ -486,7 +496,7 @@ class ChessGameTest {
     }
 
     public void chessGameLoad() {
-        final ChessGame chessGame = defaultChessGameFactory();
+        final ChessGame chessGame = defaultChessGameSupplier().get();
 
         final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
         final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
@@ -732,10 +742,10 @@ class ChessGameTest {
         chessGame.makeMovement(secondPlayerUsername, Coordinate.a8, Coordinate.b8, null);
     }
 
-    public final ChessGame defaultChessGameFactory() {
-            final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
+    public static Supplier<ChessGame> defaultChessGameSupplier() {
+        final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
 
-        return ChessGame.of(
+        return () -> ChessGame.of(
                 UUID.randomUUID(),
                 chessBoard,
                 userAccountSupplier("firstPlayer").get(),
@@ -744,7 +754,7 @@ class ChessGameTest {
                 ChessGame.TimeControllingTYPE.DEFAULT);
     }
 
-    public final Supplier<UserAccount> userAccountSupplier(String username) {
+    public static Supplier<UserAccount> userAccountSupplier(String username) {
         return () -> UserAccount.of(new Username(username), new Email("some@email.com"), new Password("password"));
     }
 }
