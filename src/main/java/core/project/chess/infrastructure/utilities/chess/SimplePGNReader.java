@@ -9,13 +9,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class SimplePGNReader {
-    private final String pgn;
     private final List<String> moves;
     private final Map<String, String> tags;
 
     public SimplePGNReader(String pgn) {
         String pgnStrip = pgn.strip();
-        this.pgn = pgnStrip;
         this.tags = extractTags(pgnStrip);
         this.moves = extractMoves(pgnStrip);
     }
@@ -86,27 +84,17 @@ public class SimplePGNReader {
                 .reduce("", (a, b) -> a +" " + b);
 
         String[] movesArr = strMoves.split("\\d+\\.");
-        List<String> moves = new ArrayList<>(movesArr.length - 1);
-        for (String move : movesArr) {
-            if (move.isEmpty() || move.isBlank()) {
-                continue;
-            }
+        List<String> gameMoves = new ArrayList<>(movesArr.length - 1);
 
-            move = move.replaceAll("\\{.+}", " ");
+        for (int i = 1; i < movesArr.length; i++) {
+            String move = movesArr[i].trim();
+
             move = move.strip();
             move = move.replaceAll(" (\\w-\\w)|(1/2-1/2)", "");
 
-            moves.add(move);
+            gameMoves.add(move);
         }
-        return moves;
-    }
-
-    private List<String> extractWhiteMoves(List<String> moves, int i) {
-        return moves.subList(0, i).stream().map(string -> string.split(" ")[0]).toList();
-    }
-
-    private List<String> extractBlackMoves(List<String> moves, int i) {
-        return moves.subList(0, i).stream().map(string -> string.split(" ")[1]).toList();
+        return gameMoves;
     }
 
     public String tag(String tag) {
@@ -114,14 +102,29 @@ public class SimplePGNReader {
         return tags.get(tag.toLowerCase());
     }
 
-    public void printTags() {
-        System.out.println(tags);
-    }
+    private PlayerMove mapToPlayerMove(String s, Color color) {
+        String promotion = Character.isUpperCase(s.charAt(s.length() - 1)) ? String.valueOf(s.charAt(s.length() - 1)) : null;
+        Piece promotionPiece = null;
+        if (promotion != null) {
+            s = s.substring(0, s.length() - 1);
 
-    public void printMoves() {
-        System.out.println(moves);
-    }
+            promotionPiece = switch (promotion) {
+                case "N" -> new Knight(color);
+                case "B" -> new Bishop(color);
+                case "R" -> new Rook(color);
+                case "Q" -> new Queen(color);
+                default -> null;
+            };
+        }
 
+        String strStart = s.substring(0, 2);
+        String strEnd = s.substring(2);
+
+        Coordinate start = Coordinate.valueOf(strStart);
+        Coordinate end = Coordinate.valueOf(strEnd);
+
+        return new PlayerMove(start, end, promotionPiece);
+    }
 
     public ChessMove read(int i) {
         String rawMove = moves.get(i);
@@ -129,59 +132,12 @@ public class SimplePGNReader {
 
         String[] splitMove = move.split(" ");
 
-
-        PlayerMove white = splitMove[0].transform(s -> {
-            String promotion = Character.isUpperCase(s.charAt(s.length() - 1)) ? String.valueOf(s.charAt(s.length() - 1)) : null;
-            Piece promotionPiece = null;
-            if (promotion != null) {
-                s = s.substring(0, s.length() - 1);
-
-                promotionPiece = switch (promotion) {
-                    case "N" -> new Knight(Color.WHITE);
-                    case "B" -> new Bishop(Color.WHITE);
-                    case "R" -> new Rook(Color.WHITE);
-                    case "Q" -> new Queen(Color.WHITE);
-                    default -> null;
-                };
-            }
-
-
-
-            String strStart = s.substring(0, 2);
-            String strEnd = s.substring(2);
-
-            Coordinate start = Coordinate.valueOf(strStart);
-            Coordinate end = Coordinate.valueOf(strEnd);
-
-            return new PlayerMove(start, end, promotionPiece);
-        });
+        PlayerMove white = splitMove[0].transform(s -> mapToPlayerMove(s, Color.WHITE));
 
         PlayerMove black = null;
 
         if (splitMove.length > 1) {
-            black = splitMove[1].transform(s -> {
-                String promotion = Character.isUpperCase(s.charAt(s.length() - 1)) ? String.valueOf(s.charAt(s.length() - 1)) : null;
-                Piece promotionPiece = null;
-                if (promotion != null) {
-                    s = s.substring(0, s.length() - 1);
-
-                    promotionPiece = switch (promotion) {
-                        case "N" -> new Knight(Color.BLACK);
-                        case "B" -> new Bishop(Color.BLACK);
-                        case "R" -> new Rook(Color.BLACK);
-                        case "Q" -> new Queen(Color.BLACK);
-                        default -> null;
-                    };
-                }
-
-                String strStart = s.substring(0, 2);
-                String strEnd = s.substring(2);
-
-                Coordinate start = Coordinate.valueOf(strStart);
-                Coordinate end = Coordinate.valueOf(strEnd);
-
-                return new PlayerMove(start, end, promotionPiece);
-            });
+            black = splitMove[1].transform(s -> mapToPlayerMove(s, Color.BLACK));
         }
 
         return new ChessMove(white, black);
