@@ -5,12 +5,15 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.infrastructure.utilities.chess.ChessBoardNavigator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
 import java.util.*;
 
 import static core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
+import static core.project.chess.domain.aggregates.chess.enumerations.Color.BLACK;
+import static core.project.chess.domain.aggregates.chess.enumerations.Color.WHITE;
 
 public record Pawn(Color color)
         implements Piece {
@@ -97,6 +100,79 @@ public record Pawn(Color color)
         }
 
         return pawnForPromotion.color().equals(inCaseOfPromotion.color());
+    }
+
+    /**
+     * Determines if a pawn has no valid moves, considering the current state of the board.
+     * <p>
+     * This method checks all possible moves for the given pawn, including straight moves, diagonal captures,
+     * passage moves, and captures on passage. If none of these moves are valid, the method returns true.
+     *
+     * @param boardNavigator An instance of ChessBoardNavigator that provides navigation functionality for the chessboard.
+     * @param ourField The field on the chessboard where the pawn is currently located.
+     * @param kingColor The color of the king that the pawn belongs to.
+     * @param latestMovement The latest movement made on the chessboard, represented as a pair of coordinates.
+     * @param pawn The pawn piece that is being checked for valid moves.
+     * @return true if the pawn has no valid moves, false otherwise.
+     */
+    public boolean isPawnOnStalemate(final ChessBoardNavigator boardNavigator, final Field ourField,
+                                     final Color kingColor, final Pair<Coordinate, Coordinate> latestMovement, final Pawn pawn) {
+        Objects.requireNonNull(boardNavigator);
+        Objects.requireNonNull(ourField);
+        Objects.requireNonNull(kingColor);
+        Objects.requireNonNull(latestMovement);
+        Objects.requireNonNull(pawn);
+
+        final ChessBoard chessBoard = boardNavigator.board();
+        final int startColumn = ourField.getCoordinate().columnToInt();
+        final int startRow = ourField.getCoordinate().getRow();
+        final King king = chessBoard.theKing(kingColor);
+
+        final List<Coordinate> fieldsForPawnMovement = boardNavigator.fieldsForPawnMovement(ourField.getCoordinate(), pawn.color());
+        for (final Coordinate currentCoordinate : fieldsForPawnMovement) {
+            final Field currentField = chessBoard.field(currentCoordinate);
+            final boolean endFieldOccupied = currentField.isPresent();
+
+            final boolean endFieldOccupiedByAllies = endFieldOccupied && currentField.pieceOptional().orElseThrow().color().equals(pawn.color());
+            if (endFieldOccupiedByAllies) {
+                continue;
+            }
+
+            final int endColumn = currentCoordinate.columnToInt();
+            final int endRow = currentCoordinate.getRow();
+
+            final boolean straightMove = startColumn == endColumn && Math.abs(startRow - endRow) == 1;
+            if (straightMove && !endFieldOccupied && king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)) {
+                return false;
+            }
+
+            final boolean diagonalCapture = Math.abs(startColumn - endColumn) == 1 && Math.abs(startRow - endRow) == 1;
+            if (
+                    diagonalCapture && endFieldOccupied && !endFieldOccupiedByAllies &&
+                            king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)
+            ) {
+                return false;
+            }
+
+            final boolean isPassage = isPassage(ourField.getCoordinate(), currentCoordinate, pawn.color());
+            if (isPassage && !endFieldOccupied && king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)) {
+
+                final int passageIntermediateRow = startRow < endRow ? startRow + 1 : startRow - 1;
+                final Coordinate passageIntermediateCoord = Coordinate.of(passageIntermediateRow, startColumn).orElseThrow();
+
+                final boolean isPassageIntermediateFieldNotOccupied = chessBoard.field(passageIntermediateCoord).isEmpty();
+                if (isPassageIntermediateFieldNotOccupied) {
+                    return false;
+                }
+            }
+
+            final boolean isCaptureOnPassage = isValidCaptureOnPassage(latestMovement, currentCoordinate, pawn.color());
+            if (isCaptureOnPassage && !endFieldOccupied && king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -287,5 +363,73 @@ public record Pawn(Color color)
         return Optional.ofNullable(
                 chessBoard.latestMovement().isPresent() ? chessBoard.latestMovement().orElseThrow().getSecond() : null
         );
+    }
+
+    private boolean isPassage(final Coordinate coordinate, final Coordinate currentCoordinate, final Color color) {
+        final int startColumn = coordinate.columnToInt();
+        final int startRow = coordinate.getRow();
+        final int endColumn = currentCoordinate.columnToInt();
+        final int endRow = currentCoordinate.getRow();
+
+        if (startColumn != endColumn) {
+            return false;
+        }
+
+        if (Math.abs(startRow - endRow) != 2) {
+            return false;
+        }
+
+        if (color.equals(WHITE)) {
+
+            if (startRow != 2) {
+                return false;
+            }
+
+            if (endRow != 4) {
+                return false;
+            }
+
+            return true;
+        }
+
+        if (startRow != 7) {
+            return false;
+        }
+
+        if (endRow != 5) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isValidCaptureOnPassage(final Pair<Coordinate, Coordinate> previousPassageMove, final Coordinate endCoord, final Color color) {
+        if (!previousMoveWasPassage(previousPassageMove, color.equals(WHITE) ? BLACK : WHITE)) {
+            return false;
+        }
+
+        final Coordinate coordOfPassagePawn = previousPassageMove.getSecond();
+
+        if (color.equals(WHITE)) {
+            return coordOfPassagePawn.columnToInt() == endCoord.columnToInt() && endCoord.getRow() - coordOfPassagePawn.getRow() == 1;
+        } else {
+            return coordOfPassagePawn.columnToInt() == endCoord.columnToInt() && endCoord.getRow() - coordOfPassagePawn.getRow() == -1;
+        }
+    }
+
+    private boolean previousMoveWasPassage(final Pair<Coordinate, Coordinate> latestMovement, final Color color) {
+        final Coordinate from = latestMovement.getFirst();
+        final Coordinate to = latestMovement.getSecond();
+
+        return switch (color) {
+            case WHITE -> {
+                final boolean passage = from.columnToInt() == to.columnToInt() && from.getRow() == 2 && to.getRow() == 4;
+                yield passage;
+            }
+            case BLACK -> {
+                final boolean passage = from.columnToInt() == to.columnToInt() && from.getRow() == 7 && to.getRow() == 5;
+                yield passage;
+            }
+        };
     }
 }

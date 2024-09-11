@@ -152,10 +152,7 @@ public class ChessBoard {
     public Field field(final Coordinate coordinate) {
         Objects.requireNonNull(coordinate);
 
-        Field field = fieldMap.get(coordinate);
-        return new Field(
-                field.getCoordinate(), field.pieceOptional().orElse(null)
-        );
+        return fieldMap.get(coordinate);
     }
 
     /**
@@ -319,9 +316,7 @@ public class ChessBoard {
         Color kingColor = fieldMap.get(from).pieceOptional().orElseThrow().color();
         King king = theKing(kingColor);
 
-        return kingColor.equals(Color.WHITE) ?
-                king.safeForKing(this, currentWhiteKingPosition, from, to) :
-                king.safeForKing(this, currentBlackKingPosition, from, to);
+        return king.safeForKing(this, kingColor, from, to);
     }
 
     /**
@@ -833,6 +828,7 @@ public class ChessBoard {
         /** Recording the move made in algebraic notation and Fen.*/
         final String currentPositionHash = this.toString();
         fenKeysOfHashCodeOfBoard.add(currentPositionHash);
+
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
         final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
@@ -932,6 +928,7 @@ public class ChessBoard {
         /** Recording the move made in algebraic notation.*/
         final String currentPositionHash = toString();
         fenKeysOfHashCodeOfBoard.add(currentPositionHash);
+
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
@@ -1327,7 +1324,7 @@ public class ChessBoard {
                 return Optional.empty();
             }
 
-            Color color = piece.color();
+            final Color color = piece.color();
             return switch (piece) {
                 case King k -> Optional.of(new King(color));
                 case Queen q -> Optional.of(new Queen(color));
