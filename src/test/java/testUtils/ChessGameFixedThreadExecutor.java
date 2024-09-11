@@ -62,9 +62,10 @@ public final class ChessGameFixedThreadExecutor {
         this.enableAssertions = enableAssertions;
 
         // Create a fixed thread pool with custom thread naming
+        AtomicInteger counter = new AtomicInteger(1);
         this.executorService = Executors.newFixedThreadPool(numThreads + 1, r -> {
-            AtomicInteger counter = new AtomicInteger(1);
             if (counter.get() == 1) {
+                counter.getAndIncrement();
                 return new Thread(r, "producer");
             }
             return new Thread(r, "consumer-" + counter.getAndIncrement());
@@ -144,6 +145,7 @@ public final class ChessGameFixedThreadExecutor {
                 Partition partition = queue.poll(100, TimeUnit.MILLISECONDS);
 
                 if (partition != null) {
+                    log("Processing partition#" + partition.num());
                     executeGames(partition, gameExecutions);
                     log("Processed partition#" + partition.num());
                     partitionExecutions++;
