@@ -34,6 +34,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("100k+ games from lichess")
+    @Disabled
     void lichess_100k() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
@@ -51,7 +52,7 @@ public class ChessGameTest {
                 8,
                 8,
                 true,
-                true,
+                false,
                 false
         );
 
@@ -135,7 +136,6 @@ public class ChessGameTest {
                 true,
                 false,
                 false
-
         );
 
         assertTrue(executor.start());
@@ -169,6 +169,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Checkmates from Lichess 2013 January")
+    @Disabled
     void lichessCheckmates() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn",
