@@ -61,7 +61,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Berliner_PGN_Archive_64")
-    @Disabled
+    @Disabled("no concurrent")
     void berliner64() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Berliner_lalg.pgn",
@@ -90,7 +90,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Mamedyarov_PGN_Archive_4684")
-    @Disabled
+    @Disabled("no concurrent")
     void mamedyarov_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
@@ -117,7 +117,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Hikaru_PGN_Archive_8025")
-    @Disabled
+    @Disabled("no concurrent")
     void nakamura_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
@@ -143,7 +143,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Magnus ALL")
-    @Disabled
+    @Disabled("no concurrent")
     void magnus_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Magnus_lalg.pgn",
@@ -205,7 +205,6 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Temp")
-    @Disabled
     void temp() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/temp.pgn",
@@ -262,7 +261,6 @@ public class ChessGameTest {
             }
 
             if (enableLogging) {
-                Log.info("Move#" + moveNum + " | " + "Game#" + pgnNum);
                 Log.info("White: " + move.white());
             }
             try {
@@ -285,6 +283,7 @@ public class ChessGameTest {
                 if (enableLogging) {
                     Log.info("Movement result for black: " + blackMessage);
                 }
+
             } catch (IllegalStateException e) {
                 String err = """
                 
