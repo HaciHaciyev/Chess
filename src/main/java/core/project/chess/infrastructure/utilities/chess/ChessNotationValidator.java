@@ -66,12 +66,12 @@ public class ChessNotationValidator {
     }
 
     public static boolean isPawnCaptureOperation(final String algebraicNotation) {
-        final String regex = PAWN_CAPTURE_OPERATION_FORMAT.formatted(PAWN_START_MOVEMENT_COORDINATES, "X", COORDINATES, INFLUENCE_ON_OPPONENT_KING);
+        final String regex = PAWN_CAPTURE_OPERATION_FORMAT.formatted(PAWN_START_MOVEMENT_COORDINATES, "x", COORDINATES, INFLUENCE_ON_OPPONENT_KING);
         return Pattern.matches(regex, algebraicNotation);
     }
 
     public static boolean isFigureCaptureOperation(final String algebraicNotation) {
-        final String regex = FIGURE_CAPTURE_OPERATION_FORMAT.formatted("[RNBQK]", COORDINATES, "X", COORDINATES, INFLUENCE_ON_OPPONENT_KING);
+        final String regex = FIGURE_CAPTURE_OPERATION_FORMAT.formatted("[RNBQK]", COORDINATES, "x", COORDINATES, INFLUENCE_ON_OPPONENT_KING);
         return Pattern.matches(regex, algebraicNotation);
     }
 
@@ -87,7 +87,7 @@ public class ChessNotationValidator {
 
     public static boolean isPromotionPlusOperation(final String algebraicNotation) {
         final String regex = PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT.formatted(
-                PAWN_START_MOVEMENT_COORDINATES, "X", COORDINATES, "[QRBN]", INFLUENCE_ON_OPPONENT_KING
+                PAWN_START_MOVEMENT_COORDINATES, "x", COORDINATES, "[QRBN]", INFLUENCE_ON_OPPONENT_KING
         );
 
         return Pattern.matches(regex, algebraicNotation);
