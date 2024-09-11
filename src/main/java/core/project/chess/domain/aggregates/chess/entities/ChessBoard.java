@@ -1019,10 +1019,10 @@ public class ChessBoard {
 
         final String currentPositionHash = fenKeysOfHashCodeOfBoard.getLast();
         final AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
-        final StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(lastMovement);
+        final StatusPair<AlgebraicNotation.Castle> isCastling = AlgebraicNotation.isCastling(lastMovement);
 
-        if (statusPair.status()) {
-            revertCastling(statusPair.orElseThrow());
+        if (isCastling.status()) {
+            revertCastling(isCastling.orElseThrow());
             return true;
         }
 
@@ -1037,7 +1037,7 @@ public class ChessBoard {
         endedField.removeFigure();
         startedField.addFigure(piece);
 
-        final boolean isCapture = lastMovement.algebraicNotation().contains("X");
+        final boolean isCapture = lastMovement.algebraicNotation().contains("x");
         if (isCapture) {
 
             final Piece previouslyCapturedPiece;
@@ -1048,6 +1048,15 @@ public class ChessBoard {
             }
 
             startedField.addFigure(previouslyCapturedPiece);
+        }
+
+        if (!isCapture && !(piece instanceof Pawn)){
+
+            if (this.figuresTurn.equals(Color.WHITE)) {
+                ruleOf50MovesForBlack--;
+            } else {
+                ruleOf50MovesForWhite--;
+            }
         }
 
         fenKeysOfHashCodeOfBoard.removeLast();

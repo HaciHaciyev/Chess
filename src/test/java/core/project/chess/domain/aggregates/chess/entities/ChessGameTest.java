@@ -27,14 +27,23 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ChessGameTest {
 
     @Test
+    @Disabled("...")
     @DisplayName("Test chess game with many invalid moves.")
     void testChessGame() {
-        chessGameLoad();
+
+        long startTime = System.nanoTime();
+        for (int i = 0; i < 150_000; i++) {
+            chessGameLoad();
+        }
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+
+        System.out.println(duration);
     }
 
     @Test
+    @Disabled("For single running.")
     @DisplayName("100k+ games from lichess")
-    @Disabled
     void lichess_100k() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
@@ -168,8 +177,8 @@ public class ChessGameTest {
     }
 
     @Test
+    @Disabled(",,,")
     @DisplayName("Checkmates from Lichess 2013 January")
-    @Disabled
     void lichessCheckmates() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn",
@@ -239,13 +248,6 @@ public class ChessGameTest {
 
         SimplePGNReader pgnReader = new SimplePGNReader(pgn);
         List<ChessMove> moves = pgnReader.readAll();
-
-//        if (enableLogging && verbose) {
-//            Log.info("""
-//                        Simulating the game of:
-//                        %s
-//                        """.formatted(pgn));
-//        }
 
         int moveNum = 0;
         for (ChessMove move : moves) {
