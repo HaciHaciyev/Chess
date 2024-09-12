@@ -7,6 +7,7 @@ import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.infrastructure.utilities.chess.ChessBoardNavigator;
 import core.project.chess.infrastructure.utilities.chess.ChessMove;
 import core.project.chess.infrastructure.utilities.chess.SimplePGNReader;
 import io.quarkus.logging.Log;
@@ -217,9 +218,54 @@ public class ChessGameTest {
     void temp() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/temp.pgn",
-                true,
-                false
+                false,
+                true
         );
+    }
+
+    @Test
+    @DisplayName("undo move")
+    void undoMove() {
+        ChessGame game = defaultChessGameSupplier().get();
+
+        String white = game.getPlayerForWhite().getUsername().username();
+        String black = game.getPlayerForBlack().getUsername().username();
+
+
+        ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
+
+        game.makeMovement(white, e2, e4, null);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.returnMovement(white);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.makeMovement(white, e2, e4, null);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.makeMovement(black, a7, a6, null);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.makeMovement(white, e4, e5, null);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.makeMovement(black, d7, d6, null);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.makeMovement(white, e5, d6, null);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.returnMovement(white);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
     }
 
     public static void executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions) {
@@ -241,6 +287,8 @@ public class ChessGameTest {
 
         String white = game.getPlayerForWhite().getUsername().username();
         String black = game.getPlayerForBlack().getUsername().username();
+
+        ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
 
         if (enableLogging) {
             Log.info("reading game#" + pgnNum);
@@ -270,6 +318,10 @@ public class ChessGameTest {
 
                 if (enableLogging) {
                     Log.info("Movement result for white: " + whiteMessage);
+                }
+
+                if (moveNum == 15) {
+                    System.out.println(navigator.prettyToString());
                 }
 
                 if (move.black() == null) {

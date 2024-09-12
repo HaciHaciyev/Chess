@@ -76,6 +76,12 @@ public class ChessBoard {
     private static final Coordinate initialBlackKingPosition = Coordinate.e8;
     private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
 
+    private @Getter String whiteKingStatus = "EMPTY";
+    private @Getter String blackKingStatus = "EMPTY";
+
+    private final List<Piece> whiteCaptures = new ArrayList<>();
+    private final List<Piece> blackCaptures = new ArrayList<>();
+
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
      *
@@ -94,6 +100,7 @@ public class ChessBoard {
         Objects.requireNonNull(initialBlackKingPosition);
         Objects.requireNonNull(initializationTYPE);
         Objects.requireNonNull(algebraicNotations);
+
 
         this.chessBoardId = chessBoardId;
         this.initializationTYPE = initializationTYPE;
@@ -153,6 +160,16 @@ public class ChessBoard {
         Objects.requireNonNull(coordinate);
 
         return fieldMap.get(coordinate);
+    }
+
+    public List<Piece> whiteCaptures() {
+        whiteCaptures.sort(this::pieceComparator);
+        return List.copyOf(whiteCaptures);
+    }
+
+    public List<Piece> blackCaptures() {
+        blackCaptures.sort(this::pieceComparator);
+        return List.copyOf(blackCaptures);
     }
 
     /**
@@ -783,8 +800,28 @@ public class ChessBoard {
 
         if (operations.contains(CAPTURE)) {
 
-            if (isCaptureOnPassage(piece, to)) {
-                fieldMap.get(latestMovement().orElseThrow().getSecond()).removeFigure();
+            boolean captureOnPassage = isCaptureOnPassage(piece, to);
+
+            if (captureOnPassage) {
+                Field field = fieldMap.get(latestMovement().orElseThrow().getSecond());
+
+                if (piece.color().equals(Color.WHITE)) {
+                    whiteCaptures.add(field.piece);
+                }
+
+                if (piece.color().equals(Color.BLACK)) {
+                    blackCaptures.add(field.piece);
+                }
+
+                field.removeFigure();
+            }
+
+            if (piece.color().equals(Color.WHITE) && !captureOnPassage) {
+                whiteCaptures.add(endField.piece);
+            }
+
+            if (piece.color().equals(Color.BLACK) && !captureOnPassage) {
+                blackCaptures.add(endField.piece);
             }
 
             endField.removeFigure();
@@ -836,6 +873,18 @@ public class ChessBoard {
 
         /** Retrieve message about game result.*/
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
+
+        if (opponentKingStatus.equals(STALEMATE)) {
+            whiteKingStatus = opponentKingStatus.name();
+            blackKingStatus = opponentKingStatus.name();
+        }
+
+        if (opponentKing.color().equals(Color.WHITE) && !opponentKingStatus.equals(STALEMATE)) {
+            whiteKingStatus = opponentKingStatus.name();
+        }
+        if (opponentKing.color().equals(Color.BLACK) && !opponentKingStatus.equals(STALEMATE)) {
+            blackKingStatus = opponentKingStatus.name();
+        }
 
         if (opponentKingStatus.equals(STALEMATE)) {
             return GameResultMessage.Stalemate;
@@ -935,6 +984,12 @@ public class ChessBoard {
 
         /** Retrieve message about game result.*/
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
+
+        if (opponentKing.color().equals(Color.WHITE)) {
+            whiteKingStatus = opponentKingStatus.name();
+        } else {
+            blackKingStatus = opponentKingStatus.name();
+        }
 
         if (opponentKingStatus.equals(STALEMATE)) {
             return GameResultMessage.Stalemate;
@@ -1279,13 +1334,14 @@ public class ChessBoard {
         throw new RuntimeException("Unexpected situation. what da heeeel💀");
     }
 
+
+
     /**
      * Represents the different types of initialization for a chess board.
      */
     private enum InitializationTYPE {
-        STANDARD, DURING_THE_GAME
+        STANDARD, DURING_THE_GAME;
     }
-
     /**
      * Represents the different operations that can be performed during a chess move,
      * such as capture, promotion, check, checkmate, and stalemate or empty if operation not exists.
@@ -1304,16 +1360,16 @@ public class ChessBoard {
         Operations(String algebraicNotation) {
             this.algebraicNotation = algebraicNotation;
         }
-    }
 
+    }
     /**
      * Represents a single field on a chess board.
      * Each field has a coordinate and can either be empty or contain a chess piece.
      */
     public static class Field {
+
         private Piece piece;
         private final @Getter Coordinate coordinate;
-
         public Field(Coordinate coordinate, Piece piece) {
             Objects.requireNonNull(coordinate);
             this.coordinate = coordinate;
@@ -1353,8 +1409,8 @@ public class ChessBoard {
                 this.piece = piece;
             }
         }
-    }
 
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -1551,5 +1607,20 @@ public class ChessBoard {
                 default -> fieldMap.put(coordinate, new Field(coordinate, null));
             }
         }
+    }
+
+    private int pieceComparator(Piece p1, Piece p2) {
+        return pieceRank(p1) - pieceRank(p2);
+    }
+
+    private int pieceRank(Piece piece) {
+        return switch (piece) {
+            case Pawn pawn -> 1;
+            case Knight knight -> 2;
+            case Bishop bishop -> 3;
+            case Rook rook -> 4;
+            case Queen queen -> 5;
+            default -> throw new IllegalStateException("Unexpected value: " + piece);
+        };
     }
 }

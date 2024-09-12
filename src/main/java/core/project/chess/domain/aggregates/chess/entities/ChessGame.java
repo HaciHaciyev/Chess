@@ -183,18 +183,18 @@ public class ChessGame {
         return message;
     }
 
-    public void returnMovement(final UUID userId) throws IllegalAccessException {
-        Objects.requireNonNull(userId);
+    public void returnMovement(final String username) {
+        Objects.requireNonNull(username);
 
-        final boolean isWhitePlayer = userId.equals(playerForWhite.getId());
-        final boolean isBlackPlayer = userId.equals(playerForBlack.getId());
+        final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
+        final boolean isBlackPlayer = username.equals(playerForBlack.getUsername().username());
 
         if (!isWhitePlayer && !isBlackPlayer) {
-            throw new IllegalAccessException("Not a player.");
+            throw new IllegalArgumentException("Not a player.");
         }
 
         if (isGameOver.status()) {
-            throw new IllegalAccessException("Game is over.");
+            throw new IllegalArgumentException("Game is over.");
         }
 
         final boolean successfulMoveReturning = chessBoard.returnOfTheMovement();
