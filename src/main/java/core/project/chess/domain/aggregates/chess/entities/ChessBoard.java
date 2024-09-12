@@ -70,17 +70,13 @@ public class ChessBoard {
     private Coordinate currentBlackKingPosition;
     private final Map<Coordinate, Field> fieldMap;
     private final Map<String, Byte> hashCodeOfBoard;
-    private final ArrayList<String> fenKeysOfHashCodeOfBoard;
+    private final ArrayList<String> fenRepresentationsOfBoard;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
+    private final List<Piece> capturedWhitePieces = new ArrayList<>();
+    private final List<Piece> capturedBlackPieces = new ArrayList<>();
     private static final Coordinate initialWhiteKingPosition = Coordinate.e1;
     private static final Coordinate initialBlackKingPosition = Coordinate.e8;
     private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
-
-    private @Getter String whiteKingStatus = "EMPTY";
-    private @Getter String blackKingStatus = "EMPTY";
-
-    private final List<Piece> whiteCaptures = new ArrayList<>();
-    private final List<Piece> blackCaptures = new ArrayList<>();
 
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
@@ -106,7 +102,7 @@ public class ChessBoard {
         this.initializationTYPE = initializationTYPE;
         this.listOfAlgebraicNotations = algebraicNotations;
         this.fieldMap = new EnumMap<>(Coordinate.class);
-        this.fenKeysOfHashCodeOfBoard = new ArrayList<>(10);
+        this.fenRepresentationsOfBoard = new ArrayList<>(10);
         this.hashCodeOfBoard = new HashMap<>(10, 0.75f);
 
         this.figuresTurn = Color.WHITE;
@@ -163,13 +159,13 @@ public class ChessBoard {
     }
 
     public List<Piece> whiteCaptures() {
-        whiteCaptures.sort(this::pieceComparator);
-        return List.copyOf(whiteCaptures);
+        capturedWhitePieces.sort(this::pieceComparator);
+        return List.copyOf(capturedWhitePieces);
     }
 
     public List<Piece> blackCaptures() {
-        blackCaptures.sort(this::pieceComparator);
-        return List.copyOf(blackCaptures);
+        capturedBlackPieces.sort(this::pieceComparator);
+        return List.copyOf(capturedBlackPieces);
     }
 
     /**
@@ -218,7 +214,7 @@ public class ChessBoard {
      * @return String representation of ChessBoard.
      */
     public String actualRepresentationOfChessBoard() {
-        return fenKeysOfHashCodeOfBoard.getLast();
+        return fenRepresentationsOfBoard.getLast();
     }
 
     /**
@@ -282,7 +278,7 @@ public class ChessBoard {
      *         collection is empty, an empty array will be returned.
      */
     public String[] arrayOfFEN() {
-        return fenKeysOfHashCodeOfBoard.toArray(String[]::new);
+        return fenRepresentationsOfBoard.toArray(String[]::new);
     }
 
     /**
@@ -560,7 +556,7 @@ public class ChessBoard {
             throw new IllegalStateException("Invalid method usage, check documentation. Only kings and rooks available for this function.");
         }
 
-        final String lastFEN = fenKeysOfHashCodeOfBoard.getLast();
+        final String lastFEN = fenRepresentationsOfBoard.getLast();
         final String aboutCastlingAbility = lastFEN.substring(lastFEN.indexOf(' '));
 
         if (aboutCastlingAbility.contains("K")) {
@@ -806,22 +802,22 @@ public class ChessBoard {
                 Field field = fieldMap.get(latestMovement().orElseThrow().getSecond());
 
                 if (piece.color().equals(Color.WHITE)) {
-                    whiteCaptures.add(field.piece);
+                    capturedWhitePieces.add(field.piece);
                 }
 
                 if (piece.color().equals(Color.BLACK)) {
-                    blackCaptures.add(field.piece);
+                    capturedBlackPieces.add(field.piece);
                 }
 
                 field.removeFigure();
             }
 
             if (piece.color().equals(Color.WHITE) && !captureOnPassage) {
-                whiteCaptures.add(endField.piece);
+                capturedWhitePieces.add(endField.piece);
             }
 
             if (piece.color().equals(Color.BLACK) && !captureOnPassage) {
-                blackCaptures.add(endField.piece);
+                capturedBlackPieces.add(endField.piece);
             }
 
             endField.removeFigure();
@@ -864,7 +860,7 @@ public class ChessBoard {
 
         /** Recording the move made in algebraic notation and Fen.*/
         final String currentPositionHash = this.toString();
-        fenKeysOfHashCodeOfBoard.add(currentPositionHash);
+        fenRepresentationsOfBoard.add(currentPositionHash);
 
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
@@ -873,18 +869,6 @@ public class ChessBoard {
 
         /** Retrieve message about game result.*/
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
-
-        if (opponentKingStatus.equals(STALEMATE)) {
-            whiteKingStatus = opponentKingStatus.name();
-            blackKingStatus = opponentKingStatus.name();
-        }
-
-        if (opponentKing.color().equals(Color.WHITE) && !opponentKingStatus.equals(STALEMATE)) {
-            whiteKingStatus = opponentKingStatus.name();
-        }
-        if (opponentKing.color().equals(Color.BLACK) && !opponentKingStatus.equals(STALEMATE)) {
-            blackKingStatus = opponentKingStatus.name();
-        }
 
         if (opponentKingStatus.equals(STALEMATE)) {
             return GameResultMessage.Stalemate;
@@ -976,7 +960,7 @@ public class ChessBoard {
 
         /** Recording the move made in algebraic notation.*/
         final String currentPositionHash = toString();
-        fenKeysOfHashCodeOfBoard.add(currentPositionHash);
+        fenRepresentationsOfBoard.add(currentPositionHash);
 
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
@@ -984,12 +968,6 @@ public class ChessBoard {
 
         /** Retrieve message about game result.*/
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
-
-        if (opponentKing.color().equals(Color.WHITE)) {
-            whiteKingStatus = opponentKingStatus.name();
-        } else {
-            blackKingStatus = opponentKingStatus.name();
-        }
 
         if (opponentKingStatus.equals(STALEMATE)) {
             return GameResultMessage.Stalemate;
@@ -1072,7 +1050,7 @@ public class ChessBoard {
             return false;
         }
 
-        final String currentPositionHash = fenKeysOfHashCodeOfBoard.getLast();
+        final String currentPositionHash = fenRepresentationsOfBoard.getLast();
         final AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
         final StatusPair<AlgebraicNotation.Castle> isCastling = AlgebraicNotation.isCastling(lastMovement);
 
@@ -1094,15 +1072,7 @@ public class ChessBoard {
 
         final boolean isCapture = lastMovement.algebraicNotation().contains("x");
         if (isCapture) {
-
-            final Piece previouslyCapturedPiece;
-            if (this.figuresTurn.equals(Color.WHITE)) {
-                previouslyCapturedPiece = findPreviouslyCapturedPiece(startedField.coordinate, Color.BLACK);
-            } else {
-                previouslyCapturedPiece = findPreviouslyCapturedPiece(startedField.coordinate, Color.WHITE);
-            }
-
-            startedField.addFigure(previouslyCapturedPiece);
+             revertCapture(startedField, endedField, piece);
         }
 
         if (!isCapture && !(piece instanceof Pawn)){
@@ -1114,7 +1084,7 @@ public class ChessBoard {
             }
         }
 
-        fenKeysOfHashCodeOfBoard.removeLast();
+        fenRepresentationsOfBoard.removeLast();
         listOfAlgebraicNotations.removeLast();
         final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
         if (newValue == 0) {
@@ -1229,118 +1199,76 @@ public class ChessBoard {
         startField.addFigure(rook);
     }
 
-    /**
-     * Finds a previously captured piece based on the given coordinate and color.
-     * <p>
-     * This method iterates through a list of algebraic notations, starting from the
-     * second-to-last move, and looks for a piece that was moved to the specified
-     * coordinates. If the piece is not found in previous moves, the method checks
-     * which piece should be at the specified position based on the color and rank.
-     *
-     * <p>The method performs the following steps:</p>
-     * <ol>
-     *     <li>Iterates through the list of algebraic notations in reverse order,
-     *     starting from the second-to-last element.</li>
-     *     <li>For each notation, extracts the coordinates of the destination position.</li>
-     *     <li>Compares the destination position with the given coordinate.</li>
-     *     <li>If the coordinates match, checks if the piece is a pawn based on the
-     *     second character of the notation.</li>
-     *     <li>If the piece is not a pawn, returns the corresponding piece object
-     *     (King, Queen, Rook, Bishop, Knight) based on the first character of the notation.</li>
-     *     <li>If no piece was found in previous moves, checks which piece should be
-     *     at the specified position based on the color and rank.</li>
-     *     <li>If no piece is found, throws an exception.</li>
-     * </ol>
-     *
-     * @param coordinate the coordinate at which to find the previously captured piece.
-     * @param color the color of the piece to find (white or black).
-     * @return a piece object corresponding to the specified coordinate and color.
-     * @throws RuntimeException if the piece cannot be found at the specified position or
-     * if an unexpected situation arises.
-     */
-    private Piece findPreviouslyCapturedPiece(final Coordinate coordinate, final Color color) {
-
-        for (int i = listOfAlgebraicNotations.size() - 2; i >= 0; i -= 2) {
-
-            final AlgebraicNotation algebraicNotation = listOfAlgebraicNotations.get(i);
-
-            var movementPair = algebraicNotation.coordinates();
-            Coordinate to = movementPair.getSecond();
-
-            final String notation = algebraicNotation.algebraicNotation();
-
-            if (to.equals(coordinate)) {
-
-                final boolean pawnMovement = Character.isDigit(notation.charAt(1));
-                if (pawnMovement) {
-                    return new Pawn(color);
-                }
-
-                return switch (notation.charAt(0)) {
-                    case 'K' -> new King(color);
-                    case 'Q' -> new Queen(color);
-                    case 'R' -> new Rook(color);
-                    case 'B' -> new Bishop(color);
-                    case 'N' -> new Knight(color);
-                    default -> throw new RuntimeException("Unexpected situation.");
-                };
-            }
+    private void revertCapture(final Field startedField, final Field endedField, final Piece piece) {
+        if (revertPotentialCaptureOnPassage(startedField, endedField, piece)) {
+            return;
         }
 
-        if (color.equals(Color.WHITE)) {
-
-            if (coordinate.getRow() == 2) {
-                return new Pawn(color);
-            }
-
-            if (coordinate.equals(Coordinate.d1)) {
-                return new Queen(color);
-            }
-
-            if (coordinate.equals(Coordinate.a1) || coordinate.equals(Coordinate.h1)) {
-                return new Rook(color);
-            }
-
-            if (coordinate.equals(Coordinate.b1) || coordinate.equals(Coordinate.g1)) {
-                return new Knight(color);
-            }
-
-            if (coordinate.equals(Coordinate.c1) || coordinate.equals(Coordinate.f1)) {
-                return new Bishop(color);
-            }
-
+        final Piece previouslyCapturedPiece;
+        if (figuresTurn.equals(Color.WHITE)) {
+            previouslyCapturedPiece = capturedBlackPieces.getLast();
+            capturedBlackPieces.removeLast();
+            endedField.addFigure(previouslyCapturedPiece);
+            return;
         }
 
-        if (coordinate.getRow() == 7) {
-            return new Pawn(color);
-        }
-
-        if (coordinate.equals(Coordinate.d8)) {
-            return new Queen(color);
-        }
-
-        if (coordinate.equals(Coordinate.a8) || coordinate.equals(Coordinate.h8)) {
-            return new Rook(color);
-        }
-
-        if (coordinate.equals(Coordinate.b8) || coordinate.equals(Coordinate.g8)) {
-            return new Knight(color);
-        }
-
-        if (coordinate.equals(Coordinate.c8) || coordinate.equals(Coordinate.f8)) {
-            return new Bishop(color);
-        }
-
-        throw new RuntimeException("Unexpected situation. what da heeeel💀");
+        previouslyCapturedPiece = capturedWhitePieces.getLast();
+        capturedWhitePieces.removeLast();
+        endedField.addFigure(previouslyCapturedPiece);
     }
 
+    private boolean revertPotentialCaptureOnPassage(final Field startedField, final Field endedField, final Piece piece) {
+        if (!(piece instanceof Pawn)) {
+            return false;
+        }
 
+        final AlgebraicNotation penultimateMove = listOfAlgebraicNotations.get(listOfAlgebraicNotations.size() - 2);
+
+        final boolean isTheMoveBeforeLastWasPassage = Pawn.isPassage(penultimateMove);
+        if (!isTheMoveBeforeLastWasPassage) {
+            return false;
+        }
+
+        final int startColumn = startedField.getCoordinate().columnToInt();
+        final int startRow = startedField.getCoordinate().getRow();
+        final int endColumn = endedField.getCoordinate().columnToInt();
+        final int endRow = endedField.getCoordinate().getRow();
+
+        final boolean isDiagonalMove = Math.abs(startColumn - endColumn) == 1 && Math.abs(startRow - endRow) == 1;
+        if (!isDiagonalMove) {
+            return false;
+        }
+
+        final Coordinate passageEnd = penultimateMove.coordinates().getSecond();
+
+        if (endColumn != passageEnd.columnToInt()) {
+            return false;
+        }
+
+        if (piece.color().equals(Color.WHITE)) {
+            final boolean isValidRows = endRow - passageEnd.getRow() == 1;
+            if (!isValidRows) {
+                return false;
+            }
+
+            fieldMap.get(passageEnd).addFigure(new Pawn(Color.BLACK));
+            return true;
+        }
+
+        final boolean isValidRows = endRow - passageEnd.getRow() == -1;
+        if (!isValidRows) {
+            return false;
+        }
+
+        fieldMap.get(passageEnd).addFigure(new Pawn(Color.WHITE));
+        return true;
+    }
 
     /**
      * Represents the different types of initialization for a chess board.
      */
     private enum InitializationTYPE {
-        STANDARD, DURING_THE_GAME;
+        STANDARD, DURING_THE_GAME
     }
     /**
      * Represents the different operations that can be performed during a chess move,

@@ -6,6 +6,7 @@ import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.infrastructure.utilities.chess.ChessBoardNavigator;
+import core.project.chess.infrastructure.utilities.chess.ChessNotationValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
@@ -227,6 +228,29 @@ public record Pawn(Color color)
         }
 
         return StatusPair.ofFalse();
+    }
+
+    public static boolean isPassage(final AlgebraicNotation algebraicNotationVO) {
+        Objects.requireNonNull(algebraicNotationVO);
+
+        final String algebraicNotation = algebraicNotationVO.algebraicNotation();
+        if (!ChessNotationValidator.isSimplePawnMovement(algebraicNotation)) {
+            return false;
+        }
+
+        final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
+        final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
+
+        if (from.getColumn() != to.getColumn()) {
+            throw new IllegalArgumentException("'From' can`t be equal to 'to' coordinate.");
+        }
+
+        final boolean validPassage = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
+        if (validPassage) {
+            return true;
+        }
+
+        return false;
     }
 
     private StatusPair<Set<Operations>> straightMove(
