@@ -242,7 +242,7 @@ public record Pawn(Color color)
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
 
         if (from.getColumn() != to.getColumn()) {
-            throw new IllegalArgumentException("'From' can`t be equal to 'to' coordinate.");
+            return false;
         }
 
         final boolean validPassage = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);

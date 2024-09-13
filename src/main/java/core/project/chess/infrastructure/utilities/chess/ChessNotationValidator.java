@@ -25,11 +25,11 @@ public class ChessNotationValidator {
 
     private ChessNotationValidator() {}
 
-    private static final String COORDINATES = "[A-H][1-8]";
+    private static final String COORDINATES = "[a-h][1-8]";
 
     private static final String INFLUENCE_ON_OPPONENT_KING = "[+#.]?";
 
-    private static final String PAWN_START_MOVEMENT_COORDINATES = "[A-H][2-7]";
+    private static final String PAWN_START_MOVEMENT_COORDINATES = "[a-h][2-7]";
 
     public static void validate(String algebraicNotation) {
         if (isSimpleFigureMovement(algebraicNotation) || isFigureCaptureOperation(algebraicNotation)) {

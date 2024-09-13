@@ -266,6 +266,21 @@ public class ChessGameTest {
         System.out.println(navigator.prettyToString());
         System.out.println(navigator.board().listOfAlgebraicNotations());
 
+        game.returnMovement(black);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.makeMovement(black, d7, d5, null);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.makeMovement(white, e5, d6, null);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
+
+        game.returnMovement(black);
+        System.out.println(navigator.prettyToString());
+        System.out.println(navigator.board().listOfAlgebraicNotations());
     }
 
     public static void executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions) {
