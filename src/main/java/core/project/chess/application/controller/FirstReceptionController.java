@@ -1,5 +1,7 @@
 package core.project.chess.application.controller;
 
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
@@ -10,28 +12,30 @@ import jakarta.ws.rs.Path;
 @Path("/reception")
 public class FirstReceptionController {
 
-    @GET @Path("/home")
-    public final String home() {
-        return "home/home";
+    private final Template home;
+
+    private final Template login;
+
+    private final Template registration;
+
+    FirstReceptionController(Template home, Template registration, Template login) {
+        this.home = home;
+        this.registration = registration;
+        this.login = login;
     }
 
-    @GET @Path("/registration_form")
-    public final String registrationForm() {
-        return "login-registration/registration";
+    @GET @Path("/home")
+    public final TemplateInstance home() {
+        return home.data("home");
     }
 
     @GET @Path("/login")
-    public final String loginForm() {
-        return "login-registration/login";
+    public final TemplateInstance loginForm() {
+        return login.data("login");
     }
 
-    @GET @Path("/logout")
-    public final String logout() {
-        return "login-registration/logout";
-    }
-
-    @GET @Path("/login?expired")
-    public final String loginExpired() {
-        return "login-registration/login_expired";
+    @GET @Path("/registration")
+    public final TemplateInstance registrationForm() {
+        return registration.data("registration_form");
     }
 }
