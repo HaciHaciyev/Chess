@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>User Name Input</title>
+</head>
+<body>
+    <h1>User Name Input</h1>
+
+    <form action="/reception/csrfTokenForm" method="post">
+    	<input type="hidden" name="{inject:csrf.parameterName}" value="{inject:csrf.token}" />
+
+    	<p>Your Name: <label>
+            <input type="text" name="name" />
+        </label></p>
+    	<p><input type="submit" name="submit"/></p>
+    </form>
+</body>
+</html>

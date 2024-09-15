@@ -1,9 +1,22 @@
 services:
-  postgres:
+  chessland:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native
+    env_file:
+      - infrastructure.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - datasource
+    networks:
+      - chess
+
+  datasource:
     container_name: chess
     image: postgres:16.0
     env_file:
-      - datasource.env
+      - infrastructure.env
     volumes:
       - postgres:/data/postgres
     ports:
@@ -12,7 +25,7 @@ services:
       - chess
     restart: unless-stopped
 
-  pgadmin:
+  datasource-administration:
     container_name: chessadministration
     image: dpage/pgadmin4
     env_file:
