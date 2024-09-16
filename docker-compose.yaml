@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: src/main/docker/Dockerfile.native
-    env_file:
-      - infrastructure.env
     ports:
       - "8080:8080"
     depends_on:

@@ -6,6 +6,9 @@ pom.xml.versionsBackup
 release.properties
 .flattened-pom.xml
 
+# Ignore all .pem files in any directory
+*.pem
+
 # Eclipse
 .project
 .classpath

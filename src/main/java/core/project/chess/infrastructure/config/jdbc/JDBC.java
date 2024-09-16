@@ -10,6 +10,7 @@ import core.project.chess.infrastructure.utilities.repository.RowMapper;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +19,12 @@ import java.util.Objects;
 @ApplicationScoped
 public class JDBC {
 
-    private final DataSourceProvider dataSourceProvider;
+    private final DataSource dataSource;
 
     public static final String SQL_QUERY_LOGGING_FORMAT = "Executing sql query : {%s}";
 
-    JDBC(DataSourceProvider dataSourceProvider) {
-        this.dataSourceProvider = dataSourceProvider;
+    JDBC(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public <T> Result<T, Throwable> queryForObject(final String sql, final Class<T> type, @OptionalArgument final Object... params) {
@@ -40,7 +41,7 @@ public class JDBC {
         Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
-                final Connection connection = dataSourceProvider.dataSource().getConnection();
+                final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
 
@@ -77,7 +78,7 @@ public class JDBC {
         Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
-                final Connection connection = dataSourceProvider.dataSource().getConnection();
+                final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
 
@@ -111,7 +112,7 @@ public class JDBC {
         Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
-                final Connection connection = dataSourceProvider.dataSource().getConnection();
+                final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                 final ResultSet resultSet = statement.executeQuery()
         ) {
@@ -149,7 +150,7 @@ public class JDBC {
         Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
-                final Connection connection = dataSourceProvider.dataSource().getConnection();
+                final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
 
@@ -177,7 +178,7 @@ public class JDBC {
         Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
-                final Connection connection = dataSourceProvider.dataSource().getConnection();
+                final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
 
@@ -208,7 +209,7 @@ public class JDBC {
         Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
-                final Connection connection = dataSourceProvider.dataSource().getConnection();
+                final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
 
