@@ -15,6 +15,8 @@ import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.CloseReason;
@@ -42,6 +44,8 @@ public class ChessGameHandler {
 
     private final JsonWebToken jwt;
 
+    private final JWTParser jwtParser;
+
     private final ObjectMapper objectMapper;
 
     private final ChessGameService chessGameService;
@@ -61,7 +65,7 @@ public class ChessGameHandler {
     public String startGame(final GameParameters gameParameters) {
         Objects.requireNonNull(gameParameters);
 
-        final Username username = new Username(jwt.getClaim("Username"));
+        final Username username = new Username(this.jwt.getClaim("Username"));
         final UserAccount firstPlayer = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
@@ -102,12 +106,16 @@ public class ChessGameHandler {
     }
 
     @OnMessage
-    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) throws JsonProcessingException {
+    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message)
+            throws JsonProcessingException, ParseException {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
         Objects.requireNonNull(message);
 
-        final String username = session.getRequestParameterMap().get("token").getFirst();
+        final String token = session.getRequestParameterMap().get("token").getFirst();
+        final JsonWebToken jsonWebToken = jwtParser.parse(token);
+
+        final String username = jsonWebToken.getName();
         Objects.requireNonNull(username);
 
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(UUID.fromString(gameId));
