@@ -13,20 +13,16 @@ import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.config.security.PasswordEncoder;
 import core.project.chess.infrastructure.utilities.containers.Result;
+import io.quarkus.logging.Log;
 import jakarta.annotation.security.PermitAll;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.Objects;
 import java.util.UUID;
 
 @PermitAll
-@Path("/chess")
-@ApplicationScoped
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
+@Path("/account")
 public class UserController {
 
     private final JwtUtility jwtUtility;
@@ -49,7 +45,8 @@ public class UserController {
     }
 
     @POST @Path("/login")
-    public final Response login(final LoginForm loginForm) {
+    public final Response login(LoginForm loginForm) {
+        Log.info("Login process.");
         Objects.requireNonNull(loginForm);
 
         final Username username = Result.ofThrowable(
@@ -81,6 +78,7 @@ public class UserController {
 
     @POST @Path("/registration")
     public final Response registration(RegistrationForm registrationForm) {
+        Log.info("Registration process.");
         Objects.requireNonNull(registrationForm);
 
         if (!Objects.equals(
@@ -134,6 +132,7 @@ public class UserController {
 
     @PATCH @Path("/token/verification")
     public final Response tokenVerification(@QueryParam("token") UUID token) throws IllegalAccessException {
+        Log.info("Token verification process.");
         var foundToken = outboundUserRepository
                 .findToken(token)
                 .orElseThrow(

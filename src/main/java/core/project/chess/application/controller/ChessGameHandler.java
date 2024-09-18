@@ -18,7 +18,6 @@ import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.CloseReason;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
@@ -26,7 +25,6 @@ import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +33,8 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Path("/chess-game")
-@ApplicationScoped
 @RolesAllowed("USER")
+@Path("/chess-game")
 @ServerEndpoint("/chess-game/{gameId}")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameHandler {
@@ -61,8 +58,8 @@ public class ChessGameHandler {
     private static final Map<Username, Pair<UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
 
     @POST @Path("/start-game")
-    @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
-    public String startGame(final GameParameters gameParameters) {
+    public String startGame(GameParameters gameParameters) {
+        Log.info("Create a game.");
         Objects.requireNonNull(gameParameters);
 
         final Username username = new Username(this.jwt.getClaim("Username"));
@@ -92,6 +89,7 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session, @PathParam("gameId") final String gameId) throws JsonProcessingException {
+        Log.info("Open websocket session.");
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
 
@@ -108,6 +106,7 @@ public class ChessGameHandler {
     @OnMessage
     public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message)
             throws JsonProcessingException, ParseException {
+        Log.info("Handle message.");
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
         Objects.requireNonNull(message);

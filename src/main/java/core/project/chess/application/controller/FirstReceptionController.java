@@ -3,12 +3,10 @@ package core.project.chess.application.controller;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.PermitAll;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
 @PermitAll
-@ApplicationScoped
 @Path("/reception")
 public class FirstReceptionController {
 
