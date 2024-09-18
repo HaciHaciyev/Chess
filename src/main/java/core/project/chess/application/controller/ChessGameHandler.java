@@ -107,7 +107,7 @@ public class ChessGameHandler {
         Objects.requireNonNull(gameId);
         Objects.requireNonNull(message);
 
-        final String username = session.getUserPrincipal().getName();
+        final String username = session.getRequestParameterMap().get("token").getFirst();
         Objects.requireNonNull(username);
 
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(UUID.fromString(gameId));
