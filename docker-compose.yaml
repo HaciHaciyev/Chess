@@ -3,10 +3,10 @@ services:
     container_name: chessland
     build:
       context: .
-      dockerfile: src/main/docker/Dockerfile.native-micro
-    image: chessland
+      dockerfile: src/main/docker/Dockerfile.native
+    image: chessland:native
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     depends_on:
       - datasource
     networks:
