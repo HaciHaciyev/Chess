@@ -15,7 +15,6 @@ import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
-import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.CloseReason;
@@ -29,8 +28,10 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Path("/chess-game")
 @ApplicationScoped
@@ -39,9 +40,9 @@ import java.util.*;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameHandler {
 
-    private final ObjectMapper objectMapper;
+    private final JsonWebToken jwt;
 
-    private final SecurityIdentity securityIdentity;
+    private final ObjectMapper objectMapper;
 
     private final ChessGameService chessGameService;
 
@@ -51,16 +52,16 @@ public class ChessGameHandler {
 
     private final InboundChessRepository inboundChessRepository;
 
-    private static final Map<UUID, Pair<ChessGame, Set<Session>>> gameSessions = new HashMap<>();
+    private static final Map<UUID, Pair<ChessGame, Set<Session>>> gameSessions = new ConcurrentHashMap<>();
 
-    private static final Map<Username, Pair<UserAccount, GameParameters>> waitingForTheGame = new HashMap<>();
+    private static final Map<Username, Pair<UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
 
     @POST @Path("/start-game")
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public String startGame(final GameParameters gameParameters) {
         Objects.requireNonNull(gameParameters);
 
-        final Username username = new Username(securityIdentity.getPrincipal().getName());
+        final Username username = new Username(jwt.getClaim("Username"));
         final UserAccount firstPlayer = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
@@ -82,7 +83,7 @@ public class ChessGameHandler {
         gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>()));
         inboundChessRepository.completelySaveStartedChessGame(chessGame);
 
-        return "You partner for chess successfully founded. Starting to create websocket connection for the game.";
+        return "You partner for chess successfully founded. Starting to create session for the game.";
     }
 
     @OnOpen
@@ -94,8 +95,7 @@ public class ChessGameHandler {
         pair.getSecond().add(session);
 
         final ChessGameMessage chessBoardMessage = new ChessGameMessage(
-                pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(),
-                pair.getFirst().getChessBoard().pgn()
+                pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(), pair.getFirst().getChessBoard().pgn()
         );
 
         sendMessage(session, objectMapper.writeValueAsString(chessBoardMessage));

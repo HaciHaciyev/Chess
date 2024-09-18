@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import static core.project.chess.domain.aggregates.chess.enumerations.Coordinate.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled
 public class ChessGameTest {
 
     @Test

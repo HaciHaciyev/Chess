@@ -75,7 +75,7 @@ public class UserController {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid password.").build());
         }
 
-        final String token = jwtUtility.generateToken(username);
+        final String token = jwtUtility.generateToken(userAccount);
         return Response.ok(token).build();
     }
 
