@@ -12,16 +12,23 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Function;
 
 @ApplicationScoped
 public class JDBC {
 
     private final DataSource dataSource;
 
+    private static final String SQL_STATUS_NO_DATA = "02000";
+
     public static final String SQL_QUERY_LOGGING_FORMAT = "Executing sql query : {%s}";
+
+    private static final Map<Class<?>, Function<ResultSet, ?>> wrapperMapFunctions = getWrapperMap();
+
+    private static final Set<Class<?>> wrapperTypes = Set.of(
+            Boolean.class, Character.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class
+    );
 
     JDBC(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -30,94 +37,80 @@ public class JDBC {
     public <T> Result<T, Throwable> queryForObject(final String sql, final Class<T> type, @OptionalArgument final Object... params) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(type);
-        Objects.requireNonNull(params);
-        if (!validateObjectParams(params)) {
-            return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
-        }
-        if (!type.isPrimitive() || type == void.class) {
-            return Result.failure(new InvalidDataArgumentException("Invalid class type. Function jdbc.queryForObjets() can only provide primitive wrappers"));
-        }
 
-        Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
+        final boolean isWrapper = wrapperTypes.contains(type);
+        if (!isWrapper || type == void.class) {
+            return Result.failure(new InvalidDataArgumentException("Invalid class type. Function jdbc.queryForObjets() can only provide primitive wrappers."));
+        }
 
         try (
                 final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
-
-            setParameters(statement, params);
+            if (params != null && params.length > 0) {
+                setParameters(statement, params);
+            }
 
             try (final ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return Result.failure(new DataNotFoundException("Data in query for object was not found."));
+                }
 
-                resultSet.first();
-                return Result.success(mapPrimitiveWrapper(type, resultSet));
-
+                return Result.success((T) wrapperMapFunctions.get(type).apply(resultSet));
             }
 
         } catch (SQLException e) {
-
             final String sqlStatus = e.getSQLState();
 
-            if (sqlStatus.equals("02000")) {
-                return Result.failure(new DataNotFoundException("Data was not found."));
+            if (sqlStatus.equals(SQL_STATUS_NO_DATA)) {
+                return Result.failure(new DataNotFoundException("Data in query for object was not found."));
             }
 
             return Result.failure(new RepositoryDataException(e.getMessage()));
-
         }
-
     }
 
     public <T> Result<T, Throwable> query(final String sql, final ResultSetExtractor<T> extractor, @OptionalArgument final Object... params) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(extractor);
-        if (!validateObjectParams(params)) {
-            return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
-        }
-
-        Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
                 final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
-
-            setParameters(statement, params);
+            if (params != null && params.length > 0) {
+                setParameters(statement, params);
+            }
 
             try (final ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return Result.failure(new DataNotFoundException("Data in for this query was not found."));
+                }
 
-                resultSet.first();
                 return Result.success(extractor.extractData(resultSet));
-
             }
 
         } catch (SQLException e) {
-
             final String sqlStatus = e.getSQLState();
 
-            if (sqlStatus.equals("02000")) {
+            if (sqlStatus.equals(SQL_STATUS_NO_DATA)) {
                 return Result.failure(new DataNotFoundException("Data was not found."));
             }
 
             return Result.failure(new RepositoryDataException(e.getMessage()));
-
         }
-
     }
 
     public <T> Result<List<T>, Throwable> queryForList(final String sql, final RowMapper<T> rowMapper) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(rowMapper);
 
-        Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
-
         try (
                 final Connection connection = dataSource.getConnection();
-                final PreparedStatement statement = connection.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                final PreparedStatement statement = connection.prepareStatement(sql);
                 final ResultSet resultSet = statement.executeQuery()
         ) {
-
-            List<T> results = new ArrayList<>();
+            final List<T> results = new ArrayList<>();
 
             int rowNum = 0;
             while (resultSet.next()) {
@@ -128,42 +121,31 @@ public class JDBC {
             return Result.success(results);
 
         } catch (SQLException e) {
-
             final String sqlStatus = e.getSQLState();
 
-            if (sqlStatus.equals("02000")) {
+            if (sqlStatus.equals(SQL_STATUS_NO_DATA)) {
                 return Result.failure(new DataNotFoundException("Data was not found."));
             }
 
             return Result.failure(new RepositoryDataException(e.getMessage()));
-
         }
     }
 
     public Result<Boolean, Throwable> update(final String sql, final Object... args) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(args);
-        if (!validateObjectParams(args)) {
-            return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
-        }
-
-        Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
                 final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
-
             setParameters(statement, args);
-
             statement.executeUpdate();
 
             return Result.success(true);
 
         } catch (SQLException e) {
-
             return Result.failure(new RepositoryDataException(e.getMessage()));
-
         }
     }
 
@@ -171,17 +153,11 @@ public class JDBC {
                                                             final Object[] array, final Object... args) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(args);
-        if (!validateObjectParams(args)) {
-            return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
-        }
-
-        Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
                 final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
-
             setParameters(statement, args);
 
             final Array createdArray = connection.createArrayOf(arrayDefinition, array);
@@ -192,21 +168,13 @@ public class JDBC {
             return Result.success(true);
 
         } catch (SQLException e) {
-
             return Result.failure(new RepositoryDataException(e.getMessage()));
-
         }
     }
-
 
     public Result<Boolean, Throwable> batch(final String sql, final Object... args) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(args);
-        if (!validateObjectParams(args)) {
-            return Result.failure(new InvalidDataArgumentException("Invalid parameters"));
-        }
-
-        Log.debug(SQL_QUERY_LOGGING_FORMAT.formatted(sql));
 
         try (
                 final Connection connection = dataSource.getConnection();
@@ -221,9 +189,7 @@ public class JDBC {
             return Result.success(true);
 
         } catch (SQLException e) {
-
             return Result.failure(new RepositoryDataException(e.getMessage()));
-
         }
     }
 
@@ -233,23 +199,64 @@ public class JDBC {
         }
     }
 
-    private <T> T mapPrimitiveWrapper(Class<T> clazz, ResultSet rs) throws SQLException {
-        return rs.getObject(1, clazz);
-    }
-
-    private boolean validateObjectParams(@OptionalArgument Object... params) {
-        if (params == null) {
-            return true;
-        }
-
-        for (Object param : params) {
-            Objects.requireNonNull(param);
-
-            if (!param.getClass().isPrimitive() || param == void.class) {
-               return false;
-            }
-        }
-
-        return true;
+    private static Map<Class<?>, Function<ResultSet, ?>> getWrapperMap() {
+        return Map.of(
+                Boolean.class, rs -> {
+                    try {
+                        return rs.getBoolean(1);
+                    } catch (SQLException e) {
+                        throw new RepositoryDataException();
+                    }
+                },
+                Character.class, rs -> {
+                    try {
+                        return rs.getString(1).charAt(0);
+                    } catch (SQLException e) {
+                        throw new RepositoryDataException();
+                    }
+                },
+                Byte.class, rs -> {
+                    try {
+                        return rs.getByte(1);
+                    } catch (SQLException e) {
+                        throw new RepositoryDataException();
+                    }
+                },
+                Short.class, rs -> {
+                    try {
+                        return rs.getShort(1);
+                    } catch (SQLException e) {
+                        throw new RepositoryDataException();
+                    }
+                },
+                Integer.class, rs -> {
+                    try {
+                        return rs.getInt(1);
+                    } catch (SQLException e) {
+                        throw new RepositoryDataException();
+                    }
+                },
+                Long.class, rs -> {
+                    try {
+                        return rs.getLong(1);
+                    } catch (SQLException e) {
+                        throw new RepositoryDataException();
+                    }
+                },
+                Float.class, rs -> {
+                    try {
+                        return rs.getFloat(1);
+                    } catch (SQLException e) {
+                        throw new RepositoryDataException();
+                    }
+                },
+                Double.class, rs -> {
+                    try {
+                        return rs.getDouble(1);
+                    } catch (SQLException e) {
+                        throw new RepositoryDataException();
+                    }
+                }
+        );
     }
 }

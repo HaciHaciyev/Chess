@@ -7,8 +7,6 @@ import core.project.chess.domain.aggregates.user.events.TokenEvents;
 import core.project.chess.domain.aggregates.user.value_objects.*;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
-import core.project.chess.infrastructure.exceptions.persistant.DataNotFoundException;
-import core.project.chess.infrastructure.exceptions.persistant.RepositoryDataException;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -37,15 +35,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 findEmail,
                 Integer.class,
                 verifiableEmail.email()
-        )
-
-        .mapFailure(throwable -> {
-            if (throwable instanceof DataNotFoundException) {
-                return -1;
-            }
-
-            throw new RepositoryDataException(throwable.getMessage());
-        }).get();
+        ).orElseThrow();
 
         return count != null && count > 0;
     }
@@ -58,15 +48,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 findEmail,
                 Integer.class,
                 verifiableUsername.username()
-        )
-
-        .mapFailure(throwable -> {
-            if (throwable instanceof DataNotFoundException) {
-                return -1;
-            }
-
-            throw new RepositoryDataException(throwable.getMessage());
-        }).get();
+        ).orElseThrow();
 
         return count != null && count > 0;
     }

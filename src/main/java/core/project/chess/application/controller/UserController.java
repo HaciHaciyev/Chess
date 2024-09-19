@@ -127,7 +127,7 @@ public class UserController {
         String link = String.format("/token/verification?%s", token.getToken());
         emailInteractionService.sendToEmail(email, link);
 
-        return Response.ok("redirect:/login").build();
+        return Response.ok(jwtUtility.generateToken(userAccount)).build();
     }
 
     @PATCH @Path("/token/verification")
@@ -148,6 +148,6 @@ public class UserController {
         foundToken.getUserAccount().enable();
         inboundUserRepository.enable(foundToken);
 
-        return Response.ok("token-verification").build();
+        return Response.ok().build();
     }
 }

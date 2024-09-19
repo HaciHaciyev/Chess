@@ -20,13 +20,13 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void save(final UserAccount userAccount) {
-        Log.info("Save user.");
+        Log.info("Save user {%s}.".formatted(userAccount.toString()));
         final String sql = """
                     INSERT INTO UserAccount
-                        (id, username, email, password,
+                        (id, username, email, password, user_role,
                         rating, rating_deviation, rating_volatility,
                         is_enable, creation_date, last_updated_date)
-                        VALUES (?,?,?,?,?,?,?,?)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?)
                     """;
 
         jdbc.update(sql,
@@ -34,6 +34,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             userAccount.getUsername().username(),
             userAccount.getEmail().email(),
             userAccount.getPassword().password(),
+            userAccount.getUserRole().toString(),
             userAccount.getRating().rating(),
             userAccount.getRating().ratingDeviation(),
             userAccount.getRating().volatility(),
@@ -47,7 +48,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void saveUserToken(final EmailConfirmationToken token) {
-        Log.info("Save user token.");
+        Log.info("Save user token {%s}.".formatted(token.toString()));
         final String sql = """
                     INSERT INTO UserToken
                         (id, user_id, token, is_confirmed,
