@@ -78,17 +78,19 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
         final String sql = """
                     UPDATE UserToken SET
                             is_confirmed = ?
-                            Where id = ?;
+                        WHERE id = ?;
                     
                     UPDATE UserAccount SET
-                            is_enable = ?
-                            WHERE id = ?;
+                            is_enable = ?,
+                            user_role = ?
+                        WHERE id = ?;
                     """;
 
         jdbc.update(sql,
             token.isConfirmed(),
             token.getTokenId().toString(),
             token.getUserAccount().isEnable(),
+            token.getUserAccount().getUserRole().toString(),
             token.getUserAccount().getId().toString()
         )
 

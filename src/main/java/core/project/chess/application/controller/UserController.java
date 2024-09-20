@@ -131,10 +131,10 @@ public class UserController {
     }
 
     @PATCH @Path("/token/verification")
-    public final Response tokenVerification(@QueryParam("token") UUID token) throws IllegalAccessException {
+    public final Response tokenVerification(@QueryParam("token") String token) throws IllegalAccessException {
         Log.info("Token verification process.");
         var foundToken = outboundUserRepository
-                .findToken(token)
+                .findToken(UUID.fromString(token))
                 .orElseThrow(
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This token is not exists").build())
                 );

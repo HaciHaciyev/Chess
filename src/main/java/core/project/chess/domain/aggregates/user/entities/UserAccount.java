@@ -23,7 +23,7 @@ public class UserAccount {
     private final Username username;
     private final Email email;
     private final Password password;
-    private final UserRole userRole;
+    private UserRole userRole;
     private boolean isEnable;
     private Rating rating;
     private final AccountEvents accountEvents;
@@ -87,6 +87,9 @@ public class UserAccount {
 
     public void enable() {
         this.isEnable = true;
+        if (userRole.equals(UserRole.NONE)) {
+            userRole = UserRole.ROLE_USER;
+        }
     }
 
     public void changeRating(final ChessGame chessGame) {

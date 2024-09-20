@@ -35,7 +35,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 findEmail,
                 Integer.class,
                 verifiableEmail.email()
-        ).orElseThrow();
+        )
+                .orElseThrow();
 
         return count != null && count > 0;
     }
@@ -48,30 +49,25 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 findEmail,
                 Integer.class,
                 verifiableUsername.username()
-        ).orElseThrow();
+        )
+                .orElseThrow();
 
         return count != null && count > 0;
     }
 
     @Override
     public Result<UserAccount, Throwable> findById(UUID userId) {
-        String selectByUsername = "Select * from UserAccount where id = ?";
-
-        return jdbc.query(selectByUsername, this::userAccountMapper, userId.toString());
+        return jdbc.query("Select * from UserAccount where id = ?", this::userAccountMapper, userId.toString());
     }
 
     @Override
     public Result<UserAccount, Throwable> findByUsername(Username username) {
-        String selectByUsername = "Select * from UserAccount where username = ?";
-
-        return jdbc.query(selectByUsername, this::userAccountMapper, username.username());
+        return jdbc.query("Select * from UserAccount where username = ?", this::userAccountMapper, username.username());
     }
 
     @Override
     public Result<UserAccount, Throwable> findByEmail(Email email) {
-        String selectByUsername = "Select * from UserAccount where email = ?";
-
-        return jdbc.query(selectByUsername, this::userAccountMapper, email.email());
+        return jdbc.query("Select * from UserAccount where email = ?", this::userAccountMapper, email.email());
     }
 
     @Override
@@ -88,7 +84,10 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 u.username AS username,
                 u.email AS email,
                 u.password AS password,
+                u.user_role AS user_role,
                 u.rating AS rating,
+                u.rating_deviation AS rating_deviation,
+                u.rating_volatility AS rating_volatility,
                 u.is_enable AS is_enable,
                 u.creation_date AS creation_date,
                 u.last_updated_date AS last_updated_date
@@ -104,8 +103,11 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
         var tokenEvents = new TokenEvents(rs.getObject("token_creation_date", Timestamp.class).toLocalDateTime());
 
         return EmailConfirmationToken.fromRepository(
-                UUID.fromString("token_id"), new Token(UUID.fromString(rs.getString("token"))), tokenEvents,
-                rs.getBoolean("token_confirmation"), userAccountMapper(rs)
+                UUID.fromString(rs.getString("token_id")),
+                new Token(UUID.fromString(rs.getString("token"))),
+                tokenEvents,
+                rs.getBoolean("token_confirmation"),
+                userAccountMapper(rs)
         );
     }
 

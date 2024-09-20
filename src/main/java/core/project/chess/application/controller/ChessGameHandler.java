@@ -7,6 +7,7 @@ import core.project.chess.application.model.ChessMovementForm;
 import core.project.chess.application.model.GameParameters;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
@@ -30,6 +31,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -58,9 +60,12 @@ public class ChessGameHandler {
     private static final Map<Username, Pair<UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
 
     @POST @Path("/start-game")
-    public String startGame(GameParameters gameParameters) {
+    public String startGame(@QueryParam("color") Color color, @QueryParam("type") ChessGame.TimeControllingTYPE type) {
         Log.info("Create a game.");
-        Objects.requireNonNull(gameParameters);
+
+        final var gameParameters = new GameParameters(
+                color, Objects.requireNonNullElse(type, ChessGame.TimeControllingTYPE.DEFAULT), LocalDateTime.now()
+        );
 
         final Username username = new Username(this.jwt.getClaim("Username"));
         final UserAccount firstPlayer = outboundUserRepository
