@@ -19,10 +19,7 @@ import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.websocket.CloseReason;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
-import jakarta.websocket.Session;
+import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import jakarta.ws.rs.*;
@@ -138,17 +135,36 @@ public class ChessGameHandler {
 
         for (Session currentSession : pair.getSecond()) {
             sendMessage(currentSession, objectMapper.writeValueAsString(chessBoardMessage));
+        }
+    }
 
-            if (chessGame.gameResult().isPresent()) {
-                final String messageInCaseOfGameEnding = "Game ended. Because of %s".formatted(chessGame.gameResult().get().toString());
+    @OnClose
+    public void onClose(final Session session, @PathParam("gameId") final String gameId) {
+        Log.info("Handle close.");
+        Objects.requireNonNull(session);
+        Objects.requireNonNull(gameId);
 
-                closeSession(currentSession, messageInCaseOfGameEnding);
-            }
+        final UUID gameUuid = UUID.fromString(gameId);
+
+        final Pair<ChessGame, Set<Session>> pair = gameSessions.get(gameUuid);
+        Objects.requireNonNull(pair);
+
+        final ChessGame chessGame = pair.getFirst();
+        if (chessGame.gameResult().isEmpty()) {
+            return;
         }
 
-        if (chessGame.gameResult().isPresent()) {
-            inboundChessRepository.completelyUpdateCompletedGame(chessGame);
-            gameSessions.remove(chessGame.getChessGameId());
+        final Set<Session> sessions = pair.getSecond();
+        if (!sessions.contains(session)) {
+            return;
+        }
+
+        final String messageInCaseOfGameEnding = "Game ended. Because of %s".formatted(chessGame.gameResult().get().toString());
+        closeSession(session, messageInCaseOfGameEnding);
+
+        sessions.remove(session);
+        if (sessions.isEmpty()) {
+            gameSessions.remove(gameUuid);
         }
     }
 
