@@ -33,7 +33,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Path("/chess-game")
-@RolesAllowed("User")
 @ServerEndpoint("/chess-game/{gameId}")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameHandler {
@@ -56,7 +55,7 @@ public class ChessGameHandler {
 
     private static final Map<Username, Pair<UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
 
-    @POST @Path("/start-game")
+    @POST @Path("/start-game") @RolesAllowed("User")
     public String startGame(@QueryParam("color") Color color, @QueryParam("type") ChessGame.TimeControllingTYPE type) {
         Log.info("Create a game.");
 
@@ -64,7 +63,7 @@ public class ChessGameHandler {
                 color, Objects.requireNonNullElse(type, ChessGame.TimeControllingTYPE.DEFAULT), LocalDateTime.now()
         );
 
-        final Username username = new Username(this.jwt.getClaim("Username"));
+        final Username username = new Username(this.jwt.getName());
         final UserAccount firstPlayer = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
