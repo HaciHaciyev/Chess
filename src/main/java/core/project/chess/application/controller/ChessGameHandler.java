@@ -32,8 +32,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@RolesAllowed("USER")
 @Path("/chess-game")
+@RolesAllowed("User")
 @ServerEndpoint("/chess-game/{gameId}")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameHandler {

@@ -18,7 +18,7 @@ public class JwtUtility {
                 .upn("chessland")
                 .expiresIn(TimeUnit.MINUTES.toMinutes(60))
                 .claim("Username", userAccount.getUsername().username())
-                .claim("Role", userAccount.getUserRole().toString())
+                .claim("Role", userAccount.getUserRole().getUserRole())
                 .sign();
     }
 }
