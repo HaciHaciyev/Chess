@@ -29,7 +29,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                         VALUES (?,?,?,?,?,?,?,?,?,?,?)
                     """;
 
-        jdbc.update(sql,
+        jdbc.write(sql,
             userAccount.getId().toString(),
             userAccount.getUsername().username(),
             userAccount.getEmail().email(),
@@ -56,7 +56,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                         VALUES (?,?,?,?,?,?)
                     """;
 
-        jdbc.update(sql,
+        jdbc.write(sql,
             token.getTokenId().toString(),
             token.getUserAccount().getId().toString(),
             token.getToken().token().toString(),
@@ -86,7 +86,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                         WHERE id = ?;
                     """;
 
-        jdbc.update(sql,
+        jdbc.write(sql,
             token.isConfirmed(),
             token.getTokenId().toString(),
             token.getUserAccount().isEnable(),
@@ -113,7 +113,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                     DELETE FROM UserAccount WHERE id = ?;
                     """;
 
-        jdbc.update(sql,
+        jdbc.write(sql,
             token.getTokenId().toString(),
             token.getUserAccount().getId().toString()
         )

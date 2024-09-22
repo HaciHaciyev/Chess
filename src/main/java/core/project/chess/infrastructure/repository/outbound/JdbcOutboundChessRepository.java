@@ -33,7 +33,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                 WHERE chess_game_id = ?
                 """;
 
-        return jdbc.query(sql, this::chessGameMapper, chessGameId);
+        return jdbc.read(sql, this::chessGameMapper, chessGameId);
     }
 
     private ChessGameHistory chessGameMapper(final ResultSet rs) throws SQLException {

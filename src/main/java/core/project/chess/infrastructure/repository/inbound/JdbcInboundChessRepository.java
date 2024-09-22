@@ -33,7 +33,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                         VALUES (?, ?, ?);
                     """;
 
-        jdbc.update(sql,
+        jdbc.write(sql,
 
             chessGame.getChessGameId().toString(),
             chessGame.getPlayerForBlackRating().rating(),
@@ -70,10 +70,10 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                         fen_representations_of_board = ?
                     """;
 
-        final String arrayDefinition = "fen_representations_of_board";
+        final String arrayDefinition = "VARCHAR";
         final byte arrayIndex = 6;
 
-        jdbc.updateAndArrayStoring(sql, arrayDefinition, arrayIndex, chessGame.getChessBoard().arrayOfFEN(),
+        jdbc.writeArrayOf(sql, arrayDefinition, arrayIndex, chessGame.getChessBoard().arrayOfFEN(),
 
             chessGame.gameResult().isPresent(),
             chessGame.getChessGameId().toString(),

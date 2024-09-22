@@ -31,7 +31,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     public boolean isEmailExists(Email verifiableEmail) {
         String findEmail = "Select COUNT(email) from UserAccount where email = ?";
 
-        Integer count = jdbc.queryForObject(
+        Integer count = jdbc.read(
                 findEmail,
                 Integer.class,
                 verifiableEmail.email()
@@ -45,7 +45,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     public boolean isUsernameExists(Username verifiableUsername) {
         String findEmail = "Select COUNT(username) from UserAccount where username = ?";
 
-        Integer count = jdbc.queryForObject(
+        Integer count = jdbc.read(
                 findEmail,
                 Integer.class,
                 verifiableUsername.username()
@@ -57,17 +57,17 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public Result<UserAccount, Throwable> findById(UUID userId) {
-        return jdbc.query("Select * from UserAccount where id = ?", this::userAccountMapper, userId.toString());
+        return jdbc.read("Select * from UserAccount where id = ?", this::userAccountMapper, userId.toString());
     }
 
     @Override
     public Result<UserAccount, Throwable> findByUsername(Username username) {
-        return jdbc.query("Select * from UserAccount where username = ?", this::userAccountMapper, username.username());
+        return jdbc.read("Select * from UserAccount where username = ?", this::userAccountMapper, username.username());
     }
 
     @Override
     public Result<UserAccount, Throwable> findByEmail(Email email) {
-        return jdbc.query("Select * from UserAccount where email = ?", this::userAccountMapper, email.email());
+        return jdbc.read("Select * from UserAccount where email = ?", this::userAccountMapper, email.email());
     }
 
     @Override
@@ -96,7 +96,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 WHERE t.token = ?
                 """;
 
-        return jdbc.query(selectUserToken, this::userTokenMapper, token.toString());
+        return jdbc.read(selectUserToken, this::userTokenMapper, token.toString());
     }
 
     private EmailConfirmationToken userTokenMapper(final ResultSet rs) throws SQLException {

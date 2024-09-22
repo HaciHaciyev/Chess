@@ -7,7 +7,6 @@ import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.repository.ResultSetExtractor;
 import core.project.chess.infrastructure.utilities.repository.RowMapper;
-import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import javax.sql.DataSource;
@@ -34,7 +33,7 @@ public class JDBC {
         this.dataSource = dataSource;
     }
 
-    public <T> Result<T, Throwable> queryForObject(final String sql, final Class<T> type, @OptionalArgument final Object... params) {
+    public <T> Result<T, Throwable> read(final String sql, final Class<T> type, @OptionalArgument final Object... params) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(type);
 
@@ -47,6 +46,7 @@ public class JDBC {
                 final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
+            connection.setReadOnly(true);
             if (params != null && params.length > 0) {
                 setParameters(statement, params);
             }
@@ -70,7 +70,7 @@ public class JDBC {
         }
     }
 
-    public <T> Result<T, Throwable> query(final String sql, final ResultSetExtractor<T> extractor, @OptionalArgument final Object... params) {
+    public <T> Result<T, Throwable> read(final String sql, final ResultSetExtractor<T> extractor, @OptionalArgument final Object... params) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(extractor);
 
@@ -78,6 +78,7 @@ public class JDBC {
                 final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
+            connection.setReadOnly(true);
             if (params != null && params.length > 0) {
                 setParameters(statement, params);
             }
@@ -101,7 +102,7 @@ public class JDBC {
         }
     }
 
-    public <T> Result<List<T>, Throwable> queryForList(final String sql, final RowMapper<T> rowMapper) {
+    public <T> Result<List<T>, Throwable> readListOf(final String sql, final RowMapper<T> rowMapper) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(rowMapper);
 
@@ -131,7 +132,7 @@ public class JDBC {
         }
     }
 
-    public Result<Boolean, Throwable> update(final String sql, final Object... args) {
+    public Result<Boolean, Throwable> write(final String sql, final Object... args) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(args);
 
@@ -139,18 +140,25 @@ public class JDBC {
                 final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
-            setParameters(statement, args);
-            statement.executeUpdate();
+            connection.setAutoCommit(false);
 
-            return Result.success(true);
+            try {
+                setParameters(statement, args);
+                statement.executeUpdate();
+                connection.commit();
 
+                return Result.success(true);
+            } catch (SQLException e) {
+                connection.rollback();
+                return Result.failure(new RepositoryDataException(e.getMessage()));
+            }
         } catch (SQLException e) {
             return Result.failure(new RepositoryDataException(e.getMessage()));
         }
     }
 
-    public Result<Boolean, Throwable> updateAndArrayStoring(final String sql, final String arrayDefinition, final byte arrayIndex,
-                                                            final Object[] array, final Object... args) {
+    public Result<Boolean, Throwable> writeArrayOf(final String sql, final String arrayDefinition, final byte arrayIndex,
+                                                   final Object[] array, final Object... args) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(args);
 
@@ -158,36 +166,20 @@ public class JDBC {
                 final Connection connection = dataSource.getConnection();
                 final PreparedStatement statement = connection.prepareStatement(sql)
         ) {
-            setParameters(statement, args);
+            connection.setAutoCommit(false);
 
-            final Array createdArray = connection.createArrayOf(arrayDefinition, array);
-            statement.setArray(arrayIndex, createdArray);
+            try {
+                setParameters(statement, args);
+                final Array createdArray = connection.createArrayOf(arrayDefinition, array);
+                statement.setArray(arrayIndex, createdArray);
+                statement.executeUpdate();
+                connection.commit();
 
-            statement.executeUpdate();
-
-            return Result.success(true);
-
-        } catch (SQLException e) {
-            return Result.failure(new RepositoryDataException(e.getMessage()));
-        }
-    }
-
-    public Result<Boolean, Throwable> batch(final String sql, final Object... args) {
-        Objects.requireNonNull(sql);
-        Objects.requireNonNull(args);
-
-        try (
-                final Connection connection = dataSource.getConnection();
-                final PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
-
-            setParameters(statement, args);
-
-            statement.addBatch();
-            statement.executeBatch();
-
-            return Result.success(true);
-
+                return Result.success(true);
+            } catch (SQLException e) {
+                connection.rollback();
+                return Result.failure(new RepositoryDataException(e.getMessage()));
+            }
         } catch (SQLException e) {
             return Result.failure(new RepositoryDataException(e.getMessage()));
         }

@@ -7,23 +7,19 @@ import static org.junit.jupiter.api.Assertions.*;
 class JDBCTest {
 
     @Test
-    void queryForObject() {
+    void read() {
     }
 
     @Test
-    void query() {
+    void readForList() {
     }
 
     @Test
-    void queryForList() {
+    void write() {
     }
 
     @Test
-    void update() {
-    }
-
-    @Test
-    void updateAndArrayStoring() {
+    void writeAndArrayStoring() {
     }
 
     @Test
