@@ -23,16 +23,41 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     private final JDBC jdbc;
 
+    private static final String FIND_EMAIL = "SELECT COUNT(email) FROM UserAccount WHERE email = ?";
+    private static final String FIND_USERNAME = "SELECT COUNT(username) FROM UserAccount WHERE username = ?";
+    private static final String FIND_BY_ID = "SELECT * FROM UserAccount WHERE id = ?";
+    private static final String FIND_BY_USERNAME = "SELECT * FROM UserAccount WHERE username = ?";
+    private static final String FIND_BY_EMAIL = "SELECT * FROM UserAccount WHERE email = ?";
+    private static final String FIND_TOKEN = """
+            SELECT
+            t.id AS token_id,
+            t.token AS token,
+            t.is_confirmed AS token_confirmation,
+            t.creation_date AS token_creation_date,
+            u.id AS id,
+            u.username AS username,
+            u.email AS email,
+            u.password AS password,
+            u.user_role AS user_role,
+            u.rating AS rating,
+            u.rating_deviation AS rating_deviation,
+            u.rating_volatility AS rating_volatility,
+            u.is_enable AS is_enable,
+            u.creation_date AS creation_date,
+            u.last_updated_date AS last_updated_date
+            FROM UserToken t
+            INNER JOIN UserAccount u ON t.user_id = u.id
+            WHERE t.token = ?
+            """;
+
     JdbcOutboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;
     }
 
     @Override
     public boolean isEmailExists(Email verifiableEmail) {
-        String findEmail = "Select COUNT(email) from UserAccount where email = ?";
-
         Integer count = jdbc.read(
-                findEmail,
+                FIND_EMAIL,
                 Integer.class,
                 verifiableEmail.email()
         )
@@ -43,10 +68,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public boolean isUsernameExists(Username verifiableUsername) {
-        String findEmail = "Select COUNT(username) from UserAccount where username = ?";
-
         Integer count = jdbc.read(
-                findEmail,
+                FIND_USERNAME,
                 Integer.class,
                 verifiableUsername.username()
         )
@@ -57,46 +80,22 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public Result<UserAccount, Throwable> findById(UUID userId) {
-        return jdbc.read("Select * from UserAccount where id = ?", this::userAccountMapper, userId.toString());
+        return jdbc.read(FIND_BY_ID, this::userAccountMapper, userId.toString());
     }
 
     @Override
     public Result<UserAccount, Throwable> findByUsername(Username username) {
-        return jdbc.read("Select * from UserAccount where username = ?", this::userAccountMapper, username.username());
+        return jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username.username());
     }
 
     @Override
     public Result<UserAccount, Throwable> findByEmail(Email email) {
-        return jdbc.read("Select * from UserAccount where email = ?", this::userAccountMapper, email.email());
+        return jdbc.read(FIND_BY_EMAIL, this::userAccountMapper, email.email());
     }
 
     @Override
     public Result<EmailConfirmationToken, Throwable> findToken(UUID token) {
-        String selectUserToken =
-                """
-                SELECT
-                t.id AS token_id,
-                t.token AS token,
-                t.is_confirmed AS token_confirmation,
-                t.creation_date AS token_creation_date,
-                
-                u.id AS id,
-                u.username AS username,
-                u.email AS email,
-                u.password AS password,
-                u.user_role AS user_role,
-                u.rating AS rating,
-                u.rating_deviation AS rating_deviation,
-                u.rating_volatility AS rating_volatility,
-                u.is_enable AS is_enable,
-                u.creation_date AS creation_date,
-                u.last_updated_date AS last_updated_date
-                FROM UserToken t
-                INNER JOIN UserAccount u ON t.user_id = u.id
-                WHERE t.token = ?
-                """;
-
-        return jdbc.read(selectUserToken, this::userTokenMapper, token.toString());
+        return jdbc.read(FIND_TOKEN, this::userTokenMapper, token.toString());
     }
 
     private EmailConfirmationToken userTokenMapper(final ResultSet rs) throws SQLException {

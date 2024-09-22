@@ -20,20 +20,18 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     private final JDBC jdbc;
 
+    public static final String GET_CHESS_GAME = """
+            SELECT id, pgn_chess_representation, fen_representations_of_board
+            WHERE chess_game_id = ?
+            """;
+
     JdbcOutboundChessRepository(JDBC jdbc) {
         this.jdbc = jdbc;
     }
 
     @Override
     public Result<ChessGameHistory, Throwable> findById(final UUID chessGameId) {
-        Objects.requireNonNull(chessGameId);
-
-        final String sql = """
-                SELECT id, pgn_chess_representation, fen_representations_of_board
-                WHERE chess_game_id = ?
-                """;
-
-        return jdbc.read(sql, this::chessGameMapper, chessGameId);
+        return jdbc.read(GET_CHESS_GAME, this::chessGameMapper, Objects.requireNonNull(chessGameId));
     }
 
     private ChessGameHistory chessGameMapper(final ResultSet rs) throws SQLException {

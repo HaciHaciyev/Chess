@@ -14,6 +14,38 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     private final JDBC jdbc;
 
+    private static final String INSERT_USER_ACCOUNT = """
+            INSERT INTO UserAccount
+                (id, username, email, password, user_role,
+                rating, rating_deviation, rating_volatility,
+                is_enable, creation_date, last_updated_date)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            """;
+
+    private static final String INSERT_USER_TOKEN = """
+            INSERT INTO UserToken
+                (id, user_id, token, is_confirmed,
+                creation_date, expiration_date)
+                VALUES (?,?,?,?,?,?)
+            """;
+
+    private static final String UPDATE_USER_TOKEN_AND_ACCOUNT = """
+            UPDATE UserToken SET
+                    is_confirmed = ?
+                WHERE id = ?;
+
+            UPDATE UserAccount SET
+                    is_enable = ?,
+                    user_role = ?
+                WHERE id = ?;
+            """;
+
+    private static final String DELETE_USER_TOKEN_AND_ACCOUNT = """
+            DELETE FROM UserToken WHERE id = ?;
+            DELETE FROM UserAccount WHERE id = ?;
+            """;
+
+
     JdbcInboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;
     }
@@ -21,15 +53,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     @Override
     public void save(final UserAccount userAccount) {
         Log.info("Save user {%s}.".formatted(userAccount.toString()));
-        final String sql = """
-                    INSERT INTO UserAccount
-                        (id, username, email, password, user_role,
-                        rating, rating_deviation, rating_volatility,
-                        is_enable, creation_date, last_updated_date)
-                        VALUES (?,?,?,?,?,?,?,?,?,?,?)
-                    """;
 
-        jdbc.write(sql,
+        jdbc.write(INSERT_USER_ACCOUNT,
             userAccount.getId().toString(),
             userAccount.getUsername().username(),
             userAccount.getEmail().email(),
@@ -49,14 +74,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     @Override
     public void saveUserToken(final EmailConfirmationToken token) {
         Log.info("Save user token {%s}.".formatted(token.toString()));
-        final String sql = """
-                    INSERT INTO UserToken
-                        (id, user_id, token, is_confirmed,
-                        creation_date, expiration_date)
-                        VALUES (?,?,?,?,?,?)
-                    """;
 
-        jdbc.write(sql,
+        jdbc.write(INSERT_USER_TOKEN,
             token.getTokenId().toString(),
             token.getUserAccount().getId().toString(),
             token.getToken().token().toString(),
@@ -75,18 +94,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             throw new IllegalArgumentException("Token need to be confirmed & UserAccount need to be enabled");
         }
 
-        final String sql = """
-                    UPDATE UserToken SET
-                            is_confirmed = ?
-                        WHERE id = ?;
-                    
-                    UPDATE UserAccount SET
-                            is_enable = ?,
-                            user_role = ?
-                        WHERE id = ?;
-                    """;
-
-        jdbc.write(sql,
+        jdbc.write(UPDATE_USER_TOKEN_AND_ACCOUNT,
             token.isConfirmed(),
             token.getTokenId().toString(),
             token.getUserAccount().isEnable(),
@@ -108,12 +116,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             throw new IllegalAccessException("It is prohibited to delete an accessible account");
         }
 
-        final String sql = """
-                    DELETE FROM UserToken WHERE id = ?;
-                    DELETE FROM UserAccount WHERE id = ?;
-                    """;
-
-        jdbc.write(sql,
+        jdbc.write(DELETE_USER_TOKEN_AND_ACCOUNT,
             token.getTokenId().toString(),
             token.getUserAccount().getId().toString()
         )

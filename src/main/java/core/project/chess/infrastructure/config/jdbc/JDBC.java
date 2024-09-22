@@ -42,10 +42,8 @@ public class JDBC {
             return Result.failure(new InvalidDataArgumentException("Invalid class type. Function jdbc.queryForObjets() can only provide primitive wrappers."));
         }
 
-        try (
-                final Connection connection = dataSource.getConnection();
-                final PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement statement = connection.prepareStatement(sql)) {
             connection.setReadOnly(true);
             if (params != null && params.length > 0) {
                 setParameters(statement, params);
@@ -58,15 +56,8 @@ public class JDBC {
 
                 return Result.success((T) wrapperMapFunctions.get(type).apply(resultSet));
             }
-
         } catch (SQLException e) {
-            final String sqlStatus = e.getSQLState();
-
-            if (sqlStatus.equals(SQL_STATUS_NO_DATA)) {
-                return Result.failure(new DataNotFoundException("Data in query for object was not found."));
-            }
-
-            return Result.failure(new RepositoryDataException(e.getMessage()));
+            return handleSQLException(e);
         }
     }
 
@@ -74,10 +65,8 @@ public class JDBC {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(extractor);
 
-        try (
-                final Connection connection = dataSource.getConnection();
-                final PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement statement = connection.prepareStatement(sql)) {
             connection.setReadOnly(true);
             if (params != null && params.length > 0) {
                 setParameters(statement, params);
@@ -90,15 +79,8 @@ public class JDBC {
 
                 return Result.success(extractor.extractData(resultSet));
             }
-
         } catch (SQLException e) {
-            final String sqlStatus = e.getSQLState();
-
-            if (sqlStatus.equals(SQL_STATUS_NO_DATA)) {
-                return Result.failure(new DataNotFoundException("Data was not found."));
-            }
-
-            return Result.failure(new RepositoryDataException(e.getMessage()));
+            return handleSQLException(e);
         }
     }
 
@@ -106,11 +88,9 @@ public class JDBC {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(rowMapper);
 
-        try (
-                final Connection connection = dataSource.getConnection();
-                final PreparedStatement statement = connection.prepareStatement(sql);
-                final ResultSet resultSet = statement.executeQuery()
-        ) {
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement statement = connection.prepareStatement(sql);
+             final ResultSet resultSet = statement.executeQuery()) {
             final List<T> results = new ArrayList<>();
 
             int rowNum = 0;
@@ -120,15 +100,8 @@ public class JDBC {
             }
 
             return Result.success(results);
-
         } catch (SQLException e) {
-            final String sqlStatus = e.getSQLState();
-
-            if (sqlStatus.equals(SQL_STATUS_NO_DATA)) {
-                return Result.failure(new DataNotFoundException("Data was not found."));
-            }
-
-            return Result.failure(new RepositoryDataException(e.getMessage()));
+            return handleSQLException(e);
         }
     }
 
@@ -136,10 +109,8 @@ public class JDBC {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(args);
 
-        try (
-                final Connection connection = dataSource.getConnection();
-                final PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement statement = connection.prepareStatement(sql)) {
             connection.setAutoCommit(false);
 
             try {
@@ -162,10 +133,8 @@ public class JDBC {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(args);
 
-        try (
-                final Connection connection = dataSource.getConnection();
-                final PreparedStatement statement = connection.prepareStatement(sql)
-        ) {
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement statement = connection.prepareStatement(sql)) {
             connection.setAutoCommit(false);
 
             try {
@@ -184,6 +153,28 @@ public class JDBC {
             return Result.failure(new RepositoryDataException(e.getMessage()));
         }
     }
+
+    public Result<Boolean, Throwable> writeBatch(final String sql, final List<Object[]> batchArgs) {
+        Objects.requireNonNull(sql);
+        Objects.requireNonNull(batchArgs);
+
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement statement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
+
+            for (Object[] args : batchArgs) {
+                setParameters(statement, args);
+                statement.addBatch();
+            }
+
+            statement.executeBatch();
+            connection.commit();
+            return Result.success(true);
+        } catch (SQLException e) {
+            return Result.failure(new RepositoryDataException(e.getMessage()));
+        }
+    }
+
 
     private void setParameters(final PreparedStatement statement, final Object... params) throws SQLException {
         for (int i = 0; i < params.length; i++) {
@@ -250,5 +241,15 @@ public class JDBC {
                     }
                 }
         );
+    }
+
+    private <T> Result<T, Throwable> handleSQLException(final SQLException e) {
+        final String sqlStatus = e.getSQLState();
+
+        if (sqlStatus.equals(SQL_STATUS_NO_DATA)) {
+            return Result.failure(new DataNotFoundException("Data was not found."));
+        }
+
+        return Result.failure(new RepositoryDataException(e.getMessage()));
     }
 }
