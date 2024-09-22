@@ -24,12 +24,11 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
         final String sql = """
                     INSERT INTO ChessGame
-                        (id, chess_board_id, player_for_white_rating,
-                        player_for_black_rating, time_controlling_type,
-                        creation_date, last_updated_date, is_game_over)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                        (id, player_for_white_rating, player_for_black_rating,
+                         time_controlling_type, creation_date, last_updated_date, is_game_over)
+                        VALUES (?, ?, ?, ?, ?, ?, ?);
                     
-                    INSERT INTO ChessGamePlayers
+                    INSERT INTO GamePlayers
                         (chess_game_id, player_for_white_id, player_for_black_id)
                         VALUES (?, ?, ?);
                     """;
@@ -37,10 +36,9 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         jdbc.update(sql,
 
             chessGame.getChessGameId().toString(),
-            chessGame.getChessBoard().getChessBoardId().toString(),
             chessGame.getPlayerForBlackRating().rating(),
             chessGame.getPlayerForBlackRating().rating(),
-            chessGame.getTimeControllingTYPE(),
+            chessGame.getTimeControllingTYPE().toString(),
             chessGame.getSessionEvents().creationDate(),
             chessGame.getSessionEvents().lastUpdateDate(),
             false,
