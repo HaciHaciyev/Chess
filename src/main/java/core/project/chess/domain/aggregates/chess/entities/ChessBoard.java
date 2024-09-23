@@ -6,6 +6,7 @@ import core.project.chess.domain.aggregates.chess.pieces.Bishop;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.pieces.*;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
+import core.project.chess.infrastructure.utilities.chess.ChessMove;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import lombok.AccessLevel;
@@ -72,8 +73,8 @@ public class ChessBoard {
     private final Map<String, Byte> hashCodeOfBoard;
     private final ArrayList<String> fenRepresentationsOfBoard;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
-    private final List<Piece> capturedWhitePieces = new ArrayList<>();
-    private final List<Piece> capturedBlackPieces = new ArrayList<>();
+    private final List<Piece> piecesCapturedByWhite = new ArrayList<>();
+    private final List<Piece> piecesCapturedByBlack = new ArrayList<>();
     private static final Coordinate initialWhiteKingPosition = Coordinate.e1;
     private static final Coordinate initialBlackKingPosition = Coordinate.e8;
     private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
@@ -159,13 +160,15 @@ public class ChessBoard {
     }
 
     public List<Piece> whiteCaptures() {
-        capturedWhitePieces.sort(this::pieceComparator);
-        return List.copyOf(capturedWhitePieces);
+        return piecesCapturedByWhite.stream()
+                .sorted(this::pieceComparator)
+                .toList();
     }
 
     public List<Piece> blackCaptures() {
-        capturedBlackPieces.sort(this::pieceComparator);
-        return List.copyOf(capturedBlackPieces);
+        return piecesCapturedByBlack.stream()
+                .sorted(this::pieceComparator)
+                .toList();
     }
 
     /**
@@ -802,22 +805,22 @@ public class ChessBoard {
                 Field field = fieldMap.get(latestMovement().orElseThrow().getSecond());
 
                 if (piece.color().equals(Color.WHITE)) {
-                    capturedWhitePieces.add(field.piece);
+                    piecesCapturedByWhite.add(field.piece);
                 }
 
                 if (piece.color().equals(Color.BLACK)) {
-                    capturedBlackPieces.add(field.piece);
+                    piecesCapturedByBlack.add(field.piece);
                 }
 
                 field.removeFigure();
             }
 
             if (piece.color().equals(Color.WHITE) && !captureOnPassage) {
-                capturedWhitePieces.add(endField.piece);
+                piecesCapturedByWhite.add(endField.piece);
             }
 
             if (piece.color().equals(Color.BLACK) && !captureOnPassage) {
-                capturedBlackPieces.add(endField.piece);
+                piecesCapturedByBlack.add(endField.piece);
             }
 
             endField.removeFigure();
@@ -1206,14 +1209,12 @@ public class ChessBoard {
 
         final Piece previouslyCapturedPiece;
         if (figuresTurn.equals(Color.WHITE)) {
-            previouslyCapturedPiece = capturedBlackPieces.getLast();
-            capturedBlackPieces.removeLast();
+            previouslyCapturedPiece = piecesCapturedByBlack.removeLast();
             endedField.addFigure(previouslyCapturedPiece);
             return;
         }
 
-        previouslyCapturedPiece = capturedWhitePieces.getLast();
-        capturedWhitePieces.removeLast();
+        previouslyCapturedPiece = piecesCapturedByWhite.removeLast();
         endedField.addFigure(previouslyCapturedPiece);
     }
 
@@ -1551,4 +1552,5 @@ public class ChessBoard {
             default -> throw new IllegalStateException("Unexpected value: " + piece);
         };
     }
+
 }
