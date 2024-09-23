@@ -214,6 +214,10 @@ public class ChessBoard {
      * @return String representation of ChessBoard.
      */
     public String actualRepresentationOfChessBoard() {
+        if (fenRepresentationsOfBoard.isEmpty()) {
+            return this.toString();
+        }
+
         return fenRepresentationsOfBoard.getLast();
     }
 

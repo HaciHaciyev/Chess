@@ -322,6 +322,24 @@ public class AlgebraicNotation {
         };
     }
 
+    public static Piece fromSymbol(String symbol) {
+        return switch (symbol) {
+            case "K" -> new King(Color.WHITE);
+            case "Q" -> new Queen(Color.WHITE);
+            case "R" -> new Rook(Color.WHITE);
+            case "B" -> new Bishop(Color.WHITE);
+            case "N" -> new Knight(Color.WHITE);
+            case "P" -> new Pawn(Color.WHITE);
+            case "k" -> new King(Color.BLACK);
+            case "q" -> new Queen(Color.BLACK);
+            case "r" -> new Rook(Color.BLACK);
+            case "b" -> new Bishop(Color.BLACK);
+            case "n" -> new Knight(Color.BLACK);
+            case "p" -> new Pawn(Color.BLACK);
+            default -> throw new IllegalArgumentException("Unknown piece symbol: " + symbol);
+        };
+    }
+
     public PieceTYPE pieceTYPE() {
         final char firstChar = this.algebraicNotation.charAt(0);
 

@@ -114,7 +114,6 @@ public class JDBC {
 
         try (final Connection connection = dataSource.getConnection();
              final PreparedStatement statement = connection.prepareStatement(sql)) {
-            connection.setReadOnly(true);
             if (params != null && params.length > 0) {
                 setParameters(statement, params);
             }
@@ -165,7 +164,6 @@ public class JDBC {
 
         try (final Connection connection = dataSource.getConnection();
              final PreparedStatement statement = connection.prepareStatement(sql)) {
-            connection.setReadOnly(true);
             if (params != null && params.length > 0) {
                 setParameters(statement, params);
             }
@@ -248,18 +246,10 @@ public class JDBC {
 
         try (final Connection connection = dataSource.getConnection();
              final PreparedStatement statement = connection.prepareStatement(sql)) {
-            connection.setAutoCommit(false);
+            setParameters(statement, args);
+            statement.executeUpdate();
 
-            try {
-                setParameters(statement, args);
-                statement.executeUpdate();
-                connection.commit();
-
-                return Result.success(true);
-            } catch (SQLException e) {
-                connection.rollback();
-                return Result.failure(new RepositoryDataException(e.getMessage()));
-            }
+            return Result.success(Boolean.TRUE);
         } catch (SQLException e) {
             return Result.failure(new RepositoryDataException(e.getMessage()));
         }
@@ -307,20 +297,12 @@ public class JDBC {
 
         try (final Connection connection = dataSource.getConnection();
              final PreparedStatement statement = connection.prepareStatement(sql)) {
-            connection.setAutoCommit(false);
+            setParameters(statement, args);
+            final Array createdArray = connection.createArrayOf(arrayDefinition, array);
+            statement.setArray(arrayIndex, createdArray);
+            statement.executeUpdate();
 
-            try {
-                setParameters(statement, args);
-                final Array createdArray = connection.createArrayOf(arrayDefinition, array);
-                statement.setArray(arrayIndex, createdArray);
-                statement.executeUpdate();
-                connection.commit();
-
-                return Result.success(true);
-            } catch (SQLException e) {
-                connection.rollback();
-                return Result.failure(new RepositoryDataException(e.getMessage()));
-            }
+            return Result.success(true);
         } catch (SQLException e) {
             return Result.failure(new RepositoryDataException(e.getMessage()));
         }
@@ -357,7 +339,6 @@ public class JDBC {
 
         try (final Connection connection = dataSource.getConnection();
              final PreparedStatement statement = connection.prepareStatement(sql)) {
-            connection.setAutoCommit(false);
 
             for (Object[] args : batchArgs) {
                 setParameters(statement, args);
@@ -365,7 +346,7 @@ public class JDBC {
             }
 
             statement.executeBatch();
-            connection.commit();
+
             return Result.success(true);
         } catch (SQLException e) {
             return Result.failure(new RepositoryDataException(e.getMessage()));

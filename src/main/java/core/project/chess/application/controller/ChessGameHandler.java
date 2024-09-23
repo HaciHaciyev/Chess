@@ -1,13 +1,15 @@
 package core.project.chess.application.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.model.ChessGameMessage;
-import core.project.chess.application.model.ChessMovementForm;
 import core.project.chess.application.model.GameParameters;
 import core.project.chess.application.service.ChessGameService;
+import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
@@ -85,7 +87,7 @@ public class ChessGameHandler {
         gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>()));
         inboundChessRepository.completelySaveStartedChessGame(chessGame);
 
-        return "You partner for chess successfully founded. Starting to create session for the game.";
+        return "You partner for chess successfully founded. Starting to create session for the game {%s}.".formatted(chessGame.getChessGameId());
     }
 
     @OnOpen
@@ -123,9 +125,15 @@ public class ChessGameHandler {
 
         final ChessGame chessGame = pair.getFirst();
 
-        final ChessMovementForm chessMovementForm = objectMapper.convertValue(message, ChessMovementForm.class);
-
-        chessGame.makeMovement(username, chessMovementForm.from(), chessMovementForm.to(), chessMovementForm.inCaseOfPromotion());
+        final JsonNode node = objectMapper.readTree(message);
+        chessGame.makeMovement(
+                username,
+                Coordinate.valueOf(node.get("from").asText()),
+                Coordinate.valueOf(node.get("to").asText()),
+                node.has("inCaseOfPromotion") && !node.get("inCaseOfPromotion").isNull()
+                        ? AlgebraicNotation.fromSymbol(node.get("inCaseOfPromotion").asText())
+                        : null
+        );
 
         final ChessGameMessage chessBoardMessage = new ChessGameMessage(
                 pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(),
