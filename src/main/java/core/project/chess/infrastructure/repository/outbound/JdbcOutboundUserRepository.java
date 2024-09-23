@@ -56,7 +56,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public boolean isEmailExists(Email verifiableEmail) {
-        Integer count = jdbc.read(
+        Integer count = jdbc.readObjectOf(
                 FIND_EMAIL,
                 Integer.class,
                 verifiableEmail.email()
@@ -68,7 +68,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public boolean isUsernameExists(Username verifiableUsername) {
-        Integer count = jdbc.read(
+        Integer count = jdbc.readObjectOf(
                 FIND_USERNAME,
                 Integer.class,
                 verifiableUsername.username()

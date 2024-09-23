@@ -90,55 +90,6 @@ public class JDBC {
     }
 
     /**
-     * Executes a SQL query that returns a single value of a specified wrapper type.
-     *
-     * @param sql  the SQL query to execute
-     * @param type the expected return type, which must be a wrapper type (e.g., Integer.class)
-     * @param params optional parameters for the SQL query
-     * @param <T>  the type of the result
-     * @return a {@code Result<T, Throwable>} containing the result or an error
-     * @throws NullPointerException if {@code sql} or {@code type} is {@code null}
-     * @throws InvalidDataArgumentException if the specified type is not a valid wrapper type
-     *
-     * @example
-     * <pre>
-     * Integer count = jdbc.read(
-     *          "SELECT COUNT(email) FROM YOU_TABLE WHERE email = ?",
-     *          Integer.class,
-     *          verifiableEmail.email()
-     * )
-     *          .orElseThrow();
-     * </pre>
-     */
-    public <T> Result<T, Throwable> read(final String sql, final Class<T> type, @OptionalArgument final Object... params) {
-        Objects.requireNonNull(sql);
-        Objects.requireNonNull(type);
-
-        final boolean isWrapper = wrapperTypes.contains(type);
-        if (!isWrapper || type == void.class) {
-            return Result.failure(new InvalidDataArgumentException("Invalid class type. Function jdbc.queryForObjets() can only provide primitive wrappers."));
-        }
-
-        try (final Connection connection = dataSource.getConnection();
-             final PreparedStatement statement = connection.prepareStatement(sql)) {
-            connection.setReadOnly(true);
-            if (params != null && params.length > 0) {
-                setParameters(statement, params);
-            }
-
-            try (final ResultSet resultSet = statement.executeQuery()) {
-                if (!resultSet.next()) {
-                    return Result.failure(new DataNotFoundException("Data in query for object was not found."));
-                }
-
-                return Result.success((T) wrapperMapFunctions.get(type).apply(resultSet));
-            }
-        } catch (SQLException e) {
-            return handleSQLException(e);
-        }
-    }
-
-    /**
      * Executes a SQL query and uses a {@code ResultSetExtractor} to map the result set to an object.
      *
      * @param sql      the SQL query to execute
@@ -174,6 +125,57 @@ public class JDBC {
                 }
 
                 return Result.success(extractor.extractData(resultSet));
+            }
+        } catch (SQLException e) {
+            return handleSQLException(e);
+        }
+    }
+
+    /**
+     * Executes a SQL query that returns a single value of a specified wrapper type.
+     *
+     * @param sql  the SQL query to execute
+     * @param type the expected return type, which must be a wrapper type (e.g., Integer.class)
+     * @param params optional parameters for the SQL query
+     * @param <T>  the type of the result
+     * @return a {@code Result<T, Throwable>} containing the result or an error
+     * @throws NullPointerException if {@code sql} or {@code type} is {@code null}
+     * @throws InvalidDataArgumentException if the specified type is not a valid wrapper type
+     *
+     * @example
+     * <pre>
+     * Integer count = jdbc.readObjectOf(
+     *          "SELECT COUNT(email) FROM YOU_TABLE WHERE email = ?",
+     *          Integer.class,
+     *          verifiableEmail.email()
+     * )
+     *          .orElseThrow();
+     * </pre>
+     */
+    public <T> Result<T, Throwable> readObjectOf(final String sql, final Class<T> type, @OptionalArgument final Object... params) {
+        Objects.requireNonNull(sql);
+        Objects.requireNonNull(type);
+
+        final boolean isWrapper = wrapperTypes.contains(type);
+        if (!isWrapper && type != String.class || type == void.class) {
+            return Result.failure(
+                    new InvalidDataArgumentException("Invalid class type. Function jdbc.queryForObjets() can only provide primitive wrappers and String.")
+            );
+        }
+
+        try (final Connection connection = dataSource.getConnection();
+             final PreparedStatement statement = connection.prepareStatement(sql)) {
+            connection.setReadOnly(true);
+            if (params != null && params.length > 0) {
+                setParameters(statement, params);
+            }
+
+            try (final ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return Result.failure(new DataNotFoundException("Data in query for object was not found."));
+                }
+
+                return Result.success((T) wrapperMapFunctions.get(type).apply(resultSet));
             }
         } catch (SQLException e) {
             return handleSQLException(e);
@@ -390,60 +392,67 @@ public class JDBC {
      */
     private static Map<Class<?>, Function<ResultSet, ?>> getWrapperMap() {
         return Map.of(
+                String.class, rs -> {
+                    try {
+                        return rs.getString(1);
+                    } catch (SQLException e) {
+                        return Result.failure(e);
+                    }
+                },
                 Boolean.class, rs -> {
                     try {
                         return rs.getBoolean(1);
                     } catch (SQLException e) {
-                        throw new RepositoryDataException();
+                        return Result.failure(e);
                     }
                 },
                 Character.class, rs -> {
                     try {
                         return rs.getString(1).charAt(0);
                     } catch (SQLException e) {
-                        throw new RepositoryDataException();
+                        return Result.failure(e);
                     }
                 },
                 Byte.class, rs -> {
                     try {
                         return rs.getByte(1);
                     } catch (SQLException e) {
-                        throw new RepositoryDataException();
+                        return Result.failure(e);
                     }
                 },
                 Short.class, rs -> {
                     try {
                         return rs.getShort(1);
                     } catch (SQLException e) {
-                        throw new RepositoryDataException();
+                        return Result.failure(e);
                     }
                 },
                 Integer.class, rs -> {
                     try {
                         return rs.getInt(1);
                     } catch (SQLException e) {
-                        throw new RepositoryDataException();
+                        return Result.failure(e);
                     }
                 },
                 Long.class, rs -> {
                     try {
                         return rs.getLong(1);
                     } catch (SQLException e) {
-                        throw new RepositoryDataException();
+                        return Result.failure(e);
                     }
                 },
                 Float.class, rs -> {
                     try {
                         return rs.getFloat(1);
                     } catch (SQLException e) {
-                        throw new RepositoryDataException();
+                        return Result.failure(e);
                     }
                 },
                 Double.class, rs -> {
                     try {
                         return rs.getDouble(1);
                     } catch (SQLException e) {
-                        throw new RepositoryDataException();
+                        return Result.failure(e);
                     }
                 }
         );
