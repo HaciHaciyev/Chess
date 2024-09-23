@@ -152,7 +152,6 @@ public record King(Color color)
      */
     public Operations kingStatus(final ChessBoard chessBoard, final Color kingColor, final Pair<Coordinate, Coordinate> latestMovement) {
         ChessBoardNavigator boardNavigator = new ChessBoardNavigator(chessBoard);
-
         return checkOrMate(boardNavigator, kingColor, latestMovement);
     }
 

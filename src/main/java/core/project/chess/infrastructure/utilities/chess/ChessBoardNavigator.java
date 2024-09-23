@@ -24,8 +24,8 @@ public record ChessBoardNavigator(ChessBoard board) {
         int turn = board.countOfMovement() + 1;
         String nextMove = fen.charAt(space + 1) == 'w' ? "White's turn" : "Black's turn";
 
-        String whiteKingStatus = "NOT";
-        String blackKingStatus = "NOT";
+        String whiteKingStatus = "NOT           ";
+        String blackKingStatus = "NOT           ";
 
         String latestMovement;
         boolean movesMadePreviously = board.latestMovement().isPresent();
