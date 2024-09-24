@@ -46,7 +46,6 @@ public class UserController {
 
     @POST @Path("/login")
     public final Response login(LoginForm loginForm) {
-        Log.info("Login process.");
         Objects.requireNonNull(loginForm);
 
         final Username username = Result.ofThrowable(
@@ -78,7 +77,6 @@ public class UserController {
 
     @POST @Path("/registration")
     public final Response registration(RegistrationForm registrationForm) {
-        Log.info("Registration process.");
         Objects.requireNonNull(registrationForm);
 
         if (!Objects.equals(

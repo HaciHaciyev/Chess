@@ -7,6 +7,7 @@ import core.project.chess.domain.aggregates.user.events.TokenEvents;
 import core.project.chess.domain.aggregates.user.value_objects.*;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
+import core.project.chess.infrastructure.exceptions.persistant.DataNotFoundException;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -56,26 +57,44 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public boolean isEmailExists(Email verifiableEmail) {
-        Integer count = jdbc.readObjectOf(
+        Result<Integer, Throwable> result = jdbc.readObjectOf(
                 FIND_EMAIL,
                 Integer.class,
                 verifiableEmail.email()
-        )
-                .orElseThrow();
+        );
 
-        return count != null && count > 0;
+        if (!result.success()) {
+
+            if (result.throwable() instanceof DataNotFoundException) {
+                return false;
+            } else {
+                Log.info(result.throwable());
+            }
+
+        }
+
+        return result.value() != null && result.value() > 0;
     }
 
     @Override
     public boolean isUsernameExists(Username verifiableUsername) {
-        Integer count = jdbc.readObjectOf(
+        Result<Integer, Throwable> result = jdbc.readObjectOf(
                 FIND_USERNAME,
                 Integer.class,
                 verifiableUsername.username()
-        )
-                .orElseThrow();
+        );
 
-        return count != null && count > 0;
+        if (!result.success()) {
+
+            if (result.throwable() instanceof DataNotFoundException) {
+                return false;
+            } else {
+                Log.info(result.throwable());
+            }
+
+        }
+
+        return result.value() != null && result.value() > 0;
     }
 
     @Override

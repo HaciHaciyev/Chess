@@ -16,6 +16,8 @@ import java.util.UUID;
 @ApplicationScoped
 public class ChessGameService {
 
+    public static final double MAX_RATING_DIFF = 150.00;
+
     public boolean isOpponent(
             final UserAccount player, final GameParameters gameParameters,
             final UserAccount opponent, final GameParameters opponentGameParameters
@@ -27,6 +29,11 @@ public class ChessGameService {
 
         final boolean sameTimeControlling = gameParameters.timeControllingTYPE().equals(opponentGameParameters.timeControllingTYPE());
         if (!sameTimeControlling) {
+            return false;
+        }
+
+        final boolean validRatingDiff = Math.abs(player.getRating().rating() - opponent.getRating().rating()) <= MAX_RATING_DIFF;
+        if (!validRatingDiff) {
             return false;
         }
 

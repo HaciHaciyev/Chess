@@ -16,6 +16,7 @@ import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.utilities.containers.Pair;
+import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
@@ -61,13 +62,16 @@ public class ChessGameHandler {
 
     @POST @Path("/start-game") @RolesAllowed("User")
     public String startGame(@QueryParam("color") Color color, @QueryParam("type") ChessGame.TimeControllingTYPE type) {
-        Log.info("Create a game.");
-
         final var gameParameters = new GameParameters(
                 color, Objects.requireNonNullElse(type, ChessGame.TimeControllingTYPE.DEFAULT), LocalDateTime.now()
         );
 
-        final Username username = new Username(this.jwt.getName());
+        final Username username = Result.ofThrowable(
+                () -> new Username(this.jwt.getName())
+        ).orElseThrow(
+                () -> new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build())
+        );
+
         final UserAccount firstPlayer = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
@@ -94,9 +98,13 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session, @PathParam("gameId") final String gameId) throws JsonProcessingException {
-        Log.info("Open websocket session.");
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
+
+        final boolean isGameSessionExists = gameSessions.containsKey(UUID.fromString(gameId));
+        if (!isGameSessionExists) {
+            return;
+        }
 
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(UUID.fromString(gameId));
         pair.getSecond().add(session);
@@ -109,33 +117,56 @@ public class ChessGameHandler {
     }
 
     @OnMessage
-    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message)
-            throws JsonProcessingException, ParseException {
-        Log.info("Handle message.");
+    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) throws JsonProcessingException {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
         Objects.requireNonNull(message);
 
         final String token = session.getRequestParameterMap().get("token").getFirst();
-        final JsonWebToken jsonWebToken = jwtParser.parse(token);
+        if (Objects.isNull(token)) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+        }
 
-        final String username = jsonWebToken.getName();
-        Objects.requireNonNull(username);
+        final JsonWebToken jsonWebToken = Result.ofThrowable(
+                () -> {
+                    try {
+                        return jwtParser.parse(token);
+                    } catch (ParseException e) {
+                        throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid JWT token.").build());
+                    }
+                }
+        ).orElseThrow();
+
+        final String username = Objects.requireNonNull(jsonWebToken).getName();
 
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(UUID.fromString(gameId));
-        Objects.requireNonNull(pair);
+        if (Objects.isNull(pair)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This game session is not exits.").build());
+        }
 
         final ChessGame chessGame = pair.getFirst();
 
-        final JsonNode node = objectMapper.readTree(message);
-        chessGame.makeMovement(
+        final JsonNode node = Result.ofThrowable(
+                () -> {
+                    try {
+                        return objectMapper.readTree(message);
+                    } catch (JsonProcessingException e) {
+                        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON response.").build());
+                    }
+                }
+        ).orElseThrow();
+
+        Result.ofThrowable(
+                () -> chessGame.makeMovement(
                 username,
                 Coordinate.valueOf(node.get("from").asText()),
                 Coordinate.valueOf(node.get("to").asText()),
                 node.has("inCaseOfPromotion") && !node.get("inCaseOfPromotion").isNull()
                         ? AlgebraicNotation.fromSymbol(node.get("inCaseOfPromotion").asText())
                         : null
-        );
+                )
+        )
+                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid chess movement.").build()));
 
         final ChessGameMessage chessBoardMessage = new ChessGameMessage(
                 pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(),
@@ -153,11 +184,15 @@ public class ChessGameHandler {
 
     @OnClose
     public void onClose(final Session session, @PathParam("gameId") final String gameId) {
-        Log.info("Handle close.");
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
 
         final UUID gameUuid = UUID.fromString(gameId);
+
+        final boolean isGameSessionExists = gameSessions.containsKey(gameUuid);
+        if (!isGameSessionExists) {
+            return;
+        }
 
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(gameUuid);
         Objects.requireNonNull(pair);
