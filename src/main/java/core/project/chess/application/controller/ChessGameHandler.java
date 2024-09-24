@@ -185,7 +185,7 @@ public class ChessGameHandler {
 
     private void sendMessage(final Session session, final String message) {
         try {
-            session.getBasicRemote().sendText(message);
+            session.getAsyncRemote().sendText(message);
         } catch (Exception e) {
             Log.info(e.getMessage());
         }
