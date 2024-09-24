@@ -28,12 +28,14 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Path("/chess-game")
 @ServerEndpoint("/chess-game/{gameId}")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -142,6 +144,10 @@ public class ChessGameHandler {
 
         for (Session currentSession : pair.getSecond()) {
             sendMessage(currentSession, objectMapper.writeValueAsString(chessBoardMessage));
+        }
+
+        if (chessGame.gameResult().isPresent()) {
+            inboundChessRepository.completelyUpdateCompletedGame(chessGame);
         }
     }
 
