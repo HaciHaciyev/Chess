@@ -6,7 +6,6 @@ import core.project.chess.domain.aggregates.chess.pieces.Bishop;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.pieces.*;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
-import core.project.chess.infrastructure.utilities.chess.ChessMove;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import lombok.AccessLevel;
@@ -73,8 +72,8 @@ public class ChessBoard {
     private final Map<String, Byte> hashCodeOfBoard;
     private final ArrayList<String> fenRepresentationsOfBoard;
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
-    private final List<Piece> piecesCapturedByWhite = new ArrayList<>();
-    private final List<Piece> piecesCapturedByBlack = new ArrayList<>();
+    private final List<Piece> capturedWhitePieces = new ArrayList<>();
+    private final List<Piece> capturedBlackPieces = new ArrayList<>();
     private static final Coordinate initialWhiteKingPosition = Coordinate.e1;
     private static final Coordinate initialBlackKingPosition = Coordinate.e8;
     private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
@@ -159,14 +158,34 @@ public class ChessBoard {
         return fieldMap.get(coordinate);
     }
 
+    /**
+     * Retrieves a sorted list of pieces that have been captured by the white player.
+     * <p>
+     * This method accesses the collection of captured black pieces, sorts them using
+     * the specified piece comparator, and returns the sorted list. The sorting is done
+     * to ensure that the captured pieces are presented in a consistent order.
+     *
+     * @return A list of {@link Piece} objects representing the pieces captured by the
+     *         white player, sorted according to the piece comparator.
+     */
     public List<Piece> whiteCaptures() {
-        return piecesCapturedByWhite.stream()
+        return capturedBlackPieces.stream()
                 .sorted(this::pieceComparator)
                 .toList();
     }
 
+    /**
+     * Retrieves a sorted list of pieces that have been captured by the black player.
+     * <p>
+     * This method accesses the collection of captured white pieces, sorts them using
+     * the specified piece comparator, and returns the sorted list. The sorting is done
+     * to ensure that the captured pieces are presented in a consistent order.
+     *
+     * @return A list of {@link Piece} objects representing the pieces captured by the
+     *         black player, sorted according to the piece comparator.
+     */
     public List<Piece> blackCaptures() {
-        return piecesCapturedByBlack.stream()
+        return capturedWhitePieces.stream()
                 .sorted(this::pieceComparator)
                 .toList();
     }
@@ -809,22 +828,22 @@ public class ChessBoard {
                 Field field = fieldMap.get(latestMovement().orElseThrow().getSecond());
 
                 if (piece.color().equals(Color.WHITE)) {
-                    piecesCapturedByWhite.add(field.piece);
+                    capturedWhitePieces.add(field.piece);
                 }
 
                 if (piece.color().equals(Color.BLACK)) {
-                    piecesCapturedByBlack.add(field.piece);
+                    capturedBlackPieces.add(field.piece);
                 }
 
                 field.removeFigure();
             }
 
             if (piece.color().equals(Color.WHITE) && !captureOnPassage) {
-                piecesCapturedByWhite.add(endField.piece);
+                capturedWhitePieces.add(endField.piece);
             }
 
             if (piece.color().equals(Color.BLACK) && !captureOnPassage) {
-                piecesCapturedByBlack.add(endField.piece);
+                capturedBlackPieces.add(endField.piece);
             }
 
             endField.removeFigure();
@@ -1213,12 +1232,12 @@ public class ChessBoard {
 
         final Piece previouslyCapturedPiece;
         if (figuresTurn.equals(Color.WHITE)) {
-            previouslyCapturedPiece = piecesCapturedByBlack.removeLast();
+            previouslyCapturedPiece = capturedBlackPieces.removeLast();
             endedField.addFigure(previouslyCapturedPiece);
             return;
         }
 
-        previouslyCapturedPiece = piecesCapturedByWhite.removeLast();
+        previouslyCapturedPiece = capturedWhitePieces.removeLast();
         endedField.addFigure(previouslyCapturedPiece);
     }
 
@@ -1275,6 +1294,7 @@ public class ChessBoard {
     private enum InitializationTYPE {
         STANDARD, DURING_THE_GAME
     }
+
     /**
      * Represents the different operations that can be performed during a chess move,
      * such as capture, promotion, check, checkmate, and stalemate or empty if operation not exists.
@@ -1295,14 +1315,15 @@ public class ChessBoard {
         }
 
     }
+
     /**
      * Represents a single field on a chess board.
      * Each field has a coordinate and can either be empty or contain a chess piece.
      */
     public static class Field {
-
         private Piece piece;
         private final @Getter Coordinate coordinate;
+
         public Field(Coordinate coordinate, Piece piece) {
             Objects.requireNonNull(coordinate);
             this.coordinate = coordinate;
@@ -1322,15 +1343,7 @@ public class ChessBoard {
                 return Optional.empty();
             }
 
-            final Color color = piece.color();
-            return switch (piece) {
-                case King k -> Optional.of(new King(color));
-                case Queen q -> Optional.of(new Queen(color));
-                case Rook r -> Optional.of(new Rook(color));
-                case Bishop b -> Optional.of(new Bishop(color));
-                case Knight k -> Optional.of(new Knight(color));
-                default -> Optional.of(new Pawn(color));
-            };
+            return Optional.of(piece);
         }
 
         private void removeFigure() {
