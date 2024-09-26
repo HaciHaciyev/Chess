@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.model.ChessGameMessage;
+import core.project.chess.application.model.ChessMovementForm;
 import core.project.chess.application.model.GameParameters;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
@@ -29,12 +30,14 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Path("/chess-game")
 @ServerEndpoint("/chess-game/{gameId}")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -118,55 +121,85 @@ public class ChessGameHandler {
     public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) throws JsonProcessingException {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
-        Objects.requireNonNull(message);
 
-        final String token = session.getRequestParameterMap().get("token").getFirst();
-        if (Objects.isNull(token)) {
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
-        }
-
-        final JsonWebToken jsonWebToken = Result.ofThrowable(
-                () -> {
-                    try {
-                        return jwtParser.parse(token);
-                    } catch (ParseException e) {
-                        throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid JWT token.").build());
-                    }
-                }
-        ).orElseThrow();
-
+        final JsonWebToken jsonWebToken = extractJWT(session);
         final String username = Objects.requireNonNull(jsonWebToken).getName();
-
+        final Map<String, List<String>> requestParams = session.getRequestParameterMap();
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(UUID.fromString(gameId));
         if (Objects.isNull(pair)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This game session is not exits.").build());
         }
 
-        final ChessGame chessGame = pair.getFirst();
+        if (requestParams.containsKey("returnOfMovementRequest")) {
+            final boolean result = returnOfMovement(username, pair);
+            if (result) {
 
-        final JsonNode node = Result.ofThrowable(
-                () -> {
-                    try {
-                        return objectMapper.readTree(message);
-                    } catch (JsonProcessingException e) {
-                        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON response.").build());
-                    }
+                final var chessBoardMessage = new ChessGameMessage(
+                        pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(),
+                        pair.getFirst().getChessBoard().pgn()
+                );
+
+                for (Session currentSession : pair.getSecond()) {
+                    sendMessage(currentSession, objectMapper.writeValueAsString(chessBoardMessage));
                 }
-        ).orElseThrow();
 
-        Result.ofThrowable(
-                () -> chessGame.makeMovement(
-                username,
-                Coordinate.valueOf(node.get("from").asText()),
-                Coordinate.valueOf(node.get("to").asText()),
-                node.has("inCaseOfPromotion") && !node.get("inCaseOfPromotion").isNull()
-                        ? AlgebraicNotation.fromSymbol(node.get("inCaseOfPromotion").asText())
-                        : null
+                return;
+            }
+
+            for (Session currentSession : pair.getSecond()) {
+                sendMessage(currentSession, "Player %s requested a return of the move.".formatted(username));
+            }
+
+            return;
+        }
+
+        if (requestParams.containsKey("resignation")) {
+            resignation(username, pair);
+
+            for (Session currentSession : pair.getSecond()) {
+                sendMessage(currentSession, "Game is ended by %s player resignation.".formatted(username));
+            }
+
+            return;
+        }
+
+        if (requestParams.containsKey("threeFold")) {
+            final boolean result = threeFold(username, pair);
+            if (result) {
+                for (Session currentSession : pair.getSecond()) {
+                    sendMessage(currentSession, "Game is ended by ThreeFold rule.");
+                }
+            }
+
+            return;
+        }
+
+        if (requestParams.containsKey("agreementRequest")) {
+            final boolean result = agreement(username, pair);
+            if (result) {
+                for (Session currentSession : pair.getSecond()) {
+                    sendMessage(currentSession, "Game is ended by agreement.");
+                }
+            }
+
+            for (Session currentSession : pair.getSecond()) {
+                sendMessage(currentSession, "Player %s requested for agreement.".formatted(username));
+            }
+
+            return;
+        }
+
+        final ChessGame chessGame = pair.getFirst();
+        final ChessMovementForm move = mapMessageForMovementForm(Objects.requireNonNull(message));
+        Result
+                .ofThrowable(
+                        () -> chessGame.makeMovement(username, move.from(), move.to(), move.inCaseOfPromotion())
                 )
-        )
-                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid chess movement.").build()));
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid chess movement.").build())
+                );
 
-        final ChessGameMessage chessBoardMessage = new ChessGameMessage(
+        final var chessBoardMessage = new ChessGameMessage(
                 pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(),
                 pair.getFirst().getChessBoard().pgn()
         );
@@ -227,6 +260,84 @@ public class ChessGameHandler {
             session.getAsyncRemote().sendText(message);
         } catch (Exception e) {
             Log.info(e.getMessage());
+        }
+    }
+
+    private boolean returnOfMovement(final String username, final Pair<ChessGame, Set<Session>> pair) {
+        final ChessGame chessGame = pair.getFirst();
+
+        try {
+            return chessGame.returnMovement(username);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Can`t return move.").build());
+        }
+    }
+
+    private void resignation(final String username, final Pair<ChessGame, Set<Session>> pair) {
+        final ChessGame chessGame = pair.getFirst();
+
+        try {
+            chessGame.resignation(username);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Not a player.").build());
+        }
+    }
+
+    private boolean threeFold(final String username, final Pair<ChessGame, Set<Session>> pair) {
+        final ChessGame chessGame = pair.getFirst();
+
+        try {
+            return chessGame.endGameByThreeFold(username);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Not a player. Illegal access").build());
+        }
+    }
+
+    private boolean agreement(final String username, final Pair<ChessGame, Set<Session>> pair) {
+        final ChessGame chessGame = pair.getFirst();
+
+        try {
+            return chessGame.agreement(username);
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Not a player in this game. Illegal access").build());
+        }
+    }
+
+
+    private ChessMovementForm mapMessageForMovementForm(final String message) {
+        final JsonNode node = Result.ofThrowable(
+                () -> {
+                    try {
+                        return objectMapper.readTree(message);
+                    } catch (JsonProcessingException e) {
+                        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON response.").build());
+                    }
+                }
+        ).orElseThrow();
+
+        try {
+            return new ChessMovementForm(
+                    Coordinate.valueOf(node.get("from").asText()),
+                    Coordinate.valueOf(node.get("to").asText()),
+                    node.has("inCaseOfPromotion") && !node.get("inCaseOfPromotion").isNull()
+                            ? AlgebraicNotation.fromSymbol(node.get("inCaseOfPromotion").asText())
+                            : null
+            );
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON request.").build());
+        }
+    }
+
+    private JsonWebToken extractJWT(final Session session) {
+        final String token = session.getRequestParameterMap().get("token").getFirst();
+        if (Objects.isNull(token)) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+        }
+
+        try {
+            return jwtParser.parse(token);
+        } catch (ParseException e) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid JWT token.").build());
         }
     }
 
