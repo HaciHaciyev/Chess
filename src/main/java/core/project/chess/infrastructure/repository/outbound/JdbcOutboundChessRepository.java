@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.repository.outbound;
 
-import core.project.chess.application.model.ChessGameHistory;
+import core.project.chess.application.dto.gamesession.ChessGameHistory;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
 import core.project.chess.infrastructure.utilities.containers.Result;

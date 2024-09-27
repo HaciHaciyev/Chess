@@ -1,4 +1,4 @@
-package core.project.chess.application.model;
+package core.project.chess.application.dto.gamesession;
 
 public enum GamePreparationMessageType {
     CHESS_GAME_STARTED,

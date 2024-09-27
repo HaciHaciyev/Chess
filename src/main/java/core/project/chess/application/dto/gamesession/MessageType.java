@@ -1,9 +1,10 @@
-package core.project.chess.application.model;
+package core.project.chess.application.dto.gamesession;
 
 public enum MessageType {
     MOVE,
     RETURN_MOVE,
     AGREEMENT,
     RESIGNATION,
-    TREE_FOLD
+    TREE_FOLD,
+    MESSAGE
 }

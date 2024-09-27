@@ -1,5 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
+import core.project.chess.application.dto.gamesession.Message;
 import core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
@@ -13,9 +14,7 @@ import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import lombok.AccessLevel;
 import lombok.Getter;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 
@@ -36,6 +35,7 @@ public class ChessGame {
     private final TimeControllingTYPE timeControllingTYPE;
     private @Getter(AccessLevel.NONE) boolean isTheOptionToEndTheGameDueToThreeFoldActive;
     private @Getter(AccessLevel.NONE) StatusPair<GameResult> isGameOver;
+    final @Getter(AccessLevel.NONE) List<Message> chatMessages;
 
     private ChessGame(UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack,
                       Rating playerForWhiteRating, Rating playerForBlackRating, SessionEvents sessionEvents,
@@ -67,6 +67,7 @@ public class ChessGame {
         this.sessionEvents = sessionEvents;
         this.timeControllingTYPE = timeControllingTYPE;
         this.isGameOver = statusPair;
+        this.chatMessages = new ArrayList<>();
 
         playerForWhite.addGame(this);
         playerForBlack.addGame(this);
@@ -89,6 +90,22 @@ public class ChessGame {
                 chessGameId, chessBoard, playerForWhite, playerForBlack, playerForWhite.getRating(),
                 playerForBlack.getRating(), sessionEvents, timeControllingTYPE, StatusPair.ofFalse()
         );
+    }
+
+    public void addChatMessage(final String username, final Message message) {
+        Objects.requireNonNull(message);
+        final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
+        final boolean isBlackPlayer = username.equals(playerForBlack.getUsername().username());
+
+        if (!isWhitePlayer && !isBlackPlayer) {
+            throw new IllegalArgumentException("Not a player.");
+        }
+
+        chatMessages.add(message);
+    }
+
+    public List<Message> chatMessages() {
+        return chatMessages.stream().toList();
     }
 
     public Optional<GameResult> gameResult() {

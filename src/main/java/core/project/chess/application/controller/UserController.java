@@ -1,7 +1,7 @@
 package core.project.chess.application.controller;
 
-import core.project.chess.application.model.LoginForm;
-import core.project.chess.application.model.RegistrationForm;
+import core.project.chess.application.dto.user.LoginForm;
+import core.project.chess.application.dto.user.RegistrationForm;
 import core.project.chess.application.service.EmailInteractionService;
 import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;

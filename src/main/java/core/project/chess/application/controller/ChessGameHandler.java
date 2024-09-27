@@ -3,10 +3,7 @@ package core.project.chess.application.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.chess.application.model.ChessGameMessage;
-import core.project.chess.application.model.ChessMovementForm;
-import core.project.chess.application.model.GameParameters;
-import core.project.chess.application.model.MessageType;
+import core.project.chess.application.dto.gamesession.*;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
@@ -131,6 +128,7 @@ public class ChessGameHandler {
 
         switch (type) {
             case MOVE -> move(username, jsonNode, pair);
+            case MESSAGE -> chat(username, jsonNode, pair);
             case RETURN_MOVE -> returnOfMovement(username, pair);
             case RESIGNATION -> resignation(username, pair);
             case TREE_FOLD -> threeFold(username, pair);
@@ -194,6 +192,20 @@ public class ChessGameHandler {
             for (Session currentSession : pair.getSecond()) {
                 sendMessage(currentSession, "Game is ended by result: {%s}.".formatted(chessGame.gameResult().get().toString()));
             }
+        }
+    }
+
+    private void chat(final String username, final JsonNode jsonNode, final Pair<ChessGame, Set<Session>> pair) throws JsonProcessingException {
+        final Message message = mapMessage(Objects.requireNonNull(jsonNode));
+
+        try {
+            pair.getFirst().addChatMessage(username, message);
+
+            for (Session session : pair.getSecond()) {
+                sendMessage(session, objectMapper.writeValueAsString(pair.getFirst().chatMessages()));
+            }
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid message.").build());
         }
     }
 
@@ -309,6 +321,14 @@ public class ChessGameHandler {
             return MessageType.valueOf(node.get("type").asText());
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON request. Invalid Message Type.").build());
+        }
+    }
+
+    private Message mapMessage(final JsonNode jsonNode) {
+        try {
+            return new Message(jsonNode.get("message").asText());
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON request. Invalid message.").build());
         }
     }
 

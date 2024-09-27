@@ -2,7 +2,7 @@ package testUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.chess.application.model.RegistrationForm;
+import core.project.chess.application.dto.user.RegistrationForm;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Test;
 

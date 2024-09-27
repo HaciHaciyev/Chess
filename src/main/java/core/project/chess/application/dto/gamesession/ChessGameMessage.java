@@ -1,4 +1,4 @@
-package core.project.chess.application.model;
+package core.project.chess.application.dto.gamesession;
 
 import java.util.Objects;
 

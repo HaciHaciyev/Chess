@@ -1,6 +1,6 @@
 package core.project.chess.application.service;
 
-import core.project.chess.application.model.GameParameters;
+import core.project.chess.application.dto.gamesession.GameParameters;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
