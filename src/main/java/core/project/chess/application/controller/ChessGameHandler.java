@@ -121,7 +121,7 @@ public class ChessGameHandler {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
 
-        final JsonNode jsonNode = getJsonTree(message);
+        final JsonNode jsonNode = getJsonTree(Objects.requireNonNull(message));
         final MessageType type = getMessageType(jsonNode);
         final String username = Objects.requireNonNull(extractJWT(session)).getName();
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(UUID.fromString(gameId));
@@ -190,6 +190,10 @@ public class ChessGameHandler {
 
         if (chessGame.gameResult().isPresent()) {
             inboundChessRepository.completelyUpdateCompletedGame(chessGame);
+
+            for (Session currentSession : pair.getSecond()) {
+                sendMessage(currentSession, "Game is ended by result: {%s}.".formatted(chessGame.gameResult().get().toString()));
+            }
         }
     }
 
@@ -202,6 +206,16 @@ public class ChessGameHandler {
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Can`t return move.").build())
         );
 
+        final boolean agreementNotExists =
+                chessGame.getReturnOfMovement().whitePlayerUsername() == null || chessGame.getReturnOfMovement().blackPlayerUsername() == null;
+        if (agreementNotExists) {
+            for (Session currentSession : pair.getSecond()) {
+                sendMessage(currentSession, "Player {%s} requested for move returning.".formatted(username));
+            }
+
+            return;
+        }
+
         final var message = new ChessGameMessage(chessGame.getChessBoard().actualRepresentationOfChessBoard(), chessGame.getChessBoard().pgn());
         for (Session currentSession : pair.getSecond()) {
             sendMessage(currentSession, objectMapper.writeValueAsString(message));
@@ -213,18 +227,16 @@ public class ChessGameHandler {
 
         try {
             chessGame.resignation(username);
-            final var message = new ChessGameMessage(chessGame.getChessBoard().actualRepresentationOfChessBoard(), chessGame.getChessBoard().pgn());
+
             for (Session currentSession : pair.getSecond()) {
-                sendMessage(currentSession, objectMapper.writeValueAsString(message));
+                sendMessage(currentSession, "Game is ended by result {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
             }
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Not a player.").build());
-        } catch (JsonProcessingException e) {
-            Log.info("Unexpected error: " + e.getMessage());
         }
     }
 
-    private void threeFold(final String username, final Pair<ChessGame, Set<Session>> pair) throws JsonProcessingException {
+    private void threeFold(final String username, final Pair<ChessGame, Set<Session>> pair) {
         final ChessGame chessGame = pair.getFirst();
 
         Result.ofThrowable(
@@ -233,13 +245,12 @@ public class ChessGameHandler {
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Can`t end game by ThreeFold rule.").build())
         );
 
-        final var message = new ChessGameMessage(chessGame.getChessBoard().actualRepresentationOfChessBoard(), chessGame.getChessBoard().pgn());
         for (Session currentSession : pair.getSecond()) {
-            sendMessage(currentSession, objectMapper.writeValueAsString(message));
+            sendMessage(currentSession, "Game is ended by ThreeFold rule, game result is: {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
         }
     }
 
-    private void agreement(final String username, final Pair<ChessGame, Set<Session>> pair) throws JsonProcessingException {
+    private void agreement(final String username, final Pair<ChessGame, Set<Session>> pair) {
         final ChessGame chessGame = pair.getFirst();
 
         Result.ofThrowable(
@@ -248,9 +259,18 @@ public class ChessGameHandler {
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Not a player in this game. Illegal access").build())
         );
 
-        final var message = new ChessGameMessage(chessGame.getChessBoard().actualRepresentationOfChessBoard(), chessGame.getChessBoard().pgn());
+        final boolean agreementNotExists =
+                chessGame.getAgreementPair().whitePlayerUsername() == null || chessGame.getAgreementPair().blackPlayerUsername() == null;
+        if (agreementNotExists) {
+            for (Session currentSession : pair.getSecond()) {
+                sendMessage(currentSession, "Player {%s} requested for move agreement.".formatted(username));
+            }
+
+            return;
+        }
+
         for (Session currentSession : pair.getSecond()) {
-            sendMessage(currentSession, objectMapper.writeValueAsString(message));
+            sendMessage(currentSession, "Game is ended by agreement, game result is {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
         }
     }
 
