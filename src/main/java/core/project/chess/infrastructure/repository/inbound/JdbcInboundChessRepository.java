@@ -17,8 +17,9 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     public static final String SAVE_STARTED_CHESS_GAME = """
             INSERT INTO ChessGame
                 (id, player_for_white_rating, player_for_black_rating,
-                 time_controlling_type, creation_date, last_updated_date, is_game_over)
-                VALUES (?, ?, ?, ?, ?, ?, ?);
+                 time_controlling_type, creation_date, last_updated_date,
+                 is_game_over, game_result_status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?);
             
             INSERT INTO GamePlayers
                 (chess_game_id, player_for_white_id, player_for_black_id)
@@ -26,15 +27,16 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             """;
 
     public static final String UPDATE_FINISHED_CHESS_GAME = """
-            UPDATE ChessGame
-                is_game_over = ?
+            UPDATE ChessGame SET
+                is_game_over = ?,
+                game_result_status = ?
                 Where id = ?;
-            
+            """;
+
+    public static final String SAVE_CHESS_GAME_HISTORY = """
             INSERT INTO ChessGameHistory
-                id = ?,
-                chess_game_id = ?,
-                pgn_chess_representation = ?,
-                fen_representations_of_board = ?
+                (id, chess_game_id, pgn_chess_representation, fen_representations_of_board)
+                VALUES (?, ?, ?, ?);
             """;
 
     JdbcInboundChessRepository(JDBC jdbc) {
@@ -53,7 +55,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             chessGame.getTimeControllingTYPE().toString(),
             chessGame.getSessionEvents().creationDate(),
             chessGame.getSessionEvents().lastUpdateDate(),
-            false,
+            false, "NONE",
 
             chessGame.getChessGameId().toString(),
             chessGame.getPlayerForWhite().getId().toString(),
@@ -64,17 +66,24 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     }
 
     @Override
-    public void completelyUpdateCompletedGame(final ChessGame chessGame) {
+    public void completelyUpdateFinishedGame(final ChessGame chessGame) {
         Objects.requireNonNull(chessGame);
         if (chessGame.gameResult().isEmpty()) {
             throw new IllegalArgumentException("Game is not over.");
         }
 
-        final String arrayDefinition = "VARCHAR";
-        final byte arrayIndex = 6;
-        jdbc.writeArrayOf(UPDATE_FINISHED_CHESS_GAME, arrayDefinition, arrayIndex, chessGame.getChessBoard().arrayOfFEN(),
-            chessGame.gameResult().isPresent(),
-            chessGame.getChessGameId().toString(),
+        jdbc.write(UPDATE_FINISHED_CHESS_GAME,
+                chessGame.gameResult().isPresent(),
+                chessGame.gameResult().orElseThrow().toString(),
+                chessGame.getChessGameId().toString()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
+
+        final byte arrayIndex = 4;
+        final String arrayDefinition = "TEXT";
+        jdbc.writeArrayOf(SAVE_CHESS_GAME_HISTORY,
+            arrayDefinition, arrayIndex, chessGame.getChessBoard().arrayOfFEN(),
             chessGame.getChessBoard().getChessBoardId().toString(),
             chessGame.getChessGameId().toString(),
             chessGame.getChessBoard().pgn()

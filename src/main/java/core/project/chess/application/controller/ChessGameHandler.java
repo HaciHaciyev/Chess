@@ -189,7 +189,7 @@ public class ChessGameHandler {
         }
 
         if (chessGame.gameResult().isPresent()) {
-            inboundChessRepository.completelyUpdateCompletedGame(chessGame);
+            inboundChessRepository.completelyUpdateFinishedGame(chessGame);
 
             for (Session currentSession : pair.getSecond()) {
                 sendMessage(currentSession, "Game is ended by result: {%s}.".formatted(chessGame.gameResult().get().toString()));
@@ -232,7 +232,7 @@ public class ChessGameHandler {
                 sendMessage(currentSession, "Game is ended by result {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
             }
 
-            inboundChessRepository.completelyUpdateCompletedGame(chessGame);
+            inboundChessRepository.completelyUpdateFinishedGame(chessGame);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Not a player.").build());
         }
@@ -251,7 +251,7 @@ public class ChessGameHandler {
             sendMessage(currentSession, "Game is ended by ThreeFold rule, game result is: {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
         }
 
-        inboundChessRepository.completelyUpdateCompletedGame(chessGame);
+        inboundChessRepository.completelyUpdateFinishedGame(chessGame);
     }
 
     private void agreement(final String username, final Pair<ChessGame, Set<Session>> pair) {
@@ -277,7 +277,7 @@ public class ChessGameHandler {
             sendMessage(currentSession, "Game is ended by agreement, game result is {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
         }
 
-        inboundChessRepository.completelyUpdateCompletedGame(chessGame);
+        inboundChessRepository.completelyUpdateFinishedGame(chessGame);
     }
 
     private void closeSession(final Session currentSession, final String messageInCaseOfGameEnding) {

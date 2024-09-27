@@ -991,7 +991,7 @@ public class ChessGameTest {
         chessGame.makeMovement(secondPlayerUsername, Coordinate.a8, Coordinate.b8, null);
     }
 
-    public static Supplier<ChessGame> defaultChessGameSupplier() {
+    static Supplier<ChessGame> defaultChessGameSupplier() {
         final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
 
         return () -> ChessGame.of(
@@ -1003,7 +1003,7 @@ public class ChessGameTest {
                 ChessGame.TimeControllingTYPE.DEFAULT);
     }
 
-    public static Supplier<UserAccount> userAccountSupplier(String username) {
+    static Supplier<UserAccount> userAccountSupplier(String username) {
         return () -> UserAccount.of(new Username(username), new Email("some@email.com"), new Password("password"));
     }
 }
