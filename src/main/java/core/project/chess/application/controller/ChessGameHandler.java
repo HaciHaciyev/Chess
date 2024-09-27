@@ -263,7 +263,7 @@ public class ChessGameHandler {
                 chessGame.getAgreementPair().whitePlayerUsername() == null || chessGame.getAgreementPair().blackPlayerUsername() == null;
         if (agreementNotExists) {
             for (Session currentSession : pair.getSecond()) {
-                sendMessage(currentSession, "Player {%s} requested for move agreement.".formatted(username));
+                sendMessage(currentSession, "Player {%s} requested for agreement.".formatted(username));
             }
 
             return;
