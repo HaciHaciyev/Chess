@@ -116,18 +116,18 @@ public class ChessGameHandler {
         final JsonNode jsonNode = getJsonTree(Objects.requireNonNull(message));
         final MessageType type = getMessageType(jsonNode);
         final String username = Objects.requireNonNull(extractJWT(session)).getName();
-        final Pair<ChessGame, Set<Session>> pair = gameSessions.get(UUID.fromString(gameId));
-        if (Objects.isNull(pair)) {
+        final Pair<ChessGame, Set<Session>> gameAndSessions = gameSessions.get(UUID.fromString(gameId));
+        if (Objects.isNull(gameAndSessions)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This game session is not exits.").build());
         }
 
         switch (type) {
-            case MOVE -> chessGameService.move(Pair.of(username, session), jsonNode, pair);
-            case MESSAGE -> chessGameService.chat(Pair.of(username, session), jsonNode, pair);
-            case RETURN_MOVE -> chessGameService.returnOfMovement(Pair.of(username, session), pair);
-            case RESIGNATION -> chessGameService.resignation(Pair.of(username, session), pair);
-            case TREE_FOLD -> chessGameService.threeFold(Pair.of(username, session), pair);
-            case AGREEMENT -> chessGameService.agreement(Pair.of(username, session), pair);
+            case MOVE -> chessGameService.move(Pair.of(username, session), jsonNode, gameAndSessions);
+            case MESSAGE -> chessGameService.chat(Pair.of(username, session), jsonNode, gameAndSessions);
+            case RETURN_MOVE -> chessGameService.returnOfMovement(Pair.of(username, session), gameAndSessions);
+            case RESIGNATION -> chessGameService.resignation(Pair.of(username, session), gameAndSessions);
+            case TREE_FOLD -> chessGameService.threeFold(Pair.of(username, session), gameAndSessions);
+            case AGREEMENT -> chessGameService.agreement(Pair.of(username, session), gameAndSessions);
             default -> throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid message type.").build());
         }
     }
