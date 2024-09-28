@@ -63,17 +63,17 @@ public record ChessBoardNavigator(ChessBoard board) {
                         continue;
                     }
 
-                    view.append(", ").append(prettyPiece);
+                    view.append(". ").append(prettyPiece);
                 }
 
                 if (Character.isDigit(c)) {
                     if (columnIndex == 0) {
                         view.append(" ");
-                        view.append(",  ".repeat(Character.getNumericValue(c) - 1));
+                        view.append(".  ".repeat(Character.getNumericValue(c) - 1));
                         continue;
                     }
 
-                    view.append(",  ".repeat(Character.getNumericValue(c)));
+                    view.append(".  ".repeat(Character.getNumericValue(c)));
                 }
             }
 

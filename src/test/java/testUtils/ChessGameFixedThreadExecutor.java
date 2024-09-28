@@ -16,6 +16,7 @@ import static core.project.chess.domain.aggregates.chess.entities.ChessGameTest.
  * A utility class for executing chess games from PGN files using a fixed thread pool.
  * This executor partitions the PGN data and processes it concurrently for improved performance.
  */
+
 public final class ChessGameFixedThreadExecutor {
 
     private final String path;

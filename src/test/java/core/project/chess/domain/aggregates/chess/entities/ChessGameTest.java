@@ -104,7 +104,7 @@ public class ChessGameTest {
     void mamedyarov_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -231,7 +231,6 @@ public class ChessGameTest {
         String white = game.getPlayerForWhite().getUsername().username();
         String black = game.getPlayerForBlack().getUsername().username();
 
-
         ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
 
         game.makeMovement(white, e2, e4, null);
@@ -335,9 +334,7 @@ public class ChessGameTest {
                     Log.info("Movement result for white: " + whiteMessage);
                 }
 
-                if (moveNum == 15) {
-                    System.out.println(navigator.prettyToString());
-                }
+                System.out.println(navigator.prettyToString());
 
                 if (move.black() == null) {
                     break;
@@ -348,6 +345,8 @@ public class ChessGameTest {
                 }
 
                 var blackMessage = game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+
+                System.out.println(navigator.prettyToString());
 
                 if (enableLogging) {
                     Log.info("Movement result for black: " + blackMessage);
