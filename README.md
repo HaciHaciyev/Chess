@@ -145,7 +145,7 @@ The Chess Game Backend is an application that provides the core functionality fo
   ```json
   {
     "type": "MESSAGE",
-    "content": "Hello, opponent!"
+    "message": "Hello, opponent!"
   }
   ```
 - **Response**: Updated chat messages
