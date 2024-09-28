@@ -134,7 +134,7 @@ public class ChessGameHandler {
 
     @Transactional
     void handleWebSocketMessage(final Session session, final String username, final JsonNode jsonNode,
-                                        final MessageType type, final Pair<ChessGame, Set<Session>> gameAndSessions) throws JsonProcessingException {
+                                final MessageType type, final Pair<ChessGame, Set<Session>> gameAndSessions) throws JsonProcessingException {
         switch (type) {
             case MOVE -> chessGameService.move(Pair.of(username, session), jsonNode, gameAndSessions);
             case MESSAGE -> chessGameService.chat(Pair.of(username, session), jsonNode, gameAndSessions);

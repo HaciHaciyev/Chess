@@ -25,6 +25,7 @@ public class ChessGame {
     private final UUID chessGameId;
     private AgreementPair agreementPair;
     private AgreementPair returnOfMovement;
+    private boolean lastMoveWasUndo;
     private @Getter(AccessLevel.NONE) Color playersTurn;
     private final ChessBoard chessBoard;
     private final UserAccount playerForWhite;
@@ -57,6 +58,7 @@ public class ChessGame {
         this.chessGameId = chessGameId;
         this.agreementPair = new AgreementPair(null, null);
         this.returnOfMovement = new AgreementPair(null, null);
+        this.lastMoveWasUndo = false;
         this.chessBoard = chessBoard;
         this.playersTurn = Color.WHITE;
         this.isTheOptionToEndTheGameDueToThreeFoldActive = false;
@@ -170,6 +172,8 @@ public class ChessGame {
 
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
 
+        lastMoveWasUndo = false;
+
         if (message.equals(GameResultMessage.RuleOf3EqualsPositions)) {
             isTheOptionToEndTheGameDueToThreeFoldActive = true;
         } else {
@@ -218,7 +222,8 @@ public class ChessGame {
             final boolean playerForBlackIsAlreadyAgreed =
                     !Objects.isNull(agreementPair.blackPlayerUsername()) && agreementPair.blackPlayerUsername().equals(playerForBlack.getUsername().username());
             if (playerForBlackIsAlreadyAgreed) {
-                this.returnOfMovement = new AgreementPair(playerForWhite.getUsername().username(), playerForBlack.getUsername().username());
+                lastMoveWasUndo = true;
+                this.returnOfMovement = new AgreementPair(null, null);
 
                 final boolean successfulMoveReturning = chessBoard.returnOfTheMovement();
                 if (!successfulMoveReturning) {
@@ -236,7 +241,8 @@ public class ChessGame {
         final boolean playerForWhiteIsAlreadyAgreed =
                 !Objects.isNull(agreementPair.whitePlayerUsername()) && agreementPair.whitePlayerUsername().equals(playerForWhite.getUsername().username());
         if (playerForWhiteIsAlreadyAgreed) {
-            this.returnOfMovement = new AgreementPair(playerForWhite.getUsername().username(), playerForBlack.getUsername().username());
+            lastMoveWasUndo = true;
+            this.returnOfMovement = new AgreementPair(null, null);
 
             final boolean successfulMoveReturning = chessBoard.returnOfTheMovement();
             if (!successfulMoveReturning) {

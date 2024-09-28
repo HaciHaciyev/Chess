@@ -96,7 +96,7 @@ public class ChessGameService {
                 t -> sendMessage(usernameAndSession.getSecond(), "Can`t return a move.")
         );
 
-        if (!chessGame.isMoveReturningAgreed()) {
+        if (!chessGame.isLastMoveWasUndo()) {
             for (Session currentSession : gameAndSessions.getSecond()) {
                 sendMessage(currentSession, "Player {%s} requested for move returning.".formatted(username));
             }
