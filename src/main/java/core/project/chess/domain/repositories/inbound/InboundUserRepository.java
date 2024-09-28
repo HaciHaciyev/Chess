@@ -7,6 +7,8 @@ public interface InboundUserRepository {
 
     void save(UserAccount userAccount);
 
+    void updateOfRating(UserAccount userAccount);
+
     void saveUserToken(EmailConfirmationToken token);
 
     void enable(EmailConfirmationToken token);

@@ -29,6 +29,14 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 VALUES (?,?,?,?,?,?)
             """;
 
+    private static final String UPDATE_USER_RATING = """
+            UPDATE UserAccount SET
+                    rating = ?,
+                    rating_deviation = ?,
+                    rating_volatility = ?
+                WHERE id = ?
+            """;
+
     private static final String UPDATE_USER_TOKEN_AND_ACCOUNT = """
             UPDATE UserToken SET
                     is_confirmed = ?
@@ -66,6 +74,20 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             userAccount.isEnable(),
             userAccount.getAccountEvents().creationDate(),
             userAccount.getAccountEvents().lastUpdateDate()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
+    }
+
+    @Override
+    public void updateOfRating(final UserAccount userAccount) {
+        Log.info("Update user account {%s}".formatted(userAccount.toString()));
+
+        jdbc.write(UPDATE_USER_RATING,
+                userAccount.getRating().rating(),
+                userAccount.getRating().ratingDeviation(),
+                userAccount.getRating().volatility(),
+                userAccount.getId().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
