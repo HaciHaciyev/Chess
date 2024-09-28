@@ -3,6 +3,7 @@ package core.project.chess.application.controller;
 import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
@@ -32,6 +33,7 @@ class UserControllerTest {
     }
 
     @Test
+    @Disabled("For single usage.")
     void registration() {
         final String token = given()
                 .contentType("application/json")

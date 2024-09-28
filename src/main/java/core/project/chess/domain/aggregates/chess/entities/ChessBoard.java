@@ -159,35 +159,27 @@ public class ChessBoard {
     }
 
     /**
-     * Retrieves a sorted list of pieces that have been captured by the white player.
+     * Retrieves a list of pieces that have been captured by the white player.
      * <p>
-     * This method accesses the collection of captured black pieces, sorts them using
-     * the specified piece comparator, and returns the sorted list. The sorting is done
-     * to ensure that the captured pieces are presented in a consistent order.
+     * This method accesses the collection of captured black pieces and returns the list.
      *
      * @return A list of {@link Piece} objects representing the pieces captured by the
-     *         white player, sorted according to the piece comparator.
+     *         white player.
      */
     public List<Piece> whiteCaptures() {
-        return capturedBlackPieces.stream()
-                .sorted(this::pieceComparator)
-                .toList();
+        return capturedBlackPieces.stream().toList();
     }
 
     /**
-     * Retrieves a sorted list of pieces that have been captured by the black player.
+     * Retrieves a list of pieces that have been captured by the black player.
      * <p>
-     * This method accesses the collection of captured white pieces, sorts them using
-     * the specified piece comparator, and returns the sorted list. The sorting is done
-     * to ensure that the captured pieces are presented in a consistent order.
+     * This method accesses the collection of captured white pieces, and returns list.
      *
      * @return A list of {@link Piece} objects representing the pieces captured by the
-     *         black player, sorted according to the piece comparator.
+     *         black player.
      */
     public List<Piece> blackCaptures() {
-        return capturedWhitePieces.stream()
-                .sorted(this::pieceComparator)
-                .toList();
+        return capturedWhitePieces.stream().toList();
     }
 
     /**

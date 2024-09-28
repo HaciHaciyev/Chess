@@ -150,8 +150,8 @@ public class ChessGame {
             throw new IllegalArgumentException("Not a player.");
         }
 
-        final boolean whiteTriesToMoveButNotHistTurn = isWhitePlayer && !Color.WHITE.equals(playersTurn);
-        if (whiteTriesToMoveButNotHistTurn) {
+        final boolean whiteTriesToMoveButNotHisTurn = isWhitePlayer && !Color.WHITE.equals(playersTurn);
+        if (whiteTriesToMoveButNotHisTurn) {
             throw new IllegalArgumentException("It`s opponent move turn.");
         }
 

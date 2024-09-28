@@ -48,7 +48,7 @@ public class ChessGameTest {
     void lichess_100k() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -75,7 +75,7 @@ public class ChessGameTest {
     void berliner64() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Berliner_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -131,7 +131,7 @@ public class ChessGameTest {
     void nakamura_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
-                true,
+                false,
                 false
         );
     }
@@ -208,16 +208,6 @@ public class ChessGameTest {
     void lichessStalemates() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_stalemates_lalg.pgn",
-                true,
-                true
-        );
-    }
-
-    @Test
-    @DisplayName("Temp")
-    void temp() {
-        executeGamesFromPGN(
-                "src/main/resources/chess/pgn/temp.pgn",
                 false,
                 true
         );
@@ -238,6 +228,7 @@ public class ChessGameTest {
         System.out.println(navigator.board().listOfAlgebraicNotations());
 
         game.returnMovement(white);
+        game.returnMovement(black);
         System.out.println(navigator.prettyToString());
         System.out.println(navigator.board().listOfAlgebraicNotations());
 
@@ -262,6 +253,7 @@ public class ChessGameTest {
         System.out.println(navigator.board().listOfAlgebraicNotations());
 
         game.returnMovement(white);
+        game.returnMovement(black);
         System.out.println(navigator.prettyToString());
         System.out.println(navigator.board().listOfAlgebraicNotations());
 
@@ -277,6 +269,7 @@ public class ChessGameTest {
         System.out.println(navigator.prettyToString());
         System.out.println(navigator.board().listOfAlgebraicNotations());
 
+        game.returnMovement(white);
         game.returnMovement(black);
         System.out.println(navigator.prettyToString());
         System.out.println(navigator.board().listOfAlgebraicNotations());
@@ -334,7 +327,9 @@ public class ChessGameTest {
                     Log.info("Movement result for white: " + whiteMessage);
                 }
 
-                System.out.println(navigator.prettyToString());
+                if (enableLogging) {
+                    System.out.println(navigator.prettyToString());
+                }
 
                 if (move.black() == null) {
                     break;
@@ -346,7 +341,9 @@ public class ChessGameTest {
 
                 var blackMessage = game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
 
-                System.out.println(navigator.prettyToString());
+                if (enableLogging) {
+                    System.out.println(navigator.prettyToString());
+                }
 
                 if (enableLogging) {
                     Log.info("Movement result for black: " + blackMessage);
