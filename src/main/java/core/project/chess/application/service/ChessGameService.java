@@ -37,7 +37,7 @@ public class ChessGameService {
 
     private final ObjectMapper objectMapper;
 
-    public static final double MAX_RATING_DIFF = 150.00;
+    public static final double MAX_RATING_DIFF = 1500;
 
     private final InboundUserRepository inboundUserRepository;
 

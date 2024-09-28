@@ -220,7 +220,7 @@ public class ChessGame {
         if (isWhitePlayer) {
 
             final boolean playerForBlackIsAlreadyAgreed =
-                    !Objects.isNull(agreementPair.blackPlayerUsername()) && agreementPair.blackPlayerUsername().equals(playerForBlack.getUsername().username());
+                    !Objects.isNull(returnOfMovement.blackPlayerUsername()) && returnOfMovement.blackPlayerUsername().equals(playerForBlack.getUsername().username());
             if (playerForBlackIsAlreadyAgreed) {
                 lastMoveWasUndo = true;
                 this.returnOfMovement = new AgreementPair(null, null);
@@ -234,12 +234,12 @@ public class ChessGame {
                 return true;
             }
 
-            this.agreementPair = new AgreementPair(username, null);
+            this.returnOfMovement = new AgreementPair(username, null);
             return false;
         }
 
         final boolean playerForWhiteIsAlreadyAgreed =
-                !Objects.isNull(agreementPair.whitePlayerUsername()) && agreementPair.whitePlayerUsername().equals(playerForWhite.getUsername().username());
+                !Objects.isNull(returnOfMovement.whitePlayerUsername()) && returnOfMovement.whitePlayerUsername().equals(playerForWhite.getUsername().username());
         if (playerForWhiteIsAlreadyAgreed) {
             lastMoveWasUndo = true;
             this.returnOfMovement = new AgreementPair(null, null);
@@ -253,7 +253,7 @@ public class ChessGame {
             return true;
         }
 
-        this.agreementPair = new AgreementPair(null, username);
+        this.returnOfMovement = new AgreementPair(null, username);
         return false;
     }
 
