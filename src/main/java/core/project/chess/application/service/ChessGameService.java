@@ -20,6 +20,7 @@ import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 import jakarta.websocket.Session;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -60,9 +61,7 @@ public class ChessGameService {
         }
 
         if (chessGame.gameResult().isPresent()) {
-            inboundChessRepository.completelyUpdateFinishedGame(chessGame);
-            inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
-            inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
+            gameOverOperationsExecutor(chessGame);
 
             for (Session currentSession : gameAndSessions.getSecond()) {
                 sendMessage(currentSession, "Game is ended by result: {%s}.".formatted(chessGame.gameResult().get().toString()));
@@ -97,9 +96,7 @@ public class ChessGameService {
                 t -> sendMessage(usernameAndSession.getSecond(), "Can`t return a move.")
         );
 
-        final var undo = chessGame.getReturnOfMovement();
-        final boolean agreementNotExists = undo.whitePlayerUsername() == null || undo.blackPlayerUsername() == null;
-        if (agreementNotExists) {
+        if (!chessGame.isMoveReturningAgreed()) {
             for (Session currentSession : gameAndSessions.getSecond()) {
                 sendMessage(currentSession, "Player {%s} requested for move returning.".formatted(username));
             }
@@ -120,13 +117,11 @@ public class ChessGameService {
         try {
             chessGame.resignation(username);
 
+            gameOverOperationsExecutor(chessGame);
+
             for (Session currentSession : gameAndSessions.getSecond()) {
                 sendMessage(currentSession, "Game is ended by result {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
             }
-
-            inboundChessRepository.completelyUpdateFinishedGame(chessGame);
-            inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
-            inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
         } catch (IllegalArgumentException e) {
             sendMessage(usernameAndSession.getSecond(), "Not a player.");
         }
@@ -142,13 +137,11 @@ public class ChessGameService {
                 t -> sendMessage(usernameAndSession.getSecond(), "Can`t end game by ThreeFold")
         );
 
+        gameOverOperationsExecutor(chessGame);
+
         for (Session currentSession : gameAndSessions.getSecond()) {
             sendMessage(currentSession, "Game is ended by ThreeFold rule, game result is: {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
         }
-
-        inboundChessRepository.completelyUpdateFinishedGame(chessGame);
-        inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
-        inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
     }
 
     public void agreement(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, Set<Session>> gameAndSessions) {
@@ -161,9 +154,7 @@ public class ChessGameService {
                 t -> sendMessage(usernameAndSession.getSecond(), "Not a player. Illegal access.")
         );
 
-        final boolean agreementNotExists =
-                chessGame.getAgreementPair().whitePlayerUsername() == null || chessGame.getAgreementPair().blackPlayerUsername() == null;
-        if (agreementNotExists) {
+        if (!chessGame.isAgreementAvailable()) {
             for (Session currentSession : gameAndSessions.getSecond()) {
                 sendMessage(currentSession, "Player {%s} requested for agreement.".formatted(username));
             }
@@ -171,10 +162,15 @@ public class ChessGameService {
             return;
         }
 
+        gameOverOperationsExecutor(chessGame);
+
         for (Session currentSession : gameAndSessions.getSecond()) {
             sendMessage(currentSession, "Game is ended by agreement, game result is {%s}".formatted(chessGame.gameResult().orElseThrow().toString()));
         }
+    }
 
+    @Transactional
+    void gameOverOperationsExecutor(final ChessGame chessGame) {
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
         inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
         inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());

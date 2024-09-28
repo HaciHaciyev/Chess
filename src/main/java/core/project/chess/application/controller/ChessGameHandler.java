@@ -18,6 +18,7 @@ import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
@@ -29,6 +30,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Path("/chess-game")
@@ -109,7 +111,7 @@ public class ChessGameHandler {
     }
 
     @OnMessage
-    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) throws JsonProcessingException {
+    public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) {
         Objects.requireNonNull(session);
         Objects.requireNonNull(gameId);
 
@@ -121,6 +123,18 @@ public class ChessGameHandler {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This game session is not exits.").build());
         }
 
+        CompletableFuture.runAsync(() -> {
+            try {
+                handleWebSocketMessage(session, username, jsonNode, type, gameAndSessions);
+            } catch (JsonProcessingException e) {
+                Log.error("Unexpected error occurred while handling websocket message.", e);
+            }
+        });
+    }
+
+    @Transactional
+    void handleWebSocketMessage(final Session session, final String username, final JsonNode jsonNode,
+                                        final MessageType type, final Pair<ChessGame, Set<Session>> gameAndSessions) throws JsonProcessingException {
         switch (type) {
             case MOVE -> chessGameService.move(Pair.of(username, session), jsonNode, gameAndSessions);
             case MESSAGE -> chessGameService.chat(Pair.of(username, session), jsonNode, gameAndSessions);

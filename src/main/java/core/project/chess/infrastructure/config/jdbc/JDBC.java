@@ -7,6 +7,7 @@ import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.repository.ResultSetExtractor;
 import core.project.chess.infrastructure.utilities.repository.RowMapper;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import javax.sql.DataSource;
@@ -126,6 +127,7 @@ public class JDBC {
                 return Result.success(extractor.extractData(resultSet));
             }
         } catch (SQLException e) {
+            Log.error(e);
             return handleSQLException(e);
         }
     }
@@ -176,6 +178,7 @@ public class JDBC {
                 return Result.success((T) wrapperMapFunctions.get(type).apply(resultSet));
             }
         } catch (SQLException e) {
+            Log.error(e);
             return handleSQLException(e);
         }
     }
@@ -214,6 +217,7 @@ public class JDBC {
 
             return Result.success(results);
         } catch (SQLException e) {
+            Log.error(e);
             return handleSQLException(e);
         }
     }
@@ -251,6 +255,7 @@ public class JDBC {
 
             return Result.success(Boolean.TRUE);
         } catch (SQLException e) {
+            Log.error(e);
             return Result.failure(new RepositoryDataException(e.getMessage()));
         }
     }
@@ -304,6 +309,7 @@ public class JDBC {
 
             return Result.success(true);
         } catch (SQLException e) {
+            Log.error(e);
             return Result.failure(new RepositoryDataException(e.getMessage()));
         }
     }
@@ -349,6 +355,7 @@ public class JDBC {
 
             return Result.success(true);
         } catch (SQLException e) {
+            Log.error(e);
             return Result.failure(new RepositoryDataException(e.getMessage()));
         }
     }

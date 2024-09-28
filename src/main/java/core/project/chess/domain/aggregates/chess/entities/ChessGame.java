@@ -132,6 +132,14 @@ public class ChessGame {
         }
     }
 
+    public boolean isAgreementAvailable() {
+        return agreementPair.whitePlayerUsername != null && agreementPair.blackPlayerUsername != null;
+    }
+
+    public boolean isMoveReturningAgreed() {
+        return returnOfMovement.whitePlayerUsername != null && returnOfMovement.blackPlayerUsername != null;
+    }
+
     public GameResultMessage makeMovement(final String username, final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion)
             throws IllegalArgumentException {
         Objects.requireNonNull(username);
@@ -304,8 +312,7 @@ public class ChessGame {
                     !Objects.isNull(agreementPair.blackPlayerUsername()) && agreementPair.blackPlayerUsername().equals(playerForBlack.getUsername().username());
             if (playerForBlackIsAlreadyAgreed) {
                 this.agreementPair = new AgreementPair(playerForWhite.getUsername().username(), playerForBlack.getUsername().username());
-                this.isGameOver = StatusPair.ofTrue(GameResult.DRAW);
-                calculatePlayersRating();
+                gameOver(Operations.STALEMATE);
 
                 return true;
             }
@@ -318,8 +325,7 @@ public class ChessGame {
                 !Objects.isNull(agreementPair.whitePlayerUsername()) && agreementPair.whitePlayerUsername().equals(playerForWhite.getUsername().username());
         if (playerForWhiteIsAlreadyAgreed) {
             this.agreementPair = new AgreementPair(playerForWhite.getUsername().username(), playerForBlack.getUsername().username());
-            this.isGameOver = StatusPair.ofTrue(GameResult.DRAW);
-            calculatePlayersRating();
+            gameOver(Operations.STALEMATE);
 
             return true;
         }
