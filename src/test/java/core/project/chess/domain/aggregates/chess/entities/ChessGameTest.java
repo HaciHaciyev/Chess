@@ -257,6 +257,7 @@ public class ChessGameTest {
         System.out.println(navigator.prettyToString());
         System.out.println(navigator.board().listOfAlgebraicNotations());
 
+        game.returnMovement(white);
         game.returnMovement(black);
         System.out.println(navigator.prettyToString());
         System.out.println(navigator.board().listOfAlgebraicNotations());
