@@ -129,7 +129,7 @@ public class UserController {
     }
 
     @PATCH @Path("/token/verification")
-    public final Response tokenVerification(@QueryParam("token") String token) throws IllegalAccessException {
+    public final Response tokenVerification(@QueryParam("token") String token) {
         Log.info("Token verification process.");
         var foundToken = outboundUserRepository
                 .findToken(UUID.fromString(token))
@@ -138,7 +138,12 @@ public class UserController {
                 );
 
         if (foundToken.isExpired()) {
-            inboundUserRepository.deleteByToken(foundToken);
+            try {
+                inboundUserRepository.deleteByToken(foundToken);
+            } catch (IllegalAccessException e) {
+                Log.error("Unexpected error while deleting token. Probably account or token is not disabled.", e);
+            }
+
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Token was expired.").build());
         }
 
