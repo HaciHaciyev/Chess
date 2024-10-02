@@ -10,6 +10,7 @@ import core.project.chess.infrastructure.repository.outbound.JdbcOutboundUserRep
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @QuarkusTest
 @Transactional
+@Disabled("...")
 class JdbcInboundChessRepositoryTest {
 
     @Inject

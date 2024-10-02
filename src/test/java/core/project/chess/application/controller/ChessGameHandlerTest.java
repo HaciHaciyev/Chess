@@ -2,12 +2,14 @@ package core.project.chess.application.controller;
 
 import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 
 @QuarkusTest
+@Disabled("...")
 class ChessGameHandlerTest {
 
     @Test

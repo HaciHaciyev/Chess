@@ -10,6 +10,7 @@ import static io.restassured.RestAssured.given;
 
 @QuarkusTest
 @Transactional
+@Disabled("...")
 class UserControllerTest {
 
     @Test

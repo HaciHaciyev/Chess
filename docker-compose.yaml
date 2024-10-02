@@ -3,15 +3,16 @@ services:
     container_name: chessland
     build:
       context: .
-      dockerfile: src/main/docker/Dockerfile.native
-    image: chessland:native
+      dockerfile: src/main/docker/Dockerfile.native-micro
     ports:
       - "8080:8080"
     depends_on:
-      - datasource
+      datasource:
+        condition: service_healthy
     networks:
       - chess
     restart: unless-stopped
+    command: ["sh", "-c", "sleep 30 && /app/chessland"]
 
   datasource:
     container_name: chess-history
@@ -25,6 +26,11 @@ services:
     networks:
       - chess
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   datasource-administration:
     container_name: chess-administration
