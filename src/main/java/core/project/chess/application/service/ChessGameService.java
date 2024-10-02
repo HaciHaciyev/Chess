@@ -170,7 +170,7 @@ public class ChessGameService {
     }
 
     @Transactional
-    void gameOverOperationsExecutor(final ChessGame chessGame) {
+    public void gameOverOperationsExecutor(final ChessGame chessGame) {
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
         inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
         inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());

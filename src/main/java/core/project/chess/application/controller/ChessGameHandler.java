@@ -284,6 +284,7 @@ public class ChessGameHandler {
                         sendMessage(session, "Game is over by result {%s}".formatted(gameResult));
                     }
 
+                    chessGameService.gameOverOperationsExecutor(game);
                     isRunning.set(false);
                 });
             }
