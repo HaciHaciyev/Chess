@@ -280,6 +280,7 @@ public class ChessGameHandler {
                     var gameAndSessions = gameSessions.get(game.getChessGameId());
 
                     for (Session session : gameAndSessions.getSecond()) {
+                        Log.info("Sending game result {%s}".formatted(gameResult));
                         sendMessage(session, "Game is over by result {%s}".formatted(gameResult));
                     }
 

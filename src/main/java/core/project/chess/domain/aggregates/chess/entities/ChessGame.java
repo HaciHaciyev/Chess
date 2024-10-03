@@ -143,8 +143,12 @@ public class ChessGame {
     private void switchPlayersTurn() {
         if (playersTurn.equals(Color.WHITE)) {
             playersTurn = Color.BLACK;
+            whiteTimer.pause();
+            blackTimer.start();
         } else {
             playersTurn = Color.WHITE;
+            blackTimer.pause();
+            whiteTimer.start();
         }
     }
 
@@ -186,25 +190,15 @@ public class ChessGame {
 
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
 
-        boolean whiteFirstMove = chessBoard.listOfAlgebraicNotations().isEmpty() && playerForWhite.getUsername().username().equals(username);
+        boolean whiteFirstMove = chessBoard.countOfMovement() < 1 && playerForWhite.getUsername().username().equals(username);
         if (whiteFirstMove) {
-            whiteTimer.start();
-        }
-
-        boolean blackFirstMove = chessBoard.listOfAlgebraicNotations().size() == 1 && playerForBlack.getUsername().username().equals(username);
-        if (blackFirstMove) {
             blackTimer.start();
-            whiteTimer.pause();
         }
 
-        if (playerForWhite.getUsername().username().equals(username)) {
+        boolean blackFirstMove = chessBoard.countOfMovement() < 1 && playerForBlack.getUsername().username().equals(username);
+        if (blackFirstMove) {
             whiteTimer.start();
             blackTimer.pause();
-        }
-
-        if (playerForBlack.getUsername().username().equals(username)) {
-            blackTimer.start();
-            whiteTimer.pause();
         }
 
         lastMoveWasUndo = false;
@@ -536,6 +530,7 @@ public class ChessGame {
 
                     Thread.sleep(100);
                 }
+                log.info("Timer is out");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -550,6 +545,7 @@ public class ChessGame {
             log.info("starting timer for {}", player);
 
             if (isPaused.get()) {
+                log.info("resuming");
                 Duration pauseDuration = Duration.between(pauseTime, Instant.now());
                 startTime = startTime.plus(pauseDuration);
                 isPaused.set(false);
@@ -568,6 +564,7 @@ public class ChessGame {
         public void pause() {
             if (isRunning.get() && !isPaused.get()) {
                 pauseTime = Instant.now();
+                log.info("pausing...");
                 isPaused.set(true);
             }
         }
