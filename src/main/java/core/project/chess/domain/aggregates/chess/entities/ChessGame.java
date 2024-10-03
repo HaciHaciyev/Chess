@@ -1,22 +1,29 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
 import core.project.chess.application.dto.gamesession.Message;
-import core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage;
-import core.project.chess.domain.aggregates.chess.events.SessionEvents;
+import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
+import core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage;
+import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.pieces.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
+import core.project.chess.infrastructure.utilities.SideEffect;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
-
-import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage.*;
 
@@ -38,6 +45,9 @@ public class ChessGame {
     private @Getter(AccessLevel.NONE) StatusPair<GameResult> isGameOver;
     final @Getter(AccessLevel.NONE) List<Message> chatMessages;
 
+    private final ChessTimer whiteTimer;
+    private final ChessTimer blackTimer;
+
     private ChessGame(UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack,
                       Rating playerForWhiteRating, Rating playerForBlackRating, SessionEvents sessionEvents,
                       TimeControllingTYPE timeControllingTYPE, StatusPair<GameResult> statusPair) {
@@ -51,6 +61,7 @@ public class ChessGame {
         Objects.requireNonNull(sessionEvents);
         Objects.requireNonNull(timeControllingTYPE);
         Objects.requireNonNull(statusPair);
+
         if (playerForBlack.getId().equals(playerForWhite.getId())) {
             throw new IllegalArgumentException("Game can`t be initialize with one same player.");
         }
@@ -70,6 +81,9 @@ public class ChessGame {
         this.timeControllingTYPE = timeControllingTYPE;
         this.isGameOver = statusPair;
         this.chatMessages = new ArrayList<>();
+
+        this.whiteTimer = new ChessTimer(timeControllingTYPE, Color.WHITE, () -> this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN));
+        this.blackTimer = new ChessTimer(timeControllingTYPE, Color.BLACK, () -> this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN));
 
         playerForWhite.addGame(this);
         playerForBlack.addGame(this);
@@ -172,6 +186,27 @@ public class ChessGame {
 
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
 
+        boolean whiteFirstMove = chessBoard.listOfAlgebraicNotations().isEmpty() && playerForWhite.getUsername().username().equals(username);
+        if (whiteFirstMove) {
+            whiteTimer.start();
+        }
+
+        boolean blackFirstMove = chessBoard.listOfAlgebraicNotations().size() == 1 && playerForBlack.getUsername().username().equals(username);
+        if (blackFirstMove) {
+            blackTimer.start();
+            whiteTimer.pause();
+        }
+
+        if (playerForWhite.getUsername().username().equals(username)) {
+            whiteTimer.start();
+            blackTimer.pause();
+        }
+
+        if (playerForBlack.getUsername().username().equals(username)) {
+            blackTimer.start();
+            whiteTimer.pause();
+        }
+
         lastMoveWasUndo = false;
 
         if (message.equals(GameResultMessage.RuleOf3EqualsPositions)) {
@@ -187,6 +222,8 @@ public class ChessGame {
                 message.equals(Checkmate) || message.equals(Stalemate) || message.equals(RuleOf50Moves) || message.equals(InsufficientMatingMaterial);
 
         if (gameOver) {
+            whiteTimer.stop();
+            blackTimer.stop();
 
             if (message.equals(Checkmate)) {
                 gameOver(Operations.CHECKMATE);
@@ -448,4 +485,104 @@ public class ChessGame {
     }
 
     public record AgreementPair(String whitePlayerUsername, String blackPlayerUsername) {}
+
+    @Slf4j
+    private static class ChessTimer implements Runnable {
+        private Instant startTime;
+        private Instant pauseTime;
+        private final Duration gameDuration;
+
+        private final AtomicBoolean isPaused;
+        private final AtomicBoolean isRunning;
+
+        private final Color player;
+
+        private final Object lock;
+        private final ExecutorService timerService;
+
+        private final SideEffect whenElapsed;
+
+        public ChessTimer(ChessGame.TimeControllingTYPE timeControlling,
+                          Color player,
+                          SideEffect whenElapsed) {
+
+            this.gameDuration = Duration.ofMinutes(timeControlling.getMinutes());
+
+            this.isPaused = new AtomicBoolean();
+            this.isRunning = new AtomicBoolean();
+
+            this.player = player;
+
+            this.lock = new Object();
+            this.timerService = Executors.newSingleThreadExecutor(r -> new Thread(r, player + " timer thread"));
+
+            this.whenElapsed = whenElapsed;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (isRunning.get()) {
+                    synchronized (lock) {
+                        if (isPaused.get()) {
+                            lock.wait();
+                        }
+                    }
+
+                    Duration elapsedTime = Duration.between(startTime, Instant.now());
+                    if (elapsedTime.compareTo(gameDuration) >= 0) {
+                        whenElapsed.execute();
+                    }
+
+                    Thread.sleep(100);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        public boolean start() {
+            if (isRunning.get()) {
+                log.info("timer for {} is already running", player);
+                return false;
+            }
+
+            log.info("starting timer for {}", player);
+
+            if (isPaused.get()) {
+                Duration pauseDuration = Duration.between(pauseTime, Instant.now());
+                startTime = startTime.plus(pauseDuration);
+                isPaused.set(false);
+
+                synchronized (lock) {
+                    lock.notify();
+                }
+            }
+
+            startTime = Instant.now();
+            isRunning.set(true);
+            timerService.submit(this);
+            return true;
+        }
+
+        public void pause() {
+            if (isRunning.get() && !isPaused.get()) {
+                pauseTime = Instant.now();
+                isPaused.set(true);
+            }
+        }
+
+        public void stop() {
+            isRunning.set(false);
+            timerService.shutdownNow();
+
+            try {
+                if (!timerService.awaitTermination(1, TimeUnit.SECONDS)) {
+                    log.warn("Timer service didn't terminate gracefully.");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 }

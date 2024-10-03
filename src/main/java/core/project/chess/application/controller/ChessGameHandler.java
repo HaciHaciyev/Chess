@@ -3,7 +3,9 @@ package core.project.chess.application.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.chess.application.dto.gamesession.*;
+import core.project.chess.application.dto.gamesession.ChessGameMessage;
+import core.project.chess.application.dto.gamesession.GameParameters;
+import core.project.chess.application.dto.gamesession.MessageType;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
@@ -22,7 +24,10 @@ import jakarta.transaction.Transactional;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +37,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Path("/chess-game")
 @ServerEndpoint("/chess-game/{gameId}")
@@ -85,6 +93,10 @@ public class ChessGameHandler {
         waitingForTheGame.remove(secondPlayer.getUsername());
         final ChessGame chessGame = chessGameService.loadChessGame(firstPlayer, gameParameters, secondPlayer, secondGameParameters);
         gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>()));
+
+        ChessGameSpectator spectator = new ChessGameSpectator(chessGame);
+        spectator.start();
+
         inboundChessRepository.completelySaveStartedChessGame(chessGame);
 
         return "You partner for chess successfully founded. Starting to create session for the game {%s}.".formatted(chessGame.getChessGameId());
@@ -135,15 +147,15 @@ public class ChessGameHandler {
     @Transactional
     void handleWebSocketMessage(final Session session, final String username, final JsonNode jsonNode,
                                 final MessageType type, final Pair<ChessGame, Set<Session>> gameAndSessions) throws JsonProcessingException {
-        switch (type) {
-            case MOVE -> chessGameService.move(Pair.of(username, session), jsonNode, gameAndSessions);
-            case MESSAGE -> chessGameService.chat(Pair.of(username, session), jsonNode, gameAndSessions);
-            case RETURN_MOVE -> chessGameService.returnOfMovement(Pair.of(username, session), gameAndSessions);
-            case RESIGNATION -> chessGameService.resignation(Pair.of(username, session), gameAndSessions);
-            case TREE_FOLD -> chessGameService.threeFold(Pair.of(username, session), gameAndSessions);
-            case AGREEMENT -> chessGameService.agreement(Pair.of(username, session), gameAndSessions);
-            default -> throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid message type.").build());
-        }
+            switch (type) {
+                case MOVE -> chessGameService.move(Pair.of(username, session), jsonNode, gameAndSessions);
+                case MESSAGE -> chessGameService.chat(Pair.of(username, session), jsonNode, gameAndSessions);
+                case RETURN_MOVE -> chessGameService.returnOfMovement(Pair.of(username, session), gameAndSessions);
+                case RESIGNATION -> chessGameService.resignation(Pair.of(username, session), gameAndSessions);
+                case TREE_FOLD -> chessGameService.threeFold(Pair.of(username, session), gameAndSessions);
+                case AGREEMENT -> chessGameService.agreement(Pair.of(username, session), gameAndSessions);
+                default -> throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid message type.").build());
+            }
     }
 
     @OnClose
@@ -250,4 +262,41 @@ public class ChessGameHandler {
         return StatusPair.ofFalse();
     }
 
+    private class ChessGameSpectator implements Runnable {
+        private final ChessGame game;
+        private final AtomicBoolean isRunning;
+        private final ExecutorService executor;
+
+        public ChessGameSpectator(ChessGame game) {
+            this.game = game;
+            this.isRunning = new AtomicBoolean();
+            this.executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Game Spectator Thread"));
+        }
+
+        @Override
+        public void run() {
+            while (isRunning.get()) {
+                game.gameResult().ifPresent(gameResult -> {
+                    var gameAndSessions = gameSessions.get(game.getChessGameId());
+
+                    for (Session session : gameAndSessions.getSecond()) {
+                        sendMessage(session, "Game is over by result {%s}".formatted(gameResult));
+                    }
+
+                    isRunning.set(false);
+                });
+            }
+            Log.info("Spectator shutting down");
+        }
+
+        public void start() {
+            if (isRunning.get()) {
+                Log.info("Spectator is already running");
+            }
+
+            Log.info("Starting spectator");
+            isRunning.set(true);
+            executor.submit(this);
+        }
+    }
 }
