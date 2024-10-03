@@ -16,6 +16,7 @@ import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
+import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
@@ -42,6 +43,8 @@ public class ChessGameService {
     private final InboundUserRepository inboundUserRepository;
 
     private final InboundChessRepository inboundChessRepository;
+
+    private final OutboundChessRepository outboundChessRepository;
 
     public void move(final Pair<String, Session> usernameAndSession, final JsonNode jsonNode, final Pair<ChessGame, Set<Session>> gameAndSessions)
             throws JsonProcessingException {
@@ -171,6 +174,10 @@ public class ChessGameService {
 
     @Transactional
     public void gameOverOperationsExecutor(final ChessGame chessGame) {
+        if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().getChessBoardId())) {
+            return;
+        }
+
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
         inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
         inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());

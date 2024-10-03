@@ -7,5 +7,7 @@ import java.util.UUID;
 
 public interface OutboundChessRepository {
 
+    boolean isChessHistoryPresent(UUID chessHistoryId);
+
     Result<ChessGameHistory, Throwable> findById(UUID chessGameId);
 }

@@ -277,7 +277,7 @@ public class ChessGameHandler {
         public void run() {
             while (isRunning.get()) {
                 game.gameResult().ifPresent(gameResult -> {
-                    var gameAndSessions = gameSessions.get(game.getChessGameId());
+                    var gameAndSessions = gameSessions.remove(game.getChessGameId());
 
                     for (Session session : gameAndSessions.getSecond()) {
                         Log.info("Sending game result {%s}".formatted(gameResult));
