@@ -480,6 +480,19 @@ public class ChessGame {
 
     public record AgreementPair(String whitePlayerUsername, String blackPlayerUsername) {}
 
+    /**
+     * An internal timer implementation for managing chess game time controls.
+     * This class handles the timing mechanics for a single player in a chess game,
+     * including starting, pausing, and stopping the timer, as well as tracking time elapsed.
+     *
+     * <p>The timer runs in its own thread and can be configured with different time control settings.
+     * It supports operations like pausing and resuming, and will execute a specified action when
+     * the allocated time has elapsed.</p>
+     *
+     * @implNote This class uses {@link ExecutorService} for timer management and atomic operations
+     *           for thread-safe state management. The timer runs at 100ms intervals to check for
+     *           time expiration.
+     */
     @Slf4j
     private class ChessTimer implements Runnable {
         private Instant startTime;
@@ -513,6 +526,14 @@ public class ChessGame {
             this.whenElapsed = whenElapsed;
         }
 
+        /**
+         * Main timer loop that checks for elapsed time and manages paused state.
+         * This method runs continuously while the timer is active, checking if the
+         * allocated time has elapsed and executing the callback if it has.
+         *
+         * @implNote The timer checks time elapsed every 100ms and uses wait/notify
+         *           mechanism for pause handling
+         */
         @Override
         public void run() {
             try {
@@ -536,6 +557,13 @@ public class ChessGame {
             }
         }
 
+        /**
+         * Starts or resumes the timer.
+         * If the timer was previously paused, it will resume from where it left off,
+         * accounting for the duration of the pause.
+         *
+         * @return true if the timer was successfully started, false if it was already running
+         */
         public boolean start() {
             if (isRunning.get()) {
                 log.info("timer for {} is already running", player);
