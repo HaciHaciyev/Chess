@@ -13,9 +13,9 @@ import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
 import core.project.chess.infrastructure.utilities.SideEffect;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import io.quarkus.logging.Log;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -493,7 +493,6 @@ public class ChessGame {
      *           for thread-safe state management. The timer runs at 100ms intervals to check for
      *           time expiration.
      */
-    @Slf4j
     private class ChessTimer implements Runnable {
         private Instant startTime;
         private Instant pauseTime;
@@ -551,7 +550,7 @@ public class ChessGame {
 
                     Thread.sleep(100);
                 }
-                log.info("Timer is out");
+                Log.info("Timer is out");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -566,14 +565,14 @@ public class ChessGame {
          */
         public boolean start() {
             if (isRunning.get()) {
-                log.info("timer for {} is already running", player);
+                Log.info("timer for {%s} is already running".formatted(player));
                 return false;
             }
 
-            log.info("starting timer for {}", player);
+            Log.info("starting timer for {%s}".formatted(player));
 
             if (isPaused.get()) {
-                log.info("resuming");
+                Log.info("resuming");
                 Duration pauseDuration = Duration.between(pauseTime, Instant.now());
                 startTime = startTime.plus(pauseDuration);
                 isPaused.set(false);
@@ -592,7 +591,7 @@ public class ChessGame {
         public void pause() {
             if (isRunning.get() && !isPaused.get()) {
                 pauseTime = Instant.now();
-                log.info("pausing...");
+                Log.info("pausing...");
                 isPaused.set(true);
             }
         }
@@ -603,7 +602,7 @@ public class ChessGame {
 
             try {
                 if (!timerService.awaitTermination(1, TimeUnit.SECONDS)) {
-                    log.warn("Timer service didn't terminate gracefully.");
+                    Log.warn("Timer service didn't terminate gracefully.");
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
