@@ -481,7 +481,7 @@ public class ChessGame {
     public record AgreementPair(String whitePlayerUsername, String blackPlayerUsername) {}
 
     @Slf4j
-    private static class ChessTimer implements Runnable {
+    private class ChessTimer implements Runnable {
         private Instant startTime;
         private Instant pauseTime;
         private final Duration gameDuration;
@@ -518,7 +518,7 @@ public class ChessGame {
             try {
                 while (isRunning.get()) {
                     synchronized (lock) {
-                        if (isPaused.get()) {
+                        if (isPaused.get() && !isGameOver.status()) {
                             lock.wait();
                         }
                     }
