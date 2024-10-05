@@ -6,6 +6,7 @@ This is a backend application for a chess game, built using Java and the Quarkus
 - [Introduction](#introduction)
 - [Features](#features)
 - [Technologies Used](#technologies-used)
+- [Pre-requirements](#pre-requirements)
 - [API Documentation](#api-documentation)
     - [Authentication](#authentication)
         - [Login](#login)
@@ -45,27 +46,40 @@ The Chess Game Backend is an application that provides the core functionality fo
 
 # Pre-requirements
 
-To run the Chess Game Backend application, the following prerequisites are required:
+To run the application as JAR file, the following prerequisites are required:
 
-1. **Java 21**: Ensure that you have Java 21 installed on your system.
+> at the end project structure should look like this
+```
+application-directory/
+├── Chessland.jar
+├── ...
+├── config/
+│   ├── application.properties
+│   ├── publicKey.pem
+│   ├── privateKey.pem
+│   ├── pgAdmin.env <- optional
+│   └── infrastructure.env
+```
 
-2. **Maven**: Install Maven, a build automation tool for Java projects.
+1. **Ensure that Java 21 and Docker are installed in your system**
+2. Download latest Chessland.zip from releases, extract it and then cd into it
+     ```
+    unzip Chessland.zip
+    cd Chessland
+    ```
+3. Create `config` folder
+    ```
+    mkdir config
+    ```
 
-3. **GraalVM**: Download and install GraalVM, a high-performance runtime for running Java applications.
-
-4. **Docker**: Install Docker, a containerization platform, to run the application and its dependencies.
-
-5. **Generate RSA Keys**: Create the required RSA keys in PEM format by running the following commands in the terminal:
+4. Create the RSA keys in PEM format by running the following commands in the terminal:
 
    ```bash
    openssl genrsa -out rsaPrivateKey.pem 2048
    openssl rsa -pubout -in rsaPrivateKey.pem -out publicKey.pem
    openssl pkcs8 -topk8 -nocrypt -inform pem -in rsaPrivateKey.pem -outform pem -out privateKey.pem
    ```
-
-   Place the generated `privateKey.pem` and `publicKey.pem` files in the `src/main/resources/` directory of your project.
-
-6. **Create `infrastructure.env` File**: Create an `infrastructure.env` file in the root directory of your project with the following content:
+5. Create an `infrastructure.env` file with following content:
 
    ```
    POSTGRES_USER=
@@ -73,17 +87,16 @@ To run the Chess Game Backend application, the following prerequisites are requi
    POSTGRES_PASSWORD=
    POSTGRES_DB=
    PGDATA=/data/postgres
-   EMAIL_PASSWORD=
    ```
 
-   Optionally, you can also create a `pgadmin.env` file in the root directory with the following content:
+   Optionally, if you want to use pgAdmin you can also create a `pgadmin.env` file alongside `infrastructure.env` with following content:
 
    ```
    PGADMIN_DEFAULT_EMAIL=
    PGADMIN_DEFAULT_PASSWORD=
    ```
 
-7. **Create `application.properties` File**: Create an `application.properties` file in the `src/main/resources/` directory with the following content:
+6. Create an `application.properties` file with the following content:
 
    ```properties
    quarkus.http.port=8080
@@ -94,9 +107,9 @@ To run the Chess Game Backend application, the following prerequisites are requi
    quarkus.datasource.db-kind=postgresql
    quarkus.flyway.enabled=true
    quarkus.flyway.migrate-at-start=true
-   quarkus.datasource.username=
-   quarkus.datasource.password=
-   quarkus.datasource.jdbc.url=
+   quarkus.datasource.username={POSTGRES_USER} <- replace these with actual values
+   quarkus.datasource.password={POSTGRES_PASSWORD}
+   quarkus.datasource.jdbc.url={POSTGRES_URL}
    quarkus.datasource.jdbc.max-size=16
    quarkus.datasource.jdbc.min-size=2
 
@@ -104,18 +117,24 @@ To run the Chess Game Backend application, the following prerequisites are requi
    mp.jwt.verify.publickey.location=publicKey.pem
    mp.jwt.verify.issuer=
 
-   quarkus.mailer.from=
-   quarkus.mailer.host=
-   quarkus.mailer.port=
-   quarkus.mailer.username=
-   quarkus.mailer.password=
-   quarkus.mailer.start-tls=
-   quarkus.mailer.auth-methods=
+   quarkus.mailer.from={EMAIL_FROM}
+   quarkus.mailer.host={EMAIL_HOST}
+   quarkus.mailer.port={EMAIL_PORT}
+   quarkus.mailer.username={EMAIL_USERNAME}
+   quarkus.mailer.password={EMAIL_PASSWORD}
+   quarkus.mailer.start-tls=REQUIRED
+   quarkus.mailer.auth-methods=DIGEST-MD5 CRAM-SHA256 CRAM-SHA1 CRAM-MD5 PLAIN LOGIN
    ```
+7. execute `sudo docker-compose up datasource` to initialize PostgreSQL
+8. optionally `sudo docker-compose up datasource-administration` to run pgAdmin in browser
+9. then finally run `java -jar Chessland.jar`
 
-   Update the properties with your specific values, such as the PostgreSQL connection details and SMTP server settings.
+---
+If you want to use Docker image:
 
-8. **Running application** Use commands provided in files in src/main/docker directory.
+🚧WIP
+
+---
 
 After completing these steps, you should have all the necessary prerequisites to run the Chess Game Backend application.
 
