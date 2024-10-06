@@ -65,8 +65,8 @@ public class UserController {
                         )
                 );
 
-        if (!userAccount.isEnable()) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This account is not enable for some reason.").build());
+        if (!userAccount.isEnabled()) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This account is not enabled.").build());
         }
 
         final boolean isPasswordsMatch = passwordEncoder.verify(new Password(loginForm.password()), userAccount.getPassword());

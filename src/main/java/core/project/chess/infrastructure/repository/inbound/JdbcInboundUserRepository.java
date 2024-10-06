@@ -71,7 +71,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             userAccount.getRating().rating(),
             userAccount.getRating().ratingDeviation(),
             userAccount.getRating().volatility(),
-            userAccount.isEnable(),
+            userAccount.isEnabled(),
             userAccount.getAccountEvents().creationDate(),
             userAccount.getAccountEvents().lastUpdateDate()
         )
@@ -112,14 +112,14 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     @Override
     public void enable(final EmailConfirmationToken token) {
         Log.info("Enable user account.");
-        if (!token.isConfirmed() || !token.getUserAccount().isEnable()) {
+        if (!token.isConfirmed() || !token.getUserAccount().isEnabled()) {
             throw new IllegalArgumentException("Token need to be confirmed & UserAccount need to be enabled");
         }
 
         jdbc.write(UPDATE_USER_TOKEN_AND_ACCOUNT,
             token.isConfirmed(),
             token.getTokenId().toString(),
-            token.getUserAccount().isEnable(),
+            token.getUserAccount().isEnabled(),
             token.getUserAccount().getUserRole().toString(),
             token.getUserAccount().getId().toString()
         )
@@ -132,7 +132,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     @Override
     public void deleteByToken(final EmailConfirmationToken token) throws IllegalAccessException {
         Log.info("Delete user account.");
-        final Boolean isEnable = token.getUserAccount().isEnable();
+        final Boolean isEnable = token.getUserAccount().isEnabled();
 
         if (Boolean.TRUE.equals(isEnable) || token.isConfirmed()) {
             throw new IllegalAccessException("It is prohibited to delete an accessible account");
