@@ -60,7 +60,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void save(final UserAccount userAccount) {
-        Log.info("Save user {%s}.".formatted(userAccount.toString()));
+        Log.infof("Save user %s", userAccount.toString());
 
         jdbc.write(INSERT_USER_ACCOUNT,
             userAccount.getId().toString(),
@@ -81,7 +81,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfRating(final UserAccount userAccount) {
-        Log.info("Update user account {%s}".formatted(userAccount.toString()));
+        Log.infof("Update user account %s", userAccount.toString());
 
         jdbc.write(UPDATE_USER_RATING,
                 userAccount.getRating().rating(),
@@ -95,7 +95,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void saveUserToken(final EmailConfirmationToken token) {
-        Log.info("Save user token {%s}.".formatted(token.toString()));
+        Log.infof("Save user token %s", token.toString());
 
         jdbc.write(INSERT_USER_TOKEN,
             token.getTokenId().toString(),
@@ -126,7 +126,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
         .ifFailure(Throwable::printStackTrace);
 
-        Log.info("User account {%s} has became available".formatted(token));
+        Log.infof("User account %s has became available", token);
     }
 
     @Override
