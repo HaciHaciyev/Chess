@@ -196,7 +196,7 @@ public class ChessGameHandler {
         try {
             currentSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, messageInCaseOfGameEnding));
         } catch (Exception e) {
-            Log.info(e.getMessage());
+            Log.error(e.getMessage(), e);
         }
     }
 
@@ -280,7 +280,7 @@ public class ChessGameHandler {
                     var gameAndSessions = gameSessions.remove(game.getChessGameId());
 
                     for (Session session : gameAndSessions.getSecond()) {
-                        Log.info("Sending game result {%s}".formatted(gameResult));
+                        Log.infof("Sending game result {%s} to session {%s}", gameResult, session.getId());
                         sendMessage(session, "Game is over by result {%s}".formatted(gameResult));
                     }
 
@@ -293,7 +293,7 @@ public class ChessGameHandler {
 
         public void start() {
             if (isRunning.get()) {
-                Log.info("Spectator is already running");
+                Log.debug("Spectator is already running");
             }
 
             Log.info("Starting spectator");

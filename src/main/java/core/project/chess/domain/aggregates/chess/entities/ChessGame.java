@@ -565,11 +565,11 @@ public class ChessGame {
          */
         public boolean start() {
             if (isRunning.get()) {
-                Log.info("timer for {%s} is already running".formatted(player));
+                Log.debugf("timer for %s is already running", player);
                 return false;
             }
 
-            Log.info("starting timer for {%s}".formatted(player));
+            Log.debugf("starting timer for %s", player);
 
             if (isPaused.get()) {
                 Log.info("resuming");
@@ -591,7 +591,7 @@ public class ChessGame {
         public void pause() {
             if (isRunning.get() && !isPaused.get()) {
                 pauseTime = Instant.now();
-                Log.info("pausing...");
+                Log.debug("pausing...");
                 isPaused.set(true);
             }
         }

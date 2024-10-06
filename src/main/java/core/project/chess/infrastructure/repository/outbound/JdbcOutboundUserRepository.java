@@ -130,7 +130,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     private UserAccount userAccountMapper(final ResultSet rs) throws SQLException {
-        Log.info("The user account {%s} was taken from the database".formatted(rs.getString("username")));
+        Log.infof("The user account %s was taken from the database", rs.getString("username"));
 
         var events = new AccountEvents(
                 rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),

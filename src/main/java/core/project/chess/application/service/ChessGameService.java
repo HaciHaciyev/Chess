@@ -67,7 +67,7 @@ public class ChessGameService {
             gameOverOperationsExecutor(chessGame);
 
             for (Session currentSession : gameAndSessions.getSecond()) {
-                sendMessage(currentSession, "Game is ended by result: {%s}.".formatted(chessGame.gameResult().get().toString()));
+                sendMessage(currentSession, "Game is ended by result: {%s}.".formatted(chessGame.gameResult().orElseThrow().toString()));
             }
         }
     }
@@ -79,7 +79,7 @@ public class ChessGameService {
 
         try {
             gameAndSessions.getFirst().addChatMessage(username, message);
-
+            // ?? sending multiple messages to session
             for (Session session : gameAndSessions.getSecond()) {
                 sendMessage(session, objectMapper.writeValueAsString(gameAndSessions.getFirst().chatMessages()));
             }
