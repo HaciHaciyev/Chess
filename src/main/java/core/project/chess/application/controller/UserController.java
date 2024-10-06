@@ -46,7 +46,9 @@ public class UserController {
 
     @POST @Path("/login")
     public final Response login(LoginForm loginForm) {
-        Objects.requireNonNull(loginForm);
+        if (loginForm == null) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Login form is null.").build());
+        }
 
         final Username username = Result.ofThrowable(
                 () -> new Username(loginForm.username())
@@ -79,7 +81,9 @@ public class UserController {
 
     @POST @Path("/registration")
     public final Response registration(RegistrationForm registrationForm) {
-        Objects.requireNonNull(registrationForm);
+        if (registrationForm == null) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Registration form is null.").build());
+        }
 
         if (!Objects.equals(
                 registrationForm.password(), registrationForm.passwordConfirmation())
