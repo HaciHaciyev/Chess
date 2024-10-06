@@ -109,7 +109,6 @@ public class ChessGame {
     }
 
     public void addChatMessage(final String username, final Message message) {
-        Objects.requireNonNull(message);
         final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
         final boolean isBlackPlayer = username.equals(playerForBlack.getUsername().username());
 

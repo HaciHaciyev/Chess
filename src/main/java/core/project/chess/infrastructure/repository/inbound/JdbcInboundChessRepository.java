@@ -6,8 +6,6 @@ import core.project.chess.infrastructure.config.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import java.util.Objects;
-
 @Transactional
 @ApplicationScoped
 public class JdbcInboundChessRepository implements InboundChessRepository {
@@ -45,8 +43,6 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
     @Override
     public void completelySaveStartedChessGame(final ChessGame chessGame) {
-        Objects.requireNonNull(chessGame);
-
         jdbc.write(SAVE_STARTED_CHESS_GAME,
 
             chessGame.getChessGameId().toString(),
@@ -67,7 +63,6 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
     @Override
     public void completelyUpdateFinishedGame(final ChessGame chessGame) {
-        Objects.requireNonNull(chessGame);
         if (chessGame.gameResult().isEmpty()) {
             throw new IllegalArgumentException("Game is not over.");
         }

@@ -82,7 +82,7 @@ public class ChessGameService {
     public void chat(final Pair<String, Session> usernameAndSession, final JsonNode jsonNode, final Pair<ChessGame, Set<Session>> gameAndSessions)
             throws JsonProcessingException {
         final String username = usernameAndSession.getFirst();
-        final Message message = mapMessage(Objects.requireNonNull(jsonNode));
+        final Message message = mapMessage(jsonNode);
 
         try {
             gameAndSessions.getFirst().addChatMessage(username, message);

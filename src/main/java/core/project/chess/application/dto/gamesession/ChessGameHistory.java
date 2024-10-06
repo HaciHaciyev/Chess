@@ -7,15 +7,10 @@ import java.util.UUID;
 public record ChessGameHistory(UUID chessHistoryId, String pgn, String[] fenRepresentations) {
 
     public ChessGameHistory {
-        Objects.requireNonNull(chessHistoryId);
-        Objects.requireNonNull(pgn);
-        Objects.requireNonNull(fenRepresentations);
         if (pgn.isBlank()) {
             throw new IllegalArgumentException("PGN can`t be blank.");
         }
         for (final String fenRepresentation : fenRepresentations) {
-            Objects.requireNonNull(fenRepresentation);
-
             if (fenRepresentation.isBlank()) {
                 throw new IllegalArgumentException("FEN representation can`t be blank.");
             }

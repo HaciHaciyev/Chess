@@ -64,6 +64,10 @@ public class ChessGameHandler {
 
     @POST @Path("/start-game") @RolesAllowed("User")
     public String startGame(@QueryParam("color") Color color, @QueryParam("type") ChessGame.TimeControllingTYPE type) {
+        if (color == null) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Color is required.").build());
+        }
+
         final var gameParameters = new GameParameters(
                 color, Objects.requireNonNullElse(type, ChessGame.TimeControllingTYPE.DEFAULT), LocalDateTime.now()
         );
@@ -109,8 +113,11 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session, @PathParam("gameId") final String gameId) throws JsonProcessingException {
-        Objects.requireNonNull(session);
-        Objects.requireNonNull(gameId);
+        if (gameId == null || gameId.isBlank()) {
+            Log.error("gameId is null or blank");
+            sendMessage(session, "gameId can't be null or blank");
+            return;
+        }
 
         final boolean isGameSessionExists = gameSessions.containsKey(UUID.fromString(gameId));
         if (!isGameSessionExists) {
@@ -133,14 +140,24 @@ public class ChessGameHandler {
 
     @OnMessage
     public void onMessage(final Session session, @PathParam("gameId") final String gameId, final String message) {
-        Objects.requireNonNull(session);
-        Objects.requireNonNull(gameId);
+        if (gameId == null || gameId.isBlank()) {
+            Log.error("gameId is null or blank");
+            sendMessage(session, "gameId can't be null or blank");
+            return;
+        }
 
-        final JsonNode jsonNode = getJsonTree(Objects.requireNonNull(message));
+        if (message == null || message.isBlank()) {
+            Log.error("message is null or blank");
+            sendMessage(session, "message can't be null or blank");
+            return;
+        }
+
         Log.infof("Received message {%s} from session {%s} for game {%s}", message, session.getId(), gameId);
 
+        final JsonNode jsonNode = getJsonTree(message);
         final MessageType type = getMessageType(jsonNode);
-        final String username = Objects.requireNonNull(extractJWT(session)).getName();
+
+        final String username = extractJWT(session).getName();
         final Pair<ChessGame, Set<Session>> gameAndSessions = gameSessions.get(UUID.fromString(gameId));
 
         if (Objects.isNull(gameAndSessions)) {
@@ -173,8 +190,11 @@ public class ChessGameHandler {
 
     @OnClose
     public void onClose(final Session session, @PathParam("gameId") final String gameId) {
-        Objects.requireNonNull(session);
-        Objects.requireNonNull(gameId);
+        if (gameId == null || gameId.isBlank()) {
+            Log.error("gameId is null or blank");
+            sendMessage(session, "gameId can't be null or blank");
+            return;
+        }
 
         final UUID gameUuid = UUID.fromString(gameId);
 
@@ -187,7 +207,6 @@ public class ChessGameHandler {
 
         Log.infof("Closing websocket session for game {%s} with id {%s}", gameId, session.getId());
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(gameUuid);
-        Objects.requireNonNull(pair);
 
         final ChessGame chessGame = pair.getFirst();
         if (chessGame.gameResult().isEmpty()) {
@@ -195,10 +214,6 @@ public class ChessGameHandler {
         }
 
         final Set<Session> sessions = pair.getSecond();
-        if (!sessions.contains(session)) {
-            return;
-        }
-
         final String messageInCaseOfGameEnding = "Game ended. Because of %s".formatted(chessGame.gameResult().get().toString());
         closeSession(session, messageInCaseOfGameEnding);
 
