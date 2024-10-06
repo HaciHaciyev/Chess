@@ -70,6 +70,7 @@ public class ChessGameService {
             sendMessage(currentSession, objectMapper.writeValueAsString(message));
         }
 
+        // TODO existence of spectator makes this operation unnecessary
         if (chessGame.gameResult().isPresent()) {
             gameOverOperationsExecutor(chessGame);
 

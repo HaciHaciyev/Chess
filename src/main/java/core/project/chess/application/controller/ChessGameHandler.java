@@ -85,16 +85,16 @@ public class ChessGameHandler {
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This account was not found.").build())
                 );
 
-        final StatusPair<Pair<UserAccount, GameParameters>> statusPair = findOpponent(firstPlayer, gameParameters);
+        final StatusPair<Pair<UserAccount, GameParameters>> potentialOpponent = findOpponent(firstPlayer, gameParameters);
 
-        if (!statusPair.status()) {
+        if (!potentialOpponent.status()) {
             waitingForTheGame.put(username, Pair.of(firstPlayer, gameParameters));
             Log.infof("No opponent found for the player %s, waiting.", username);
             return "Try to find opponent for you.";
         }
 
-        final UserAccount secondPlayer = statusPair.orElseThrow().getFirst();
-        final GameParameters secondGameParameters = statusPair.orElseThrow().getSecond();
+        final UserAccount secondPlayer = potentialOpponent.orElseThrow().getFirst();
+        final GameParameters secondGameParameters = potentialOpponent.orElseThrow().getSecond();
         Log.infof("Found opponent for the player %s: %s", username, secondPlayer.getUsername().username());
 
         waitingForTheGame.remove(secondPlayer.getUsername());
@@ -300,8 +300,8 @@ public class ChessGameHandler {
 
         public ChessGameSpectator(ChessGame game) {
             this.game = game;
-            this.isRunning = new AtomicBoolean();
-            this.executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Game Spectator Thread"));
+            this.isRunning = new AtomicBoolean(false);
+            this.executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Spectator Thread"));
         }
 
         @Override

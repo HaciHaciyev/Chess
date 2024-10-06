@@ -10,7 +10,10 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 import static core.project.chess.domain.aggregates.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.aggregates.chess.enumerations.Color.WHITE;
@@ -57,7 +60,7 @@ public class UserAccount {
         return new UserAccount(id, username, email, password, userRole, enabled, rating, events, new HashSet<>(), new HashSet<>());
     }
 
-    public boolean isEnable() {
+    public boolean isEnabled() {
         return isEnable;
     }
 

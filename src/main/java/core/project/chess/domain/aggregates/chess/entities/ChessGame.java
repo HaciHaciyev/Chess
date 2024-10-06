@@ -519,7 +519,7 @@ public class ChessGame {
             this.player = player;
 
             this.lock = new Object();
-            this.timerService = Executors.newSingleThreadExecutor(r -> new Thread(r, player + " timer thread"));
+            this.timerService = Executors.newVirtualThreadPerTaskExecutor();
 
             this.whenElapsed = whenElapsed;
         }
