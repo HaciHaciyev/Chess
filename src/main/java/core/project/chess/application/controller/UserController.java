@@ -54,6 +54,7 @@ public class UserController {
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
         );
 
+        Log.debugf("Fetching user %s from repo", username.username());
         final UserAccount userAccount = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
@@ -72,6 +73,7 @@ public class UserController {
         }
 
         final String token = jwtUtility.generateToken(userAccount);
+        Log.info("Login successful");
         return Response.ok(token).build();
     }
 
@@ -117,14 +119,18 @@ public class UserController {
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid user account.").build())
         );
 
+        Log.infof("Saving new user %s to repo", username.username());
         inboundUserRepository.save(userAccount);
 
         var token = EmailConfirmationToken.createToken(userAccount);
+
+        Log.infof("Saving new token %s to repo", token.getToken().token().toString().substring(4));
         inboundUserRepository.saveUserToken(token);
 
         String link = String.format("/token/verification?%s", token.getToken());
         emailInteractionService.sendToEmail(email, link);
 
+        Log.info("Registration successful.");
         return Response.ok(jwtUtility.generateToken(userAccount)).build();
     }
 

@@ -597,6 +597,7 @@ public class ChessGame {
         }
 
         public void stop() {
+            Log.debugf("Stopping timer for %s", player);
             isRunning.set(false);
             timerService.shutdownNow();
 

@@ -74,6 +74,7 @@ public class ChessGameHandler {
                 () -> new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build())
         );
 
+        Log.debugf("Fetching user %s from repo", username.username());
         final UserAccount firstPlayer = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
@@ -84,19 +85,23 @@ public class ChessGameHandler {
 
         if (!statusPair.status()) {
             waitingForTheGame.put(username, Pair.of(firstPlayer, gameParameters));
+            Log.infof("No opponent found for the player %s, waiting.", username);
             return "Try to find opponent for you.";
         }
 
         final UserAccount secondPlayer = statusPair.orElseThrow().getFirst();
         final GameParameters secondGameParameters = statusPair.orElseThrow().getSecond();
+        Log.infof("Found opponent for the player %s: %s", username, secondPlayer.getUsername().username());
 
         waitingForTheGame.remove(secondPlayer.getUsername());
         final ChessGame chessGame = chessGameService.loadChessGame(firstPlayer, gameParameters, secondPlayer, secondGameParameters);
         gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>()));
 
+        Log.infof("Initializing Spectator for game {%s}", chessGame.getChessGameId());
         ChessGameSpectator spectator = new ChessGameSpectator(chessGame);
         spectator.start();
 
+        Log.debugf("Saving started game {%s}", chessGame.getChessGameId());
         inboundChessRepository.completelySaveStartedChessGame(chessGame);
 
         return "You partner for chess successfully founded. Starting to create session for the game {%s}.".formatted(chessGame.getChessGameId());
@@ -109,6 +114,8 @@ public class ChessGameHandler {
 
         final boolean isGameSessionExists = gameSessions.containsKey(UUID.fromString(gameId));
         if (!isGameSessionExists) {
+            Log.errorf("Game session with id {%s} does not exist", gameId);
+            sendMessage(session, "Game session with id {%s} does not exist".formatted(gameId));
             return;
         }
 
@@ -119,6 +126,8 @@ public class ChessGameHandler {
                 pair.getFirst().getChessBoard().actualRepresentationOfChessBoard(), pair.getFirst().getChessBoard().pgn()
         );
 
+        Log.debugf("New session for game {%s} with id {%s} is opened", gameId, session.getId());
+        Log.debugf("Sending game state to session {%s}", session.getId());
         sendMessage(session, objectMapper.writeValueAsString(chessBoardMessage));
     }
 
@@ -128,15 +137,19 @@ public class ChessGameHandler {
         Objects.requireNonNull(gameId);
 
         final JsonNode jsonNode = getJsonTree(Objects.requireNonNull(message));
+        Log.infof("Received message {%s} from session {%s} for game {%s}", message, session.getId(), gameId);
+
         final MessageType type = getMessageType(jsonNode);
         final String username = Objects.requireNonNull(extractJWT(session)).getName();
         final Pair<ChessGame, Set<Session>> gameAndSessions = gameSessions.get(UUID.fromString(gameId));
+
         if (Objects.isNull(gameAndSessions)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This game session is not exits.").build());
         }
 
         CompletableFuture.runAsync(() -> {
             try {
+                Log.debugf("Handling %s for game {%s}", type, gameId);
                 handleWebSocketMessage(session, username, jsonNode, type, gameAndSessions);
             } catch (JsonProcessingException e) {
                 Log.error("Unexpected error occurred while handling websocket message.", e);
@@ -167,9 +180,12 @@ public class ChessGameHandler {
 
         final boolean isGameSessionExists = gameSessions.containsKey(gameUuid);
         if (!isGameSessionExists) {
+            Log.errorf("Game session with id {%s} does not exist", gameId);
+            sendMessage(session, "Game session with id {%s} does not exist".formatted(gameId));
             return;
         }
 
+        Log.infof("Closing websocket session for game {%s} with id {%s}", gameId, session.getId());
         final Pair<ChessGame, Set<Session>> pair = gameSessions.get(gameUuid);
         Objects.requireNonNull(pair);
 
@@ -277,6 +293,8 @@ public class ChessGameHandler {
         public void run() {
             while (isRunning.get()) {
                 game.gameResult().ifPresent(gameResult -> {
+                    Log.infof("Game is over by result {%s}", gameResult);
+                    Log.debugf("Removing game {%s}", game.getChessGameId());
                     var gameAndSessions = gameSessions.remove(game.getChessGameId());
 
                     for (Session session : gameAndSessions.getSecond()) {
