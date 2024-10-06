@@ -10,9 +10,9 @@ import core.project.chess.application.dto.gamesession.Message;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
-import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
@@ -53,13 +53,20 @@ public class ChessGameService {
         final ChessMovementForm move = mapMessageForMovementForm(Objects.requireNonNull(jsonNode));
 
         Result.ofThrowable(
-                () -> chessGame.makeMovement(username, move.from(), move.to(), move.inCaseOfPromotion())
+                () -> {
+                    Log.infof("User {%s} makes move %s -> %s | promotion -> %s", username, move.from(), move.to(), move.inCaseOfPromotion());
+                    return chessGame.makeMovement(username, move.from(), move.to(), move.inCaseOfPromotion());
+                }
         ).ifFailure(
-                t -> sendMessage(usernameAndSession.getSecond(), "Invalid chess movement.")
+                t -> {
+                    Log.errorf(t, "Failed to make movement {%s} for user {%s}", move, username);
+                    sendMessage(usernameAndSession.getSecond(), "Invalid chess movement.");
+                }
         );
 
         final var message = new ChessGameMessage(chessGame.getChessBoard().actualRepresentationOfChessBoard(), chessGame.getChessBoard().pgn());
         for (Session currentSession : gameAndSessions.getSecond()) {
+            Log.infof("Sending updated state of game {%s} to session {%s}", chessGame.getChessGameId(), currentSession.getId());
             sendMessage(currentSession, objectMapper.writeValueAsString(message));
         }
 
@@ -82,8 +89,10 @@ public class ChessGameService {
             // ?? sending multiple messages to session
             for (Session session : gameAndSessions.getSecond()) {
                 sendMessage(session, objectMapper.writeValueAsString(gameAndSessions.getFirst().chatMessages()));
+                Log.infof("Sent message {%s} to session {%s}", message, session.getId());
             }
         } catch (IllegalArgumentException | NullPointerException e) {
+            Log.errorf(e, "Failed to add message {%s} for user {%s}", message, username);
             sendMessage(usernameAndSession.getSecond(), "Invalid message.");
         }
     }
@@ -94,7 +103,10 @@ public class ChessGameService {
         final ChessGame chessGame = gameAndSessions.getFirst();
 
         Result.ofThrowable(
-                () -> chessGame.returnMovement(username)
+                () -> {
+                    Log.infof("User {%s} proposes to return a move", username);
+                    return chessGame.returnMovement(username);
+                }
         ).ifFailure(
                 t -> sendMessage(usernameAndSession.getSecond(), "Can`t return a move.")
         );
@@ -116,7 +128,7 @@ public class ChessGameService {
     public void resignation(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, Set<Session>> gameAndSessions) {
         final String username = usernameAndSession.getFirst();
         final ChessGame chessGame = gameAndSessions.getFirst();
-
+        Log.infof("User {%s} resigns", username);
         try {
             chessGame.resignation(username);
 
@@ -139,7 +151,7 @@ public class ChessGameService {
         ).ifFailure(
                 t -> sendMessage(usernameAndSession.getSecond(), "Can`t end game by ThreeFold")
         );
-
+        Log.infof("User {%s} ends game by ThreeFold", username);
         gameOverOperationsExecutor(chessGame);
 
         for (Session currentSession : gameAndSessions.getSecond()) {
@@ -152,7 +164,10 @@ public class ChessGameService {
         final ChessGame chessGame = gameAndSessions.getFirst();
 
         Result.ofThrowable(
-                () -> chessGame.agreement(username)
+                () -> {
+                    Log.infof("User {%s} proposes for stalemate", username);
+                    return chessGame.agreement(username);
+                }
         ).ifFailure(
                 t -> sendMessage(usernameAndSession.getSecond(), "Not a player. Illegal access.")
         );
@@ -175,9 +190,11 @@ public class ChessGameService {
     @Transactional
     public void gameOverOperationsExecutor(final ChessGame chessGame) {
         if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().getChessBoardId())) {
+            Log.errorf("History of game %s is already present", chessGame.getChessGameId());
             return;
         }
 
+        Log.infof("Saving finished game %s and changing ratings", chessGame.getChessGameId());
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
         inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
         inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
@@ -237,6 +254,12 @@ public class ChessGameService {
             );
 
         }
+        Log.infof("Created chess game {%s} | Players: {%s}(%s), {%s}(%s) -- {%s} | Time controlling type: {%s}",
+                chessGame.getChessBoard().getChessBoardId(),
+                firstPlayer.getUsername().username(), firstPlayer.getRating().rating(),
+                secondPlayer.getUsername().username(), secondPlayer.getRating().rating(),
+                timeControlling
+        );
 
         return chessGame;
     }
