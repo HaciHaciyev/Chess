@@ -11,7 +11,6 @@ import core.project.chess.domain.aggregates.chess.pieces.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.OptionalArgument;
-import core.project.chess.infrastructure.utilities.SideEffect;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
 import lombok.AccessLevel;
@@ -24,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage.*;
 
@@ -45,8 +45,8 @@ public class ChessGame {
     private @Getter(AccessLevel.NONE) StatusPair<GameResult> isGameOver;
     final @Getter(AccessLevel.NONE) List<Message> chatMessages;
 
-    private final ChessTimer whiteTimer;
-    private final ChessTimer blackTimer;
+    private final ChessCountdownTimer whiteTimer;
+    private final ChessCountdownTimer blackTimer;
 
     private ChessGame(UUID chessGameId, ChessBoard chessBoard, UserAccount playerForWhite, UserAccount playerForBlack,
                       Rating playerForWhiteRating, Rating playerForBlackRating, SessionEvents sessionEvents,
@@ -82,8 +82,11 @@ public class ChessGame {
         this.isGameOver = statusPair;
         this.chatMessages = new ArrayList<>();
 
-        this.whiteTimer = new ChessTimer(timeControllingTYPE, Color.WHITE, () -> this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN));
-        this.blackTimer = new ChessTimer(timeControllingTYPE, Color.BLACK, () -> this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN));
+        this.whiteTimer = new ChessCountdownTimer("White timer", Duration.ofMinutes(timeControllingTYPE.getMinutes()),
+                unused -> this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN));
+
+        this.blackTimer = new ChessCountdownTimer("Black timer", Duration.ofMinutes(timeControllingTYPE.getMinutes()),
+                unused -> this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN));
 
         playerForWhite.addGame(this);
         playerForBlack.addGame(this);
@@ -188,17 +191,6 @@ public class ChessGame {
         }
 
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
-
-        boolean whiteFirstMove = chessBoard.countOfMovement() < 1 && playerForWhite.getUsername().username().equals(username);
-        if (whiteFirstMove) {
-            blackTimer.start();
-        }
-
-        boolean blackFirstMove = chessBoard.countOfMovement() < 1 && playerForBlack.getUsername().username().equals(username);
-        if (blackFirstMove) {
-            whiteTimer.start();
-            blackTimer.pause();
-        }
 
         lastMoveWasUndo = false;
 
@@ -479,20 +471,8 @@ public class ChessGame {
 
     public record AgreementPair(String whitePlayerUsername, String blackPlayerUsername) {}
 
-    /**
-     * An internal timer implementation for managing chess game time controls.
-     * This class handles the timing mechanics for a single player in a chess game,
-     * including starting, pausing, and stopping the timer, as well as tracking time elapsed.
-     *
-     * <p>The timer runs in its own thread and can be configured with different time control settings.
-     * It supports operations like pausing and resuming, and will execute a specified action when
-     * the allocated time has elapsed.</p>
-     *
-     * @implNote This class uses {@link ExecutorService} for timer management and atomic operations
-     *           for thread-safe state management. The timer runs at 100ms intervals to check for
-     *           time expiration.
-     */
-    private class ChessTimer implements Runnable {
+    private class ChessCountdownTimer implements Runnable {
+
         private Instant startTime;
         private Instant pauseTime;
         private final Duration gameDuration;
@@ -500,78 +480,63 @@ public class ChessGame {
         private final AtomicBoolean isPaused;
         private final AtomicBoolean isRunning;
 
-        private final Color player;
-
         private final Object lock;
         private final ExecutorService timerService;
 
-        private final SideEffect whenElapsed;
+        private final Consumer<Void> onComplete;
 
-        public ChessTimer(ChessGame.TimeControllingTYPE timeControlling,
-                          Color player,
-                          SideEffect whenElapsed) {
+        private final String name;
 
-            this.gameDuration = Duration.ofMinutes(timeControlling.getMinutes());
-
+        public ChessCountdownTimer(String name, Duration duration, Consumer<Void> onComplete) {
+            this.name = name;
+            this.gameDuration = duration;
             this.isPaused = new AtomicBoolean();
             this.isRunning = new AtomicBoolean();
-
-            this.player = player;
-
             this.lock = new Object();
-            this.timerService = Executors.newVirtualThreadPerTaskExecutor();
-
-            this.whenElapsed = whenElapsed;
+            this.timerService = Executors.newSingleThreadExecutor();
+            this.onComplete = onComplete;
         }
 
-        /**
-         * Main timer loop that checks for elapsed time and manages paused state.
-         * This method runs continuously while the timer is active, checking if the
-         * allocated time has elapsed and executing the callback if it has.
-         *
-         * @implNote The timer checks time elapsed every 100ms and uses wait/notify
-         *           mechanism for pause handling
-         */
         @Override
         public void run() {
             try {
                 while (isRunning.get()) {
                     synchronized (lock) {
-                        if (isPaused.get() && !isGameOver.status()) {
+                        if (isPaused.get()) {
                             lock.wait();
                         }
                     }
 
-                    Duration elapsedTime = Duration.between(startTime, Instant.now());
-                    if (elapsedTime.compareTo(gameDuration) >= 0) {
-                        whenElapsed.execute();
+                    Duration elapsed = Duration.between(startTime, Instant.now());
+                    Duration remaining = gameDuration.minus(elapsed);
+
+                    if (remaining.isNegative() || remaining.isZero()) {
+                        onComplete.accept(null);
+                        stop();
+                        break;
                     }
 
                     Thread.sleep(100);
                 }
-                Log.info("Timer is out");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
 
-        /**
-         * Starts or resumes the timer.
-         * If the timer was previously paused, it will resume from where it left off,
-         * accounting for the duration of the pause.
-         *
-         * @return true if the timer was successfully started, false if it was already running
-         */
         public boolean start() {
-            if (isRunning.get()) {
-                Log.debugf("timer for %s is already running", player);
+            if (isRunning.get() && !isPaused.get()) {
+                Log.warnf("%s for the game %s is already running", name, chessGameId);
                 return false;
             }
 
-            Log.debugf("starting timer for %s", player);
+            if (!isPaused.get()) {
+                Log.infof("starting {%s}", name);
+            }
+
+            isRunning.set(true);
 
             if (isPaused.get()) {
-                Log.info("resuming");
+                Log.infof("resuming {%s}", name);
                 Duration pauseDuration = Duration.between(pauseTime, Instant.now());
                 startTime = startTime.plus(pauseDuration);
                 isPaused.set(false);
@@ -579,30 +544,32 @@ public class ChessGame {
                 synchronized (lock) {
                     lock.notify();
                 }
+
+                return true;
+            } else {
+                startTime = Instant.now();
             }
 
-            startTime = Instant.now();
-            isRunning.set(true);
             timerService.submit(this);
             return true;
         }
 
         public void pause() {
             if (isRunning.get() && !isPaused.get()) {
+                Log.infof("pausing {%s}...", name);
                 pauseTime = Instant.now();
-                Log.debug("pausing...");
                 isPaused.set(true);
             }
         }
 
         public void stop() {
-            Log.debugf("Stopping timer for %s", player);
             isRunning.set(false);
             timerService.shutdownNow();
+            Log.infof("Shutting down {%s}...", name);
 
             try {
                 if (!timerService.awaitTermination(1, TimeUnit.SECONDS)) {
-                    Log.warn("Timer service didn't terminate gracefully.");
+                    Log.warn("Timer service didn't terminate gracefully");
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
