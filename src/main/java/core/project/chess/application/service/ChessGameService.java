@@ -28,8 +28,8 @@ import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -46,7 +46,7 @@ public class ChessGameService {
 
     private final OutboundChessRepository outboundChessRepository;
 
-    public void move(final Pair<String, Session> usernameAndSession, final JsonNode jsonNode, final Pair<ChessGame, Set<Session>> gameAndSessions)
+    public void move(final Pair<String, Session> usernameAndSession, final JsonNode jsonNode, final Pair<ChessGame, HashSet<Session>> gameAndSessions)
             throws JsonProcessingException {
         final String username = usernameAndSession.getFirst();
         final ChessGame chessGame = gameAndSessions.getFirst();
@@ -70,7 +70,6 @@ public class ChessGameService {
             sendMessage(currentSession, objectMapper.writeValueAsString(message));
         }
 
-        // TODO existence of spectator makes this operation unnecessary
         if (chessGame.gameResult().isPresent()) {
             gameOverOperationsExecutor(chessGame);
 
@@ -80,14 +79,14 @@ public class ChessGameService {
         }
     }
 
-    public void chat(final Pair<String, Session> usernameAndSession, final JsonNode jsonNode, final Pair<ChessGame, Set<Session>> gameAndSessions)
+    public void chat(final Pair<String, Session> usernameAndSession, final JsonNode jsonNode, final Pair<ChessGame, HashSet<Session>> gameAndSessions)
             throws JsonProcessingException {
         final String username = usernameAndSession.getFirst();
         final Message message = mapMessage(jsonNode);
 
         try {
             gameAndSessions.getFirst().addChatMessage(username, message);
-            // ?? sending multiple messages to session
+
             for (Session session : gameAndSessions.getSecond()) {
                 sendMessage(session, objectMapper.writeValueAsString(gameAndSessions.getFirst().chatMessages()));
                 Log.infof("Sent message {%s} to session {%s}", message, session.getId());
@@ -98,7 +97,7 @@ public class ChessGameService {
         }
     }
 
-    public void returnOfMovement(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, Set<Session>> gameAndSessions)
+    public void returnOfMovement(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, HashSet<Session>> gameAndSessions)
             throws JsonProcessingException {
         final String username = usernameAndSession.getFirst();
         final ChessGame chessGame = gameAndSessions.getFirst();
@@ -126,7 +125,7 @@ public class ChessGameService {
         }
     }
 
-    public void resignation(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, Set<Session>> gameAndSessions) {
+    public void resignation(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, HashSet<Session>> gameAndSessions) {
         final String username = usernameAndSession.getFirst();
         final ChessGame chessGame = gameAndSessions.getFirst();
         Log.infof("User {%s} resigns", username);
@@ -143,7 +142,7 @@ public class ChessGameService {
         }
     }
 
-    public void threeFold(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, Set<Session>> gameAndSessions) {
+    public void threeFold(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, HashSet<Session>> gameAndSessions) {
         final String username = usernameAndSession.getFirst();
         final ChessGame chessGame = gameAndSessions.getFirst();
 
@@ -160,7 +159,7 @@ public class ChessGameService {
         }
     }
 
-    public void agreement(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, Set<Session>> gameAndSessions) {
+    public void agreement(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, HashSet<Session>> gameAndSessions) {
         final String username = usernameAndSession.getFirst();
         final ChessGame chessGame = gameAndSessions.getFirst();
 
@@ -255,11 +254,11 @@ public class ChessGameService {
             );
 
         }
-        Log.infof("Created chess game {%s} | Players: {%s}(%s), {%s}(%s) -- {%s} | Time controlling type: {%s}",
+        Log.infof("Created chess game {%s} | Players: {%s}(%s), {%s}(%s) | Time controlling type: {%s}",
                 chessGame.getChessBoard().getChessBoardId(),
                 firstPlayer.getUsername().username(), firstPlayer.getRating().rating(),
                 secondPlayer.getUsername().username(), secondPlayer.getRating().rating(),
-                timeControlling
+                timeControlling.toString()
         );
 
         return chessGame;
