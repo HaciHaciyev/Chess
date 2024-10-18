@@ -56,6 +56,12 @@ public class UserController {
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
         );
 
+        final Password password = Result.ofThrowable(
+                () -> new Password(loginForm.password())
+        ).orElseThrow(
+                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid password.").build())
+        );
+
         Log.debugf("Fetching user %s from repo", username.username());
         final UserAccount userAccount = outboundUserRepository
                 .findByUsername(username)
@@ -69,7 +75,7 @@ public class UserController {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This account is not enabled.").build());
         }
 
-        final boolean isPasswordsMatch = passwordEncoder.verify(new Password(loginForm.password()), userAccount.getPassword());
+        final boolean isPasswordsMatch = passwordEncoder.verify(password, userAccount.getPassword());
         if (!isPasswordsMatch) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid password.").build());
         }
