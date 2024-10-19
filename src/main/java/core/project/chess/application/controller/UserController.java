@@ -35,6 +35,14 @@ public class UserController {
 
     private final EmailInteractionService emailInteractionService;
 
+    public static final String NOT_ENABLED = "This account is not enabled.";
+
+    public static final String INVALID_PASSWORD = "Invalid password. Must contains at least 8 characters.";
+
+    private static final String USER_NOT_FOUND = "User %s not found, check data for correctness or register account if you do not have.";
+
+    public static final String INVALID_USERNAME = "Invalid username. Username can`t be blank an need to contain only letters and digits, no special symbols";
+
     UserController(JwtUtility jwtUtility, PasswordEncoder passwordEncoder, InboundUserRepository inboundUserRepository,
                    OutboundUserRepository outboundUserRepository, EmailInteractionService emailInteractionService) {
         this.jwtUtility = jwtUtility;
@@ -53,26 +61,26 @@ public class UserController {
         final Username username = Result.ofThrowable(
                 () -> new Username(loginForm.username())
         ).orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
+                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_USERNAME).build())
         );
 
         final Password password = Result.ofThrowable(
                 () -> new Password(loginForm.password())
         ).orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid password.").build())
+                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build())
         );
 
         Log.debugf("Fetching user %s from repo", username.username());
         final UserAccount userAccount = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
-                        () -> new WebApplicationException(
-                                Response.status(Response.Status.BAD_REQUEST).entity(String.format("User %s not found", username.username())).build()
-                        )
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                                .entity(String.format(USER_NOT_FOUND, username.username()))
+                                .build())
                 );
 
         if (!userAccount.isEnabled()) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This account is not enabled.").build());
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(NOT_ENABLED).build());
         }
 
         final boolean isPasswordsMatch = passwordEncoder.verify(password, userAccount.getPassword());
@@ -80,8 +88,8 @@ public class UserController {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid password.").build());
         }
 
-        final String token = jwtUtility.generateToken(userAccount);
         Log.info("Login successful");
+        final String token = jwtUtility.generateToken(userAccount);
         return Response.ok(token).build();
     }
 
@@ -100,7 +108,7 @@ public class UserController {
         Username username = Result.ofThrowable(
                 () -> new Username(registrationForm.username())
         ).orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
+                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_USERNAME).build())
         );
 
         Email email = Result.ofThrowable(
@@ -112,11 +120,11 @@ public class UserController {
         Password password = Result.ofThrowable(
                 () -> new Password(passwordEncoder.encode(new Password(registrationForm.password())))
         ).orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid password.").build())
+                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build())
         );
 
         if (outboundUserRepository.isUsernameExists(username)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Username already exists").build());
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Username already exists.").build());
         }
 
         if (outboundUserRepository.isEmailExists(email)) {
@@ -141,7 +149,7 @@ public class UserController {
         emailInteractionService.sendToEmail(email, link);
 
         Log.info("Registration successful.");
-        return Response.ok(jwtUtility.generateToken(userAccount)).build();
+        return Response.ok("Registration successful. Verify you email.").build();
     }
 
     @PATCH @Path("/token/verification")
@@ -160,7 +168,7 @@ public class UserController {
                 Log.error("Unexpected error while deleting token. Probably account or token is not disabled.", e);
             }
 
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Token was expired.").build());
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Token was expired. You need to register again.").build());
         }
 
         foundToken.confirm();
