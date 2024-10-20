@@ -14,4 +14,6 @@ public interface InboundUserRepository {
     void enable(EmailConfirmationToken token);
 
     void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException;
+
+    void addPartnership(UserAccount firstUser, UserAccount secondUser);
 }

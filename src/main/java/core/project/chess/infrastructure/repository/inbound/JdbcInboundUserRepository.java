@@ -22,6 +22,12 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 VALUES (?,?,?,?,?,?,?,?,?,?,?)
             """;
 
+    private static final String INSERT_NEW_PARTNERSHIP = """
+            INSERT INTO UserPartnership
+                (user_id, partner_id)
+                VALUES (?,?)
+            """;
+
     private static final String INSERT_USER_TOKEN = """
             INSERT INTO UserToken
                 (id, user_id, token, is_confirmed,
@@ -76,7 +82,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             userAccount.getAccountEvents().lastUpdateDate()
         )
 
-        .ifFailure(Throwable::printStackTrace);
+        .ifFailure(Log::error);
     }
 
     @Override
@@ -90,7 +96,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 userAccount.getId().toString()
         )
 
-        .ifFailure(Throwable::printStackTrace);
+        .ifFailure(Log::error);
     }
 
     @Override
@@ -106,7 +112,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             token.getTokenEvents().getExpirationDate()
         )
 
-        .ifFailure(Throwable::printStackTrace);
+        .ifFailure(Log::error);
     }
 
     @Override
@@ -124,7 +130,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             token.getUserAccount().getId().toString()
         )
 
-        .ifFailure(Throwable::printStackTrace);
+        .ifFailure(Log::error);
 
         Log.infof("User account %s has became available", token);
     }
@@ -143,6 +149,21 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             token.getUserAccount().getId().toString()
         )
 
-        .ifFailure(Throwable::printStackTrace);
+        .ifFailure(Log::error);
+    }
+
+    @Override
+    public void addPartnership(UserAccount firstUser, UserAccount secondUser) {
+        final boolean doNotMatch = !firstUser.getPartners().contains(secondUser) || !secondUser.getPartners().contains(firstUser);
+        if (doNotMatch) {
+            throw new IllegalArgumentException("Illegal function usage.");
+        }
+
+        jdbc.write(INSERT_NEW_PARTNERSHIP,
+                firstUser.getId().toString(),
+                secondUser.getId().toString()
+        )
+
+        .ifFailure(Log::error);
     }
 }

@@ -200,19 +200,23 @@ public class JDBC {
      * );
      * </pre>
      */
-    public <T> Result<List<T>, Throwable> readListOf(final String sql, final RowMapper<T> rowMapper) {
+    public <T> Result<List<T>, Throwable> readListOf(final String sql, final RowMapper<T> rowMapper, @OptionalArgument final Object... params) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(rowMapper);
 
         try (final Connection connection = dataSource.getConnection();
-             final PreparedStatement statement = connection.prepareStatement(sql);
-             final ResultSet resultSet = statement.executeQuery()) {
-            final List<T> results = new ArrayList<>();
+             final PreparedStatement statement = connection.prepareStatement(sql)) {
+            if (params != null && params.length > 0) {
+                setParameters(statement, params);
+            }
 
-            int rowNum = 0;
-            while (resultSet.next()) {
-                results.add(rowMapper.extractData(resultSet, rowNum));
-                rowNum++;
+            final List<T> results = new ArrayList<>();
+            try (final ResultSet resultSet = statement.executeQuery()) {
+                int rowNum = 0;
+                while (resultSet.next()) {
+                    results.add(rowMapper.extractData(resultSet, rowNum));
+                    rowNum++;
+                }
             }
 
             return Result.success(results);

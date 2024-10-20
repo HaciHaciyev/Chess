@@ -1,12 +1,27 @@
 package core.project.chess.application.dto.gamesession;
 
+import core.project.chess.domain.aggregates.user.value_objects.Username;
+
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 
-public record ChessGameHistory(UUID chessHistoryId, String pgn, String[] fenRepresentations) {
+public record ChessGameHistory(UUID chessHistoryId,
+                               String pgn, String[] fenRepresentations,
+                               Username playerForWhite, Username playerForBlack,
+                               double whitePlayerRating, double blackPlayerRating,
+                               LocalDateTime gameStart, LocalDateTime gameEnd) {
 
     public ChessGameHistory {
+        Objects.requireNonNull(chessHistoryId);
+        Objects.requireNonNull(pgn);
+        Objects.requireNonNull(fenRepresentations);
+        Objects.requireNonNull(playerForWhite);
+        Objects.requireNonNull(playerForBlack);
+        Objects.requireNonNull(gameStart);
+        Objects.requireNonNull(gameEnd);
+
         if (pgn.isBlank()) {
             throw new IllegalArgumentException("PGN can`t be blank.");
         }
