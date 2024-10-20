@@ -30,8 +30,9 @@ public class UserAccount {
     private boolean isEnable;
     private Rating rating;
     private final AccountEvents accountEvents;
-    private final /**@ManyToMany*/ Set<UserAccount> partners;
-    private final /**@ManyToMany*/ Set<ChessGame> games;
+    private final Set<UserAccount> partners;
+    private final Set<UserAccount> partnershipRequest;
+    private final Set<ChessGame> games;
 
     public static UserAccount of(Username username, Email email, Password password) {
         Objects.requireNonNull(username);
@@ -40,7 +41,7 @@ public class UserAccount {
 
         return new UserAccount(
                 UUID.randomUUID(), username, email, password, UserRole.NONE, false,
-                Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
+                Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>()
         );
     }
 
@@ -57,7 +58,7 @@ public class UserAccount {
         Objects.requireNonNull(rating);
         Objects.requireNonNull(events);
 
-        return new UserAccount(id, username, email, password, userRole, enabled, rating, events, new HashSet<>(), new HashSet<>());
+        return new UserAccount(id, username, email, password, userRole, enabled, rating, events, new HashSet<>(), new HashSet<>(), new HashSet<>());
     }
 
     public boolean isEnabled() {
@@ -68,14 +69,30 @@ public class UserAccount {
         return Rating.fromRepository(this.rating.rating(), this.rating.ratingDeviation(), this.rating.volatility());
     }
 
+    public boolean containsPartnershipRequest(final UserAccount userAccount) {
+        return partnershipRequest.contains(userAccount);
+    }
+
     public void addPartner(final UserAccount partner) {
         Objects.requireNonNull(partner);
-        partners.add(partner);
+        if (partner.containsPartnershipRequest(this)) {
+            partners.add(partner);
+            partner.addPartner(this);
+            this.partnershipRequest.remove(partner);
+            return;
+        }
+
+        this.partnershipRequest.add(partner);
     }
 
     public void removePartner(final UserAccount partner) {
         Objects.requireNonNull(partner);
         partners.remove(partner);
+        partner.removePartner(this);
+    }
+
+    public void removePartnershipRequest(final UserAccount userAccount) {
+        this.partnershipRequest.remove(userAccount);
     }
 
     public void addGame(final ChessGame game) {
