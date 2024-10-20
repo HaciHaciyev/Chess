@@ -78,7 +78,7 @@ public class UserSessionHandler {
     private void handleWebSocketMessage(final JsonNode jsonNode, final MessageType type, final Pair<Session, UserAccount> sessionAndUserAccount) {
         try {
             if (Objects.requireNonNull(type) == MessageType.PARTNERSHIP_REQUEST) {
-                userService.handlePartnershipRequest(new Username(jsonNode.get("username").asText()), type, sessionAndUserAccount);
+                userService.handlePartnershipRequest(new Username(jsonNode.get("username").asText()), sessionAndUserAccount);
             } else {
                 sendMessage(sessionAndUserAccount.getFirst(), "Invalid message type.");
             }

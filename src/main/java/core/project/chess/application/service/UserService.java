@@ -23,7 +23,7 @@ public class UserService {
         this.outboundUserRepository = outboundUserRepository;
     }
 
-    public void handlePartnershipRequest(final Username partner, final MessageType type, final Pair<Session, UserAccount> sessionAndUserAccount) {
+    public void handlePartnershipRequest(final Username partner, final Pair<Session, UserAccount> sessionAndUserAccount) {
         final Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(partner);
         if (!result.success()) {
             sendMessage(sessionAndUserAccount.getFirst(), "This account is not exists.");
