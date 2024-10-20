@@ -18,8 +18,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @PermitAll
 @Path("/account")
@@ -54,7 +53,7 @@ public class UserController {
 
     @POST @Path("/login")
     public final Response login(LoginForm loginForm) {
-        if (loginForm == null) {
+        if (Objects.isNull(loginForm)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Login form is null.").build());
         }
 
@@ -95,7 +94,7 @@ public class UserController {
 
     @POST @Path("/registration")
     public final Response registration(RegistrationForm registrationForm) {
-        if (registrationForm == null) {
+        if (Objects.isNull(registrationForm)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Registration form is null.").build());
         }
 
@@ -154,6 +153,10 @@ public class UserController {
 
     @PATCH @Path("/token/verification")
     public final Response tokenVerification(@QueryParam("token") String token) {
+        if (Objects.isNull(token)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Token can`t be null.").build());
+        }
+
         Log.info("Token verification process.");
         var foundToken = outboundUserRepository
                 .findToken(UUID.fromString(token))

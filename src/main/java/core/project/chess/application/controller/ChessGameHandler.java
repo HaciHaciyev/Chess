@@ -13,13 +13,13 @@ import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
+import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import core.project.chess.infrastructure.utilities.containers.Triple;
 import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
-import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.transaction.Transactional;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
@@ -27,7 +27,6 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -42,6 +41,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ChessGameHandler {
 
     private final JWTParser jwtParser;
+
+    private final JwtUtility jwtUtility;
 
     private final ObjectMapper objectMapper;
 
@@ -68,7 +69,7 @@ public class ChessGameHandler {
         CompletableFuture.supplyAsync(() -> {
             sendMessage(session, "Trying to create a game.");
 
-            final var resultOfUsernameExtracting = Result.ofThrowable(() -> new Username(extractJWT(session).getName()));
+            final var resultOfUsernameExtracting = Result.ofThrowable(() -> new Username(jwtUtility.extractJWT(session).getName()));
             final Username username = resultOfUsernameExtracting.success() ? resultOfUsernameExtracting.value() : null;
             if (Objects.isNull(username)) {
                 sendMessage(session, "You do not authenticated, or you jwt token is invalid.");
@@ -162,7 +163,7 @@ public class ChessGameHandler {
         final JsonNode jsonNode = getJsonTree(message);
         final MessageType type = getMessageType(jsonNode);
 
-        final String username = extractJWT(session).getName();
+        final String username = jwtUtility.extractJWT(session).getName();
         final Pair<ChessGame, HashSet<Session>> gameAndSessions = gameSessions.get(UUID.fromString(gameId));
 
         if (Objects.isNull(gameAndSessions)) {
@@ -189,7 +190,7 @@ public class ChessGameHandler {
                 case RESIGNATION -> chessGameService.resignation(Pair.of(username, session), gameAndSessions);
                 case TREE_FOLD -> chessGameService.threeFold(Pair.of(username, session), gameAndSessions);
                 case AGREEMENT -> chessGameService.agreement(Pair.of(username, session), gameAndSessions);
-                default -> throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid message type.").build());
+                default -> sendMessage(session, "Invalid message type.");
             }
     }
 
@@ -267,19 +268,6 @@ public class ChessGameHandler {
             return MessageType.valueOf(node.get("type").asText());
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON request. Invalid Message Type.").build());
-        }
-    }
-
-    private JsonWebToken extractJWT(final Session session) {
-        final String token = session.getRequestParameterMap().get("token").getFirst();
-        if (Objects.isNull(token)) {
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
-        }
-
-        try {
-            return jwtParser.parse(token);
-        } catch (ParseException e) {
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid JWT token.").build());
         }
     }
 
