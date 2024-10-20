@@ -101,7 +101,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     @Override
     public Result<List<ChessGameHistory>, Throwable> listOfGames(final Username username, final int pageNumber) {
-        return jdbc.readListOf(LIST_OF_GAMES, this::chessGamesExtractor, pageNumber, Objects.requireNonNull(username));
+        return jdbc.readListOf(LIST_OF_GAMES, this::chessGamesExtractor, Objects.requireNonNull(username), Objects.requireNonNull(username), pageNumber);
     }
 
     private ChessGameHistory chessGameMapper(final ResultSet rs) throws SQLException {
