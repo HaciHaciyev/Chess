@@ -8,7 +8,6 @@ import core.project.chess.infrastructure.broker.PartnershipRequestsProducer;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
-import io.smallrye.reactive.messaging.kafka.Record;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 import lombok.AccessLevel;
@@ -39,13 +38,13 @@ public class UserSessionService {
         firstUser.addPartner(secondUser);
         if (firstUser.getPartners().contains(secondUser)) {
             sendMessage(firstUserPair.getFirst(), successfullyAddedPartnershipMessage(firstUser, secondUser));
-            partnershipRequestsProducer.send(Record.of(partner.username(), successfullyAddedPartnershipMessage(secondUser, firstUser)));
+            partnershipRequestsProducer.send(partner, successfullyAddedPartnershipMessage(secondUser, firstUser));
             inboundUserRepository.addPartnership(firstUser, secondUser);
             return;
         }
 
         sendMessage(firstUserPair.getFirst(), "Wait for user %s answer.".formatted(partner.username()));
-        partnershipRequestsProducer.send(Record.of(partner.username(), invitationMessage(message, firstUser)));
+        partnershipRequestsProducer.send(partner, invitationMessage(message, firstUser));
     }
 
     public void handlePartnershipRequest(final Pair<Session, UserAccount> secondUserPair,

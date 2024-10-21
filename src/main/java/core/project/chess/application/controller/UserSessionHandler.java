@@ -8,6 +8,7 @@ import core.project.chess.application.service.UserSessionService;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
+import core.project.chess.infrastructure.broker.PartnershipRequestsConsumer;
 import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
@@ -20,6 +21,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -37,6 +39,8 @@ public class UserSessionHandler {
 
     private final OutboundUserRepository outboundUserRepository;
 
+    private final PartnershipRequestsConsumer partnershipRequestsConsumer;
+
     private static final Map<Username, Pair<Session, UserAccount>> userSessions = new ConcurrentHashMap<>();
 
     @OnOpen
@@ -49,6 +53,12 @@ public class UserSessionHandler {
         }
 
         userSessions.put(username, Pair.of(session, result.value()));
+
+        CompletableFuture.runAsync(() -> fetchAndSendMessagesFromBrokerToUser(username, session));
+    }
+
+    private void fetchAndSendMessagesFromBrokerToUser(final Username username, final Session session) {
+        partnershipRequestsConsumer.getMessagesForUser(username).forEach(m -> sendMessage(session, m));
     }
 
     @OnMessage
