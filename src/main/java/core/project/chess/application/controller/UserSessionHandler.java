@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.dto.user.MessageType;
-import core.project.chess.application.service.UserService;
+import core.project.chess.application.service.UserSessionService;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
@@ -17,31 +17,27 @@ import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @ServerEndpoint("/user-session")
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class UserSessionHandler {
 
     private final JwtUtility jwtUtility;
 
-    private final UserService userService;
-
     private final ObjectMapper objectMapper;
+
+    private final UserSessionService userSessionService;
 
     private final OutboundUserRepository outboundUserRepository;
 
-    private static final Map<Username, Pair<Session, UserAccount>> userSessions = new HashMap<>();
-
-    UserSessionHandler(JwtUtility jwtUtility, UserService userService, ObjectMapper objectMapper, OutboundUserRepository outboundUserRepository) {
-        this.jwtUtility = jwtUtility;
-        this.userService = userService;
-        this.objectMapper = objectMapper;
-        this.outboundUserRepository = outboundUserRepository;
-    }
+    private static final Map<Username, Pair<Session, UserAccount>> userSessions = new ConcurrentHashMap<>();
 
     @OnOpen
     public final void onOpen(Session session) {
@@ -77,14 +73,24 @@ public class UserSessionHandler {
     @Transactional
     private void handleWebSocketMessage(final JsonNode jsonNode, final MessageType type, final Pair<Session, UserAccount> sessionAndUserAccount) {
         try {
-            if (Objects.requireNonNull(type) == MessageType.PARTNERSHIP_REQUEST) {
-                userService.handlePartnershipRequest(new Username(jsonNode.get("username").asText()), sessionAndUserAccount);
-            } else {
-                sendMessage(sessionAndUserAccount.getFirst(), "Invalid message type.");
+            final String message = Objects.requireNonNull(jsonNode.get("message").asText());
+            final Username secondUser = new Username(Objects.requireNonNull(jsonNode.get("username")).asText());
+
+            final boolean partnershipRequest = Objects.requireNonNull(type).equals(MessageType.PARTNERSHIP_REQUEST);
+            if (partnershipRequest) {
+                if (userSessions.containsKey(secondUser)) {
+                    userSessionService.handlePartnershipRequest(userSessions.get(secondUser), message, sessionAndUserAccount);
+                    return;
+                }
+
+                userSessionService.handlePartnershipRequest(secondUser, message, sessionAndUserAccount);
+                return;
             }
+
+            sendMessage(sessionAndUserAccount.getFirst(), "Invalid message type.");
         } catch (NullPointerException e) {
             Log.error(e);
-            sendMessage(sessionAndUserAccount.getFirst(), "Invalid message type");
+            sendMessage(sessionAndUserAccount.getFirst(), "Invalid message.");
         }
     }
 
