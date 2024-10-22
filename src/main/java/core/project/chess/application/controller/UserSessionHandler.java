@@ -3,12 +3,12 @@ package core.project.chess.application.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.chess.application.dto.user.Message;
 import core.project.chess.application.dto.user.MessageType;
 import core.project.chess.application.service.UserSessionService;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
-import core.project.chess.infrastructure.broker.PartnershipRequestsConsumer;
 import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
@@ -21,8 +21,6 @@ import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,9 +37,7 @@ public class UserSessionHandler {
 
     private final OutboundUserRepository outboundUserRepository;
 
-    private final PartnershipRequestsConsumer partnershipRequestsConsumer;
-
-    private static final Map<Username, Pair<Session, UserAccount>> userSessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Username, Pair<Session, UserAccount>> userSessions = new ConcurrentHashMap<>();
 
     @OnOpen
     public final void onOpen(Session session) {
@@ -53,12 +49,11 @@ public class UserSessionHandler {
         }
 
         userSessions.put(username, Pair.of(session, result.value()));
-
-        CompletableFuture.runAsync(() -> fetchAndSendMessagesFromBrokerToUser(username, session));
+        CompletableFuture.runAsync(() -> sendReceivedMessagesForUsers(username, session));
     }
 
-    private void fetchAndSendMessagesFromBrokerToUser(final Username username, final Session session) {
-        partnershipRequestsConsumer.getMessagesForUser(username).forEach(m -> sendMessage(session, m));
+    private void sendReceivedMessagesForUsers(final Username username, final Session session) {
+        userSessionService.partnershipRequest(session, username);
     }
 
     @OnMessage
@@ -89,11 +84,11 @@ public class UserSessionHandler {
             final boolean partnershipRequest = Objects.requireNonNull(type).equals(MessageType.PARTNERSHIP_REQUEST);
             if (partnershipRequest) {
                 if (userSessions.containsKey(secondUser)) {
-                    userSessionService.handlePartnershipRequest(userSessions.get(secondUser), message, sessionAndUserAccount);
+                    userSessionService.handlePartnershipRequest(userSessions.get(secondUser), new Message(message), sessionAndUserAccount);
                     return;
                 }
 
-                userSessionService.handlePartnershipRequest(secondUser, message, sessionAndUserAccount);
+                userSessionService.handlePartnershipRequest(secondUser, new Message(message), sessionAndUserAccount);
                 return;
             }
 

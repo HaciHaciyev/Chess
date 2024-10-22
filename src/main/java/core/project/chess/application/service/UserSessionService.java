@@ -1,10 +1,10 @@
 package core.project.chess.application.service;
 
+import core.project.chess.application.dto.user.Message;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
-import core.project.chess.infrastructure.broker.PartnershipRequestsProducer;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
@@ -12,6 +12,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -21,9 +25,13 @@ public class UserSessionService {
 
     private final OutboundUserRepository outboundUserRepository;
 
-    private final PartnershipRequestsProducer partnershipRequestsProducer;
+    private static final ConcurrentHashMap<Username, Pair<UserAccount, Queue<Message>>> partnershipRequests = new ConcurrentHashMap<>();
 
-    public void handlePartnershipRequest(final Username partner, final String message,
+    public void partnershipRequest(final Session session, final Username username) {
+        partnershipRequests.get(username).getSecond().forEach(message -> sendMessage(session, message.message()));
+    }
+
+    public void handlePartnershipRequest(final Username partner, final Message message,
                                          final Pair<Session, UserAccount> firstUserPair) {
 
         final Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(partner);
@@ -36,19 +44,21 @@ public class UserSessionService {
         final UserAccount secondUser = result.value();
 
         firstUser.addPartner(secondUser);
-        if (firstUser.getPartners().contains(secondUser)) {
+        final boolean partnershipCreated = firstUser.getPartners().contains(secondUser);
+        if (partnershipCreated) {
             sendMessage(firstUserPair.getFirst(), successfullyAddedPartnershipMessage(firstUser, secondUser));
-            partnershipRequestsProducer.send(partner, successfullyAddedPartnershipMessage(secondUser, firstUser));
+            partnershipRequests.computeIfAbsent(partner, k -> Pair.of(secondUser, new LinkedList<>())).getSecond().add(message);
+
             inboundUserRepository.addPartnership(firstUser, secondUser);
             return;
         }
 
         sendMessage(firstUserPair.getFirst(), "Wait for user %s answer.".formatted(partner.username()));
-        partnershipRequestsProducer.send(partner, invitationMessage(message, firstUser));
+        partnershipRequests.computeIfAbsent(partner, k -> Pair.of(secondUser, new LinkedList<>())).getSecond().add(message);
     }
 
     public void handlePartnershipRequest(final Pair<Session, UserAccount> secondUserPair,
-                                         final String message, final Pair<Session, UserAccount> firstUserPair) {
+                                         final Message message, final Pair<Session, UserAccount> firstUserPair) {
 
         final UserAccount firstUser = firstUserPair.getSecond();
         final UserAccount secondUser = secondUserPair.getSecond();
@@ -62,7 +72,7 @@ public class UserSessionService {
         }
 
         sendMessage(firstUserPair.getFirst(), "Wait for user answer.");
-        sendMessage(secondUserPair.getFirst(), invitationMessage(message, firstUser));
+        sendMessage(secondUserPair.getFirst(), invitationMessage(message.message(), firstUser));
     }
 
     private static String invitationMessage(String message, UserAccount firstUser) {

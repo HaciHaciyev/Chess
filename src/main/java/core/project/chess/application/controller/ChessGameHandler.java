@@ -52,9 +52,9 @@ public class ChessGameHandler {
 
     private final InboundChessRepository inboundChessRepository;
 
-    private static final Map<UUID, Pair<ChessGame, HashSet<Session>>> gameSessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<UUID, Pair<ChessGame, HashSet<Session>>> gameSessions = new ConcurrentHashMap<>();
 
-    private static final Map<Username, Triple<Session, UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Username, Triple<Session, UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen(final Session session) throws JsonProcessingException {
