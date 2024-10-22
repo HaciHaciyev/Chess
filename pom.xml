@@ -47,10 +47,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-websockets</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-messaging-rabbitmq</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -120,6 +116,18 @@
                 <version>${compiler-plugin.version}</version>
                 <configuration>
                     <parameters>true</parameters>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.34</version>
+                        </path>
+                        <path>
+                            <groupId>io.quarkus</groupId>
+                            <artifactId>quarkus-extension-processor</artifactId>
+                            <version>3.13.2</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 

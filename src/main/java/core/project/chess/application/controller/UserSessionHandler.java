@@ -76,7 +76,7 @@ public class UserSessionHandler {
     }
 
     @Transactional
-    private void handleWebSocketMessage(final JsonNode jsonNode, final MessageType type, final Pair<Session, UserAccount> sessionAndUserAccount) {
+    public void handleWebSocketMessage(final JsonNode jsonNode, final MessageType type, final Pair<Session, UserAccount> sessionAndUserAccount) {
         try {
             final String message = Objects.requireNonNull(jsonNode.get("message").asText());
             final Username secondUser = new Username(Objects.requireNonNull(jsonNode.get("username")).asText());
