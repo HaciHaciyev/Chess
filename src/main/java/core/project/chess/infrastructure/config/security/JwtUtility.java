@@ -32,6 +32,17 @@ public class JwtUtility {
                 .sign();
     }
 
+    public String refreshToken(UserAccount userAccount) {
+        Log.info("New token generation.");
+
+        final long year = 86400L * 365L + 1L;
+        return Jwt.issuer("Chessland")
+                .upn(userAccount.getUsername().username())
+                .groups(userAccount.getUserRole().getUserRole())
+                .expiresIn(year)
+                .sign();
+    }
+
     public JsonWebToken extractJWT(final Session session) {
         final String token = session.getRequestParameterMap().get("token").getFirst();
         if (Objects.isNull(token)) {

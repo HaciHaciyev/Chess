@@ -7,11 +7,16 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 
-public record ChessGameHistory(UUID chessHistoryId,
-                               String pgn, String[] fenRepresentations,
-                               Username playerForWhite, Username playerForBlack,
-                               double whitePlayerRating, double blackPlayerRating,
-                               LocalDateTime gameStart, LocalDateTime gameEnd) {
+public record ChessGameHistory(
+        UUID chessHistoryId,
+        String pgn,
+        String[] fenRepresentations,
+        Username playerForWhite,
+        Username playerForBlack,
+        double whitePlayerRating,
+        double blackPlayerRating,
+        LocalDateTime gameStart,
+        LocalDateTime gameEnd) {
 
     public ChessGameHistory {
         Objects.requireNonNull(chessHistoryId);

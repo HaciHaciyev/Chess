@@ -59,6 +59,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             DELETE FROM UserAccount WHERE id = ?;
             """;
 
+    private static final String INSERT_REFRESH_TOKEN = "INSERT INTO UserTokens (user_id, refresh_token) VALUES (?, ?);";
 
     JdbcInboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;
@@ -165,5 +166,10 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
         )
 
         .ifFailure(Log::error);
+    }
+
+    @Override
+    public void saveRefreshToken(UserAccount userAccount, String refreshToken) {
+        jdbc.write(INSERT_USER_TOKEN, userAccount.getId().toString(), refreshToken).ifFailure(Log::error);
     }
 }

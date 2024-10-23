@@ -8,6 +8,7 @@ import core.project.chess.domain.aggregates.user.value_objects.*;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
 import core.project.chess.infrastructure.exceptions.persistant.DataNotFoundException;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,6 +30,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     private static final String FIND_BY_ID = "SELECT * FROM UserAccount WHERE id = ?";
     private static final String FIND_BY_USERNAME = "SELECT * FROM UserAccount WHERE username = ?";
     private static final String FIND_BY_EMAIL = "SELECT * FROM UserAccount WHERE email = ?";
+    private static final String FIND_REFRESH_TOKEN = "";
     private static final String FIND_TOKEN = """
             SELECT
             t.id AS token_id,
@@ -115,6 +117,11 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     @Override
     public Result<EmailConfirmationToken, Throwable> findToken(UUID token) {
         return jdbc.read(FIND_TOKEN, this::userTokenMapper, token.toString());
+    }
+
+    @Override
+    public Result<Pair<String, String>, Throwable> findRefreshToken(String refreshToken) {
+        return jdbc.read(FIND_REFRESH_TOKEN, rs -> Pair.of(rs.getString("user_id"), rs.getString("token")), refreshToken);
     }
 
     private EmailConfirmationToken userTokenMapper(final ResultSet rs) throws SQLException {

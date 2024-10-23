@@ -14,9 +14,12 @@ import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.config.security.PasswordEncoder;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
@@ -24,7 +27,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.TimeZone;
+import java.util.UUID;
 
 @PermitAll
 @Path("/account")
@@ -32,6 +40,8 @@ import java.util.*;
 public class UserController {
 
     private final JsonWebToken jwt;
+
+    private final JWTParser jwtParser;
 
     private final JwtUtility jwtUtility;
 
@@ -90,6 +100,9 @@ public class UserController {
         }
 
         Log.info("Login successful");
+        final String refreshToken = jwtUtility.refreshToken(userAccount);
+        inboundUserRepository.saveRefreshToken(userAccount, refreshToken);
+
         final String token = jwtUtility.generateToken(userAccount);
         return Response.ok(token).build();
     }
@@ -181,6 +194,45 @@ public class UserController {
         inboundUserRepository.enable(foundToken);
 
         return Response.ok().build();
+    }
+
+    @PATCH @Path("/refresh-token")
+    public final Response refresh(@HeaderParam("Refresh-Token") String refreshToken) {
+        if (Objects.isNull(refreshToken) || refreshToken.isBlank() || refreshToken.length() > 512) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid refresh token.").build());
+        }
+
+        final Pair<String, String> foundedPairResult = outboundUserRepository
+                .findRefreshToken(refreshToken)
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This refresh token is not founded").build())
+                );
+
+        final JsonWebToken refreshJWT = parseJWT(foundedPairResult.getSecond());
+        final var tokenExpiration = LocalDateTime.ofInstant(Instant.ofEpochMilli(refreshJWT.getExpirationTime()), TimeZone.getDefault().toZoneId());
+        if (LocalDateTime.now().isAfter(tokenExpiration)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Refresh token is expired, you need to login,").build());
+        }
+
+        final UserAccount userAccount = outboundUserRepository
+                .findById(UUID.fromString(foundedPairResult.getFirst()))
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User was`t founded.").build())
+                );
+
+        final String regeneratedToken = jwtUtility.generateToken(userAccount);
+        return Response.ok(regeneratedToken).build();
+    }
+
+    private JsonWebToken parseJWT(String token) {
+        JsonWebToken jsonWebToken = null;
+        try {
+            jsonWebToken = jwtParser.parse(token);
+        } catch (ParseException e) {
+            Log.error("Unexpected error. Can`t parse jwt.", e);
+        }
+
+        return jsonWebToken;
     }
 
     @Authenticated

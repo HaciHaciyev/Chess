@@ -4,6 +4,7 @@ import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 
 import java.util.UUID;
@@ -21,4 +22,6 @@ public interface OutboundUserRepository {
     Result<UserAccount, Throwable> findByEmail(Email email);
 
     Result<EmailConfirmationToken, Throwable> findToken(UUID token);
+
+    Result<Pair<String, String>, Throwable> findRefreshToken(String refreshToken);
 }
