@@ -72,7 +72,7 @@ public class ChessGameHandler {
             final var resultOfUsernameExtracting = Result.ofThrowable(() -> new Username(jwtUtility.extractJWT(session).getName()));
             final Username username = resultOfUsernameExtracting.success() ? resultOfUsernameExtracting.value() : null;
             if (Objects.isNull(username)) {
-                sendMessage(session, "You do not authenticated, or you jwt token is invalid.");
+                sendMessage(session, "You do not authenticated, or you jwt token is invalid. Reopen Session.");
                 return null;
             }
 
@@ -80,8 +80,12 @@ public class ChessGameHandler {
             final Result<UserAccount, Throwable> foundUser = outboundUserRepository.findByUsername(username);
             final UserAccount firstPlayer = foundUser.success() ? foundUser.value() : null;
             if (Objects.isNull(firstPlayer)) {
-                sendMessage(session, "You do not have a valid user account. User not found.");
+                sendMessage(session, "You do not have a valid user account. User not found. Reopen Session.");
                 return null;
+            }
+
+            if (session.getRequestParameterMap().containsKey("partner")) {
+                return startGameWithPartner(Pair.of(session, firstPlayer), session.getRequestParameterMap().get("partner"));
             }
 
             sendMessage(session, "Process for opponent finding.");
@@ -129,6 +133,19 @@ public class ChessGameHandler {
                 Log.error("Unexpected error occurred while sending chess board message.", e);
             }
         });
+    }
+
+    private Pair<Session, ChessGameMessage> startGameWithPartner(final Pair<Session, UserAccount> firstSessionUser, final List<String> partners) {
+        if (partners.size() > 1) {
+            sendMessage(firstSessionUser.getFirst(), "You can`t invite more than one partner. Reopen Session.");
+            return null;
+        }
+        if (partners.isEmpty()) {
+            throw new IllegalArgumentException("Can`t invite a partner without an username.");
+        }
+
+        // TODO
+        return null;
     }
 
     private void connectToExistedGame(final Session session, final String gameId) throws JsonProcessingException {
