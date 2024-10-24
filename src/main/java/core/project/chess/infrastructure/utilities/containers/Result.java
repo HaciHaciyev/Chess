@@ -83,18 +83,6 @@ public record Result<V, E extends Throwable>(V value,
     }
 
     /**
-     * Executes the provided action if failure, otherwise returns the value.
-     */
-    public V ifFailureOrReturn(Consumer<? super E> action) {
-        if (!this.success) {
-            action.accept(this.throwable);
-            return null;
-        }
-
-        return this.value;
-    }
-
-    /**
      * side effect only method that applies either to Success or Failure whichever is present
      */
     public void handle(Consumer<? super V> successAction,

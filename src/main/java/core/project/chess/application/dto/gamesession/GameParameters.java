@@ -2,7 +2,7 @@ package core.project.chess.application.dto.gamesession;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
-import core.project.chess.infrastructure.utilities.OptionalArgument;
+import core.project.chess.infrastructure.utilities.annotations.OptionalArgument;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

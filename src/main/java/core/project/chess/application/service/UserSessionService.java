@@ -7,7 +7,6 @@ import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
-import core.project.chess.domain.services.GlobalSessionService;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.json.JsonUtilities;
@@ -19,7 +18,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.util.LinkedList;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +26,7 @@ import static core.project.chess.application.dto.user.MessageType.PARTNERSHIP_RE
 
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class UserSessionService implements GlobalSessionService {
+public class UserSessionService {
 
     private final InboundUserRepository inboundUserRepository;
 
@@ -38,7 +36,6 @@ public class UserSessionService implements GlobalSessionService {
 
     private static final ConcurrentHashMap<Username, Pair<UserAccount, Queue<Message>>> partnershipRequests = new ConcurrentHashMap<>();
 
-    @Override
     public void handleOnOpen(Session session, Username username) {
         Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(username);
         if (!result.success()) {
@@ -50,27 +47,27 @@ public class UserSessionService implements GlobalSessionService {
         CompletableFuture.runAsync(() -> messages(session, username));
     }
 
-    @Override
     public void handleOnMessage(Session session, Username username, String message) {
         final Pair<Session, UserAccount> sessionAndUserAccount = userSessions.get(username);
 
-        final MessageType messageType = JsonUtilities.messageType(message).ifFailureOrReturn(t -> WSUtilities.sendMessage(session, "Invalid message type."));
-        if (Objects.isNull(messageType)) {
+        final Result<MessageType, Throwable> messageType = JsonUtilities.messageType(message);
+        if (!messageType.success()) {
+            WSUtilities.sendMessage(session, "Invalid message type.");
             return;
         }
 
-        final JsonNode messageNode = JsonUtilities.jsonTree(message).ifFailureOrReturn(t -> WSUtilities.sendMessage(session, "Invalid message."));
-        if (Objects.isNull(messageNode)) {
+        final Result<JsonNode, Throwable> messageNode = JsonUtilities.jsonTree(message);
+        if (!messageNode.success()) {
+            WSUtilities.sendMessage(session, "Invalid message.");
             return;
         }
 
         CompletableFuture.runAsync(() -> {
             Log.debugf("Handling %s for user {%s}", messageType, username.username());
-            handleWebSocketMessage(messageNode, messageType, sessionAndUserAccount.getFirst(), sessionAndUserAccount.getSecond());
+            handleWebSocketMessage(messageNode.value(), messageType.value(), sessionAndUserAccount.getFirst(), sessionAndUserAccount.getSecond());
         });
     }
 
-    @Override
     public void handleOnClose(Session session, Username username) {
         userSessions.remove(username);
         WSUtilities.closeSession(session, "Session is closed.");
@@ -80,23 +77,21 @@ public class UserSessionService implements GlobalSessionService {
         partnershipRequests.get(username).getSecond().forEach(message -> WSUtilities.sendMessage(session, message.message()));
     }
 
-    private static String invitationMessage(String message, UserAccount firstUser) {
-        return "User %s invite you for partnership {%s}.".formatted(firstUser.getUsername().username(), message);
-    }
-
-    private static String successfullyAddedPartnershipMessage(UserAccount firstUser, UserAccount secondUser) {
-        return "Partnership {%s - %s} successfully added.".formatted(firstUser.getUsername().username(), secondUser.getUsername().username());
-    }
-
     private void handleWebSocketMessage(JsonNode messageNode, MessageType type, Session session, UserAccount user) {
-        final String message = JsonUtilities.message(messageNode).ifFailureOrReturn(t -> WSUtilities.sendMessage(session, "Message can`t be null."));
-        final Username username = JsonUtilities.usernameOfPartner(messageNode)
-                .ifFailureOrReturn(
-                        t -> WSUtilities.sendMessage(session, "Invalid partner username.")
-                );
+        final Result<String, Throwable> message = JsonUtilities.message(messageNode);
+        if (!message.success()) {
+            WSUtilities.sendMessage(session, "Message can`t be null.");
+            return;
+        }
+
+        final Result<Username, Throwable> username = JsonUtilities.usernameOfPartner(messageNode);
+        if (!username.success()) {
+            WSUtilities.sendMessage(session, "Invalid partner username.");
+            return;
+        }
 
         if (type.equals(PARTNERSHIP_REQUEST)) {
-            partnershipRequest(session, user, message, username);
+            partnershipRequest(session, user, message.value(), username.value());
             return;
         }
 
@@ -152,5 +147,13 @@ public class UserSessionService implements GlobalSessionService {
 
         WSUtilities.sendMessage(firstUserPair.getFirst(), "Wait for user answer.");
         WSUtilities.sendMessage(secondUserPair.getFirst(), invitationMessage(message.message(), firstUser));
+    }
+
+    private static String invitationMessage(String message, UserAccount firstUser) {
+        return "User %s invite you for partnership {%s}.".formatted(firstUser.getUsername().username(), message);
+    }
+
+    private static String successfullyAddedPartnershipMessage(UserAccount firstUser, UserAccount secondUser) {
+        return "Partnership {%s - %s} successfully added.".formatted(firstUser.getUsername().username(), secondUser.getUsername().username());
     }
 }

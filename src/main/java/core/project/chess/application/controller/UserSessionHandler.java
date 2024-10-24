@@ -1,7 +1,7 @@
 package core.project.chess.application.controller;
 
+import core.project.chess.application.service.UserSessionService;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
-import core.project.chess.domain.services.GlobalSessionService;
 import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.utilities.web.WSUtilities;
 import jakarta.websocket.OnClose;
@@ -20,12 +20,12 @@ public class UserSessionHandler {
 
     private final JwtUtility jwtUtility;
 
-    private final GlobalSessionService globalSessionService;
+    private final UserSessionService userSessionService;
 
     @OnOpen
     public final void onOpen(Session session) {
         final Username username = new Username(jwtUtility.extractJWT(session).getName());
-        globalSessionService.handleOnOpen(session, username);
+        userSessionService.handleOnOpen(session, username);
     }
 
     @OnMessage
@@ -36,12 +36,12 @@ public class UserSessionHandler {
         }
 
         final Username username = new Username(jwtUtility.extractJWT(session).getName());
-        globalSessionService.handleOnMessage(session, username, message);
+        userSessionService.handleOnMessage(session, username, message);
     }
 
     @OnClose
     public final void onClose(Session session) {
         final Username username = new Username(jwtUtility.extractJWT(session).getName());
-        globalSessionService.handleOnClose(session, username);
+        userSessionService.handleOnClose(session, username);
     }
 }
