@@ -86,9 +86,8 @@ public class ChessGameService {
 
         try {
             gameAndSessions.getFirst().addChatMessage(username, message);
-
             for (Session session : gameAndSessions.getSecond()) {
-                sendMessage(session, objectMapper.writeValueAsString(gameAndSessions.getFirst().chatMessages()));
+                sendMessage(session, objectMapper.writeValueAsString(message));
                 Log.infof("Sent message {%s} to session {%s}", message, session.getId());
             }
         } catch (IllegalArgumentException | NullPointerException e) {
