@@ -27,11 +27,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
-import java.util.TimeZone;
 import java.util.UUID;
 
 @PermitAll
@@ -209,8 +208,10 @@ public class UserController {
                 );
 
         final JsonWebToken refreshJWT = parseJWT(foundedPairResult.getSecond());
-        final var tokenExpiration = LocalDateTime.ofInstant(Instant.ofEpochMilli(refreshJWT.getExpirationTime()), TimeZone.getDefault().toZoneId());
-        if (LocalDateTime.now().isAfter(tokenExpiration)) {
+        long tokenExpirationDate = refreshJWT.getExpirationTime();
+        final var tokenExpiration = LocalDateTime.ofEpochSecond(tokenExpirationDate, 0, ZoneOffset.UTC);
+
+        if (LocalDateTime.now(ZoneOffset.UTC).isAfter(tokenExpiration)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Refresh token is expired, you need to login,").build());
         }
 
