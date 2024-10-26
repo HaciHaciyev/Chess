@@ -142,6 +142,19 @@ public class ChessGameService {
         }
     }
 
+    private void handleWebSocketMessage(final Session session, final String username, final JsonNode jsonNode,
+                                        final MessageType type, final Pair<ChessGame, HashSet<Session>> gameSessions) {
+        switch (type) {
+            case MOVE -> this.move(jsonNode, Pair.of(username, session), gameSessions);
+            case MESSAGE -> this.chat(jsonNode, Pair.of(username, session), gameSessions);
+            case RETURN_MOVE -> this.returnOfMovement(Pair.of(username, session), gameSessions);
+            case RESIGNATION -> this.resignation(Pair.of(username, session), gameSessions);
+            case TREE_FOLD -> this.threeFold(Pair.of(username, session), gameSessions);
+            case AGREEMENT -> this.agreement(Pair.of(username, session), gameSessions);
+            default -> sendMessage(session, "Invalid message type.");
+        }
+    }
+
     private void gameInitialization(Session session, Username username, String message) {
         final Result<GameInit, Throwable> parameters = JsonUtilities.gameInit(message);
         if (!parameters.success()) {
@@ -236,19 +249,6 @@ public class ChessGameService {
         }
 
         invitations.put(partner.getUsername(), user);
-    }
-
-    private void handleWebSocketMessage(final Session session, final String username, final JsonNode jsonNode,
-                                        final MessageType type, final Pair<ChessGame, HashSet<Session>> gameSessions) {
-        switch (type) {
-            case MOVE -> this.move(jsonNode, Pair.of(username, session), gameSessions);
-            case MESSAGE -> this.chat(jsonNode, Pair.of(username, session), gameSessions);
-            case RETURN_MOVE -> this.returnOfMovement(Pair.of(username, session), gameSessions);
-            case RESIGNATION -> this.resignation(Pair.of(username, session), gameSessions);
-            case TREE_FOLD -> this.threeFold(Pair.of(username, session), gameSessions);
-            case AGREEMENT -> this.agreement(Pair.of(username, session), gameSessions);
-            default -> sendMessage(session, "Invalid message type.");
-        }
     }
 
     private void move(JsonNode jsonNode, Pair<String, Session> usernameSession, Pair<ChessGame, HashSet<Session>> gameSessions) {
