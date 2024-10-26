@@ -11,6 +11,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.time.Duration;
 import java.util.Objects;
 
 @Singleton
@@ -25,17 +26,18 @@ public class JwtUtility {
     public String generateToken(UserAccount userAccount) {
         Log.info("New token generation.");
 
+        Duration expiration = Duration.ofSeconds(86401);
         return Jwt.issuer("Chessland")
                 .upn(userAccount.getUsername().username())
                 .groups(userAccount.getUserRole().getUserRole())
-                .expiresIn(86401)
+                .expiresIn(expiration)
                 .sign();
     }
 
     public String refreshToken(UserAccount userAccount) {
         Log.info("New token generation.");
 
-        final long year = 86400L * 365L + 1L;
+        Duration year = Duration.ofDays(365);
         return Jwt.issuer("Chessland")
                 .upn(userAccount.getUsername().username())
                 .groups(userAccount.getUserRole().getUserRole())
