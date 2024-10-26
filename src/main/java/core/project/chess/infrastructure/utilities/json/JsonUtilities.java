@@ -5,15 +5,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.dto.gamesession.ChessGameMessage;
 import core.project.chess.application.dto.gamesession.ChessMovementForm;
+import core.project.chess.application.dto.gamesession.GameInit;
 import core.project.chess.application.dto.gamesession.Message;
 import core.project.chess.application.dto.user.MessageType;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
+import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+
+import java.util.Objects;
+import java.util.UUID;
 
 public class JsonUtilities {
 
@@ -59,17 +63,18 @@ public class JsonUtilities {
         return Result.ofThrowable(() -> new Username(messageNode.get("usernameOfPartner").asText()));
     }
 
-    public static ChessMovementForm movementFormMessage(final JsonNode node) {
+    public static Result<ChessMovementForm, Throwable> movementFormMessage(final JsonNode node) {
         try {
-            return new ChessMovementForm(
-                    Coordinate.valueOf(node.get("from").asText()),
-                    Coordinate.valueOf(node.get("to").asText()),
-                    node.has("inCaseOfPromotion") && !node.get("inCaseOfPromotion").isNull()
-                            ? AlgebraicNotation.fromSymbol(node.get("inCaseOfPromotion").asText())
-                            : null
+            return Result.success(
+                    new ChessMovementForm(
+                            Coordinate.valueOf(node.get("from").asText()),
+                            Coordinate.valueOf(node.get("to").asText()),
+                            node.has("inCaseOfPromotion") && !node.get("inCaseOfPromotion").isNull()
+                                    ? AlgebraicNotation.fromSymbol(node.get("inCaseOfPromotion").asText()) : null
+                    )
             );
         } catch (IllegalArgumentException e) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON request. Invalid move format.").build());
+            return Result.failure(e);
         }
     }
 
@@ -83,5 +88,62 @@ public class JsonUtilities {
         } catch (JsonProcessingException e) {
             return Result.failure(e);
         }
+    }
+
+    public static Result<GameInit, Throwable> gameInit(String message) {
+        final Result<JsonNode, Throwable> node = jsonTree(message);
+        if (!node.success()) {
+            return Result.failure(node.throwable());
+        }
+
+        final Result<UUID, Throwable> gameId = getGameId(node.value());
+        if (!gameId.success()) {
+            return Result.failure(gameId.throwable());
+        }
+
+        if (Objects.isNull(gameId.value())) {
+            return Result.success(new GameInit(gameId.value(), null, null, null));
+        }
+
+        final Result<Color, Throwable> color = getColor(node.value());
+        if (!color.success()) {
+            return Result.failure(color.throwable());
+        }
+
+        final Result<TimeControllingTYPE, Throwable> time = getTimeControllingTYPE(node.value());
+        if (!time.success()) {
+            return Result.failure(time.throwable());
+        }
+
+        final Result<Username, Throwable> nameOfPartner = getPartnerName(node.value());
+        if (!nameOfPartner.success()) {
+            return Result.failure(nameOfPartner.throwable());
+        }
+
+        return Result.success(new GameInit(gameId.value(), color.value(), time.value(), nameOfPartner.value()));
+    }
+
+    private static Result<UUID, Throwable> getGameId(JsonNode node) {
+        return Result.ofThrowable(
+                () -> node.has("gameId") && !node.get("gameId").isNull() ? UUID.fromString(node.get("gameId").asText()) : null
+        );
+    }
+
+    private static Result<Username, Throwable> getPartnerName(JsonNode node) {
+        return Result.ofThrowable(
+                () -> node.has("partner") && !node.get("partner").isNull() ? new Username(node.get("partner").asText()) : null
+        );
+    }
+
+    private static Result<Color, Throwable> getColor(JsonNode node) {
+        return Result.ofThrowable(
+                () -> node.has("color") && !node.get("color").isNull() ? Color.valueOf(node.get("color").asText()) : null
+        );
+    }
+
+    private static Result<TimeControllingTYPE, Throwable> getTimeControllingTYPE(JsonNode node) {
+        return Result.ofThrowable(
+                () -> node.has("time") && !node.get("time").isNull() ? TimeControllingTYPE.valueOf(node.get("time").asText()) : TimeControllingTYPE.DEFAULT
+        );
     }
 }
