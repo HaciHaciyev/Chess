@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS RefreshToken (
     user_id char(36) NOT NULL,
-    token varchar(512) NOT NULL,
+    token text NOT NULL,
     PRIMARY KEY (user_id),
     CONSTRAINT fk_user_account
         FOREIGN KEY (user_id) REFERENCES UserAccount(id)

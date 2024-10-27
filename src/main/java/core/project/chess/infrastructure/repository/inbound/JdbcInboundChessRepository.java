@@ -3,7 +3,6 @@ package core.project.chess.infrastructure.repository.inbound;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
-import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -59,7 +58,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             chessGame.getPlayerForBlack().getId().toString()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
@@ -74,7 +73,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                 chessGame.getChessGameId().toString()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
 
         final byte arrayIndex = 4;
         final String arrayDefinition = "TEXT";
@@ -85,6 +84,6 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             chessGame.getChessBoard().pgn()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
     }
 }

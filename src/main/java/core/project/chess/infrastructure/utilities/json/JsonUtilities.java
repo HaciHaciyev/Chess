@@ -101,7 +101,8 @@ public class JsonUtilities {
             return Result.failure(gameId.throwable());
         }
 
-        if (Objects.isNull(gameId.value())) {
+        final boolean connectToExistedGame = Objects.nonNull(gameId.value());
+        if (connectToExistedGame) {
             return Result.success(new GameInit(gameId.value(), null, null, null));
         }
 

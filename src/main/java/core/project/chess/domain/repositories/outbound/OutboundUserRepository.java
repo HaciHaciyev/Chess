@@ -15,6 +15,8 @@ public interface OutboundUserRepository {
 
     boolean isUsernameExists(Username verifiableUsername);
 
+    boolean havePartnership(UserAccount user, UserAccount partner);
+
     Result<UserAccount, Throwable> findById(UUID userId);
 
     Result<UserAccount, Throwable> findByUsername(Username username);

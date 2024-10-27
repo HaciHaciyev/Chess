@@ -56,18 +56,31 @@ public class ChessGameService {
 
     private static final ConcurrentHashMap<UUID, Pair<ChessGame, HashSet<Session>>> gameSessions = new ConcurrentHashMap<>();
 
-    private static final ConcurrentHashMap</**User*/Username, /**Partner*/UserAccount> invitations = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Username, List<Pair<UserAccount, GameParameters>>> invitations = new ConcurrentHashMap<>();
 
     private static final ConcurrentHashMap<Username, Triple<Session, UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
 
-    public void handleOnOpen(Session session, Username username) {
-        Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(username);
-        if (!result.success()) {
-            sendMessage(session, "This account is do not founded.");
-            return;
-        }
+    private static final String INVITATION_MESSAGE = "User %s invite you for a chess game with parameters: figures color for you = %s, time control = %s.";
 
-        sessions.put(username, Pair.of(session, result.value()));
+    public void handleOnOpen(Session session, Username username) {
+        CompletableFuture.runAsync(() -> {
+            Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(username);
+            if (!result.success()) {
+                sendMessage(session, "This account is do not founded.");
+                return;
+            }
+            sessions.put(username, Pair.of(session, result.value()));
+            if (invitations.containsKey(username)) {
+                invitations.get(username)
+                        .forEach(p -> {
+                            UserAccount partner = p.getFirst();
+                            GameParameters gameParameters = p.getSecond();
+                            String color = Objects.isNull(gameParameters.color()) ? "RANDOM" : gameParameters.color().equals(Color.BLACK) ? "WHITE" : "BLACK";
+                            String message = String.format(INVITATION_MESSAGE, partner.getUsername().username(), color, gameParameters.timeControllingTYPE());
+                            sendMessage(session, message);
+                        });
+            }
+        });
     }
 
     public void handleOnMessage(Session session, Username username, String message) {
@@ -76,7 +89,13 @@ public class ChessGameService {
             return;
         }
 
-        final boolean isGameInitialization = session.getRequestParameterMap().containsKey("game-init");
+        final Result<MessageType, Throwable> messageType = JsonUtilities.chessMessageType(message);
+        if (!messageType.success()) {
+            sendMessage(session, "Invalid message type.");
+            return;
+        }
+
+        final boolean isGameInitialization = messageType.value().equals(MessageType.GAME_INIT);
         if (isGameInitialization) {
             gameInitialization(session, username, message);
             return;
@@ -98,12 +117,6 @@ public class ChessGameService {
             return;
         }
 
-        final Result<MessageType, Throwable> messageType = JsonUtilities.chessMessageType(message);
-        if (!messageType.success()) {
-            sendMessage(session, "Invalid message.");
-            return;
-        }
-
         CompletableFuture.runAsync(
                 () -> handleWebSocketMessage(session, username.username(), messageNode.value(), messageType.value(), gamePlusSessions)
         );
@@ -119,12 +132,10 @@ public class ChessGameService {
 
         final boolean isGameSessionExists = gameSessions.containsKey(gameUuid);
         if (!isGameSessionExists) {
-            Log.errorf("Game session with id {%s} does not exist", gameId);
             sendMessage(session, "Game session with id {%s} does not exist".formatted(gameId));
             return;
         }
 
-        Log.infof("Closing websocket session for game {%s} with id {%s}", gameId, session.getId());
         final Pair<ChessGame, HashSet<Session>> pair = gameSessions.get(gameUuid);
 
         final ChessGame chessGame = pair.getFirst();
@@ -138,7 +149,7 @@ public class ChessGameService {
 
         sessionHashSet.remove(session);
         if (sessionHashSet.isEmpty()) {
-            ChessGameService.gameSessions.remove(gameUuid);
+            gameSessions.remove(gameUuid);
         }
     }
 
@@ -156,25 +167,27 @@ public class ChessGameService {
     }
 
     private void gameInitialization(Session session, Username username, String message) {
-        final Result<GameInit, Throwable> parameters = JsonUtilities.gameInit(message);
-        if (!parameters.success()) {
-            sendMessage(session, "Invalid game initialization parameters");
-            return;
-        }
+        CompletableFuture.runAsync(() -> {
+            final Result<GameInit, Throwable> parameters = JsonUtilities.gameInit(message);
+            if (!parameters.success()) {
+                sendMessage(session, "Invalid game initialization parameters");
+                return;
+            }
 
-        final boolean partnershipGame = Objects.nonNull(parameters.value().nameOfPartner());
-        if (partnershipGame) {
-            partnershipGame(session, username, parameters.value());
-            return;
-        }
+            final boolean connectToExistedGame = Objects.nonNull(parameters.value().gameId());
+            if (connectToExistedGame) {
+                connectToExistedGame(session, parameters.value().gameId());
+                return;
+            }
 
-        final boolean connectToExistedGame = parameters.value().gameId() != null;
-        if (connectToExistedGame) {
-            connectToExistedGame(session, parameters.value().gameId());
-            return;
-        }
+            final boolean partnershipGame = Objects.nonNull(parameters.value().nameOfPartner());
+            if (partnershipGame) {
+                partnershipGame(session, username, parameters.value());
+                return;
+            }
 
-        gameInit(session, username, parameters.value());
+            gameInit(session, username, parameters.value());
+        });
     }
 
     private void connectToExistedGame(Session session, UUID gameId) {
@@ -220,35 +233,59 @@ public class ChessGameService {
                 sessions.get(parameters.nameOfPartner()).getSecond(), () -> outboundUserRepository.findByUsername(parameters.nameOfPartner()).orElseThrow()
         );
 
-        final boolean haveNoPartnership = !user.getPartners().contains(partner);
+        final boolean haveNoPartnership = outboundUserRepository.havePartnership(user, partner);
         if (haveNoPartnership) {
             sendMessage(session, "You can`t invite someone who`s have not partnership with you.");
             return;
         }
 
-        final boolean isResponse = invitations.containsKey(user.getUsername()) && invitations.get(user.getUsername()).equals(partner);
-        if (isResponse) {
-            if (!sessions.containsKey(partner.getUsername())) {
-                sendMessage(session, "Invitation is no more active.");
-                return;
-            }
+        invitations.computeIfAbsent(partner.getUsername(), k -> new LinkedList<>()).add(Pair.of(user, getGameParameters(parameters)));
+        final StatusPair<GameParameters> isResponse = findGameParameters(username, partner);
 
-            invitations.remove(user.getUsername());
-            final Session partnerSession = sessions.get(partner.getUsername()).getFirst();
-            chessGameInitialization(
-                    session, user, new GameParameters(null, ChessGame.TimeControllingTYPE.DEFAULT, LocalDateTime.now()),
-                    partnerSession, partner, new GameParameters(null, ChessGame.TimeControllingTYPE.DEFAULT, LocalDateTime.now())
+        if (isResponse.status()) {
+            GameParameters gameParameters = new GameParameters(parameters.color(), parameters.time(), LocalDateTime.now());
+            partnershipGameInit(
+                    sessions.get(username).getFirst(), user, gameParameters, sessions.get(partner.getUsername()).getFirst(), partner, isResponse.orElseThrow()
             );
-            return;
+
+            removeInvitations(user, partner);
+        }
+    }
+
+    private static void removeInvitations(UserAccount user, UserAccount partner) {
+        final List<Pair<UserAccount, GameParameters>> userInvitations = invitations.get(user.getUsername());
+        for (int i = 0; i < userInvitations.size(); i++) {
+            final Pair<UserAccount, GameParameters> userInvitation = userInvitations.get(i);
+
+            final boolean isPartner = userInvitation.getFirst().getUsername().equals(partner.getUsername());
+            if (isPartner) {
+                userInvitations.remove(i);
+                break;
+            }
         }
 
-        final boolean partnerIsOnline = sessions.containsKey(partner.getUsername());
-        if (partnerIsOnline) {
-            final Session partnerSession = sessions.get(partner.getUsername()).getFirst();
-            sendMessage(partnerSession, "You invited for chess game by {%s}.".formatted(username.username()));
+        final List<Pair<UserAccount, GameParameters>> partnerInvitations = invitations.get(partner.getUsername());
+        for (int i = 0; i < partnerInvitations.size(); i++) {
+            final Pair<UserAccount, GameParameters> userInvitation = partnerInvitations.get(i);
+
+            final boolean isPartner = userInvitation.getFirst().getUsername().equals(user.getUsername());
+            if (isPartner) {
+                partnerInvitations.remove(i);
+                break;
+            }
+        }
+    }
+
+    private boolean isPartnershipGameAgreed(UserAccount user, UserAccount partner) {
+        final boolean haveRequestFromPartner = !invitations.get(user.getUsername()).stream()
+                .filter(p -> p.getFirst().getUsername().equals(partner.getUsername()))
+                .toList().isEmpty();
+
+        if (!haveRequestFromPartner) {
+            return false;
         }
 
-        invitations.put(partner.getUsername(), user);
+        return !invitations.get(partner.getUsername()).stream().filter(p -> p.getFirst().getUsername().equals(user.getUsername())).toList().isEmpty();
     }
 
     private void move(JsonNode jsonNode, Pair<String, Session> usernameSession, Pair<ChessGame, HashSet<Session>> gameSessions) {
@@ -383,10 +420,52 @@ public class ChessGameService {
         }
     }
 
+    public StatusPair<GameParameters> findGameParameters(Username username, UserAccount partner) {
+        List<Pair<UserAccount, GameParameters>> invitationList = invitations.get(username);
+        if (Objects.isNull(invitationList)) {
+            return StatusPair.ofFalse();
+        }
+
+        for (Pair<UserAccount, GameParameters> pair : invitationList) {
+            if (pair.getFirst().getUsername().equals(partner.getUsername())) {
+                return StatusPair.ofTrue(pair.getSecond());
+            }
+        }
+
+        return StatusPair.ofFalse();
+    }
+
     private void chessGameInitialization(Session session, UserAccount firstPlayer, GameParameters gameParameters,
                                          Session secondSession,  UserAccount secondPlayer, GameParameters secondGameParameters) {
         final ChessGame chessGame = loadChessGame(firstPlayer, gameParameters, secondPlayer, secondGameParameters);
         gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>(Arrays.asList(session, secondSession))));
+
+        session.getUserProperties().put("game-id", chessGame.getChessGameId().toString());
+        secondSession.getUserProperties().put("game-id", chessGame.getChessGameId().toString());
+
+        final Result<String, Throwable> message = JsonUtilities.chessGameToString(chessGame);
+        sendMessage(session, message.orElseThrow());
+        sendMessage(secondSession, message.orElseThrow());
+
+        inboundChessRepository.completelySaveStartedChessGame(chessGame);
+        ChessGameSpectator spectator = new ChessGameSpectator(chessGame);
+        spectator.start();
+    }
+
+    private void partnershipGameInit(Session session, UserAccount firstPlayer, GameParameters gameParameters,
+                                     Session secondSession, UserAccount secondPlayer, GameParameters secondGameParameters) {
+        Objects.requireNonNull(session);
+        if (Objects.isNull(secondSession)) {
+            sendMessage(session, "The request timed out. Can`t initialize a game.");
+            return;
+        }
+
+        final ChessGame chessGame = loadChessGame(firstPlayer, gameParameters, secondPlayer, secondGameParameters);
+        gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>(Arrays.asList(session, secondSession))));
+
+        final Result<String, Throwable> message = JsonUtilities.chessGameToString(chessGame);
+        sendMessage(session, message.orElseThrow());
+        sendMessage(secondSession, message.orElseThrow());
 
         session.getUserProperties().put("game-id", chessGame.getChessGameId().toString());
         secondSession.getUserProperties().put("game-id", chessGame.getChessGameId().toString());
@@ -407,6 +486,10 @@ public class ChessGameService {
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
         inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
         inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
+    }
+
+    private static GameParameters getGameParameters(GameInit parameters) {
+        return new GameParameters(parameters.color(), parameters.time(), LocalDateTime.now());
     }
 
     private StatusPair<Triple<Session, UserAccount, GameParameters>> findOpponent(final UserAccount firstPlayer, final GameParameters gameParameters) {

@@ -59,7 +59,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             DELETE FROM UserAccount WHERE id = ?;
             """;
 
-    private static final String INSERT_REFRESH_TOKEN = "INSERT INTO UserTokens (user_id, refresh_token) VALUES (?, ?);";
+    private static final String INSERT_REFRESH_TOKEN = "INSERT INTO RefreshToken (user_id, token) VALUES (?, ?);";
 
     JdbcInboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;
@@ -83,7 +83,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             userAccount.getAccountEvents().lastUpdateDate()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 userAccount.getId().toString()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             token.getTokenEvents().getExpirationDate()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
@@ -131,7 +131,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             token.getUserAccount().getId().toString()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
 
         Log.infof("User account %s has became available", token);
     }
@@ -150,7 +150,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             token.getUserAccount().getId().toString()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
@@ -165,11 +165,11 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 secondUser.getId().toString()
         )
 
-        .ifFailure(Log::error);
+        .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
     public void saveRefreshToken(UserAccount userAccount, String refreshToken) {
-        jdbc.write(INSERT_USER_TOKEN, userAccount.getId().toString(), refreshToken).ifFailure(Log::error);
+        jdbc.write(INSERT_REFRESH_TOKEN, userAccount.getId().toString(), refreshToken).ifFailure(Throwable::printStackTrace);
     }
 }

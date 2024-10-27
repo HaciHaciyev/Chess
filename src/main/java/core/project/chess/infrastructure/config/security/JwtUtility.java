@@ -1,6 +1,7 @@
 package core.project.chess.infrastructure.config.security;
 
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
+import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
@@ -12,6 +13,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 
 @Singleton
@@ -45,14 +47,18 @@ public class JwtUtility {
                 .sign();
     }
 
-    public JsonWebToken extractJWT(final Session session) {
-        final String token = session.getRequestParameterMap().get("token").getFirst();
+    public Result<JsonWebToken, IllegalArgumentException> extractJWT(final Session session) {
+        final List<String> token = session.getRequestParameterMap().get("token");
         if (Objects.isNull(token)) {
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+            return Result.failure(new IllegalArgumentException("Token is do not defined."));
+        }
+
+        if (token.isEmpty()) {
+            return Result.failure(new IllegalArgumentException("Token is do not defined."));
         }
 
         try {
-            return jwtParser.parse(token);
+            return Result.success(jwtParser.parse(token.getFirst()));
         } catch (ParseException e) {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid JWT token.").build());
         }
