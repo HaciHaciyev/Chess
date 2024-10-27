@@ -28,7 +28,7 @@ public class JwtUtility {
     public String generateToken(UserAccount userAccount) {
         Log.info("New token generation.");
 
-        Duration expiration = Duration.ofSeconds(86401);
+        Duration expiration = Duration.ofDays(1).plusSeconds(1);
         return Jwt.issuer("Chessland")
                 .upn(userAccount.getUsername().username())
                 .groups(userAccount.getUserRole().getUserRole())
