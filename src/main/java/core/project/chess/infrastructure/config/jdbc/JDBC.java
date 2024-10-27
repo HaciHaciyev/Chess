@@ -18,7 +18,7 @@ import java.util.function.Function;
 /**
  * The {@code JDBC} class provides a set of utility methods for interacting with a relational database using JDBC (Java Database Connectivity).
  * It simplifies the execution of SQL queries and the handling of results, while also providing error handling and transaction management.
- * This class is designed to be used as a singleton within an application context.
+ * This class is designed to be used as a singleton within a DI container.
  *
  * <h2>Class API Overview</h2>
  * The {@code JDBC} class offers the following key functionalities:
@@ -61,7 +61,7 @@ import java.util.function.Function;
  *
  * // Batch insert customers
  * String batchInsertSQL = "INSERT INTO customers (name, email) VALUES (?, ?)";
- * List<Object[]> batchArgs = Arrays.asList(
+ * List<Object[]>batchArgs = Arrays.asList(
  *     new Object[]{"Alice", "alice@example.com"},
  *     new Object[]{"Bob", "bob@example.com"}
  * );
