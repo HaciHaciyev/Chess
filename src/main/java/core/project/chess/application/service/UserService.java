@@ -26,6 +26,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -59,7 +60,7 @@ public class UserService {
 
     public static final String INVALID_USERNAME = "Invalid username. Username can`t be blank an need to contain only letters and digits, no special symbols";
 
-    public String login(LoginForm loginForm) {
+    public Map<String, String> login(LoginForm loginForm) {
         final Username username = Result.ofThrowable(
                 () -> new Username(loginForm.username())
         ).orElseThrow(
@@ -94,7 +95,8 @@ public class UserService {
         final String refreshToken = jwtUtility.refreshToken(userAccount);
         inboundUserRepository.saveRefreshToken(userAccount, refreshToken);
 
-        return jwtUtility.generateToken(userAccount);
+        final String token = jwtUtility.generateToken(userAccount);
+        return Map.of("token", token, "refresh-token", refreshToken);
     }
 
     public void registration(RegistrationForm registrationForm) {

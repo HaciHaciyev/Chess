@@ -59,7 +59,9 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             DELETE FROM UserAccount WHERE id = ?;
             """;
 
-    private static final String INSERT_REFRESH_TOKEN = "INSERT INTO RefreshToken (user_id, token) VALUES (?, ?);";
+    private static final String INSERT_OR_UPDATE_REFRESH_TOKEN = """
+            INSERT INTO RefreshToken (user_id, token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET token = ?;
+            """;
 
     JdbcInboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;
@@ -170,6 +172,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void saveRefreshToken(UserAccount userAccount, String refreshToken) {
-        jdbc.write(INSERT_REFRESH_TOKEN, userAccount.getId().toString(), refreshToken).ifFailure(Throwable::printStackTrace);
+        jdbc.write(INSERT_OR_UPDATE_REFRESH_TOKEN, userAccount.getId().toString(), refreshToken, refreshToken).ifFailure(Throwable::printStackTrace);
     }
 }

@@ -371,8 +371,8 @@ public class ChessGameService {
             return;
         }
 
-        invitations.computeIfAbsent(partner.getUsername(), k -> new LinkedList<>()).add(Pair.of(user, getGameParameters(parameters)));
-        GameParameters gameParameters = new GameParameters(parameters.color(), parameters.time(), LocalDateTime.now());
+        final GameParameters gameParameters = getGameParameters(parameters);
+        invitations.computeIfAbsent(partner.getUsername(), k -> new LinkedList<>()).add(Pair.of(user, gameParameters));
 
         final StatusPair<GameParameters> isResponse = isValidPartnershipGame(user, gameParameters, partner);
         if (isResponse.status()) {
@@ -551,9 +551,9 @@ public class ChessGameService {
         return !sameColor;
     }
 
-    private ChessGame loadChessGame(
-            final UserAccount firstPlayer, final GameParameters gameParameters, final UserAccount secondPlayer, final GameParameters secondGameParameters
-    ) {
+    private ChessGame loadChessGame(final UserAccount firstPlayer, final GameParameters gameParameters,
+                                    final UserAccount secondPlayer, final GameParameters secondGameParameters) {
+
         final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
         final ChessGame.TimeControllingTYPE timeControlling = gameParameters.timeControllingTYPE();
         final boolean firstPlayerIsWhite = gameParameters.color() != null && gameParameters.color().equals(Color.WHITE);
