@@ -30,7 +30,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     private static final String FIND_BY_ID = "SELECT * FROM UserAccount WHERE id = ?";
     private static final String FIND_BY_USERNAME = "SELECT * FROM UserAccount WHERE username = ?";
     private static final String FIND_BY_EMAIL = "SELECT * FROM UserAccount WHERE email = ?";
-    private static final String FIND_REFRESH_TOKEN = "SELECT * FROM Refresh-Token WHERE token = ?";
+    private static final String FIND_REFRESH_TOKEN = "SELECT * FROM RefreshToken WHERE token = ?";
     private static final String IS_PARTNERSHIP_EXISTS = """
             SELECT * FROM UserPartnership
             WHERE (user_id = ? AND partner_id = ?) OR (user_id = ? AND partner_id = ?);
