@@ -101,7 +101,7 @@ public class ChessGameService {
             return;
         }
 
-        final String gameId = (String) session.getUserProperties().get("game-id");
+        final String gameId = session.getUserProperties().get("game-id").toString();
         if (Objects.isNull(gameId)) {
             return;
         }
@@ -123,7 +123,7 @@ public class ChessGameService {
     }
 
     public void handleOnClose(Session session) {
-        final String gameId = (String) session.getUserProperties().get("game-id");
+        final String gameId = session.getUserProperties().get("game-id").toString();
         if (Objects.isNull(gameId)) {
             return;
         }
@@ -324,7 +324,6 @@ public class ChessGameService {
 
     private void connectToExistedGame(Session session, UUID gameId) {
         final Pair<ChessGame, HashSet<Session>> pair = gameSessions.get(gameId);
-        session.getUserProperties().put("game-id", gameId);
         pair.getSecond().add(session);
 
         sendMessage(session, JsonUtilities.chessGameToString(pair.getFirst()).orElseThrow());
