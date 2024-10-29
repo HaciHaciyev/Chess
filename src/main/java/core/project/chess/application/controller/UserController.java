@@ -59,7 +59,7 @@ public class UserController {
 
     @PATCH @Path("/refresh-token")
     public final Response refresh(@HeaderParam("Refresh-Token") String refreshToken) {
-        if (Objects.isNull(refreshToken) || refreshToken.isBlank() || refreshToken.length() > 512) {
+        if (Objects.isNull(refreshToken) || refreshToken.isBlank()) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid refresh token.").build());
         }
 
@@ -72,7 +72,7 @@ public class UserController {
         List<ChessGameHistory> listOfGames = outboundChessRepository
                 .listOfGames(new Username(jwt.getName()), pageNumber)
                 .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Data not found.").build())
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User does not exist.\uD83D\uDC7B").build())
                 );
 
         return Response.ok(listOfGames).build();
