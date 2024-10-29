@@ -339,6 +339,7 @@ public class ChessGameService {
         if (!potentialOpponent.status()) {
             waitingForTheGame.put(username, Triple.of(session, firstPlayer, gameParameters));
             sendMessage(session, "Try to find opponent for you %s.".formatted(username.username()));
+            return;
         }
 
         final Session secondSession = potentialOpponent.orElseThrow().getFirst();
