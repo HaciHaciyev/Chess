@@ -69,13 +69,21 @@ public class UserAccount {
         return Rating.fromRepository(this.rating.rating(), this.rating.ratingDeviation(), this.rating.volatility());
     }
 
-    public boolean containsPartnershipRequest(final UserAccount userAccount) {
+    public Set<UserAccount> getPartners() {
+        return new HashSet<>(partners);
+    }
+
+    boolean containsPartnershipRequest(final UserAccount userAccount) {
         return partnershipRequest.contains(userAccount);
+    }
+
+    public boolean containsPartner(final UserAccount userAccount) {
+        return partners.contains(userAccount);
     }
 
     public void addPartner(final UserAccount partner) {
         Objects.requireNonNull(partner);
-        if (partner.containsPartnershipRequest(this)) {
+        if (partner.containsPartnershipRequest(this) || partner.containsPartner(this)) {
             partners.add(partner);
             partner.addPartner(this);
             this.partnershipRequest.remove(partner);

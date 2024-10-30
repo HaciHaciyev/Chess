@@ -7,7 +7,6 @@ import core.project.chess.application.dto.gamesession.ChessGameMessage;
 import core.project.chess.application.dto.gamesession.ChessMovementForm;
 import core.project.chess.application.dto.gamesession.GameInit;
 import core.project.chess.application.dto.gamesession.Message;
-import core.project.chess.application.dto.user.MessageType;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
@@ -33,15 +32,6 @@ public class JsonUtilities {
         }
     }
 
-    public static Result<MessageType, Throwable> messageType(final String message) {
-        Result<JsonNode, Throwable> resultNode = jsonTree(message);
-        if (!resultNode.success()) {
-            return Result.failure(resultNode.throwable());
-        }
-
-        return Result.ofThrowable(() -> MessageType.valueOf(resultNode.value().get("type").asText()));
-    }
-
     public static Result<core.project.chess.application.dto.gamesession.MessageType, Throwable> chessMessageType(final String message) {
         Result<JsonNode, Throwable> resultNode = jsonTree(message);
         if (!resultNode.success()) {
@@ -51,16 +41,8 @@ public class JsonUtilities {
         return Result.ofThrowable(() -> core.project.chess.application.dto.gamesession.MessageType.valueOf(resultNode.value().get("type").asText()));
     }
 
-    public static Result<String, Throwable> message(JsonNode messageNode) {
-        return Result.ofThrowable(() -> messageNode.get("message").asText());
-    }
-
     public static Result<Message, Throwable> messageRecord(JsonNode messageNode) {
         return Result.ofThrowable(() -> new Message(messageNode.get("message").asText()));
-    }
-
-    public static Result<Username, Throwable> usernameOfPartner(JsonNode messageNode) {
-        return Result.ofThrowable(() -> new Username(messageNode.get("usernameOfPartner").asText()));
     }
 
     public static Result<ChessMovementForm, Throwable> movementFormMessage(final JsonNode node) {
