@@ -22,8 +22,6 @@ import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.websocket.Session;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -108,7 +106,8 @@ public class ChessGameService {
 
         final Pair<ChessGame, HashSet<Session>> gamePlusSessions = ChessGameService.gameSessions.get(UUID.fromString(gameId));
         if (Objects.isNull(gamePlusSessions)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This game session is not exits.").build());
+            sendMessage(session, "This game session is not exits.");
+            return;
         }
 
         final Result<JsonNode, Throwable> messageNode = JsonUtilities.jsonTree(message);
@@ -553,38 +552,16 @@ public class ChessGameService {
 
     private ChessGame loadChessGame(final UserAccount firstPlayer, final GameParameters gameParameters,
                                     final UserAccount secondPlayer, final GameParameters secondGameParameters) {
-
         final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
         final ChessGame.TimeControllingTYPE timeControlling = gameParameters.timeControllingTYPE();
-        final boolean firstPlayerIsWhite = gameParameters.color() != null && gameParameters.color().equals(Color.WHITE);
-        final boolean secondPlayerIsBlack = secondGameParameters.color() != null && secondGameParameters.color().equals(Color.BLACK);
+        final boolean firstPlayerIsWhite = Objects.nonNull(gameParameters.color()) && gameParameters.color().equals(Color.WHITE);
+        final boolean secondPlayerIsBlack = Objects.nonNull(secondGameParameters.color()) && secondGameParameters.color().equals(Color.BLACK);
 
-        final ChessGame chessGame;
         if (firstPlayerIsWhite && secondPlayerIsBlack) {
-
-            chessGame = Result.ofThrowable(
-                    () -> ChessGame.of(UUID.randomUUID(), chessBoard, firstPlayer, secondPlayer, SessionEvents.defaultEvents(), timeControlling)
-            ).orElseThrow(
-                    () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid data for chess game creation.").build())
-            );
-
-        } else {
-
-            chessGame = Result.ofThrowable(
-                    () -> ChessGame.of(UUID.randomUUID(), chessBoard, secondPlayer, firstPlayer, SessionEvents.defaultEvents(), timeControlling)
-            ).orElseThrow(
-                    () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid data for chess game creation.").build())
-            );
-
+            return ChessGame.of(UUID.randomUUID(), chessBoard, firstPlayer, secondPlayer, SessionEvents.defaultEvents(), timeControlling);
         }
-        Log.infof("Created chess game {%s} | Players: {%s}(%s), {%s}(%s) | Time controlling type: {%s}",
-                chessGame.getChessBoard().getChessBoardId(),
-                firstPlayer.getUsername().username(), firstPlayer.getRating().rating(),
-                secondPlayer.getUsername().username(), secondPlayer.getRating().rating(),
-                timeControlling.toString()
-        );
 
-        return chessGame;
+        return ChessGame.of(UUID.randomUUID(), chessBoard, secondPlayer, firstPlayer, SessionEvents.defaultEvents(), timeControlling);
     }
 
     private class ChessGameSpectator implements Runnable {
