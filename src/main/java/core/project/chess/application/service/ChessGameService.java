@@ -99,7 +99,7 @@ public class ChessGameService {
             return;
         }
 
-        final String gameId = session.getUserProperties().get("game-id").toString();
+        final String gameId = Optional.ofNullable(session.getUserProperties().get("game-id")).map(Object::toString).orElse(null);
         if (Objects.isNull(gameId)) {
             return;
         }
