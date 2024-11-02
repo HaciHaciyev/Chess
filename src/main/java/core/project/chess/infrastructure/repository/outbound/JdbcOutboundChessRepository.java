@@ -23,7 +23,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     private final JDBC jdbc;
 
-    public static final String IS_PRESENT = "SELECT EXISTS(SELECT 1 FROM UserAccount WHERE id = ?)";
+    public static final String IS_PRESENT = "SELECT COUNT(id) FROM ChessGameHistory WHERE id = ?";
 
     public static final String GET_CHESS_GAME = """
             SELECT

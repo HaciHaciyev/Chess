@@ -20,7 +20,6 @@ import core.project.chess.infrastructure.utilities.containers.Triple;
 import core.project.chess.infrastructure.utilities.json.JsonUtilities;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
 import jakarta.websocket.Session;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -104,7 +103,7 @@ public class ChessGameService {
             return;
         }
 
-        final Pair<ChessGame, HashSet<Session>> gamePlusSessions = ChessGameService.gameSessions.get(UUID.fromString(gameId));
+        final Pair<ChessGame, HashSet<Session>> gamePlusSessions = gameSessions.get(UUID.fromString(gameId));
         if (Objects.isNull(gamePlusSessions)) {
             sendMessage(session, "This game session is not exits.");
             return;
@@ -122,7 +121,7 @@ public class ChessGameService {
     }
 
     public void handleOnClose(Session session) {
-        final String gameId = session.getUserProperties().get("game-id").toString();
+        final String gameId = Optional.ofNullable(session.getUserProperties().get("game-id")).map(Object::toString).orElse(null);
         if (Objects.isNull(gameId)) {
             return;
         }
@@ -209,14 +208,6 @@ public class ChessGameService {
         for (Session currentSession : gameSessions.getSecond()) {
             sendMessage(currentSession, message);
         }
-
-        if (chessGame.gameResult().isPresent()) {
-            gameOverOperationsExecutor(chessGame);
-
-            for (Session currentSession : gameSessions.getSecond()) {
-                sendMessage(currentSession, "Game is ended by result: {%s}.".formatted(chessGame.gameResult().orElseThrow().toString()));
-            }
-        }
     }
 
     public void chat(JsonNode jsonNode, Pair<String, Session> usernameSession, Pair<ChessGame, HashSet<Session>> gameAndSessions) {
@@ -265,8 +256,6 @@ public class ChessGameService {
         try {
             chessGame.resignation(username);
 
-            gameOverOperationsExecutor(chessGame);
-
             String message = "Game is ended by result {%s}".formatted(chessGame.gameResult().orElseThrow().toString());
             for (Session currentSession : gameAndSessions.getSecond()) {
                 sendMessage(currentSession, message);
@@ -286,8 +275,6 @@ public class ChessGameService {
             sendMessage(usernameAndSession.getSecond(), "Can`t end game by ThreeFold");
             return;
         }
-
-        gameOverOperationsExecutor(chessGame);
 
         String message = "Game is ended by ThreeFold rule, game result is: {%s}".formatted(chessGame.gameResult().orElseThrow().toString());
         for (Session currentSession : gameAndSessions.getSecond()) {
@@ -312,8 +299,6 @@ public class ChessGameService {
 
             return;
         }
-
-        gameOverOperationsExecutor(chessGame);
 
         String message = "Game is ended by agreement, game result is {%s}".formatted(chessGame.gameResult().orElseThrow().toString());
         for (Session currentSession : gameAndSessions.getSecond()) {
@@ -481,10 +466,10 @@ public class ChessGameService {
         return StatusPair.ofFalse();
     }
 
-    @Transactional
-    void gameOverOperationsExecutor(final ChessGame chessGame) {
+    private void gameOverOperationsExecutor(final ChessGame chessGame) {
+        Log.info("Game over operations executing.");
         if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().getChessBoardId())) {
-            Log.errorf("History of game %s is already present", chessGame.getChessGameId());
+            Log.infof("History of game %s is already present", chessGame.getChessGameId());
             return;
         }
 
@@ -583,12 +568,13 @@ public class ChessGameService {
                     Log.debugf("Removing game {%s}", game.getChessGameId());
                     var gameAndSessions = gameSessions.remove(game.getChessGameId());
 
+                    CompletableFuture.runAsync(() -> gameOverOperationsExecutor(game));
+
                     for (Session session : gameAndSessions.getSecond()) {
                         Log.infof("Sending game result {%s} to session {%s}", gameResult, session.getId());
                         sendMessage(session, "Game is over by result {%s}".formatted(gameResult));
                     }
 
-                    gameOverOperationsExecutor(game);
                     isRunning.set(false);
                 });
             }
