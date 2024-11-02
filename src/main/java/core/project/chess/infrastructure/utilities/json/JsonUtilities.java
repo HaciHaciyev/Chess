@@ -129,4 +129,15 @@ public class JsonUtilities {
                 () -> node.has("time") && !node.get("time").isNull() ? TimeControllingTYPE.valueOf(node.get("time").asText()) : TimeControllingTYPE.DEFAULT
         );
     }
+
+    public static Result<String, Throwable> gameId(String message) {
+        final Result<JsonNode, Throwable> node = jsonTree(message);
+        if (!node.success()) {
+            return Result.failure(node.throwable());
+        }
+
+        return Result.ofThrowable(
+                () -> node.value().has("game-id") && !node.value().get("game-id").isNull() ? node.value().get("game-id").asText() : null
+        );
+    }
 }

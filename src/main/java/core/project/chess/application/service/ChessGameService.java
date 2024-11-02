@@ -98,12 +98,25 @@ public class ChessGameService {
             return;
         }
 
-        final String gameId = Optional.ofNullable(session.getUserProperties().get("game-id")).map(Object::toString).orElse(null);
-        if (Objects.isNull(gameId)) {
+        final Result<String, Throwable> gameIdFromUser = JsonUtilities.gameId(message);
+        if (!gameIdFromUser.success() || Objects.isNull(gameIdFromUser.value())) {
+            sendMessage(session, "Game id is required.");
             return;
         }
 
-        final Pair<ChessGame, HashSet<Session>> gamePlusSessions = gameSessions.get(UUID.fromString(gameId));
+        final Object gameIdObj = session.getUserProperties().get("game-id");
+        if (Objects.isNull(gameIdObj)) {
+            sendMessage(session, "Game id is required.");
+            return;
+        }
+
+        final List<String> gameIdList = (List<String>) gameIdObj;
+        if (!gameIdList.contains(gameIdFromUser.value())) {
+            sendMessage(session, "This game id is do not match.");
+            return;
+        }
+
+        final Pair<ChessGame, HashSet<Session>> gamePlusSessions = gameSessions.get(UUID.fromString(gameIdFromUser.value()));
         if (Objects.isNull(gamePlusSessions)) {
             sendMessage(session, "This game session is not exits.");
             return;
@@ -121,33 +134,35 @@ public class ChessGameService {
     }
 
     public void handleOnClose(Session session) {
-        final String gameId = Optional.ofNullable(session.getUserProperties().get("game-id")).map(Object::toString).orElse(null);
-        if (Objects.isNull(gameId)) {
+        final Object gameIdObj = session.getUserProperties().get("game-id");
+        if (Objects.isNull(gameIdObj)) {
             return;
         }
 
-        final UUID gameUuid = UUID.fromString(gameId);
+        for (String gameId : (List<String>) gameIdObj) {
+            final UUID gameUuid = UUID.fromString(gameId);
 
-        final boolean isGameSessionExists = gameSessions.containsKey(gameUuid);
-        if (!isGameSessionExists) {
-            sendMessage(session, "Game session with id {%s} does not exist".formatted(gameId));
-            return;
-        }
+            final boolean isGameSessionExists = gameSessions.containsKey(gameUuid);
+            if (!isGameSessionExists) {
+                sendMessage(session, "Game session with id {%s} does not exist".formatted(gameId));
+                return;
+            }
 
-        final Pair<ChessGame, HashSet<Session>> pair = gameSessions.get(gameUuid);
+            final Pair<ChessGame, HashSet<Session>> pair = gameSessions.get(gameUuid);
 
-        final ChessGame chessGame = pair.getFirst();
-        if (chessGame.gameResult().isEmpty()) {
-            return;
-        }
+            final ChessGame chessGame = pair.getFirst();
+            if (chessGame.gameResult().isEmpty()) {
+                return;
+            }
 
-        final Set<Session> sessionHashSet = pair.getSecond();
-        final String messageInCaseOfGameEnding = "Game ended. Because of %s".formatted(chessGame.gameResult().get().toString());
-        closeSession(session, messageInCaseOfGameEnding);
+            final Set<Session> sessionHashSet = pair.getSecond();
+            final String messageInCaseOfGameEnding = "Game ended. Because of %s".formatted(chessGame.gameResult().get().toString());
+            closeSession(session, messageInCaseOfGameEnding);
 
-        sessionHashSet.remove(session);
-        if (sessionHashSet.isEmpty()) {
-            gameSessions.remove(gameUuid);
+            sessionHashSet.remove(session);
+            if (sessionHashSet.isEmpty()) {
+                gameSessions.remove(gameUuid);
+            }
         }
     }
 
@@ -409,8 +424,8 @@ public class ChessGameService {
         final ChessGame chessGame = loadChessGame(firstPlayer, gameParameters, secondPlayer, secondGameParameters);
         gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>(Arrays.asList(session, secondSession))));
 
-        session.getUserProperties().put("game-id", chessGame.getChessGameId().toString());
-        secondSession.getUserProperties().put("game-id", chessGame.getChessGameId().toString());
+        session.getUserProperties().put("game-id", new ArrayList<>(Collections.singletonList(chessGame.getChessGameId().toString())));
+        secondSession.getUserProperties().put("game-id", new ArrayList<>(Collections.singletonList(chessGame.getChessGameId().toString())));
 
         final Result<String, Throwable> message = JsonUtilities.chessGameToString(chessGame);
         sendMessage(session, message.orElseThrow());
