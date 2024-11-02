@@ -6,7 +6,6 @@ import core.project.chess.infrastructure.exceptions.persistant.RepositoryDataExc
 import core.project.chess.infrastructure.utilities.annotations.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.repository.ResultSetExtractor;
-import core.project.chess.infrastructure.utilities.repository.RowMapper;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -187,7 +186,7 @@ public class JDBC {
      * Executes a SQL query that returns a list of objects mapped by a {@code RowMapper}.
      *
      * @param sql      the SQL query to execute
-     * @param rowMapper a functional interface for mapping rows of the result set to objects
+     * @param extractor a functional interface for mapping rows of the result set to objects
      * @param <T>     the type of the mapped objects
      * @return a {@code Result<List<T>, Throwable>} containing the list of mapped objects or an error
      * @throws NullPointerException if {@code sql} or {@code rowMapper} is {@code null}
@@ -200,22 +199,21 @@ public class JDBC {
      * );
      * </pre>
      */
-    public <T> Result<List<T>, Throwable> readListOf(final String sql, final RowMapper<T> rowMapper, @OptionalArgument final Object... params) {
+    public <T> Result<List<T>, Throwable> readListOf(final String sql, final ResultSetExtractor<T> extractor, @OptionalArgument final Object... params) {
         Objects.requireNonNull(sql);
-        Objects.requireNonNull(rowMapper);
+        Objects.requireNonNull(extractor);
 
         try (final Connection connection = dataSource.getConnection();
-             final PreparedStatement statement = connection.prepareStatement(sql)) {
+             final PreparedStatement statement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
             if (params != null && params.length > 0) {
                 setParameters(statement, params);
             }
 
             final List<T> results = new ArrayList<>();
             try (final ResultSet resultSet = statement.executeQuery()) {
-                int rowNum = 0;
                 while (resultSet.next()) {
-                    results.add(rowMapper.extractData(resultSet, rowNum));
-                    rowNum++;
+                    T item = extractor.extractData(resultSet);
+                    results.add(item);
                 }
             }
 

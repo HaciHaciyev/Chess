@@ -1,5 +1,7 @@
 package core.project.chess.application.dto.gamesession;
 
+import core.project.chess.domain.aggregates.chess.entities.ChessGame;
+import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 
 import java.time.LocalDateTime;
@@ -13,6 +15,8 @@ public record ChessGameHistory(
         String[] fenRepresentations,
         Username playerForWhite,
         Username playerForBlack,
+        ChessGame.TimeControllingTYPE timeControl,
+        GameResult gameResult,
         double whitePlayerRating,
         double blackPlayerRating,
         LocalDateTime gameStart,
