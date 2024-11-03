@@ -427,7 +427,12 @@ public class ChessGameService {
         session.getUserProperties().put("game-id", new ArrayList<>(Collections.singletonList(chessGame.getChessGameId().toString())));
         secondSession.getUserProperties().put("game-id", new ArrayList<>(Collections.singletonList(chessGame.getChessGameId().toString())));
 
+        final Result<String, Throwable> overviewMessage = JsonUtilities.gameSessionToString(chessGame);
         final Result<String, Throwable> message = JsonUtilities.chessGameToString(chessGame);
+
+        sendMessage(session, overviewMessage.orElseThrow());
+        sendMessage(secondSession, overviewMessage.orElseThrow());
+
         sendMessage(session, message.orElseThrow());
         sendMessage(secondSession, message.orElseThrow());
 

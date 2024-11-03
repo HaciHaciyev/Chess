@@ -3,10 +3,7 @@ package core.project.chess.infrastructure.utilities.json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.chess.application.dto.gamesession.ChessGameMessage;
-import core.project.chess.application.dto.gamesession.ChessMovementForm;
-import core.project.chess.application.dto.gamesession.GameInit;
-import core.project.chess.application.dto.gamesession.Message;
+import core.project.chess.application.dto.gamesession.*;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
@@ -56,6 +53,21 @@ public class JsonUtilities {
                     )
             );
         } catch (IllegalArgumentException e) {
+            return Result.failure(e);
+        }
+    }
+
+    public static Result<String, Throwable> gameSessionToString(ChessGame chessGame) {
+        try {
+            var message = new GameSessionMessage(
+                    chessGame.getChessGameId().toString(),
+                    chessGame.getPlayerForWhite().getUsername(), chessGame.getPlayerForBlack().getUsername(),
+                    chessGame.getPlayerForWhiteRating().rating(), chessGame.getPlayerForBlackRating().rating(),
+                    chessGame.getTimeControllingTYPE()
+            );
+
+            return Result.success(objectMapper.writeValueAsString(message));
+        } catch (JsonProcessingException e) {
             return Result.failure(e);
         }
     }
