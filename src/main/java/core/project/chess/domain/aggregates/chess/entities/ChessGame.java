@@ -10,9 +10,9 @@ import core.project.chess.domain.aggregates.chess.events.SessionEvents;
 import core.project.chess.domain.aggregates.chess.pieces.Piece;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Rating;
-import core.project.chess.infrastructure.utilities.annotations.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -162,7 +162,7 @@ public class ChessGame {
         return returnOfMovement.whitePlayerUsername != null && returnOfMovement.blackPlayerUsername != null;
     }
 
-    public GameResultMessage makeMovement(final String username, final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion)
+    public GameResultMessage makeMovement(final String username, final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion)
             throws IllegalArgumentException {
         Objects.requireNonNull(username);
         Objects.requireNonNull(from);

@@ -1,18 +1,21 @@
 services:
-  chessland:
-    container_name: chessland
-    build:
-      context: .
-      dockerfile: src/main/docker/Dockerfile.native-micro
+  cache:
+    container_name: valkey
+    hostname: valkey
+    image: valkey/valkey:7.2.6
+    volumes:
+      - ./conf/valkey.conf:/etc/valkey/valkey.conf
+      - ./data:/data
+    command: valkey-server /etc/valkey/valkey.conf
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
     ports:
-      - "8080:8080"
-    depends_on:
-      datasource:
-        condition: service_healthy
+      - "6379:6379"
     networks:
       - chess
-    restart: unless-stopped
-    command: ["sh", "-c", "sleep 30 && /app/chessland"]
 
   datasource:
     container_name: chess-history
@@ -31,19 +34,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  datasource-administration:
-    container_name: chess-administration
-    image: dpage/pgadmin4
-    env_file:
-      - pgadmin.env
-    volumes:
-      - pgadmin:/var/lib/pgadmin
-    ports:
-      - "5050:80"
-    networks:
-      - chess
-    restart: unless-stopped
 
 networks:
   chess:

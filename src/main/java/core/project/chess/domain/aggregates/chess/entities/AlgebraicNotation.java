@@ -3,10 +3,10 @@ package core.project.chess.domain.aggregates.chess.entities;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.pieces.*;
-import core.project.chess.infrastructure.utilities.annotations.OptionalArgument;
 import core.project.chess.infrastructure.utilities.chess.ChessNotationValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -121,7 +121,7 @@ public class AlgebraicNotation {
      */
     static AlgebraicNotation of(
             final PieceTYPE piece, final Set<ChessBoard.Operations> operationsSet,
-            final Coordinate from, final Coordinate to, final @OptionalArgument PieceTYPE inCaseOfPromotion
+            final Coordinate from, final Coordinate to, final @Nullable PieceTYPE inCaseOfPromotion
     ) {
 
         final boolean castle = isCastling(piece, from, to);

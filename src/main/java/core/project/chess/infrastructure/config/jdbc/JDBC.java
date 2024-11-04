@@ -3,10 +3,10 @@ package core.project.chess.infrastructure.config.jdbc;
 import core.project.chess.infrastructure.exceptions.persistant.DataNotFoundException;
 import core.project.chess.infrastructure.exceptions.persistant.InvalidDataArgumentException;
 import core.project.chess.infrastructure.exceptions.persistant.RepositoryDataException;
-import core.project.chess.infrastructure.utilities.annotations.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.repository.ResultSetExtractor;
 import io.quarkus.logging.Log;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import javax.sql.DataSource;
@@ -108,7 +108,7 @@ public class JDBC {
      * );
      * </pre>
      */
-    public <T> Result<T, Throwable> read(final String sql, final ResultSetExtractor<T> extractor, @OptionalArgument final Object... params) {
+    public <T> Result<T, Throwable> read(final String sql, final ResultSetExtractor<T> extractor, @Nullable final Object... params) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(extractor);
 
@@ -152,7 +152,7 @@ public class JDBC {
      *          .orElseThrow();
      * </pre>
      */
-    public <T> Result<T, Throwable> readObjectOf(final String sql, final Class<T> type, @OptionalArgument final Object... params) {
+    public <T> Result<T, Throwable> readObjectOf(final String sql, final Class<T> type, @Nullable final Object... params) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(type);
 
@@ -199,7 +199,7 @@ public class JDBC {
      * );
      * </pre>
      */
-    public <T> Result<List<T>, Throwable> readListOf(final String sql, final ResultSetExtractor<T> extractor, @OptionalArgument final Object... params) {
+    public <T> Result<List<T>, Throwable> readListOf(final String sql, final ResultSetExtractor<T> extractor, @Nullable final Object... params) {
         Objects.requireNonNull(sql);
         Objects.requireNonNull(extractor);
 

@@ -4,9 +4,9 @@ import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.aggregates.chess.pieces.*;
-import core.project.chess.infrastructure.utilities.annotations.OptionalArgument;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -764,7 +764,7 @@ public class ChessBoard {
      * @return The operations performed during the repositioning.
      * @throws IllegalArgumentException If the move is invalid.
      */
-    protected final GameResultMessage reposition(final Coordinate from, final Coordinate to, final @OptionalArgument Piece inCaseOfPromotion) {
+    protected final GameResultMessage reposition(final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion) {
         /** Preparation of necessary data and validation.*/
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);

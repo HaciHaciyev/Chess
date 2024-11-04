@@ -2,6 +2,6 @@ package core.project.chess.application.dto.gamesession;
 
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.pieces.Piece;
-import core.project.chess.infrastructure.utilities.annotations.OptionalArgument;
+import jakarta.annotation.Nullable;
 
-public record ChessMovementForm(Coordinate from, Coordinate to, @OptionalArgument Piece inCaseOfPromotion) { }
+public record ChessMovementForm(Coordinate from, Coordinate to, @Nullable Piece inCaseOfPromotion) { }
