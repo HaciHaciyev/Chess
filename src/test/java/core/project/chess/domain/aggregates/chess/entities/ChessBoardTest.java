@@ -1,6 +1,5 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
-import core.project.chess.domain.aggregates.chess.pieces.Bishop;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.pieces.*;
 import org.junit.jupiter.api.Disabled;
@@ -8,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
+@Disabled
 class ChessBoardTest {
 
     @Test

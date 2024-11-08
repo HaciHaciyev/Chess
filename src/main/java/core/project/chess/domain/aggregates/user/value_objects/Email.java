@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 public record Email(String email) {
 
+    //TODO очень примитивный regEX
     private static final String emailRegex = "^(\\S+)@(\\S+)$";
 
     private static final Pattern pattern = Pattern.compile(emailRegex);

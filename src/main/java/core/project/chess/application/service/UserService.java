@@ -60,6 +60,8 @@ public class UserService {
 
     public static final String INVALID_USERNAME = "Invalid username. Username can`t be blank an need to contain only letters and digits, no special symbols";
 
+    public static final String TOKEN_VERIFICATION_URL = "%s/chessland/account/token/verification?token=%s";
+
     public Map<String, String> login(LoginForm loginForm) {
         final Username username = Result.ofThrowable(
                 () -> new Username(loginForm.username())
@@ -142,11 +144,10 @@ public class UserService {
         inboundUserRepository.save(userAccount);
 
         var token = EmailConfirmationToken.createToken(userAccount);
-
         Log.infof("Saving new token %s to repo", token.getToken().token().toString().substring(4));
         inboundUserRepository.saveUserToken(token);
 
-        String link = String.format("/token/verification?%s", token.getToken());
+        String link = String.format("/token/verification?%s", token.getToken().token());
         emailInteractionService.sendToEmail(email, link);
 
         Log.info("Registration successful.");
