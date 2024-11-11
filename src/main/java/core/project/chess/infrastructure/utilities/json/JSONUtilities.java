@@ -12,12 +12,13 @@ import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-public class JsonUtilities {
+public class JSONUtilities {
 
-    private JsonUtilities() {}
+    private JSONUtilities() {}
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -151,5 +152,34 @@ public class JsonUtilities {
         return Result.ofThrowable(
                 () -> node.value().has("game-id") && !node.value().get("game-id").isNull() ? node.value().get("game-id").asText() : null
         );
+    }
+
+    public static Result<String, Throwable> writeValueAsString(Object value) {
+        try {
+            final String message = objectMapper.writeValueAsString(value);
+
+            return Result.success(message);
+        } catch (JsonProcessingException e) {
+            return Result.failure(e);
+        }
+    }
+
+    public static Result<GameParameters, Throwable> gameParameters(String value) {
+        try {
+            final Result<JsonNode, Throwable> node = jsonTree(value);
+            if (!node.success()) {
+                return Result.failure(node.throwable());
+            }
+
+            GameParameters gameParameters = new GameParameters(
+                    Color.valueOf(node.value().get("color").asText()),
+                    TimeControllingTYPE.valueOf(node.value().get("timeControllingTYPE").asText()),
+                    LocalDateTime.parse(node.value().get("creationTime").asText())
+            );
+
+            return Result.success(gameParameters);
+        } catch (Throwable e) {
+            return Result.failure(e);
+        }
     }
 }
