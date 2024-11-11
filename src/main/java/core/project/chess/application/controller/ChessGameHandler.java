@@ -14,6 +14,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.util.Objects;
+
+import static core.project.chess.infrastructure.utilities.web.WSUtilities.sendMessage;
+
 @ServerEndpoint("/chess-game")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameHandler {
@@ -26,7 +30,7 @@ public class ChessGameHandler {
     public void onOpen(final Session session) {
         final Result<JsonWebToken, IllegalArgumentException> jwt = jwtUtility.extractJWT(session);
         if (!jwt.success()) {
-            WSUtilities.sendMessage(session, "Token is required.");
+            sendMessage(session, "Token is required.");
             WSUtilities.closeSession(session, "You are don`t authorized.");
             return;
         }
@@ -37,9 +41,18 @@ public class ChessGameHandler {
 
     @OnMessage
     public void onMessage(final Session session, final String message) {
+        if (Objects.isNull(message) || message.isBlank()) {
+            sendMessage(session, "Message is required.");
+            return;
+        }
+
+        if (message.length() > 255) {
+            sendMessage(session, "Message is to long.");
+        }
+
         final Result<JsonWebToken, IllegalArgumentException> jwt = jwtUtility.extractJWT(session);
         if (!jwt.success()) {
-            WSUtilities.sendMessage(session, "Token is required.");
+            sendMessage(session, "Token is required.");
             WSUtilities.closeSession(session, "You are don`t authorized.");
             return;
         }
