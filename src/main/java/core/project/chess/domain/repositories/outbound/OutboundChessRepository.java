@@ -1,6 +1,6 @@
 package core.project.chess.domain.repositories.outbound;
 
-import core.project.chess.application.dto.gamesession.ChessGameHistory;
+import core.project.chess.domain.aggregates.chess.value_objects.ChessGameHistory;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 

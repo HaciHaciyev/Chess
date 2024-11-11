@@ -1,9 +1,9 @@
 package core.project.chess.application.controller;
 
-import core.project.chess.application.dto.gamesession.ChessGameHistory;
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
 import core.project.chess.application.service.UserService;
+import core.project.chess.domain.aggregates.chess.value_objects.ChessGameHistory;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import io.quarkus.security.Authenticated;

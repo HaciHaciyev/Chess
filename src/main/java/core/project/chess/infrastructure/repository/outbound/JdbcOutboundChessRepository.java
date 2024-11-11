@@ -1,8 +1,8 @@
 package core.project.chess.infrastructure.repository.outbound;
 
-import core.project.chess.application.dto.gamesession.ChessGameHistory;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
+import core.project.chess.domain.aggregates.chess.value_objects.ChessGameHistory;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;

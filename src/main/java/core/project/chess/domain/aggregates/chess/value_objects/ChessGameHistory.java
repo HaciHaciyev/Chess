@@ -1,4 +1,4 @@
-package core.project.chess.application.dto.gamesession;
+package core.project.chess.domain.aggregates.chess.value_objects;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
