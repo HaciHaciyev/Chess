@@ -1,7 +1,6 @@
 package core.project.chess.application.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.dto.gamesession.*;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
@@ -39,8 +38,6 @@ import static core.project.chess.infrastructure.utilities.web.WSUtilities.sendMe
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameService {
-
-    private final ObjectMapper objectMapper;
 
     private final InboundUserRepository inboundUserRepository;
 
@@ -196,6 +193,7 @@ public class ChessGameService {
     }
 
     private void partnershipGame(Session session, Username addresser, GameInit parameters) {
+        Objects.requireNonNull(parameters.nameOfPartner());
         if (!outboundUserRepository.isUsernameExists(parameters.nameOfPartner())) {
             sendMessage(session, "User %s do not exists.".formatted(parameters.nameOfPartner().username()));
             return;
@@ -453,7 +451,7 @@ public class ChessGameService {
                 continue;
             }
 
-            final boolean isOpponent = this.isOpponent(firstPlayer, gameParameters, potentialOpponent, gameParametersOfPotentialOpponent, true);
+            final boolean isOpponent = this.isOpponent(firstPlayer, gameParameters, potentialOpponent, gameParametersOfPotentialOpponent);
             if (isOpponent) {
                 return StatusPair.ofTrue(entry.getValue());
             }
@@ -468,8 +466,8 @@ public class ChessGameService {
     }
 
     private boolean isOpponent(final UserAccount player, final GameParameters gameParameters,
-                               final UserAccount opponent, final GameParameters opponentGameParameters,
-                               final boolean isRatingDifferenceRequired) {
+                               final UserAccount opponent, final GameParameters opponentGameParameters) {
+
         final boolean sameUser = player.getId().equals(opponent.getId());
         if (sameUser) {
             return false;
@@ -480,11 +478,9 @@ public class ChessGameService {
             return false;
         }
 
-        if (isRatingDifferenceRequired) {
-            final boolean validRatingDiff = Math.abs(player.getRating().rating() - opponent.getRating().rating()) <= 1500;
-            if (!validRatingDiff) {
-                return false;
-            }
+        final boolean validRatingDiff = Math.abs(player.getRating().rating() - opponent.getRating().rating()) <= 1500;
+        if (!validRatingDiff) {
+            return false;
         }
 
         final boolean colorNotSpecified = gameParameters.color() == null || opponentGameParameters.color() == null;
@@ -498,6 +494,7 @@ public class ChessGameService {
 
     private ChessGame loadChessGame(final UserAccount firstPlayer, final GameParameters gameParameters,
                                     final UserAccount secondPlayer, final GameParameters secondGameParameters) {
+
         final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
         final ChessGame.TimeControllingTYPE timeControlling = gameParameters.timeControllingTYPE();
         final boolean firstPlayerIsWhite = Objects.nonNull(gameParameters.color()) && gameParameters.color().equals(Color.WHITE);
