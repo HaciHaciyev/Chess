@@ -3,7 +3,6 @@ package core.project.chess.application.controller;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.config.security.JwtUtility;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.web.WSUtilities;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
@@ -13,6 +12,8 @@ import jakarta.websocket.server.ServerEndpoint;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+
+import java.util.Optional;
 
 @ServerEndpoint("/chess-game")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)

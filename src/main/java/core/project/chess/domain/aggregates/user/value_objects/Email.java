@@ -1,5 +1,7 @@
 package core.project.chess.domain.aggregates.user.value_objects;
 
+import io.quarkus.logging.Log;
+
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +22,7 @@ public record Email(String email) {
 
         Matcher matcher = pattern.matcher(email);
         if (!matcher.matches()) {
+            Log.errorf("Invalid email format: %s", email);
             throw new IllegalArgumentException("Email format error");
         }
     }

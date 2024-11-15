@@ -22,14 +22,17 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class UserService {
@@ -60,9 +63,12 @@ public class UserService {
 
     public static final String INVALID_USERNAME = "Invalid username. Username can`t be blank an need to contain only letters and digits, no special symbols";
 
-    public static final String TOKEN_VERIFICATION_URL = "%s/chessland/account/token/verification?token=%s";
+    //TODO replace with domain
+    public static final String EMAIL_VERIFICATION_URL = "http://localhost:8080/chessland/account/token/verification?token=%s";
 
     public Map<String, String> login(LoginForm loginForm) {
+        Log.infof("User %s is logging in", loginForm.username());
+
         final Username username = Result.ofThrowable(
                 () -> new Username(loginForm.username())
         ).orElseThrow(
@@ -75,21 +81,25 @@ public class UserService {
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build())
         );
 
-        Log.debugf("Fetching user %s from repo", username.username());
         final UserAccount userAccount = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                                .entity(String.format(USER_NOT_FOUND, username.username()))
-                                .build())
+                        () -> {
+                            Log.error("Login failure, user not found");
+                            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                                    .entity(String.format(USER_NOT_FOUND, username.username()))
+                                    .build());
+                        }
                 );
 
         if (!userAccount.isEnabled()) {
+            Log.error("Login failure, account is not enabled");
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(NOT_ENABLED).build());
         }
 
         final boolean isPasswordsMatch = passwordEncoder.verify(password, userAccount.getPassword());
         if (!isPasswordsMatch) {
+            Log.error("Login failure, wrong password");
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid password.").build());
         }
 
@@ -102,70 +112,86 @@ public class UserService {
     }
 
     public void registration(RegistrationForm registrationForm) {
+        Log.infof("Starting registration process for user %s", registrationForm.username());
         if (!Objects.equals(
                 registrationForm.password(), registrationForm.passwordConfirmation())
         ) {
+            Log.error("Registration failure, passwords do not match");
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Passwords don`t match.").build());
         }
 
         Username username = Result.ofThrowable(
                 () -> new Username(registrationForm.username())
         ).orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_USERNAME).build())
+                () -> {
+                    Log.error("Registration failure, invalid username");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_USERNAME).build());
+                }
         );
 
         Email email = Result.ofThrowable(
                 () -> new Email(registrationForm.email())
         ).orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid email.").build())
+                () -> {
+                    Log.error("Registration failure, invalid email");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid email.").build());
+                }
         );
 
         Password password = Result.ofThrowable(
                 () -> new Password(passwordEncoder.encode(new Password(registrationForm.password())))
         ).orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build())
+                () -> {
+                    Log.error("Registration failure, invalid password");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build());
+                }
         );
 
         if (outboundUserRepository.isUsernameExists(username)) {
+            Log.errorf("Registration failure, user %s already exists", username.username());
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Username already exists.").build());
         }
 
         if (outboundUserRepository.isEmailExists(email)) {
+            Log.errorf("Registration failure, email %s already exists", email.email());
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Email already exists.").build());
         }
 
-        UserAccount userAccount = Result.ofThrowable(() ->
-                UserAccount.of(username, email, password)
-        ).orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid user account.").build())
-        );
+        UserAccount userAccount = UserAccount.of(username, email, password);
 
-        Log.infof("Saving new user %s to repo", username.username());
+        Log.infof("Saving user %s to repo", username.username());
         inboundUserRepository.save(userAccount);
 
-        var token = EmailConfirmationToken.createToken(userAccount);
-        Log.infof("Saving new token %s to repo", token.getToken().token().toString().substring(4));
+        EmailConfirmationToken token = EmailConfirmationToken.createToken(userAccount);
+        Log.info("Saving email token to repo");
         inboundUserRepository.saveUserToken(token);
 
-        String link = String.format("/token/verification?%s", token.getToken().token());
+        String link = EMAIL_VERIFICATION_URL.formatted(token.getToken().token());
+
+        Log.infof("Sending verification link to %s", username.username());
         emailInteractionService.sendToEmail(email, link);
 
-        Log.info("Registration successful.");
+        Log.info("Registration successful");
     }
 
     public void tokenVerification(String token) {
-        Log.info("Token verification process.");
+        Log.infof("Verifying %s", token);
         var foundToken = outboundUserRepository
                 .findToken(UUID.fromString(token))
                 .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This token is not exists").build())
+                        () -> {
+                            Log.error("Verification failure, token does not exist");
+                            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This token does not exist").build());
+                        }
                 );
 
         if (foundToken.isExpired()) {
+            Log.error("Verification failure, token expired");
             try {
+                Log.infof("Deleting user %s", foundToken.getUserAccount().getUsername().username());
                 inboundUserRepository.deleteByToken(foundToken);
             } catch (IllegalAccessException e) {
-                Log.error("Unexpected error while deleting token. Probably account or token is not disabled.", e);
+                Log.error("Can't delete enabled account", e);
             }
 
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Token was expired. You need to register again.").build());
@@ -174,17 +200,21 @@ public class UserService {
         foundToken.confirm();
         foundToken.getUserAccount().enable();
         inboundUserRepository.enable(foundToken);
+        Log.infof("Verification successful");
     }
 
     public String refreshToken(String refreshToken) {
         final Pair<String, String> foundedPairResult = outboundUserRepository
                 .findRefreshToken(refreshToken)
                 .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This refresh token is not founded").build())
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This refresh token is not found").build())
                 );
 
-        final JsonWebToken refreshJWT = parseJWT(foundedPairResult.getSecond());
-        long tokenExpirationDate = refreshJWT.getExpirationTime();
+        Optional<JsonWebToken> refreshJWT = parseJWT(foundedPairResult.getSecond());
+        long tokenExpirationDate = refreshJWT.orElseThrow(
+                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Something went wrong, try again later").build()))
+                .getExpirationTime();
+
         final var tokenExpiration = LocalDateTime.ofEpochSecond(tokenExpirationDate, 0, ZoneOffset.UTC);
 
         if (LocalDateTime.now(ZoneOffset.UTC).isAfter(tokenExpiration)) {
@@ -194,7 +224,10 @@ public class UserService {
         final UserAccount userAccount = outboundUserRepository
                 .findById(UUID.fromString(foundedPairResult.getFirst()))
                 .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User was`t founded.").build())
+                        () ->{
+                            Log.error("User is not found");
+                            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User was`t founded.").build());
+                        }
                 );
 
         return jwtUtility.generateToken(userAccount);
@@ -205,7 +238,7 @@ public class UserService {
         try {
             jsonWebToken = jwtParser.parse(token);
         } catch (ParseException e) {
-            Log.error("Unexpected error. Can`t parse jwt.", e);
+            Log.fatal("Can`t parse jwt. How is this possible?", e);
         }
 
         return jsonWebToken;

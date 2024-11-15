@@ -32,6 +32,5 @@ public class EmailInteractionService {
         );
 
         mailer.send(Mail.withText(email.email(), subject, body));
-        Log.infof("Token sent to : %s", email.email());
     }
 }

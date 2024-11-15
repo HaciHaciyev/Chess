@@ -31,7 +31,7 @@ public class EmailConfirmationToken {
 
     public static EmailConfirmationToken createToken(final UserAccount userAccount) {
         return new EmailConfirmationToken(
-                UUID.randomUUID(), Token.createToken(), new TokenEvents(LocalDateTime.now()), Boolean.FALSE, userAccount
+                UUID.randomUUID(), Token.createToken(), new TokenEvents(LocalDateTime.now()), false, userAccount
         );
     }
 
