@@ -18,9 +18,6 @@ public class EmailInteractionService {
     }
 
     public void sendToEmail(Email email, String link) {
-        Objects.requireNonNull(email);
-        Objects.requireNonNull(link);
-
         String subject = "Email confirmation";
         String body = String.format(
                 """

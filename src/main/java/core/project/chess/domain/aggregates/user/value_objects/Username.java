@@ -18,7 +18,7 @@ public record Username(String username) {
             throw new IllegalArgumentException("Username cannot be blank.");
         }
         if (username.length() > 24) {
-            throw new IllegalArgumentException("This username is to long.");
+            throw new IllegalArgumentException("This username is too long.");
         }
 
         Matcher matcher = pattern.matcher(username);

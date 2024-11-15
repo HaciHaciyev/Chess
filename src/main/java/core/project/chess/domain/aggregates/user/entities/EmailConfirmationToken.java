@@ -36,7 +36,7 @@ public class EmailConfirmationToken {
     }
 
     public static EmailConfirmationToken fromRepository(
-            final UUID tokenId, final Token token, final TokenEvents tokenEvents, final Boolean isConfirmed, final UserAccount userAccount
+            UUID tokenId, Token token, TokenEvents tokenEvents, Boolean isConfirmed, UserAccount userAccount
     ) {
         return new EmailConfirmationToken(tokenId, token, tokenEvents, isConfirmed, userAccount);
     }
@@ -46,10 +46,6 @@ public class EmailConfirmationToken {
     }
 
     public void confirm() {
-        if (isConfirmed) {
-            throw new IllegalStateException("Email confirmation token is already confirmed");
-        }
-
         isConfirmed = true;
     }
 }
