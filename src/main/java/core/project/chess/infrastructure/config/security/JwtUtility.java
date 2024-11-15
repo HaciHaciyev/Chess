@@ -62,7 +62,7 @@ public class JwtUtility {
         try {
             return Optional.of(jwtParser.parse(token.getFirst()));
         } catch (ParseException e) {
-            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).entity("Invalid JWT token.").build());
+            throw new IllegalArgumentException("Wrong JWT", e);
         }
     }
 }
