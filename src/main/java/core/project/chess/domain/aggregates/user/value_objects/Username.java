@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public record Username(String username) {
 
-    private static final String usernameRegex = "^[a-zA-Z0-9 ]*$";
+    private static final String usernameRegex = "^[a-zA-Z0-9]*$";
 
     private static final Pattern pattern = Pattern.compile(usernameRegex);
 
