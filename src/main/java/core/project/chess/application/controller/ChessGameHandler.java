@@ -3,7 +3,6 @@ package core.project.chess.application.controller;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.config.security.JwtUtility;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.web.WSUtilities;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
@@ -15,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static core.project.chess.infrastructure.utilities.web.WSUtilities.sendMessage;
 
@@ -28,14 +28,14 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session) {
-        final Result<JsonWebToken, IllegalArgumentException> jwt = jwtUtility.extractJWT(session);
-        if (!jwt.success()) {
+        final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
+        if (jwt.isEmpty()) {
             sendMessage(session, "Token is required.");
-            WSUtilities.closeSession(session, "You are don`t authorized.");
+            WSUtilities.closeSession(session, "You are not authorized.");
             return;
         }
 
-        final Username username = new Username(jwt.value().getName());
+        final Username username = new Username(jwt.orElseThrow().getName());
         chessGameService.handleOnOpen(session, username);
     }
 
@@ -50,14 +50,14 @@ public class ChessGameHandler {
             sendMessage(session, "Message is to long.");
         }
 
-        final Result<JsonWebToken, IllegalArgumentException> jwt = jwtUtility.extractJWT(session);
-        if (!jwt.success()) {
+        final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
+        if (jwt.isEmpty()) {
             sendMessage(session, "Token is required.");
-            WSUtilities.closeSession(session, "You are don`t authorized.");
+            WSUtilities.closeSession(session, "You are not authorized.");
             return;
         }
 
-        final Username username = new Username(jwt.value().getName());
+        final Username username = new Username(jwt.orElseThrow().getName());
         chessGameService.handleOnMessage(session, username, message);
     }
 

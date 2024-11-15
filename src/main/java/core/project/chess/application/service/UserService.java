@@ -226,14 +226,13 @@ public class UserService {
         return jwtUtility.generateToken(userAccount);
     }
 
-    private JsonWebToken parseJWT(String token) {
-        JsonWebToken jsonWebToken = null;
+    private Optional<JsonWebToken> parseJWT(String token) {
         try {
-            jsonWebToken = jwtParser.parse(token);
+            return Optional.of(jwtParser.parse(token));
         } catch (ParseException e) {
             Log.fatal("Can`t parse jwt. How is this possible?", e);
         }
 
-        return jsonWebToken;
+        return Optional.empty();
     }
 }
