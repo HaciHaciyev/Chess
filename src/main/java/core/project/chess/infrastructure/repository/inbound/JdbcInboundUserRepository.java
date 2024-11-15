@@ -135,10 +135,9 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void deleteByToken(final EmailConfirmationToken token) throws IllegalAccessException {
-        Log.info("Delete user account.");
-        final Boolean isEnable = token.getUserAccount().isEnabled();
+        final boolean isEnable = token.getUserAccount().isEnabled();
 
-        if (Boolean.TRUE.equals(isEnable) || token.isConfirmed()) {
+        if (isEnable || token.isConfirmed()) {
             throw new IllegalAccessException("It is prohibited to delete an accessible account");
         }
 
