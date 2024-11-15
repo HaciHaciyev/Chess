@@ -25,27 +25,27 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session) {
-        final Result<JsonWebToken, IllegalArgumentException> jwt = jwtUtility.extractJWT(session);
-        if (!jwt.success()) {
+        final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
+        if (jwt.isEmpty()) {
             WSUtilities.sendMessage(session, "Token is required.");
-            WSUtilities.closeSession(session, "You are don`t authorized.");
+            WSUtilities.closeSession(session, "You are not authorized.");
             return;
         }
 
-        final Username username = new Username(jwt.value().getName());
+        final Username username = new Username(jwt.orElseThrow().getName());
         chessGameService.handleOnOpen(session, username);
     }
 
     @OnMessage
     public void onMessage(final Session session, final String message) {
-        final Result<JsonWebToken, IllegalArgumentException> jwt = jwtUtility.extractJWT(session);
-        if (!jwt.success()) {
+        final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
+        if (jwt.isEmpty()) {
             WSUtilities.sendMessage(session, "Token is required.");
-            WSUtilities.closeSession(session, "You are don`t authorized.");
+            WSUtilities.closeSession(session, "You are not authorized.");
             return;
         }
 
-        final Username username = new Username(jwt.value().getName());
+        final Username username = new Username(jwt.orElseThrow().getName());
         chessGameService.handleOnMessage(session, username, message);
     }
 
