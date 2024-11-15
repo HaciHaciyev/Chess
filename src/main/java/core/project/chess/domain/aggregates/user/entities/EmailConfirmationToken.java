@@ -46,6 +46,10 @@ public class EmailConfirmationToken {
     }
 
     public void confirm() {
+        if (isConfirmed) {
+            throw new IllegalStateException("This token has already been confirmed");
+        }
+
         isConfirmed = true;
     }
 }
