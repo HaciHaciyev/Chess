@@ -83,10 +83,10 @@ public class ChessGame {
         this.chatMessages = new ArrayList<>();
 
         this.whiteTimer = new ChessCountdownTimer("White timer", Duration.ofMinutes(timeControllingTYPE.getMinutes()),
-                unused -> this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN));
+                () -> this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN));
 
         this.blackTimer = new ChessCountdownTimer("Black timer", Duration.ofMinutes(timeControllingTYPE.getMinutes()),
-                unused -> this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN));
+                () -> this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN));
 
         playerForWhite.addGame(this);
         playerForBlack.addGame(this);
@@ -483,11 +483,11 @@ public class ChessGame {
         private final Object lock;
         private final ExecutorService timerService;
 
-        private final Consumer<Void> onComplete;
+        private final Runnable onComplete;
 
         private final String name;
 
-        public ChessCountdownTimer(String name, Duration duration, Consumer<Void> onComplete) {
+        public ChessCountdownTimer(String name, Duration duration, Runnable onComplete) {
             this.name = name;
             this.gameDuration = duration;
             this.isPaused = new AtomicBoolean();
@@ -511,7 +511,7 @@ public class ChessGame {
                     Duration remaining = gameDuration.minus(elapsed);
 
                     if (remaining.isNegative() || remaining.isZero()) {
-                        onComplete.accept(null);
+                        onComplete.run();
                         stop();
                         break;
                     }
