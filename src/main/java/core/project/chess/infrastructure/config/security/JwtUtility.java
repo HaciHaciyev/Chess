@@ -26,7 +26,7 @@ public class JwtUtility {
     }
 
     public String generateToken(UserAccount userAccount) {
-        Log.info("New token generation.");
+        Log.info("Token generation, will expire in a day");
 
         Duration expiration = Duration.ofDays(1).plusSeconds(1);
         return Jwt.issuer("Chessland")
@@ -37,7 +37,7 @@ public class JwtUtility {
     }
 
     public String refreshToken(UserAccount userAccount) {
-        Log.info("New token generation.");
+        Log.info("Refreshing token, will expire in a year");
 
         Duration year = Duration.ofDays(365);
         return Jwt.issuer("Chessland")

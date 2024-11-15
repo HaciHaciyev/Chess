@@ -69,7 +69,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void save(final UserAccount userAccount) {
-        Log.infof("Save user %s", userAccount.toString());
 
         jdbc.write(INSERT_USER_ACCOUNT,
             userAccount.getId().toString(),
@@ -90,7 +89,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfRating(final UserAccount userAccount) {
-        Log.infof("Update user account %s", userAccount.toString());
 
         jdbc.write(UPDATE_USER_RATING,
                 userAccount.getRating().rating(),
@@ -104,7 +102,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void saveUserToken(final EmailConfirmationToken token) {
-        Log.infof("Save user token %s", token.toString());
 
         jdbc.write(INSERT_USER_TOKEN,
             token.getTokenId().toString(),
@@ -120,7 +117,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void enable(final EmailConfirmationToken token) {
-        Log.info("Enable user account.");
         if (!token.isConfirmed() || !token.getUserAccount().isEnabled()) {
             throw new IllegalArgumentException("Token need to be confirmed & UserAccount need to be enabled");
         }
@@ -135,7 +131,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
         .ifFailure(Throwable::printStackTrace);
 
-        Log.infof("User account %s has became available", token);
     }
 
     @Override
