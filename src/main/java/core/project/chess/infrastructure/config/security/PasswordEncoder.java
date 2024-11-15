@@ -18,7 +18,7 @@ public class PasswordEncoder {
 
     public String encode(Password password) {
         Objects.requireNonNull(password);
-        return argon2.hash(22, 65536, 1, password.password().toCharArray());
+        return argon2.hash(16, 65536, 4, password.password().toCharArray());
     }
 
     public boolean verify(Password password, Password hashed) {
