@@ -523,10 +523,10 @@ public class ChessGame {
             }
         }
 
-        public boolean start() {
+        public void start() {
             if (isRunning.get() && !isPaused.get()) {
                 Log.warnf("%s for the game %s is already running", name, chessGameId);
-                return false;
+                return;
             }
 
             if (!isPaused.get()) {
@@ -542,16 +542,15 @@ public class ChessGame {
                 isPaused.set(false);
 
                 synchronized (lock) {
-                    lock.notify();
+                    lock.notifyAll();
                 }
 
-                return true;
+                return;
             } else {
                 startTime = Instant.now();
             }
 
             timerService.submit(this);
-            return true;
         }
 
         public void pause() {

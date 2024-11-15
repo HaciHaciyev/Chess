@@ -498,9 +498,7 @@ public class ChessBoard {
                 return true;
             }
 
-            if (piece.color().equals(Color.BLACK) && lastMoveEnd.getRow() - to.getRow() == 1) {
-                return true;
-            }
+            return piece.color().equals(Color.BLACK) && lastMoveEnd.getRow() - to.getRow() == 1;
         }
 
         return false;
@@ -826,6 +824,7 @@ public class ChessBoard {
                     capturedBlackPieces.add(field.piece);
                 }
 
+                changeInMaterialAdvantage(field.piece);
                 field.removeFigure();
             }
 
@@ -837,6 +836,7 @@ public class ChessBoard {
                 capturedBlackPieces.add(endField.piece);
             }
 
+            changeInMaterialAdvantage(endField.piece);
             endField.removeFigure();
         }
 
@@ -845,6 +845,7 @@ public class ChessBoard {
                 endField.removeFigure();
             }
 
+            changeInMaterialAdvantageInCaseOfPromotion(inCaseOfPromotion);
             endField.addFigure(inCaseOfPromotion);
         } else {
             endField.addFigure(piece);
@@ -1544,10 +1545,6 @@ public class ChessBoard {
                 default -> fieldMap.put(coordinate, new Field(coordinate, null));
             }
         }
-    }
-
-    private int pieceComparator(Piece p1, Piece p2) {
-        return pieceRank(p1) - pieceRank(p2);
     }
 
     private int pieceRank(Piece piece) {
