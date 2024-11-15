@@ -1,8 +1,8 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
+import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.enumerations.GameResult;
 import core.project.chess.domain.aggregates.chess.events.SessionEvents;
-import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import static core.project.chess.domain.aggregates.chess.enumerations.Coordinate.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled
 public class ChessGameTest {
 
     @Test

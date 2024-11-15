@@ -8,7 +8,6 @@ import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
-import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.config.security.PasswordEncoder;
@@ -37,21 +36,15 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class UserService {
 
-    private final JsonWebToken jwt;
-
     private final JWTParser jwtParser;
 
     private final JwtUtility jwtUtility;
-
-    private final UserService userService;
 
     private final PasswordEncoder passwordEncoder;
 
     private final InboundUserRepository inboundUserRepository;
 
     private final OutboundUserRepository outboundUserRepository;
-
-    private final OutboundChessRepository outboundChessRepository;
 
     private final EmailInteractionService emailInteractionService;
 
