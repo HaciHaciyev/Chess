@@ -1,15 +1,11 @@
 package core.project.chess.infrastructure.config.security;
 
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
-import core.project.chess.infrastructure.utilities.containers.Result;
-import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.inject.Singleton;
 import jakarta.websocket.Session;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.Duration;
@@ -27,9 +23,8 @@ public class JwtUtility {
     }
 
     public String generateToken(UserAccount userAccount) {
-        Log.info("Token generation, will expire in a day");
-
         Duration expiration = Duration.ofDays(1).plusSeconds(1);
+
         return Jwt.issuer("Chessland")
                 .upn(userAccount.getUsername().username())
                 .groups(userAccount.getUserRole().getUserRole())
@@ -38,9 +33,8 @@ public class JwtUtility {
     }
 
     public String refreshToken(UserAccount userAccount) {
-        Log.info("Refreshing token, will expire in a year");
-
         Duration year = Duration.ofDays(365);
+
         return Jwt.issuer("Chessland")
                 .upn(userAccount.getUsername().username())
                 .groups(userAccount.getUserRole().getUserRole())
@@ -62,7 +56,7 @@ public class JwtUtility {
         try {
             return Optional.of(jwtParser.parse(token.getFirst()));
         } catch (ParseException e) {
-            throw new IllegalArgumentException("Wrong JWT", e);
+            return Optional.empty();
         }
     }
 }
