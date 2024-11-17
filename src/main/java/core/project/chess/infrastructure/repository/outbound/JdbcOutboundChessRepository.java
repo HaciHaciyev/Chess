@@ -27,6 +27,23 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     public static final String IS_PRESENT = "SELECT COUNT(id) FROM ChessGameHistory WHERE id = ?";
 
+    public static final String GET_PARTNERS_USERNAMES = """
+            SELECT partner.username
+            FROM UserPartnership AS up
+            JOIN UserAccount AS partner ON up.partner_id = partner.id
+            JOIN UserAccount AS user_account ON up.user_id = user_account.id
+            WHERE user_account.username = ?
+            
+            UNION
+            
+            SELECT user_account.username
+            FROM UserPartnership AS up
+            JOIN UserAccount AS user_account ON up.user_id = user_account.id
+            JOIN UserAccount AS partner ON up.partner_id = partner.id
+            WHERE partner.username = ?
+            LIMIT 10 OFFSET ? * 10;
+            """;
+
     public static final String GET_CHESS_GAME = """
             SELECT
                 cgh.id AS chessHistoryId,
@@ -121,8 +138,18 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
         );
     }
 
+    @Override
+    public Result<List<String>, Throwable> listOfPartners(String username, int pageNumber) {
+        return jdbc.readListOf(
+                GET_PARTNERS_USERNAMES,
+                rs -> rs.getString("username"),
+                Objects.requireNonNull(username),
+                Objects.requireNonNull(username),
+                pageNumber
+        );
+    }
+
     private ChessGameHistory chessGameMapper(final ResultSet rs) throws SQLException {
-        Log.info("ChessGame is recreated from repository.");
 
         return new ChessGameHistory(
                 UUID.fromString(rs.getString("chessHistoryId")),

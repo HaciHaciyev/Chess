@@ -77,4 +77,16 @@ public class UserController {
 
         return Response.ok(listOfGames).build();
     }
+
+    @Authenticated
+    @GET @Path("/partners")
+    public final Response partners(@QueryParam("pageNumber") int pageNumber) {
+        List<String> partnersUsernames = outboundChessRepository
+                .listOfPartners(jwt.getName(), pageNumber)
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User does not exist.\uD83D\uDC7B").build())
+                );
+
+        return Response.ok(partnersUsernames).build();
+    }
 }
