@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.utilities.json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.chess.application.dto.gamesession.*;
+import core.project.chess.application.dto.gamesession.inbound.*;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
@@ -30,13 +30,13 @@ public class JSONUtilities {
         }
     }
 
-    public static Result<core.project.chess.application.dto.gamesession.MessageType, Throwable> chessMessageType(final String message) {
+    public static Result<MessageType, Throwable> chessMessageType(final String message) {
         Result<JsonNode, Throwable> resultNode = jsonTree(message);
         if (!resultNode.success()) {
             return Result.failure(resultNode.throwable());
         }
 
-        return Result.ofThrowable(() -> core.project.chess.application.dto.gamesession.MessageType.valueOf(resultNode.value().get("type").asText()));
+        return Result.ofThrowable(() -> MessageType.valueOf(resultNode.value().get("type").asText()));
     }
 
     public static Result<Message, Throwable> messageRecord(JsonNode messageNode) {

@@ -1,4 +1,4 @@
-package core.project.chess.application.dto.gamesession;
+package core.project.chess.application.dto.gamesession.inbound;
 
 public enum MessageType {
     GAME_INIT,

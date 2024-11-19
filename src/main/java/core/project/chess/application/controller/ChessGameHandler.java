@@ -18,7 +18,7 @@ import java.util.Optional;
 
 import static core.project.chess.infrastructure.utilities.web.WSUtilities.sendMessage;
 
-@ServerEndpoint("/chess-game")
+@ServerEndpoint("/chessland/chess-game")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameHandler {
 

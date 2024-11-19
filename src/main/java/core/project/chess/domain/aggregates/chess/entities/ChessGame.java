@@ -1,6 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
-import core.project.chess.application.dto.gamesession.Message;
+import core.project.chess.application.dto.gamesession.inbound.Message;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import static core.project.chess.domain.aggregates.chess.enumerations.GameResultMessage.*;
 

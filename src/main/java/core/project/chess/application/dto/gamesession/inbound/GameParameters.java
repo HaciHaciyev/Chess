@@ -1,4 +1,4 @@
-package core.project.chess.application.dto.gamesession;
+package core.project.chess.application.dto.gamesession.inbound;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;

@@ -1,7 +1,7 @@
 package core.project.chess.infrastructure.cache;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import core.project.chess.application.dto.gamesession.GameParameters;
+import core.project.chess.application.dto.gamesession.inbound.GameParameters;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import core.project.chess.infrastructure.utilities.json.JSONUtilities;
 import io.quarkus.redis.datasource.RedisDataSource;

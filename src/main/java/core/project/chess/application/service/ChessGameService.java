@@ -1,7 +1,7 @@
 package core.project.chess.application.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import core.project.chess.application.dto.gamesession.*;
+import core.project.chess.application.dto.gamesession.inbound.*;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
