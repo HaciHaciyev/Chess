@@ -1,8 +1,10 @@
 package core.project.chess.application.controller;
 
+import core.project.chess.application.dto.gamesession.Message;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.config.security.JwtUtility;
+import core.project.chess.infrastructure.utilities.json.JSONUtilities;
 import core.project.chess.infrastructure.utilities.web.WSUtilities;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
@@ -30,8 +32,8 @@ public class ChessGameHandler {
     public void onOpen(final Session session) {
         final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
         if (jwt.isEmpty()) {
-            sendMessage(session, "Token is required.");
-            WSUtilities.closeSession(session, "You are not authorized.");
+            sendMessage(session, JSONUtilities.write(Message.error("Token is required.")).orElseThrow());
+            WSUtilities.closeSession(session, JSONUtilities.write(Message.error("You are not authorized.")).orElseThrow());
             return;
         }
 
@@ -42,18 +44,19 @@ public class ChessGameHandler {
     @OnMessage
     public void onMessage(final Session session, final String message) {
         if (Objects.isNull(message) || message.isBlank()) {
-            sendMessage(session, "Message is required.");
+            sendMessage(session, JSONUtilities.write(Message.error("Message is required.")).orElseThrow());
             return;
         }
 
         if (message.length() > 255) {
             sendMessage(session, "Message is to long.");
+            sendMessage(session, JSONUtilities.write(Message.error("Message is to long.")).orElseThrow());
         }
 
         final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
         if (jwt.isEmpty()) {
-            sendMessage(session, "Token is required.");
-            WSUtilities.closeSession(session, "You are not authorized.");
+            sendMessage(session, JSONUtilities.write(Message.error("Token is required.")).orElseThrow());
+            WSUtilities.closeSession(session, JSONUtilities.write(Message.error("You are not authorized.")).orElseThrow());
             return;
         }
 

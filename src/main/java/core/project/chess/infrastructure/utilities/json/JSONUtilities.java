@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.utilities.json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.chess.application.dto.gamesession.inbound.*;
+import core.project.chess.application.dto.gamesession.*;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
@@ -11,9 +11,11 @@ import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
+import io.quarkus.logging.Log;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public class JSONUtilities {
@@ -30,6 +32,23 @@ public class JSONUtilities {
         }
     }
 
+    public static Optional<String> write(Message message) {
+        try {
+            return Optional.of(objectMapper.writeValueAsString(message));
+        } catch (JsonProcessingException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static Result<Message, Throwable> readAsMessage(String message) {
+        Log.infof("deserializing: %s", message);
+        try {
+            return Result.success(objectMapper.readValue(message, Message.class));
+        } catch (JsonProcessingException e) {
+            return Result.failure(e);
+        }
+    }
+
     public static Result<MessageType, Throwable> chessMessageType(final String message) {
         Result<JsonNode, Throwable> resultNode = jsonTree(message);
         if (!resultNode.success()) {
@@ -39,8 +58,8 @@ public class JSONUtilities {
         return Result.ofThrowable(() -> MessageType.valueOf(resultNode.value().get("type").asText()));
     }
 
-    public static Result<Message, Throwable> messageRecord(JsonNode messageNode) {
-        return Result.ofThrowable(() -> new Message(messageNode.get("message").asText()));
+    public static Result<ChatMessage, Throwable> messageRecord(JsonNode messageNode) {
+        return Result.ofThrowable(() -> new ChatMessage(messageNode.get("message").asText()));
     }
 
     public static Result<ChessMovementForm, Throwable> movementFormMessage(final JsonNode node) {
@@ -92,11 +111,8 @@ public class JSONUtilities {
         }
 
         final Result<UUID, Throwable> gameId = getGameId(node.value());
-        if (!gameId.success()) {
-            return Result.failure(gameId.throwable());
-        }
-
         final boolean connectToExistedGame = Objects.nonNull(gameId.value());
+
         if (connectToExistedGame) {
             return Result.success(new GameInit(gameId.value(), null, null, null));
         }
@@ -116,7 +132,7 @@ public class JSONUtilities {
             return Result.failure(nameOfPartner.throwable());
         }
 
-        return Result.success(new GameInit(gameId.value(), color.value(), time.value(), nameOfPartner.value()));
+        return Result.success(new GameInit(null, color.value(), time.value(), nameOfPartner.value()));
     }
 
     private static Result<UUID, Throwable> getGameId(JsonNode node) {

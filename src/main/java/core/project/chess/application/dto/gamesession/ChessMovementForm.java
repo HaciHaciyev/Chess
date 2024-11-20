@@ -1,4 +1,4 @@
-package core.project.chess.application.dto.gamesession.inbound;
+package core.project.chess.application.dto.gamesession;
 
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.chess.pieces.Piece;
