@@ -1,4 +1,4 @@
-package core.project.chess.application.dto.gamesession.inbound;
+package core.project.chess.application.dto.gamesession;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
 import core.project.chess.domain.aggregates.user.value_objects.Username;

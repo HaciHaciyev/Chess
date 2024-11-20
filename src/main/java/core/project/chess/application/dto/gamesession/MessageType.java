@@ -1,4 +1,4 @@
-package core.project.chess.application.dto.gamesession.inbound;
+package core.project.chess.application.dto.gamesession;
 
 public enum MessageType {
     GAME_INIT,
@@ -7,5 +7,8 @@ public enum MessageType {
     AGREEMENT,
     RESIGNATION,
     TREE_FOLD,
+    ERROR,
+    INVITATION,
+    INFO,
     MESSAGE
 }

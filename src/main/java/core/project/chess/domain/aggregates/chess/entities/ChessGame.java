@@ -1,6 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
-import core.project.chess.application.dto.gamesession.inbound.Message;
+import core.project.chess.application.dto.gamesession.ChatMessage;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
@@ -42,7 +42,7 @@ public class ChessGame {
     private final TimeControllingTYPE timeControllingTYPE;
     private @Getter(AccessLevel.NONE) boolean isTheOptionToEndTheGameDueToThreeFoldActive;
     private @Getter(AccessLevel.NONE) StatusPair<GameResult> isGameOver;
-    final @Getter(AccessLevel.NONE) List<Message> chatMessages;
+    final @Getter(AccessLevel.NONE) List<ChatMessage> chatMessages;
 
     private final ChessCountdownTimer whiteTimer;
     private final ChessCountdownTimer blackTimer;
@@ -110,7 +110,7 @@ public class ChessGame {
         );
     }
 
-    public void addChatMessage(final String username, final Message message) {
+    public void addChatMessage(final String username, final ChatMessage message) {
         final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
         final boolean isBlackPlayer = username.equals(playerForBlack.getUsername().username());
 
@@ -121,7 +121,7 @@ public class ChessGame {
         chatMessages.add(message);
     }
 
-    public List<Message> chatMessages() {
+    public List<ChatMessage> chatMessages() {
         return chatMessages.stream().toList();
     }
 
