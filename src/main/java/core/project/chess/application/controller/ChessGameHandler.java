@@ -48,8 +48,7 @@ public class ChessGameHandler {
             return;
         }
 
-        if (message.length() > 255) {
-            sendMessage(session, "Message is to long.");
+        if (message.length() > 512) {
             sendMessage(session, JSONUtilities.write(Message.error("Message is to long.")).orElseThrow());
         }
 
