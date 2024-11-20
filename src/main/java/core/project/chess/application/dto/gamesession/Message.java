@@ -2,12 +2,21 @@ package core.project.chess.application.dto.gamesession;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.infrastructure.utilities.json.JSONUtilities;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public record Message(MessageType type,
                       String gameID,
+                      String FEN,
+                      String PGN,
+                      Username whitePlayerUsername,
+                      Username blackPlayerUsername,
+                      Double whitePlayerRating,
+                      Double blackPlayerRating,
                       String color,
                       String partner,
                       Coordinate from,
@@ -16,67 +25,222 @@ public record Message(MessageType type,
                       String message,
                       TimeControllingTYPE time) {
 
+    private static final Pattern PROMOTION_PATTERN = Pattern.compile("^[QRNBqrnb]$");
     private static final String INVITATION_MESSAGE = "User %s invite you for a chess game with parameters: figures color for you = %s, time control = %s.";
-    private static final Pattern pattern = Pattern.compile("^[QRNBqrnb]$");
 
     public Message {
-        Objects.requireNonNull(type);
-
-        if (Objects.nonNull(inCaseOfPromotion) && !pattern.matcher(gameID).matches()) {
-            throw new IllegalArgumentException("Invalid piece type.");
+        Objects.requireNonNull(type, "Message type must not be null.");
+        if (Objects.nonNull(inCaseOfPromotion) && !PROMOTION_PATTERN.matcher(inCaseOfPromotion).matches()) {
+            throw new IllegalArgumentException("Invalid promotion piece type.");
         }
     }
 
-    public static Message gameInit(String color, TimeControllingTYPE timeControlling) {
-        return new Message(MessageType.GAME_INIT, null, color, null, null, null, null, null, timeControlling);
+    public static Builder builder(MessageType type) {
+        return new Builder(type);
     }
 
-    public static Message connectToExistingGame(String gameID, String color, TimeControllingTYPE timeControlling) {
-        return new Message(MessageType.GAME_INIT, gameID, color, null, null, null, null, null, timeControlling);
-    }
-
-    public static Message partnershipGame(String color, String partner, TimeControllingTYPE timeControlling) {
-        return new Message(MessageType.GAME_INIT, null, color, partner, null, null, null, null, timeControlling);
+    public static Message gameInit(String color, TimeControllingTYPE time) {
+        return builder(MessageType.GAME_INIT).color(color).time(time).build();
     }
 
     public static Message move(String gameID, Coordinate from, Coordinate to) {
-        return new Message(MessageType.MOVE, gameID, null, null, from, to, null, null, null);
+        return builder(MessageType.MOVE).gameID(gameID).from(from).to(to).build();
     }
 
     public static Message promotion(String gameID, Coordinate from, Coordinate to, String promotion) {
-        return new Message(MessageType.MOVE, gameID, null, null, from, to, promotion, null,  null);
+        return builder(MessageType.MOVE)
+                .gameID(gameID)
+                .from(from)
+                .to(to)
+                .inCaseOfPromotion(promotion)
+                .build();
     }
 
     public static Message chat(String gameID, String message) {
-        return new Message(MessageType.MESSAGE, gameID, null, null, null, null, null, message, null);
-    }
-
-    public static Message returnMovement(String gameID) {
-        return new Message(MessageType.MOVE, gameID, null, null, null, null, null, null, null);
-    }
-
-    public static Message resignation(String gameID) {
-        return new Message(MessageType.RESIGNATION, gameID, null, null, null, null, null, null, null);
-    }
-
-    public static Message threefold(String gameID) {
-        return new Message(MessageType.TREE_FOLD, gameID, null, null, null, null, null, null, null);
-    }
-
-    public static Message agreement(String gameID) {
-        return new Message(MessageType.AGREEMENT, gameID, null, null, null, null, null, null, null);
-    }
-
-    public static Message error(String message) {
-        return new Message(MessageType.ERROR, null, null, null, null, null, null, message, null);
+        return builder(MessageType.MESSAGE).gameID(gameID).message(message).build();
     }
 
     public static Message invitation(String username, GameParameters gameParams) {
         String message = String.format(INVITATION_MESSAGE, username, gameParams.color(), gameParams.timeControllingTYPE());
-        return new Message(MessageType.INVITATION, null, null, null, null, null, null, message, null);
+        return builder(MessageType.INVITATION).message(message).build();
+    }
+
+    public static Message connectToExistingGame(String gameID, String color, TimeControllingTYPE time) {
+        return builder(MessageType.GAME_INIT)
+                .gameID(gameID)
+                .color(color)
+                .time(time)
+                .build();
+    }
+
+    public static Message partnershipGame(String color, String partner, TimeControllingTYPE time) {
+        return builder(MessageType.GAME_INIT)
+                .color(color)
+                .partner(partner)
+                .time(time)
+                .build();
+    }
+
+    public static Message returnMovement(String gameID) {
+        return builder(MessageType.MOVE)
+                .gameID(gameID)
+                .build();
+    }
+
+    public static Message resignation(String gameID) {
+        return builder(MessageType.RESIGNATION)
+                .gameID(gameID)
+                .build();
+    }
+
+    public static Message threefold(String gameID) {
+        return builder(MessageType.TREE_FOLD)
+                .gameID(gameID)
+                .build();
+    }
+
+    public static Message agreement(String gameID) {
+        return builder(MessageType.AGREEMENT)
+                .gameID(gameID)
+                .build();
+    }
+
+    public static Message error(String message) {
+        return builder(MessageType.ERROR)
+                .message(message)
+                .build();
     }
 
     public static Message info(String message) {
-        return new Message(MessageType.INFO, null, null, null, null, null, null, message, null);
+        return builder(MessageType.INFO)
+                .message(message)
+                .build();
+    }
+
+    public static Message userInfo(String message) {
+        return builder(MessageType.USER_INFO)
+                .message(message)
+                .build();
+    }
+
+    public static Message gameStartInfo(GameSessionMessage gsm) {
+        return builder(MessageType.GAME_START_INFO)
+                .gameID(gsm.id())
+                .whitePlayerUsername(gsm.whitePlayerUsername())
+                .blackPlayerUsername(gsm.blackPlayerUsername())
+                .whitePlayerRating(gsm.whitePlayerRating())
+                .blackPlayerRating(gsm.blackPlayerRating())
+                .time(gsm.timeControl())
+                .build();
+    }
+
+    public static Message FEN_PGN(String gameID, String FEN, String PGN) {
+        return builder(MessageType.FEN_PGN)
+                .gameID(gameID)
+                .FEN(FEN)
+                .PGN(PGN)
+                .build();
+    }
+
+    public Optional<String> write() {
+        return JSONUtilities.write(this);
+    }
+
+    public static class Builder {
+        private final MessageType type;
+        private String gameID;
+        private String FEN;
+        private String PGN;
+        private Username whitePlayerUsername;
+        private Username blackPlayerUsername;
+        private Double whitePlayerRating;
+        private Double blackPlayerRating;
+        private String color;
+        private String partner;
+        private Coordinate from;
+        private Coordinate to;
+        private String inCaseOfPromotion;
+        private String message;
+        private TimeControllingTYPE time;
+
+        public Builder(MessageType type) {
+            this.type = Objects.requireNonNull(type, "Message type must not be null.");
+        }
+
+        public Builder gameID(String gameID) {
+            this.gameID = gameID;
+            return this;
+        }
+
+        public Builder FEN(String FEN) {
+            this.FEN = FEN;
+            return this;
+        }
+
+        public Builder PGN(String PGN) {
+            this.PGN = PGN;
+            return this;
+        }
+
+        public Builder whitePlayerUsername(Username whitePlayerUsername) {
+            this.whitePlayerUsername = whitePlayerUsername;
+            return this;
+        }
+
+        public Builder blackPlayerUsername(Username blackPlayerUsername) {
+            this.blackPlayerUsername = blackPlayerUsername;
+            return this;
+        }
+
+        public Builder whitePlayerRating(Double whitePlayerRating) {
+            this.whitePlayerRating = whitePlayerRating;
+            return this;
+        }
+
+        public Builder blackPlayerRating(Double blackPlayerRating) {
+            this.blackPlayerRating = blackPlayerRating;
+            return this;
+        }
+
+        public Builder color(String color) {
+            this.color = color;
+            return this;
+        }
+
+        public Builder partner(String partner) {
+            this.partner = partner;
+            return this;
+        }
+
+        public Builder from(Coordinate from) {
+            this.from = from;
+            return this;
+        }
+
+        public Builder to(Coordinate to) {
+            this.to = to;
+            return this;
+        }
+
+        public Builder inCaseOfPromotion(String inCaseOfPromotion) {
+            this.inCaseOfPromotion = inCaseOfPromotion;
+            return this;
+        }
+
+        public Builder message(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public Builder time(TimeControllingTYPE time) {
+            this.time = time;
+            return this;
+        }
+
+        public Message build() {
+            return new Message(type, gameID, FEN, PGN, whitePlayerUsername, blackPlayerUsername,
+                    whitePlayerRating, blackPlayerRating, color, partner,
+                    from, to, inCaseOfPromotion, message, time);
+        }
     }
 }

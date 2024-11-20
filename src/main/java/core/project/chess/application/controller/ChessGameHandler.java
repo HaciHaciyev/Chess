@@ -4,7 +4,6 @@ import core.project.chess.application.dto.gamesession.Message;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.config.security.JwtUtility;
-import core.project.chess.infrastructure.utilities.json.JSONUtilities;
 import core.project.chess.infrastructure.utilities.web.WSUtilities;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
@@ -32,39 +31,39 @@ public class ChessGameHandler {
     public void onOpen(final Session session) {
         final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
         if (jwt.isEmpty()) {
-            sendMessage(session, JSONUtilities.write(Message.error("Token is required.")).orElseThrow());
-            WSUtilities.closeSession(session, JSONUtilities.write(Message.error("You are not authorized.")).orElseThrow());
+            sendMessage(session, Message.error("Token is required.").write().orElseThrow());
+            WSUtilities.closeSession(session, Message.error("You are not authorized.").write().orElseThrow());
             return;
         }
 
         final Username username = new Username(jwt.orElseThrow().getName());
-        chessGameService.handleOnOpen(session, username);
+        chessGameService.onOpen(session, username);
     }
 
     @OnMessage
     public void onMessage(final Session session, final String message) {
         if (Objects.isNull(message) || message.isBlank()) {
-            sendMessage(session, JSONUtilities.write(Message.error("Message is required.")).orElseThrow());
+            sendMessage(session, Message.error("Message is required.").write().orElseThrow());
             return;
         }
 
         if (message.length() > 512) {
-            sendMessage(session, JSONUtilities.write(Message.error("Message is to long.")).orElseThrow());
+            sendMessage(session, Message.error("Message is to long.").write().orElseThrow());
         }
 
         final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
         if (jwt.isEmpty()) {
-            sendMessage(session, JSONUtilities.write(Message.error("Token is required.")).orElseThrow());
-            WSUtilities.closeSession(session, JSONUtilities.write(Message.error("You are not authorized.")).orElseThrow());
+            sendMessage(session, Message.error("Token is required.").write().orElseThrow());
+            WSUtilities.closeSession(session, Message.error("You are not authorized.").write().orElseThrow());
             return;
         }
 
         final Username username = new Username(jwt.orElseThrow().getName());
-        chessGameService.handleOnMessage(session, username, message);
+        chessGameService.onMessage(session, username, message);
     }
 
     @OnClose
     public void onClose(final Session session) {
-        chessGameService.handleOnClose(session);
+        chessGameService.onClose(session);
     }
 }

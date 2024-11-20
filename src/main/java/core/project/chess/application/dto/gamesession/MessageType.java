@@ -7,8 +7,14 @@ public enum MessageType {
     AGREEMENT,
     RESIGNATION,
     TREE_FOLD,
+
+    MESSAGE,
+
     ERROR,
     INVITATION,
     INFO,
-    MESSAGE
+    USER_INFO,
+    FEN_PGN,
+    GAME_START_INFO,
+    GAME_ENDED
 }
