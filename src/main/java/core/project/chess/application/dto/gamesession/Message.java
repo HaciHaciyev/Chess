@@ -2,11 +2,10 @@ package core.project.chess.application.dto.gamesession;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.json.JSONUtilities;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 public record Message(MessageType type,
@@ -141,6 +140,11 @@ public record Message(MessageType type,
                 .PGN(PGN)
                 .build();
     }
+
+    public String asJSON() {
+        return JSONUtilities.writeMessage(this);
+    }
+}
 
     public Optional<String> write() {
         return JSONUtilities.write(this);

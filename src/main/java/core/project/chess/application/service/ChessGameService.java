@@ -58,7 +58,7 @@ public class ChessGameService {
         CompletableFuture.runAsync(() -> {
             Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(username);
             if (!result.success()) {
-                closeSession(session, Message.error("This account is do not founded.").write().orElseThrow());
+                closeSession(session, Message.error("This account is do not founded.").asJSON());
                 return;
             }
 
@@ -66,7 +66,7 @@ public class ChessGameService {
             partnershipGameCacheService
                     .getAll(username.username())
                     .forEach((key, value) -> {
-                        String message = Message.invitation(key, value).write().orElseThrow();
+                        String message = Message.invitation(key, value).asJSON();
                         sendMessage(session, message);
                     });
         });
@@ -74,13 +74,13 @@ public class ChessGameService {
 
     public void onMessage(Session session, Username username, String message) {
         if (Objects.isNull(message) || message.isBlank()) {
-            sendMessage(session, Message.error("Message can't be null or blank.").write().orElseThrow());
+            sendMessage(session, Message.error("Message can't be null or blank.").asJSON());
             return;
         }
 
         final Result<Message, Throwable> msg = JSONUtilities.readAsMessage(message);
         if (!msg.success()) {
-            sendMessage(session, Message.error("Invalid message.").write().orElseThrow());
+            sendMessage(session, Message.error(msg.throwable().getMessage()).asJSON());
             return;
         }
 
@@ -92,24 +92,24 @@ public class ChessGameService {
 
         final String gameID = msg.value().gameID();
         if (Objects.isNull(gameID) || gameID.isBlank()) {
-            sendMessage(session, Message.error("Game id is required.").write().orElseThrow());
+            sendMessage(session, Message.error("Game id is required.").asJSON());
             return;
         }
 
         final Object gameIdObj = session.getUserProperties().get("game-id");
         if (Objects.isNull(gameIdObj)) {
-            sendMessage(session, Message.error("Game id is required.").write().orElseThrow());
+            sendMessage(session, Message.error("Game id is required.").asJSON());
             return;
         }
 
         if (gameIdObj instanceof List<?> ls && !ls.contains(gameID)) {
-            sendMessage(session, Message.error("This game id is do not exists.").write().orElseThrow());
+            sendMessage(session, Message.error("This game id is do not exists.").asJSON());
             return;
         }
 
         final Pair<ChessGame, HashSet<Session>> gamePlusSessions = gameSessions.get(UUID.fromString(gameID));
         if (Objects.isNull(gamePlusSessions)) {
-            sendMessage(session, Message.error("This game session does not exist.").write().orElseThrow());
+            sendMessage(session, Message.error("This game session does not exist.").asJSON());
             return;
         }
 
@@ -127,7 +127,7 @@ public class ChessGameService {
             case RESIGNATION -> this.resignation(Pair.of(username, session), gameSessions);
             case TREE_FOLD -> this.threeFold(Pair.of(username, session), gameSessions);
             case AGREEMENT -> this.agreement(Pair.of(username, session), gameSessions);
-            default -> sendMessage(session, Message.error("Invalid message type.").write().orElseThrow());
+            default -> sendMessage(session, Message.error("Invalid message type.").asJSON());
         }
     }
 
@@ -135,7 +135,7 @@ public class ChessGameService {
         CompletableFuture.runAsync(() -> {
             final Result<GameInit, Throwable> parameters = JSONUtilities.gameInit(message);
             if (!parameters.success()) {
-                sendMessage(session, Message.error("Invalid game initialization parameters").write().orElseThrow());
+                sendMessage(session, Message.error("Invalid game initialization parameters").asJSON());
                 return;
             }
 
@@ -166,7 +166,7 @@ public class ChessGameService {
         final GameParameters gameParameters = new GameParameters(parameters.color(), parameters.time(), LocalDateTime.now());
         final UserAccount firstPlayer = outboundUserRepository.findByUsername(username).orElseThrow();
 
-        sendMessage(session, Message.info("Finding opponent...").write().orElseThrow());
+        sendMessage(session, Message.info("Finding opponent...").asJSON());
 
         final StatusPair<Triple<Session, UserAccount, GameParameters>> potentialOpponent = locateOpponentForGame(firstPlayer, gameParameters);
         if (!potentialOpponent.status()) {
@@ -174,8 +174,7 @@ public class ChessGameService {
 
             String message = Message
                     .userInfo("Trying to find an opponent for you %s.".formatted(username.username()))
-                    .write()
-                    .orElseThrow();
+                            .asJSON();
 
             sendMessage(session, message);
             return;
@@ -238,7 +237,7 @@ public class ChessGameService {
     private void handlePartnershipGameRequest(Session session, Username addresser, GameInit parameters) {
         Objects.requireNonNull(parameters.nameOfPartner());
         if (!outboundUserRepository.isUsernameExists(parameters.nameOfPartner())) {
-            sendMessage(session, Message.error("User %s do not exists.".formatted(parameters.nameOfPartner().username())).write().orElseThrow());
+            sendMessage(session, Message.error("User %s do not exists.".formatted(parameters.nameOfPartner().username())).asJSON());
             return;
         }
 
@@ -251,7 +250,7 @@ public class ChessGameService {
 
         final boolean isHavePartnership = outboundUserRepository.havePartnership(addresseeAccount, addresserAccount);
         if (!isHavePartnership) {
-            sendMessage(session, Message.error("You can`t invite someone who`s have not partnership with you.").write().orElseThrow());
+            sendMessage(session, Message.error("You can`t invite someone who`s have not partnership with you.").asJSON());
             return;
         }
 
@@ -590,7 +589,7 @@ public class ChessGameService {
 
             final boolean isGameSessionExists = gameSessions.containsKey(gameUuid);
             if (!isGameSessionExists) {
-                sendMessage(session, Message.error("Game session with id {%s} does not exist".formatted(gameId)).write().orElseThrow());
+                sendMessage(session, Message.error("Game session with id {%s} does not exist".formatted(gameId)).asJSON());
                 return;
             }
 
@@ -603,7 +602,7 @@ public class ChessGameService {
 
             final Set<Session> sessionHashSet = pair.getSecond();
             final String messageInCaseOfGameEnding = "Game ended. Because of %s".formatted(chessGame.gameResult().orElseThrow().toString());
-            closeSession(session, Message.info(messageInCaseOfGameEnding).write().orElseThrow());
+            closeSession(session, Message.info(messageInCaseOfGameEnding).asJSON());
 
             sessionHashSet.remove(session);
             if (sessionHashSet.isEmpty()) {

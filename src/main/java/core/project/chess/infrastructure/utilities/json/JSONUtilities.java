@@ -13,7 +13,6 @@ import io.quarkus.logging.Log;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 public class JSONUtilities {
@@ -30,12 +29,18 @@ public class JSONUtilities {
         }
     }
 
-    public static Optional<String> write(Message message) {
-        try {
-            return Optional.of(objectMapper.writeValueAsString(message));
-        } catch (JsonProcessingException e) {
-            return Optional.empty();
+    public static String writeMessage(Message message) {
+        if (message == null) {
+            return "";
         }
+
+        try {
+            return objectMapper.writeValueAsString(message);
+        } catch (JsonProcessingException e) {
+            Log.error(e);
+        }
+
+        return "";
     }
 
     public static Result<Message, Throwable> readAsMessage(String message) {
