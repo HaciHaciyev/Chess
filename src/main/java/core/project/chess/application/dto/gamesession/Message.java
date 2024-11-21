@@ -2,8 +2,8 @@ package core.project.chess.application.dto.gamesession;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.json.JSONUtilities;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -38,91 +38,117 @@ public record Message(MessageType type,
         return new Builder(type);
     }
 
-    public static Message gameInit(String color, TimeControllingTYPE time) {
-        return builder(MessageType.GAME_INIT).color(color).time(time).build();
+    public static String gameInit(String color, TimeControllingTYPE time) {
+        return builder(MessageType.GAME_INIT)
+                .color(color)
+                .time(time)
+                .build()
+                .asJSON();
     }
 
-    public static Message move(String gameID, Coordinate from, Coordinate to) {
-        return builder(MessageType.MOVE).gameID(gameID).from(from).to(to).build();
+    public static String move(String gameID, Coordinate from, Coordinate to) {
+        return builder(MessageType.MOVE)
+                .gameID(gameID)
+                .from(from)
+                .to(to)
+                .build()
+                .asJSON();
     }
 
-    public static Message promotion(String gameID, Coordinate from, Coordinate to, String promotion) {
+    public static String promotion(String gameID, Coordinate from, Coordinate to, String promotion) {
         return builder(MessageType.MOVE)
                 .gameID(gameID)
                 .from(from)
                 .to(to)
                 .inCaseOfPromotion(promotion)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message chat(String gameID, String message) {
-        return builder(MessageType.MESSAGE).gameID(gameID).message(message).build();
+    public static String chat(String gameID, String message) {
+        return builder(MessageType.MESSAGE)
+                .gameID(gameID)
+                .message(message)
+                .build()
+                .asJSON();
     }
 
-    public static Message invitation(String username, GameParameters gameParams) {
+    public static String invitation(String username, GameParameters gameParams) {
         String message = String.format(INVITATION_MESSAGE, username, gameParams.color(), gameParams.timeControllingTYPE());
-        return builder(MessageType.INVITATION).message(message).build();
+        return builder(MessageType.INVITATION)
+                .message(message)
+                .build()
+                .asJSON();
     }
 
-    public static Message connectToExistingGame(String gameID, String color, TimeControllingTYPE time) {
+    public static String connectToExistingGame(String gameID, String color, TimeControllingTYPE time) {
         return builder(MessageType.GAME_INIT)
                 .gameID(gameID)
                 .color(color)
                 .time(time)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message partnershipGame(String color, String partner, TimeControllingTYPE time) {
+    public static String partnershipGame(String color, String partner, TimeControllingTYPE time) {
         return builder(MessageType.GAME_INIT)
                 .color(color)
                 .partner(partner)
                 .time(time)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message returnMovement(String gameID) {
+    public static String returnMovement(String gameID) {
         return builder(MessageType.MOVE)
                 .gameID(gameID)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message resignation(String gameID) {
+    public static String resignation(String gameID) {
         return builder(MessageType.RESIGNATION)
                 .gameID(gameID)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message threefold(String gameID) {
+    public static String threefold(String gameID) {
         return builder(MessageType.TREE_FOLD)
                 .gameID(gameID)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message agreement(String gameID) {
+    public static String agreement(String gameID) {
         return builder(MessageType.AGREEMENT)
                 .gameID(gameID)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message error(String message) {
+    public static String error(String message) {
         return builder(MessageType.ERROR)
                 .message(message)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message info(String message) {
+    public static String info(String message) {
         return builder(MessageType.INFO)
                 .message(message)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message userInfo(String message) {
+    public static String userInfo(String message) {
         return builder(MessageType.USER_INFO)
                 .message(message)
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message gameStartInfo(GameSessionMessage gsm) {
+    public static String gameStartInfo(GameSessionMessage gsm) {
         return builder(MessageType.GAME_START_INFO)
                 .gameID(gsm.id())
                 .whitePlayerUsername(gsm.whitePlayerUsername())
@@ -130,24 +156,21 @@ public record Message(MessageType type,
                 .whitePlayerRating(gsm.whitePlayerRating())
                 .blackPlayerRating(gsm.blackPlayerRating())
                 .time(gsm.timeControl())
-                .build();
+                .build()
+                .asJSON();
     }
 
-    public static Message FEN_PGN(String gameID, String FEN, String PGN) {
+    public static String FEN_PGN(String gameID, String FEN, String PGN) {
         return builder(MessageType.FEN_PGN)
                 .gameID(gameID)
                 .FEN(FEN)
                 .PGN(PGN)
-                .build();
+                .build()
+                .asJSON();
     }
 
     public String asJSON() {
         return JSONUtilities.writeMessage(this);
-    }
-}
-
-    public Optional<String> write() {
-        return JSONUtilities.write(this);
     }
 
     public static class Builder {
