@@ -1,6 +1,6 @@
 package core.project.chess.domain.aggregates.chess.entities;
 
-import core.project.chess.application.dto.gamesession.ChatMessage;
+import core.project.chess.domain.aggregates.chess.value_objects.ChatMessage;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard.Operations;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
@@ -191,13 +191,9 @@ public class ChessGame {
 
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
 
-        lastMoveWasUndo = false;
+        this.lastMoveWasUndo = false;
 
-        if (message.equals(GameResultMessage.RuleOf3EqualsPositions)) {
-            isTheOptionToEndTheGameDueToThreeFoldActive = true;
-        } else {
-            isTheOptionToEndTheGameDueToThreeFoldActive = false;
-        }
+        this.isTheOptionToEndTheGameDueToThreeFoldActive = message.equals(GameResultMessage.RuleOf3EqualsPositions);
 
         this.agreementPair = new AgreementPair(null, null);
         this.returnOfMovement = new AgreementPair(null, null);

@@ -1,10 +1,13 @@
 package core.project.chess.application.dto.gamesession;
 
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
+import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.json.JSONUtilities;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -123,17 +126,6 @@ public record Message(MessageType type,
                 .build();
     }
 
-    public static Message gameStartInfo(GameSessionMessage gsm) {
-        return builder(MessageType.GAME_START_INFO)
-                .gameID(gsm.id())
-                .whitePlayerUsername(gsm.whitePlayerUsername())
-                .blackPlayerUsername(gsm.blackPlayerUsername())
-                .whitePlayerRating(gsm.whitePlayerRating())
-                .blackPlayerRating(gsm.blackPlayerRating())
-                .time(gsm.timeControl())
-                .build();
-    }
-
     public static Message FEN_PGN(String gameID, String FEN, String PGN) {
         return builder(MessageType.FEN_PGN)
                 .gameID(gameID)
@@ -142,8 +134,29 @@ public record Message(MessageType type,
                 .build();
     }
 
-    public Optional<String> write() {
+    public Optional<String> asJSON() {
         return JSONUtilities.write(this);
+    }
+
+    public Result<GameParameters, IllegalArgumentException> gameParameters() {
+        try {
+            Color color = Objects.nonNull(this.color) ? Color.valueOf(this.color) : null;
+            TimeControllingTYPE time = Objects.requireNonNullElse(this.time, TimeControllingTYPE.DEFAULT);
+
+            return Result.success(new GameParameters(color, time, LocalDateTime.now()));
+        } catch (IllegalArgumentException e) {
+            return Result.failure(e);
+        }
+    }
+
+    public Result<Username, IllegalArgumentException> partnerUsername() {
+        try {
+            final Username partnerUsername = new Username(this.partner);
+
+            return Result.success(partnerUsername);
+        } catch (IllegalArgumentException e) {
+            return Result.failure(e);
+        }
     }
 
     public static class Builder {

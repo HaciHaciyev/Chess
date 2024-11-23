@@ -7,7 +7,7 @@ import jakarta.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-public record GameParameters(@Nullable Color color, ChessGame.TimeControllingTYPE timeControllingTYPE, LocalDateTime creationTime) {
+public record GameParameters(@Nullable Color color, @Nullable ChessGame.TimeControllingTYPE timeControllingTYPE, LocalDateTime creationTime) {
 
     public long waitingTime() {
         return Duration.between(creationTime, LocalDateTime.now()).toMinutes();
