@@ -397,6 +397,14 @@ public class ChessGame {
         playerForBlack.changeRating(this);
     }
 
+    public Duration remainingTimeForWhite() {
+        return whiteTimer.remainingTime();
+    }
+
+    public Duration remainingTimeForBlack() {
+        return blackTimer.remainingTime();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -502,8 +510,7 @@ public class ChessGame {
                         }
                     }
 
-                    Duration elapsed = Duration.between(startTime, Instant.now());
-                    Duration remaining = gameDuration.minus(elapsed);
+                    Duration remaining = remainingTime();
 
                     if (remaining.isNegative() || remaining.isZero()) {
                         onComplete.run();
@@ -516,6 +523,11 @@ public class ChessGame {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+
+        public Duration remainingTime() {
+            Duration elapsed = Duration.between(startTime, Instant.now());
+            return gameDuration.minus(elapsed);
         }
 
         public void start() {

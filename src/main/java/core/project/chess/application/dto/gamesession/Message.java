@@ -22,6 +22,7 @@ public record Message(MessageType type,
                       Username blackPlayerUsername,
                       Double whitePlayerRating,
                       Double blackPlayerRating,
+                      String timeLeft,
                       String color,
                       String partner,
                       Coordinate from,
@@ -170,6 +171,7 @@ public record Message(MessageType type,
         private Username blackPlayerUsername;
         private Double whitePlayerRating;
         private Double blackPlayerRating;
+        private String timeLeft;
         private String color;
         private String partner;
         private Coordinate from;
@@ -217,6 +219,11 @@ public record Message(MessageType type,
             return this;
         }
 
+        public Builder timeLeft(String timeLeft) {
+            this.timeLeft = timeLeft;
+            return this;
+        }
+
         public Builder color(String color) {
             this.color = color;
             return this;
@@ -254,7 +261,7 @@ public record Message(MessageType type,
 
         public Message build() {
             return new Message(type, gameID, FEN, PGN, whitePlayerUsername, blackPlayerUsername,
-                    whitePlayerRating, blackPlayerRating, color, partner,
+                    whitePlayerRating, blackPlayerRating, timeLeft, color, partner,
                     from, to, inCaseOfPromotion, message, time);
         }
     }
