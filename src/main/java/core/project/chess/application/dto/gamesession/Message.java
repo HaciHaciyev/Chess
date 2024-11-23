@@ -1,5 +1,6 @@
 package core.project.chess.application.dto.gamesession;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
@@ -12,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record Message(MessageType type,
                       String gameID,
                       String FEN,
