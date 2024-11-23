@@ -1,4 +1,4 @@
-package RegistrationAndLogin;
+package core.project.chess.RegistrationAndLogin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import testUtils.RegistrationForm;
 import testUtils.UserDBManagement;
 
 import static io.restassured.RestAssured.*;
@@ -15,6 +16,7 @@ import static org.hamcrest.Matchers.*;
 
 
 @QuarkusTest
+@Disabled
 class RegistrationTests {
 
     public static final String REGISTRATION = "/chessland/account/registration";

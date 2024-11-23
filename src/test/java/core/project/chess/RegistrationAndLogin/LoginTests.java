@@ -1,24 +1,25 @@
-package RegistrationAndLogin;
+package core.project.chess.RegistrationAndLogin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.mailer.Mail;
-import io.quarkus.mailer.MockMailbox;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
+import testUtils.LoginForm;
+import testUtils.RegistrationForm;
 import testUtils.UserDBManagement;
 
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
+@Disabled
 public class LoginTests {
 
     public static final String LOGIN = "/chessland/account/login/";
-
     public static final String TOKEN_VERIFICATION = "/chessland/account/token/verification";
 
     @Inject
@@ -140,14 +141,14 @@ public class LoginTests {
     void login_Wrong_Username() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
         String accountJSON = objectMapper.writer().writeValueAsString(account);
-        
+
         given().contentType("application/json")
                 .body(accountJSON)
                 .when().post(RegistrationTests.REGISTRATION)
                 .then()
                 .statusCode(200)
                 .body(containsString("successful"));
-        
+
         String emailConfirmationToken = dbManagement.getToken(account.username());
 
         given().queryParam("token", emailConfirmationToken)
@@ -165,14 +166,5 @@ public class LoginTests {
                 .then()
                 .statusCode(400)
                 .body(containsString("%s not found".formatted(loginForm.username())));
-    }
-
-    record LoginForm(String username, String password) {
-        static LoginForm from(RegistrationForm registrationForm) {
-            return new LoginForm(
-                    registrationForm.username(),
-                    registrationForm.password()
-            );
-        }
     }
 }

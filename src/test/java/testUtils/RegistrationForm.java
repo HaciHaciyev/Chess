@@ -1,8 +1,8 @@
-package RegistrationAndLogin;
+package testUtils;
 
 import net.datafaker.Faker;
 
-record RegistrationForm(String username, String email, String password, String passwordConfirmation) {
+public record RegistrationForm(String username, String email, String password, String passwordConfirmation) {
 
     private static final Faker faker = new Faker();
 
@@ -15,7 +15,7 @@ record RegistrationForm(String username, String email, String password, String p
         );
     }
 
-    static RegistrationForm randomForm() {
+    public static RegistrationForm randomForm() {
         String password = faker.internet().password();
         return new RegistrationForm(
                 faker.name().firstName(),
@@ -25,7 +25,7 @@ record RegistrationForm(String username, String email, String password, String p
         );
     }
 
-    RegistrationForm withUsername(String username) {
+    public RegistrationForm withUsername(String username) {
         return new RegistrationForm(
                 username,
                 email(),
@@ -34,7 +34,7 @@ record RegistrationForm(String username, String email, String password, String p
         );
     }
 
-    RegistrationForm withEmail(String email) {
+    public RegistrationForm withEmail(String email) {
         return new RegistrationForm(
                 username(),
                 email,
@@ -43,7 +43,7 @@ record RegistrationForm(String username, String email, String password, String p
         );
     }
 
-    RegistrationForm withPassword(String password) {
+    public RegistrationForm withPassword(String password) {
         return new RegistrationForm(
                 username(),
                 email(),
@@ -52,7 +52,7 @@ record RegistrationForm(String username, String email, String password, String p
         );
     }
 
-    RegistrationForm withPasswordConfirmation(String passwordConfirmation) {
+    public RegistrationForm withPasswordConfirmation(String passwordConfirmation) {
         return new RegistrationForm(
                 username(),
                 email(),
