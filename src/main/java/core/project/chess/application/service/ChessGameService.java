@@ -24,6 +24,8 @@ import jakarta.websocket.Session;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -372,10 +374,13 @@ public class ChessGameService {
             return;
         }
 
+        String remainingTime = remainingTimeAsString(cg);
+
         final String message = Message.builder(MessageType.FEN_PGN)
                 .gameID(cg.getChessGameId().toString())
                 .FEN(cg.getChessBoard().actualRepresentationOfChessBoard())
                 .PGN(cg.getChessBoard().pgn())
+                .timeLeft(remainingTime)
                 .build()
                 .asJSON()
                 .orElseThrow();
@@ -383,6 +388,26 @@ public class ChessGameService {
         for (Session currentSession : gameSessions.getSecond()) {
             sendMessage(currentSession, message);
         }
+    }
+
+    private String remainingTimeAsString(ChessGame cg) {
+        Duration whiteRemaining = cg.remainingTimeForWhite();
+
+        long wHH = whiteRemaining.toHours();
+        int wMM = whiteRemaining.toMinutesPart();
+        int wSS = whiteRemaining.toSecondsPart();
+
+        String wTime = "W -> %02d:%02d:%02d".formatted(wHH, wMM, wSS);
+
+        Duration blackRemaining = cg.remainingTimeForBlack();
+
+        long bHH = blackRemaining.toHours();
+        int bMM = blackRemaining.toMinutesPart();
+        int bSS = blackRemaining.toSecondsPart();
+
+        String bTime = "B -> %02d:%02d:%02d".formatted(bHH, bMM, bSS);
+
+        return wTime + " | " + bTime;
     }
 
     public void chat(Message message, Pair<String, Session> usernameSession, Pair<ChessGame, HashSet<Session>> gameAndSessions) {
