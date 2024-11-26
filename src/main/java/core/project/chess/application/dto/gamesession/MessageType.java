@@ -16,5 +16,7 @@ public enum MessageType {
     USER_INFO,
     FEN_PGN,
     GAME_START_INFO,
-    GAME_ENDED
+    GAME_ENDED,
+
+    PARTNERSHIP_REQUEST
 }
