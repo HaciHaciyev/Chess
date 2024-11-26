@@ -106,14 +106,14 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     @Override
     public boolean havePartnership(UserAccount user, UserAccount partner) {
         Result<Boolean, Throwable> result = jdbc.readObjectOf(
-                IS_PARTNERSHIP_EXISTS, Boolean.class, user.getId(), partner.getId(), partner.getId(), user.getId()
+                IS_PARTNERSHIP_EXISTS, Boolean.class, user.getId().toString(), partner.getId().toString(), partner.getId().toString(), user.getId().toString()
         );
 
         if (!result.success()) {
             if (result.throwable() instanceof DataNotFoundException) {
                 return false;
             } else {
-                Log.info(result.throwable());
+                result.throwable().printStackTrace();
             }
         }
 
