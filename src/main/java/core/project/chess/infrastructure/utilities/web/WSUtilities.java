@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.utilities.web;
 
+import core.project.chess.application.dto.gamesession.Message;
 import io.quarkus.logging.Log;
 import jakarta.websocket.CloseReason;
 import jakarta.websocket.Session;
@@ -19,12 +20,24 @@ public class WSUtilities {
         }
     }
 
+    public static void closeSession(final Session currentSession, final Message message) {
+        closeSession(currentSession, message.asJSON());
+    }
+
     /**
      * Sends message to specified session
      */
     public static void sendMessage(final Session session, final String message) {
         try {
             session.getAsyncRemote().sendText(message);
+        } catch (Exception e) {
+            Log.info(e.getMessage());
+        }
+    }
+
+    public static void sendMessage(final Session session, final Message message) {
+        try {
+            session.getAsyncRemote().sendObject(message).get();
         } catch (Exception e) {
             Log.info(e.getMessage());
         }

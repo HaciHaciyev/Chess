@@ -7,10 +7,10 @@ import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.json.JSONUtilities;
+import io.quarkus.logging.Log;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -137,8 +137,14 @@ public record Message(MessageType type,
                 .build();
     }
 
-    public Optional<String> asJSON() {
-        return JSONUtilities.write(this);
+    public String asJSON() {
+        try {
+            return JSONUtilities.write(this).orElseThrow();
+        } catch (Exception e) {
+            Log.error(e);
+        }
+
+        return "";
     }
 
     public Result<GameParameters, IllegalArgumentException> gameParameters() {
