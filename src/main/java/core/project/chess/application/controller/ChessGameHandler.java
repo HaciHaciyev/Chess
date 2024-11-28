@@ -4,8 +4,8 @@ import core.project.chess.application.dto.gamesession.Message;
 import core.project.chess.application.service.ChessGameService;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.config.application.MessageDecoder;
+import core.project.chess.infrastructure.config.application.MessageEncoder;
 import core.project.chess.infrastructure.config.security.JwtUtility;
-import core.project.chess.infrastructure.utilities.web.WSUtilities;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
@@ -17,10 +17,11 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.Optional;
 
+import static core.project.chess.infrastructure.utilities.web.WSUtilities.closeSession;
 import static core.project.chess.infrastructure.utilities.web.WSUtilities.sendMessage;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-@ServerEndpoint(value = "/chessland/chess-game", decoders = MessageDecoder.class)
+@ServerEndpoint(value = "/chessland/chess-game", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
 public class ChessGameHandler {
 
     private final JwtUtility jwtUtility;
@@ -29,24 +30,14 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session) {
-        final Optional<JsonWebToken> jwt = validateToken(session);
-        if (jwt.isEmpty()) {
-            return;
-        }
-
-        final Username username = new Username(jwt.orElseThrow().getName());
-        chessGameService.onOpen(session, username);
+        validateToken(session)
+                .ifPresent(token -> chessGameService.onOpen(session, new Username(validateToken(session).orElseThrow().getName())));
     }
 
     @OnMessage
     public void onMessage(final Session session, final Message message) {
-        final Optional<JsonWebToken> jwt = validateToken(session);
-        if (jwt.isEmpty()) {
-            return;
-        }
-
-        final Username username = new Username(jwt.orElseThrow().getName());
-        chessGameService.onMessage(session, username, message);
+        validateToken(session)
+                .ifPresent(token -> chessGameService.onMessage(session, new Username(validateToken(session).orElseThrow().getName()), message));
     }
 
     @OnClose
@@ -56,9 +47,10 @@ public class ChessGameHandler {
 
     private Optional<JsonWebToken> validateToken(Session session) {
         final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
+
         if (jwt.isEmpty()) {
-            sendMessage(session, Message.error("Token is required.").asJSON().orElseThrow());
-            WSUtilities.closeSession(session, Message.error("You are not authorized.").asJSON().orElseThrow());
+            sendMessage(session, Message.error("Token is required."));
+            closeSession(session, Message.error("You are not authorized."));
             return Optional.empty();
         }
 

@@ -3,6 +3,8 @@ package core.project.chess.WS;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.dto.gamesession.MessageType;
+import core.project.chess.infrastructure.config.application.MessageDecoder;
+import core.project.chess.infrastructure.config.application.MessageEncoder;
 import testUtils.LoginForm;
 import testUtils.RegistrationForm;
 import core.project.chess.application.dto.gamesession.Message;
@@ -32,7 +34,7 @@ import static org.hamcrest.Matchers.*;
 //@Disabled
 class ChessWSTest {
 
-    private static final LinkedBlockingDeque<String> MESSAGES = new LinkedBlockingDeque<>();
+    private static final LinkedBlockingDeque<Message> MESSAGES = new LinkedBlockingDeque<>();
 
     public static final String REGISTRATION = "/chessland/account/registration";
 
@@ -73,7 +75,7 @@ class ChessWSTest {
         String token = login(account);
 
         try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, token))) {
-            sendMessage(session, account.username(), "Hello, world");
+            sendMessage(session, account.username(), Message.info("Hello, world"));
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
         }
     }
@@ -87,7 +89,7 @@ class ChessWSTest {
         String token = login(account);
 
         try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, token))) {
-            sendMessage(session, account.username(), Message.gameInit("WHITE", ChessGame.TimeControllingTYPE.RAPID).asJSON().orElseThrow());
+            sendMessage(session, account.username(), Message.gameInit("WHITE", ChessGame.TimeControllingTYPE.RAPID));
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
         }
     }
@@ -108,105 +110,105 @@ class ChessWSTest {
              Session bSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))) {
 
             String wName = whiteForm.username();
-            sendMessage(wSession, wName, Message.gameInit("WHITE", ChessGame.TimeControllingTYPE.RAPID).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.gameInit("WHITE", ChessGame.TimeControllingTYPE.RAPID));
 
             String bName = blackForm.username();
-            sendMessage(bSession, bName, Message.gameInit("BLACK", ChessGame.TimeControllingTYPE.RAPID).asJSON().orElseThrow());
+            sendMessage(bSession, bName, Message.gameInit("BLACK", ChessGame.TimeControllingTYPE.RAPID));
 
             String gameID = extractGameID();
             //1
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.e4).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.e5).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.e4));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.e5));
             //2
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.b8, Coordinate.c6).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.b8, Coordinate.c6));
             //3
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.b1, Coordinate.c3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g8, Coordinate.f6).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.b1, Coordinate.c3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g8, Coordinate.f6));
             //4
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f1, Coordinate.c4).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.d6).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f1, Coordinate.c4));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.d6));
             //5
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d2, Coordinate.d3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.c8, Coordinate.e6).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d2, Coordinate.d3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.c8, Coordinate.e6));
             //6
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e1, Coordinate.g1).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.e6, Coordinate.c4).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e1, Coordinate.g1));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.e6, Coordinate.c4));
             //7
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d3, Coordinate.c4).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f8, Coordinate.e7).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d3, Coordinate.c4));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f8, Coordinate.e7));
             //8
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.e2).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d8, Coordinate.d7).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.e2));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d8, Coordinate.d7));
             //9
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.c1, Coordinate.e3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.e8, Coordinate.c8).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.c1, Coordinate.e3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.e8, Coordinate.c8));
             //10
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.a1, Coordinate.d1).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f6, Coordinate.g4).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.a1, Coordinate.d1));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f6, Coordinate.g4));
             //11
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.c3, Coordinate.d5).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.h7, Coordinate.h6).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.c3, Coordinate.d5));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.h7, Coordinate.h6));
             //12
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.b2, Coordinate.b3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.g5).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.b2, Coordinate.b3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.g5));
             //13
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.h2, Coordinate.h3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g4, Coordinate.e3).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.h2, Coordinate.h3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g4, Coordinate.e3));
             //14
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f2, Coordinate.e3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.a7, Coordinate.a6).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f2, Coordinate.e3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.a7, Coordinate.a6));
             //15
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.h3, Coordinate.h4).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g5, Coordinate.f6).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.h3, Coordinate.h4));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g5, Coordinate.f6));
             //16
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.h2).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f6, Coordinate.h4).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.h2));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f6, Coordinate.h4));
             //17
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f1, Coordinate.f3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.h8, Coordinate.f8).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f1, Coordinate.f3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.h8, Coordinate.f8));
             //18
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.f5).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g7, Coordinate.g6).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.f5));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g7, Coordinate.g6));
             //19
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f5, Coordinate.f3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f7, Coordinate.f5).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f5, Coordinate.f3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f7, Coordinate.f5));
             //20
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.h3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g6, Coordinate.g5).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.h3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g6, Coordinate.g5));
             //21
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.h5).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f5, Coordinate.e4).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.h5));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f5, Coordinate.e4));
             //22
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.h5, Coordinate.h6).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f8, Coordinate.f2).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.h5, Coordinate.h6));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.f8, Coordinate.f2));
             //23
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.g2, Coordinate.g3).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.h3).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.g2, Coordinate.g3));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.h3));
             //24
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d5, Coordinate.e7).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.c6, Coordinate.e7).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d5, Coordinate.e7));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.c6, Coordinate.e7));
             //25
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f2).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.h3, Coordinate.h2).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f2));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.h3, Coordinate.h2));
             //26
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f2, Coordinate.f1).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.h2, Coordinate.g3).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.f2, Coordinate.f1));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.h2, Coordinate.g3));
             //27
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.h6, Coordinate.e6).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d8, Coordinate.d7).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.h6, Coordinate.e6));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d8, Coordinate.d7));
             //28
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.g8).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.d8).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.g8));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.d8));
             //29
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.g8, Coordinate.e6).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.c8, Coordinate.b8).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.g8, Coordinate.e6));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.c8, Coordinate.b8));
             //30
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.e7).asJSON().orElseThrow());
-            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g3, Coordinate.f2).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.e7));
+            sendMessage(bSession, bName, Message.move(gameID, Coordinate.g3, Coordinate.f2));
 
             //31
-            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.d2).asJSON().orElseThrow());
+            sendMessage(wSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.d2));
 
             wSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
             bSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
@@ -231,23 +233,19 @@ class ChessWSTest {
              Session bChessSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken));
         ) {
 
-            String wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+            Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(blackForm.username())
                     .message("br")
-                    .build()
-                    .asJSON()
-                    .orElseThrow();
+                    .build();
 
             sendMessage(wMessagingSession, whiteForm.username(), wPartnershipRequest);
 
             Thread.sleep(Duration.ofSeconds(2));
 
-            String bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+            Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(whiteForm.username())
                     .message("brrr")
-                    .build()
-                    .asJSON()
-                    .orElseThrow();
+                    .build();
 
             sendMessage(bMessagingSession, blackForm.username(), bPartnershipRequest);
 
@@ -256,104 +254,106 @@ class ChessWSTest {
             String wName = whiteForm.username();
             String bName = blackForm.username();
 
-            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, ChessGame.TimeControllingTYPE.RAPID).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, ChessGame.TimeControllingTYPE.RAPID));
 
-            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, ChessGame.TimeControllingTYPE.RAPID).asJSON().orElseThrow());
+            Thread.sleep(Duration.ofSeconds(1));
+            
+            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, ChessGame.TimeControllingTYPE.RAPID));
 
             String gameID = extractGameID();
             //1
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.e4).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.e5).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.e4));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.e5));
             //2
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.b8, Coordinate.c6).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.b8, Coordinate.c6));
             //3
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.b1, Coordinate.c3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g8, Coordinate.f6).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.b1, Coordinate.c3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g8, Coordinate.f6));
             //4
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f1, Coordinate.c4).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.d6).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f1, Coordinate.c4));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.d6));
             //5
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d2, Coordinate.d3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.c8, Coordinate.e6).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d2, Coordinate.d3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.c8, Coordinate.e6));
             //6
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e1, Coordinate.g1).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.e6, Coordinate.c4).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e1, Coordinate.g1));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.e6, Coordinate.c4));
             //7
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d3, Coordinate.c4).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f8, Coordinate.e7).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d3, Coordinate.c4));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f8, Coordinate.e7));
             //8
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.e2).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d8, Coordinate.d7).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.e2));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d8, Coordinate.d7));
             //9
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.c1, Coordinate.e3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.e8, Coordinate.c8).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.c1, Coordinate.e3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.e8, Coordinate.c8));
             //10
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.a1, Coordinate.d1).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f6, Coordinate.g4).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.a1, Coordinate.d1));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f6, Coordinate.g4));
             //11
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.c3, Coordinate.d5).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.h7, Coordinate.h6).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.c3, Coordinate.d5));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.h7, Coordinate.h6));
             //12
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.b2, Coordinate.b3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.g5).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.b2, Coordinate.b3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.g5));
             //13
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.h2, Coordinate.h3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g4, Coordinate.e3).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.h2, Coordinate.h3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g4, Coordinate.e3));
             //14
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f2, Coordinate.e3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.a7, Coordinate.a6).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f2, Coordinate.e3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.a7, Coordinate.a6));
             //15
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.h3, Coordinate.h4).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g5, Coordinate.f6).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.h3, Coordinate.h4));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g5, Coordinate.f6));
             //16
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.h2).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f6, Coordinate.h4).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.h2));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f6, Coordinate.h4));
             //17
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f1, Coordinate.f3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.h8, Coordinate.f8).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f1, Coordinate.f3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.h8, Coordinate.f8));
             //18
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.f5).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g7, Coordinate.g6).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.f5));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g7, Coordinate.g6));
             //19
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f5, Coordinate.f3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f7, Coordinate.f5).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f5, Coordinate.f3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f7, Coordinate.f5));
             //20
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.h3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g6, Coordinate.g5).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.h3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g6, Coordinate.g5));
             //21
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.h5).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f5, Coordinate.e4).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.h5));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f5, Coordinate.e4));
             //22
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.h5, Coordinate.h6).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f8, Coordinate.f2).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.h5, Coordinate.h6));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.f8, Coordinate.f2));
             //23
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.g2, Coordinate.g3).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.h3).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.g2, Coordinate.g3));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.h3));
             //24
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d5, Coordinate.e7).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.c6, Coordinate.e7).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d5, Coordinate.e7));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.c6, Coordinate.e7));
             //25
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f2).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.h3, Coordinate.h2).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f2));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.h3, Coordinate.h2));
             //26
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f2, Coordinate.f1).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.h2, Coordinate.g3).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.f2, Coordinate.f1));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.h2, Coordinate.g3));
             //27
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.h6, Coordinate.e6).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d8, Coordinate.d7).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.h6, Coordinate.e6));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d8, Coordinate.d7));
             //28
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.g8).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.d8).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.g8));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.d7, Coordinate.d8));
             //29
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.g8, Coordinate.e6).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.c8, Coordinate.b8).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.g8, Coordinate.e6));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.c8, Coordinate.b8));
             //30
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.e7).asJSON().orElseThrow());
-            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g3, Coordinate.f2).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.e7));
+            sendMessage(bChessSession, bName, Message.move(gameID, Coordinate.g3, Coordinate.f2));
 
             //31
-            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.d2).asJSON().orElseThrow());
+            sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.d2));
 
             wChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
             bChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
@@ -361,28 +361,22 @@ class ChessWSTest {
     }
 
     private String extractGameID() {
-        for (String message : MESSAGES) {
-            try {
+        for (Message message : MESSAGES) {
                 Log.infof("Message -> %s", message);
-                Message msg = objectMapper.readValue(message, Message.class);
 
-                if (msg.gameID() != null) {
-                    return msg.gameID();
+                if (message.gameID() != null) {
+                    return message.gameID();
                 }
-
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                Log.info(e);
-            }
         }
-
-        return "";
+        
+        throw new IllegalStateException("No gameID found");
     }
 
 
-    private void sendMessage(Session session, String username, String message) {
+    private void sendMessage(Session session, String username, Message message) {
         Log.infof("%s sending -> %s", username, message);
-        session.getAsyncRemote().sendText(message);
+        session.getAsyncRemote().sendObject(message);
+        
         try {
             Thread.sleep(50);
         } catch (InterruptedException e) {
@@ -436,7 +430,7 @@ class ChessWSTest {
         return account;
     }
 
-    @ClientEndpoint
+    @ClientEndpoint(decoders = MessageDecoder.class, encoders = MessageEncoder.class)
     static class WSClient {
 
         @Inject
@@ -449,7 +443,7 @@ class ChessWSTest {
         }
 
         @OnMessage
-        public void onMessage(Session session, String message) {
+        public void onMessage(Session session, Message message) {
             String username = extractToken(session);
             MESSAGES.add(message);
             Log.infof("%s received -> %s", username, message);
