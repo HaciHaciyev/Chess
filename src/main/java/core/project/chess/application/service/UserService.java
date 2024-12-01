@@ -73,14 +73,12 @@ public class UserService {
 
         final UserAccount userAccount = outboundUserRepository
                 .findByUsername(username)
-                .orElseThrow(
-                        () -> {
-                            Log.error("Login failure, user not found");
-                            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                                    .entity(String.format(USER_NOT_FOUND, username.username()))
-                                    .build());
-                        }
-                );
+                .orElseThrow(() -> {
+                    Log.error("Login failure, user not found");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                            .entity(String.format(USER_NOT_FOUND, username.username()))
+                            .build());
+                });
 
         if (!userAccount.isEnabled()) {
             Log.error("Login failure, account is not enabled");

@@ -28,7 +28,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
     public static final String IS_PRESENT = "SELECT COUNT(id) FROM ChessGameHistory WHERE id = ?";
 
     public static final String GET_PARTNERS_USERNAMES = """
-            SELECT partner.username
+            SELECT DISTINCT partner.username
             FROM UserPartnership AS up
             JOIN UserAccount AS partner ON up.partner_id = partner.id
             JOIN UserAccount AS user_account ON up.user_id = user_account.id
@@ -36,7 +36,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             
             UNION
             
-            SELECT user_account.username
+            SELECT DISTINCT user_account.username
             FROM UserPartnership AS up
             JOIN UserAccount AS user_account ON up.user_id = user_account.id
             JOIN UserAccount AS partner ON up.partner_id = partner.id
