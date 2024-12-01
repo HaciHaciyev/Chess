@@ -25,7 +25,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -174,16 +173,12 @@ public class ChessGameService {
         }
 
         final Triple<Session, UserAccount, GameParameters> opponentData = potentialOpponent.orElseThrow();
-        final Session secondSession = opponentData.getFirst();
         final UserAccount secondPlayer = opponentData.getSecond();
-        final GameParameters secondGameParameters = opponentData.getThird();
 
         waitingForTheGame.remove(secondPlayer.getUsername());
 
         startStandardChessGame(
-                Triple.of(session, firstPlayer, gameParameters),
-                Triple.of(secondSession, secondPlayer, secondGameParameters),
-                false
+                Triple.of(session, firstPlayer, gameParameters), opponentData, false
         );
     }
 
