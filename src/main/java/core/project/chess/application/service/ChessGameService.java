@@ -582,12 +582,10 @@ public class ChessGameService {
     private class ChessGameSpectator implements Runnable {
         private final ChessGame game;
         private final AtomicBoolean isRunning;
-        private final ExecutorService executor;
 
         public ChessGameSpectator(ChessGame game) {
             this.game = game;
             this.isRunning = new AtomicBoolean(false);
-            this.executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Spectator Thread"));
         }
 
         @Override
@@ -617,7 +615,7 @@ public class ChessGameService {
 
             Log.info("Starting spectator");
             isRunning.set(true);
-            executor.submit(this);
+            Thread.startVirtualThread(this);
         }
     }
 }

@@ -512,6 +512,10 @@ public class ChessGame {
 
                     Duration remaining = remainingTime();
 
+                    Log.infof("remaining time -> %s", remaining.toString());
+
+
+
                     if (remaining.isNegative() || remaining.isZero()) {
                         onComplete.run();
                         stop();
@@ -580,6 +584,8 @@ public class ChessGame {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+
+            Log.infof("%s is terminated? -> %s", name, timerService.isTerminated());
         }
     }
 }
