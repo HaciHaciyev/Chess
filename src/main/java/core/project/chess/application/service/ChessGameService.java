@@ -568,7 +568,6 @@ public class ChessGameService {
     }
 
     private void gameOverOperationsExecutor(final ChessGame chessGame) {
-        Log.info("Game over operations executing.");
         if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().getChessBoardId())) {
             Log.infof("History of game %s is already present", chessGame.getChessGameId());
             return;
@@ -602,8 +601,7 @@ public class ChessGameService {
                     CompletableFuture.runAsync(() -> gameOverOperationsExecutor(game));
 
                     for (Session session : gameAndSessions.getSecond()) {
-                        Log.infof("Sending game result {%s} to session {%s}", gameResult, session.getId());
-                        sendMessage(session, "Game is over by result {%s}".formatted(gameResult));
+                        sendMessage(session, Message.info("Game is over by result {%s}".formatted(gameResult)));
                     }
 
                     isRunning.set(false);
