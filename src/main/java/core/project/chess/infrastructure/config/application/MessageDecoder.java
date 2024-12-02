@@ -7,7 +7,7 @@ import jakarta.websocket.Decoder;
 
 public class MessageDecoder implements Decoder.Text<Message> {
 
-    private static final int MAX_LENGTH = 512;
+    private static final int MAX_LENGTH = 1024;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -26,6 +26,6 @@ public class MessageDecoder implements Decoder.Text<Message> {
 
     @Override
     public boolean willDecode(String json) {
-        return json != null && json.length() <= MAX_LENGTH;
+        return json != null && (json.length() <= MAX_LENGTH || !json.isBlank());
     }
 }
