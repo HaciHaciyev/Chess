@@ -46,9 +46,7 @@ public final class ProfilePicture {
     }
 
     public static String profilePicturePath(String id) {
-        String path = String.format(PATH_FORMAT, id);
-        Log.info(path);
-        return path;
+        return String.format(PATH_FORMAT, id);
     }
 
     public String path() {
@@ -66,7 +64,7 @@ public final class ProfilePicture {
         Objects.requireNonNull(profilePicture);
 
         if (profilePicture.length > MAX_SIZE) {
-            Log.info("Profile picture is too big.");
+            Log.error("Profile picture is too big.");
             return StatusPair.ofFalse();
         }
 

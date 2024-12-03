@@ -210,7 +210,6 @@ public class UserAccountService {
 
         userAccount.setProfilePicture(profilePicture);
 
-        Log.info("Called: imageFileRepository.put(userAccount);");
         imageFileRepository.put(userAccount);
     }
 
@@ -221,10 +220,6 @@ public class UserAccountService {
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build())
                 );
 
-        Log.info("""
-                Called: .load(ProfilePicture.profilePicturePath(userAccount.getId().toString()))
-                        .orElseGet(ProfilePicture::defaultProfilePicture);
-                """);
         return imageFileRepository
                 .load(ProfilePicture.profilePicturePath(userAccount.getId().toString()))
                 .orElseGet(ProfilePicture::defaultProfilePicture);

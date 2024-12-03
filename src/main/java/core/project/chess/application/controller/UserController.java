@@ -7,7 +7,6 @@ import core.project.chess.domain.aggregates.chess.value_objects.ChessGameHistory
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.infrastructure.utilities.containers.Result;
-import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
@@ -75,14 +74,12 @@ public class UserController {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Picture can`t be null.").build());
         }
 
-        Log.infof("Inbound picture");
         Username username = Result
                 .ofThrowable(() -> new Username(jwt.getName()))
                 .orElseThrow(
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
                 );
 
-        Log.info("Called: userAccountService.putProfilePicture(picture, username);");
         userAccountService.putProfilePicture(picture, username);
         return Response.accepted("Successfully saved picture.").build();
     }
@@ -96,7 +93,6 @@ public class UserController {
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
                 );
 
-        Log.info("Called: userAccountService.getProfilePicture(username).profilePicture();");
         return Response.ok(userAccountService.getProfilePicture(username).profilePicture()).build();
     }
 
@@ -109,7 +105,6 @@ public class UserController {
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
                 );
 
-        Log.info("Called: userAccountService.deleteProfilePicture(username);");
         userAccountService.deleteProfilePicture(username);
         return Response.accepted("Successfully delete a profile image.").build();
     }
