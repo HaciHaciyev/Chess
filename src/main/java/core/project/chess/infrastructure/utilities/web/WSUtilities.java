@@ -37,7 +37,7 @@ public class WSUtilities {
 
     public static void sendMessage(final Session session, final Message message) {
         try {
-            session.getAsyncRemote().sendObject(message).get();
+            session.getAsyncRemote().sendObject(message);
         } catch (Exception e) {
             Log.info(e.getMessage());
         }

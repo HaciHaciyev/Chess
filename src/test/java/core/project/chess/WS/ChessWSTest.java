@@ -23,7 +23,6 @@ import testUtils.UserDBManagement;
 
 import java.net.URI;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import static io.restassured.RestAssured.*;
@@ -34,7 +33,8 @@ import static org.hamcrest.Matchers.*;
 //@Disabled
 class ChessWSTest {
 
-    private static final LinkedBlockingDeque<Message> MESSAGES = new LinkedBlockingDeque<>();
+    private static final LinkedBlockingDeque<Message> USER_MESSAGES = new LinkedBlockingDeque<>();
+    private static final LinkedBlockingDeque<Message> CHESS_MESSAGES = new LinkedBlockingDeque<>();
 
     public static final String REGISTRATION = "/chessland/account/registration";
 
@@ -44,8 +44,8 @@ class ChessWSTest {
 
     @TestHTTPResource("/chessland/chess-game")
     URI serverURI;
+//    URI serverURI = URI.create("http://localhost:9990/chessland/chess-game");
 
-    //    @TestHTTPResource("http://0.0.0.0:9091/user-session")
     URI userSessionURI = URI.create("http://localhost:9091/user-session");
 
     @Inject
@@ -54,9 +54,11 @@ class ChessWSTest {
     @Inject
     UserDBManagement userDBManagement;
 
+
     @AfterEach
     void purge() {
-        MESSAGES.clear();
+        USER_MESSAGES.clear();
+        CHESS_MESSAGES.clear();
     }
 
     @BeforeEach
@@ -217,6 +219,7 @@ class ChessWSTest {
 
     @Test
     @DisplayName("Custom partnership game")
+//    @Disabled
     void custom_Partnership_Game() throws Exception {
         RegistrationForm whiteForm = registerRandom();
         enableAccount(whiteForm);
@@ -233,6 +236,8 @@ class ChessWSTest {
              Session bChessSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken));
         ) {
 
+            Thread.sleep(Duration.ofMillis(100));
+
             Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(blackForm.username())
                     .message("br")
@@ -240,7 +245,7 @@ class ChessWSTest {
 
             sendMessage(wMessagingSession, whiteForm.username(), wPartnershipRequest);
 
-            Thread.sleep(Duration.ofSeconds(2));
+//            Thread.sleep(Duration.ofSeconds(1));
 
             Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(whiteForm.username())
@@ -249,16 +254,18 @@ class ChessWSTest {
 
             sendMessage(bMessagingSession, blackForm.username(), bPartnershipRequest);
 
-            Thread.sleep(Duration.ofSeconds(2));
+//            Thread.sleep(Duration.ofSeconds(1));
 
             String wName = whiteForm.username();
             String bName = blackForm.username();
 
             sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, ChessGame.TimeControllingTYPE.RAPID));
 
-            Thread.sleep(Duration.ofSeconds(1));
-            
+//            Thread.sleep(Duration.ofSeconds(1));
+
             sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, ChessGame.TimeControllingTYPE.RAPID));
+
+//            Thread.sleep(Duration.ofSeconds(1));
 
             String gameID = extractGameID();
             //1
@@ -355,20 +362,30 @@ class ChessWSTest {
             //31
             sendMessage(wChessSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.d2));
 
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            wMessagingSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
+            bMessagingSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
+
             wChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
             bChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
         }
     }
 
     private String extractGameID() {
-        for (Message message : MESSAGES) {
+        System.out.println("##############################################################");
+        Log.info("Looking for game ID");
+        for (Message message : CHESS_MESSAGES) {
                 Log.infof("Message -> %s", message);
 
                 if (message.gameID() != null) {
+                    System.out.println("##############################################################");
                     return message.gameID();
                 }
         }
-        
+
+        System.out.println("##############################################################");
         throw new IllegalStateException("No gameID found");
     }
 
@@ -439,13 +456,20 @@ class ChessWSTest {
         @OnOpen
         public void onOpen(Session session) {
             String username = extractToken(session);
-            Log.infof("User %s connected to the server", username);
+            Log.infof("User %s connected to the server -> %s", username, session.getRequestURI().getPath());
         }
 
         @OnMessage
         public void onMessage(Session session, Message message) {
             String username = extractToken(session);
-            MESSAGES.add(message);
+            String query = session.getRequestURI().getPath();
+
+            if (query.contains("user")) {
+                USER_MESSAGES.add(message);
+            } else {
+                CHESS_MESSAGES.add(message);
+            }
+
             Log.infof("%s received -> %s", username, message);
         }
 

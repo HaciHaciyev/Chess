@@ -32,7 +32,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     private static final String FIND_BY_EMAIL = "SELECT * FROM UserAccount WHERE email = ?";
     private static final String FIND_REFRESH_TOKEN = "SELECT * FROM RefreshToken WHERE token = ?";
     private static final String IS_PARTNERSHIP_EXISTS = """
-            SELECT * FROM UserPartnership
+            SELECT COUNT(*) FROM UserPartnership
             WHERE (user_id = ? AND partner_id = ?) OR (user_id = ? AND partner_id = ?);
             """;
     private static final String FIND_TOKEN = """
@@ -108,6 +108,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
         Result<Boolean, Throwable> result = jdbc.readObjectOf(
                 IS_PARTNERSHIP_EXISTS, Boolean.class, user.getId().toString(), partner.getId().toString(), partner.getId().toString(), user.getId().toString()
         );
+
 
         if (!result.success()) {
             if (result.throwable() instanceof DataNotFoundException) {

@@ -1,6 +1,8 @@
 package core.project.chess.application.dto.gamesession;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
@@ -33,6 +35,7 @@ public record Message(MessageType type,
 
     private static final Pattern PROMOTION_PATTERN = Pattern.compile("^[QRNBqrnb]$");
     private static final String INVITATION_MESSAGE = "User %s invite you for a chess game with parameters: figures color for you = %s, time control = %s.";
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public Message {
         Objects.requireNonNull(type, "Message type must not be null.");
@@ -166,6 +169,18 @@ public record Message(MessageType type,
         } catch (IllegalArgumentException e) {
             return Result.failure(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        try {
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            Log.error(e);
+        }
+        return "";
     }
 
     public static class Builder {

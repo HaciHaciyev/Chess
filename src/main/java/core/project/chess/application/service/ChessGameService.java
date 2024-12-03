@@ -568,7 +568,6 @@ public class ChessGameService {
     }
 
     private void gameOverOperationsExecutor(final ChessGame chessGame) {
-        Log.info("Game over operations executing.");
         if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().getChessBoardId())) {
             Log.infof("History of game %s is already present", chessGame.getChessGameId());
             return;
@@ -583,12 +582,10 @@ public class ChessGameService {
     private class ChessGameSpectator implements Runnable {
         private final ChessGame game;
         private final AtomicBoolean isRunning;
-        private final ExecutorService executor;
 
         public ChessGameSpectator(ChessGame game) {
             this.game = game;
             this.isRunning = new AtomicBoolean(false);
-            this.executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Spectator Thread"));
         }
 
         @Override
@@ -602,8 +599,7 @@ public class ChessGameService {
                     CompletableFuture.runAsync(() -> gameOverOperationsExecutor(game));
 
                     for (Session session : gameAndSessions.getSecond()) {
-                        Log.infof("Sending game result {%s} to session {%s}", gameResult, session.getId());
-                        sendMessage(session, "Game is over by result {%s}".formatted(gameResult));
+                        sendMessage(session, Message.info("Game is over by result {%s}".formatted(gameResult)));
                     }
 
                     isRunning.set(false);
@@ -619,7 +615,7 @@ public class ChessGameService {
 
             Log.info("Starting spectator");
             isRunning.set(true);
-            executor.submit(this);
+            Thread.startVirtualThread(this);
         }
     }
 }
