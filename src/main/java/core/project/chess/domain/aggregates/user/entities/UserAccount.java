@@ -32,6 +32,7 @@ public class UserAccount {
     private final AccountEvents accountEvents;
     private final Set<UserAccount> partners;
     private final Set<ChessGame> games;
+    private ProfilePicture profilePicture;
 
     public static UserAccount of(Username username, Email email, Password password) {
         Objects.requireNonNull(username);
@@ -40,15 +41,16 @@ public class UserAccount {
 
         return new UserAccount(
                 UUID.randomUUID(), username, email, password, UserRole.NONE, false,
-                Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>()
+                Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(),
+                ProfilePicture.defaultProfilePicture()
         );
     }
 
     /**
      * this method is used to call only from repository
      */
-    public static UserAccount fromRepository(UUID id, Username username, Email email, Password password,
-                                             UserRole userRole, boolean enabled, Rating rating, AccountEvents events) {
+    public static UserAccount fromRepository(UUID id, Username username, Email email, Password password, UserRole userRole,
+                                             boolean enabled, Rating rating, AccountEvents events, ProfilePicture profilePicture) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(username);
         Objects.requireNonNull(email);
@@ -57,7 +59,10 @@ public class UserAccount {
         Objects.requireNonNull(rating);
         Objects.requireNonNull(events);
 
-        return new UserAccount(id, username, email, password, userRole, enabled, rating, events, new HashSet<>(), new HashSet<>());
+        return new UserAccount(
+                id, username, email, password, userRole, enabled, rating, events,
+                new HashSet<>(), new HashSet<>(), Objects.requireNonNullElseGet(profilePicture, ProfilePicture::defaultProfilePicture)
+        );
     }
 
     public boolean isEnabled() {
@@ -70,28 +75,6 @@ public class UserAccount {
 
     public Set<UserAccount> getPartners() {
         return new HashSet<>(partners);
-    }
-
-    public boolean containsPartner(final UserAccount userAccount) {
-        return partners.contains(userAccount);
-    }
-
-    public void addPartner(final UserAccount partner) {
-        Objects.requireNonNull(partner);
-        if (partner.username.equals(this.username)) {
-            return;
-        }
-
-        this.partners.add(partner);
-        if (!partner.containsPartner(this)) {
-            partner.addPartner(this);
-        }
-    }
-
-    public void removePartner(final UserAccount partner) {
-        Objects.requireNonNull(partner);
-        partners.remove(partner);
-        partner.removePartner(this);
     }
 
     public void addGame(final ChessGame game) {
@@ -139,6 +122,15 @@ public class UserAccount {
         }
 
         return color.equals(BLACK) ? 1 : 0;
+    }
+
+    public void setProfilePicture(ProfilePicture picture) {
+        Objects.requireNonNull(picture);
+        this.profilePicture = picture;
+    }
+
+    public void deleteProfilePicture() {
+        this.profilePicture = ProfilePicture.defaultProfilePicture();
     }
 
     @Override

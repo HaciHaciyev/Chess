@@ -1,28 +1,32 @@
 package core.project.chess.infrastructure.utilities.json;
 
-import com.fasterxml.jackson.core.JsonPointer;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import core.project.chess.application.dto.gamesession.*;
-import core.project.chess.domain.aggregates.chess.entities.ChessGame;
+import core.project.chess.application.dto.gamesession.GameParameters;
+import core.project.chess.application.dto.gamesession.Message;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame.TimeControllingTYPE;
 import core.project.chess.domain.aggregates.chess.enumerations.Color;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.Optional;
 
 public class JSONUtilities {
 
     private JSONUtilities() {}
 
-    private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule()).disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    static {
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    }
 
     public static Result<JsonNode, Throwable> jsonTree(final String message) {
         try {
@@ -63,5 +67,14 @@ public class JSONUtilities {
         );
 
         return Result.success(gameParameters);
+    }
+
+    public static String prettyWrite(Message message) {
+        try {
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(message);
+        } catch (JsonProcessingException e) {
+            Log.error(e);
+        }
+        return "";
     }
 }

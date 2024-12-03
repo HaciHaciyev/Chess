@@ -6,11 +6,13 @@ import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.aggregates.user.value_objects.Email;
 import core.project.chess.domain.aggregates.user.value_objects.Password;
+import core.project.chess.domain.aggregates.user.value_objects.ProfilePicture;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
 import core.project.chess.infrastructure.config.security.JwtUtility;
 import core.project.chess.infrastructure.config.security.PasswordEncoder;
+import core.project.chess.infrastructure.files.ImageFileRepository;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
@@ -32,13 +34,15 @@ import java.util.UUID;
 
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class UserService {
+public class UserAccountService {
 
     private final JWTParser jwtParser;
 
     private final JwtUtility jwtUtility;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final ImageFileRepository imageFileRepository;
 
     private final InboundUserRepository inboundUserRepository;
 
@@ -166,12 +170,10 @@ public class UserService {
         Log.infof("Verifying %s", token);
         var foundToken = outboundUserRepository
                 .findToken(UUID.fromString(token))
-                .orElseThrow(
-                        () -> {
-                            Log.error("Verification failure, token does not exist");
-                            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This token does not exist").build());
-                        }
-                );
+                .orElseThrow(() -> {
+                    Log.error("Verification failure, token does not exist");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("This token does not exist").build());
+                });
 
         if (foundToken.isExpired()) {
             Log.error("Verification failure, token expired");
@@ -189,6 +191,54 @@ public class UserService {
         foundToken.getUserAccount().enable();
         inboundUserRepository.enable(foundToken);
         Log.infof("Verification successful");
+    }
+
+    public void putProfilePicture(byte[] picture, Username username) {
+        final UserAccount userAccount = outboundUserRepository
+                .findByUsername(username)
+                .orElseThrow(() -> {
+                    Log.error("User not found");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build());
+                });
+
+        final ProfilePicture profilePicture = Result
+                .ofThrowable(() -> ProfilePicture.of(picture, userAccount))
+                .orElseThrow(() -> {
+                    Log.error("Corrupted image.");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Corrupted image.").build());
+                });
+
+        userAccount.setProfilePicture(profilePicture);
+
+        Log.info("Called: imageFileRepository.put(userAccount);");
+        imageFileRepository.put(userAccount);
+    }
+
+    public ProfilePicture getProfilePicture(Username username) {
+        final UserAccount userAccount = outboundUserRepository
+                .findByUsername(username)
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build())
+                );
+
+        Log.info("""
+                Called: .load(ProfilePicture.profilePicturePath(userAccount.getId().toString()))
+                        .orElseGet(ProfilePicture::defaultProfilePicture);
+                """);
+        return imageFileRepository
+                .load(ProfilePicture.profilePicturePath(userAccount.getId().toString()))
+                .orElseGet(ProfilePicture::defaultProfilePicture);
+    }
+
+    public void deleteProfilePicture(Username username) {
+        final UserAccount userAccount = outboundUserRepository
+                .findByUsername(username)
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build())
+                );
+
+        userAccount.deleteProfilePicture();
+        imageFileRepository.delete(ProfilePicture.profilePicturePath(userAccount.getId().toString()));
     }
 
     public String refreshToken(String refreshToken) {

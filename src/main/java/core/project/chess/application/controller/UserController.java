@@ -2,10 +2,12 @@ package core.project.chess.application.controller;
 
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
-import core.project.chess.application.service.UserService;
+import core.project.chess.application.service.UserAccountService;
 import core.project.chess.domain.aggregates.chess.value_objects.ChessGameHistory;
 import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
+import core.project.chess.infrastructure.utilities.containers.Result;
+import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
@@ -24,51 +26,97 @@ public class UserController {
 
     private final JsonWebToken jwt;
 
-    private final UserService userService;
+    private final UserAccountService userAccountService;
 
     private final OutboundChessRepository outboundChessRepository;
 
     @POST @Path("/login")
-    public final Response login(LoginForm loginForm) {
+    public Response login(LoginForm loginForm) {
         if (Objects.isNull(loginForm)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Login form is null.").build());
         }
 
-        return Response.ok(userService.login(loginForm)).build();
+        return Response.ok(userAccountService.login(loginForm)).build();
     }
 
     @POST @Path("/registration")
-    public final Response registration(RegistrationForm registrationForm) {
+    public Response registration(RegistrationForm registrationForm) {
         if (Objects.isNull(registrationForm)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Registration form is null.").build());
         }
 
-        userService.registration(registrationForm);
+        userAccountService.registration(registrationForm);
         return Response.ok("Registration successful. Verify you email.").build();
     }
 
     @PATCH @Path("/token/verification")
-    public final Response tokenVerification(@QueryParam("token") String token) {
+    public Response tokenVerification(@QueryParam("token") String token) {
         if (Objects.isNull(token)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Token can`t be null.").build());
         }
 
-        userService.tokenVerification(token);
+        userAccountService.tokenVerification(token);
         return Response.ok("Now, account is enabled.").build();
     }
 
     @PATCH @Path("/refresh-token")
-    public final Response refresh(@HeaderParam("Refresh-Token") String refreshToken) {
+    public Response refresh(@HeaderParam("Refresh-Token") String refreshToken) {
         if (Objects.isNull(refreshToken) || refreshToken.isBlank()) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid refresh token.").build());
         }
 
-        return Response.ok(userService.refreshToken(refreshToken)).build();
+        return Response.ok(userAccountService.refreshToken(refreshToken)).build();
+    }
+
+    @Authenticated
+    @PUT @Path("/put-profile-picture")
+    public Response putProfilePicture(byte[] picture) {
+        if (Objects.isNull(picture)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Picture can`t be null.").build());
+        }
+
+        Log.infof("Inbound picture");
+        Username username = Result
+                .ofThrowable(() -> new Username(jwt.getName()))
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
+                );
+
+        Log.info("Called: userAccountService.putProfilePicture(picture, username);");
+        userAccountService.putProfilePicture(picture, username);
+        return Response.accepted("Successfully saved picture.").build();
+    }
+
+    @Authenticated
+    @GET @Path("/profile-picture")
+    public Response getProfilePicture() {
+        Username username = Result
+                .ofThrowable(() -> new Username(jwt.getName()))
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
+                );
+
+        Log.info("Called: userAccountService.getProfilePicture(username).profilePicture();");
+        return Response.ok(userAccountService.getProfilePicture(username).profilePicture()).build();
+    }
+
+    @Authenticated
+    @DELETE @Path("/delete-profile-picture")
+    public Response deleteProfilePicture() {
+        Username username = Result
+                .ofThrowable(() -> new Username(jwt.getName()))
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
+                );
+
+        Log.info("Called: userAccountService.deleteProfilePicture(username);");
+        userAccountService.deleteProfilePicture(username);
+        return Response.accepted("Successfully delete a profile image.").build();
     }
 
     @Authenticated
     @GET @Path("/game-history")
-    public final Response gameHistory(@QueryParam("pageNumber") int pageNumber) {
+    public Response gameHistory(@QueryParam("pageNumber") int pageNumber) {
         List<ChessGameHistory> listOfGames = outboundChessRepository
                 .listOfGames(new Username(jwt.getName()), pageNumber)
                 .orElseThrow(
@@ -80,7 +128,7 @@ public class UserController {
 
     @Authenticated
     @GET @Path("/partners")
-    public final Response partners(@QueryParam("pageNumber") int pageNumber) {
+    public Response partners(@QueryParam("pageNumber") int pageNumber) {
         List<String> partnersUsernames = outboundChessRepository
                 .listOfPartners(jwt.getName(), pageNumber)
                 .orElseThrow(

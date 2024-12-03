@@ -12,8 +12,9 @@ import testUtils.LoginForm;
 import testUtils.RegistrationForm;
 import testUtils.UserDBManagement;
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
 @Disabled
@@ -52,7 +53,7 @@ public class LoginTests {
                 .when().patch(TOKEN_VERIFICATION)
                 .then()
                 .statusCode(200)
-                .body(containsString("account is enabled"));
+                .body(containsString("Now, account is enabled."));
 
         LoginForm loginForm = LoginForm.from(account);
         String loginJSON = objectMapper.writer().writeValueAsString(loginForm);

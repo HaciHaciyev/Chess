@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.Objects;
 
 @ApplicationScoped
-public class PartnershipGameInvitationsService {
+public class GameInvitationsRepository {
 
     private static final String KEY_FORMAT = "Partnership game invitations {%s}";
 
     private final HashCommands<String, String, String> hashCommands;
 
-    PartnershipGameInvitationsService(RedisDataSource redisDataSource) {
+    GameInvitationsRepository(RedisDataSource redisDataSource) {
         this.hashCommands = redisDataSource.hash(new TypeReference<>(){});
     }
 

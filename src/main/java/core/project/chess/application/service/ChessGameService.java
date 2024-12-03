@@ -1,6 +1,8 @@
 package core.project.chess.application.service;
 
-import core.project.chess.application.dto.gamesession.*;
+import core.project.chess.application.dto.gamesession.GameParameters;
+import core.project.chess.application.dto.gamesession.Message;
+import core.project.chess.application.dto.gamesession.MessageType;
 import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
 import core.project.chess.domain.aggregates.chess.entities.ChessGame;
@@ -13,7 +15,7 @@ import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
-import core.project.chess.infrastructure.cache.PartnershipGameInvitationsService;
+import core.project.chess.infrastructure.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
@@ -28,11 +30,10 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static core.project.chess.infrastructure.utilities.web.WSUtilities.*;
+import static core.project.chess.infrastructure.utilities.web.WSUtilities.closeSession;
+import static core.project.chess.infrastructure.utilities.web.WSUtilities.sendMessage;
 
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -46,7 +47,7 @@ public class ChessGameService {
 
     private final OutboundChessRepository outboundChessRepository;
 
-    private final PartnershipGameInvitationsService partnershipGameCacheService;
+    private final GameInvitationsRepository partnershipGameCacheService;
 
     private static final ConcurrentHashMap<Username, Pair<Session, UserAccount>> sessions = new ConcurrentHashMap<>();
 
