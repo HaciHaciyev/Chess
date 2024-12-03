@@ -179,7 +179,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 UserRole.valueOf(rs.getString("user_role")),
                 rs.getBoolean("is_enable"),
                 rating,
-                events
+                events,
+                null
         );
     }
 }
