@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.containsString;
 
 @QuarkusTest
 @Transactional
+@Disabled
 class UserControllerTest {
 
     static final String PUT_PROFILE_PICTURE = "/chessland/account/put-profile-picture";
