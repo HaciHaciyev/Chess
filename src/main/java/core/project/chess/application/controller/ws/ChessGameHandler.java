@@ -1,4 +1,4 @@
-package core.project.chess.application.ws;
+package core.project.chess.application.controller.ws;
 
 import core.project.chess.application.dto.gamesession.Message;
 import core.project.chess.application.service.ChessGameService;

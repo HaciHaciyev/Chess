@@ -13,8 +13,8 @@ public final class ProfilePicture {
     private final String imageType;
     private final byte[] profilePicture;
     private static final int MAX_SIZE = 262_144;
-    public static final String PATH_FORMAT = "src/main/resources/static/profile/photos/%s";
-    public static final String DEFAULT_PROFILE_PICTURE_PATH = "src/main/resources/static/profile/photos/default-profile-picture.png";
+    private static final String PATH_FORMAT = "src/main/resources/static/profile/photos/%s";
+    private static final String DEFAULT_PROFILE_PICTURE_PATH = "src/main/resources/static/profile/photos/default-profile-picture.png";
 
     private ProfilePicture(String path, byte[] profilePicture, String imageType) {
         this.path = path;
@@ -57,6 +57,10 @@ public final class ProfilePicture {
         byte[] copy = new byte[profilePicture.length];
         System.arraycopy(profilePicture, 0, copy, 0, profilePicture.length);
         return copy;
+    }
+
+    public String imageType() {
+        return imageType;
     }
 
     private static StatusPair<String> validate(String path, byte[] profilePicture) {

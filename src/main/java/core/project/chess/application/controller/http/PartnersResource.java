@@ -1,4 +1,4 @@
-package core.project.chess.application.http;
+package core.project.chess.application.controller.http;
 
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import io.quarkus.security.Authenticated;

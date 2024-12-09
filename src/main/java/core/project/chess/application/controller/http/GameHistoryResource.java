@@ -1,4 +1,4 @@
-package core.project.chess.application.http;
+package core.project.chess.application.controller.http;
 
 import core.project.chess.domain.aggregates.chess.value_objects.ChessGameHistory;
 import core.project.chess.domain.aggregates.user.value_objects.Username;

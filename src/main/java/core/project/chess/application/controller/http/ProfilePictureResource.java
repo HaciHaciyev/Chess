@@ -1,4 +1,4 @@
-package core.project.chess.application.http;
+package core.project.chess.application.controller.http;
 
 import core.project.chess.application.service.UserAccountService;
 import core.project.chess.domain.aggregates.user.value_objects.ProfilePicture;
