@@ -100,7 +100,7 @@ public class UserAccountService {
         inboundUserRepository.saveRefreshToken(userAccount, refreshToken);
 
         final String token = jwtUtility.generateToken(userAccount);
-        return Map.of("token", token, "refresh-token", refreshToken);
+        return Map.of("token", token, "refreshToken", refreshToken);
     }
 
     public void registration(RegistrationForm registrationForm) {
@@ -256,12 +256,10 @@ public class UserAccountService {
 
         final UserAccount userAccount = outboundUserRepository
                 .findById(UUID.fromString(foundedPairResult.getFirst()))
-                .orElseThrow(
-                        () ->{
-                            Log.error("User is not found");
-                            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User was`t founded.").build());
-                        }
-                );
+                .orElseThrow(() -> {
+                    Log.error("User is not found");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User was`t founded.").build());
+                });
 
         return jwtUtility.generateToken(userAccount);
     }

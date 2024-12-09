@@ -8,16 +8,13 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.Objects;
 
 @PermitAll
 @Path("/account")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class UserController {
-
-    private final JsonWebToken jwt;
+public class AuthResource {
 
     private final UserAccountService userAccountService;
 

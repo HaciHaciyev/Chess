@@ -4,7 +4,6 @@ import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken
 import core.project.chess.domain.aggregates.user.entities.UserAccount;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.infrastructure.config.jdbc.JDBC;
-import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
