@@ -77,8 +77,6 @@ public class JDBC {
 
     private static final String SQL_STATUS_NO_DATA = "02000";
 
-    public static final String SQL_QUERY_LOGGING_FORMAT = "Executing sql query : {%s}";
-
     private static final Map<Class<?>, Function<ResultSet, ?>> wrapperMapFunctions = getWrapperMap();
 
     private static final Set<Class<?>> wrapperTypes = Set.of(
@@ -176,9 +174,13 @@ public class JDBC {
 
                 return Result.success((T) wrapperMapFunctions.get(type).apply(resultSet));
             }
-        } catch (SQLException e) {
+        } catch (SQLException | IllegalArgumentException e) {
             Log.error(e);
-            return handleSQLException(e);
+            if (e instanceof IllegalArgumentException) {
+                return Result.failure(e);
+            }
+
+            return handleSQLException((SQLException) e);
         }
     }
 
@@ -386,63 +388,63 @@ public class JDBC {
                     try {
                         return rs.getString(1);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to String.");
                     }
                 },
                 Boolean.class, rs -> {
                     try {
                         return rs.getBoolean(1);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Boolean.");
                     }
                 },
                 Character.class, rs -> {
                     try {
                         return rs.getString(1).charAt(0);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Character.");
                     }
                 },
                 Byte.class, rs -> {
                     try {
                         return rs.getByte(1);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Byte.");
                     }
                 },
                 Short.class, rs -> {
                     try {
                         return rs.getShort(1);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Short.");
                     }
                 },
                 Integer.class, rs -> {
                     try {
                         return rs.getInt(1);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Integer.");
                     }
                 },
                 Long.class, rs -> {
                     try {
                         return rs.getLong(1);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Long.");
                     }
                 },
                 Float.class, rs -> {
                     try {
                         return rs.getFloat(1);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Float.");
                     }
                 },
                 Double.class, rs -> {
                     try {
                         return rs.getDouble(1);
                     } catch (SQLException e) {
-                        return Result.failure(e);
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Double.");
                     }
                 }
         );
