@@ -18,7 +18,6 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import java.util.Optional;
 
 import static core.project.chess.infrastructure.utilities.web.WSUtilities.closeSession;
-import static core.project.chess.infrastructure.utilities.web.WSUtilities.sendMessage;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @ServerEndpoint(value = "/chessland/chess-game", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
@@ -30,14 +29,12 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session) {
-        validateToken(session)
-                .ifPresent(token -> chessGameService.onOpen(session, new Username(validateToken(session).orElseThrow().getName())));
+        validateToken(session).ifPresent(token -> chessGameService.onOpen(session, new Username(token.getName())));
     }
 
     @OnMessage
     public void onMessage(final Session session, final Message message) {
-        validateToken(session)
-                .ifPresent(token -> chessGameService.onMessage(session, new Username(validateToken(session).orElseThrow().getName()), message));
+        validateToken(session).ifPresent(token -> chessGameService.onMessage(session, new Username(token.getName()), message));
     }
 
     @OnClose
@@ -46,14 +43,11 @@ public class ChessGameHandler {
     }
 
     private Optional<JsonWebToken> validateToken(Session session) {
-        final Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
-
-        if (jwt.isEmpty()) {
-            sendMessage(session, Message.error("Token is required."));
-            closeSession(session, Message.error("You are not authorized."));
-            return Optional.empty();
-        }
-
-        return jwt;
+        return jwtUtility
+                .extractJWT(session)
+                .or(() -> {
+                    closeSession(session, Message.error("You are not authorized. Token is required."));
+                    return Optional.empty();
+                });
     }
 }
