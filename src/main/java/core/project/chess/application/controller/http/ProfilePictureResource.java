@@ -52,7 +52,7 @@ public class ProfilePictureResource {
                 );
 
         ProfilePicture profilePicture = userAccountService.getProfilePicture(username);
-        return Response.ok(Map.of(profilePicture.profilePicture(), profilePicture.imageType())).build();
+        return Response.ok(Map.of("profilePicture", profilePicture.profilePicture(), "imageType", profilePicture.imageType())).build();
     }
 
     @DELETE
