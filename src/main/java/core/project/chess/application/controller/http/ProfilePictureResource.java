@@ -6,6 +6,7 @@ import core.project.chess.domain.aggregates.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.security.Authenticated;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
@@ -27,6 +28,7 @@ public class ProfilePictureResource {
 
     @PUT
     @Path("/put-profile-picture")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response putProfilePicture(byte[] picture) {
         if (Objects.isNull(picture)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Picture can`t be null.").build());
