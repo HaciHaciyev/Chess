@@ -6,6 +6,7 @@ import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import testUtils.ByteArrayToImageConsole;
@@ -136,6 +137,7 @@ class UserControllerTest {
 
         given()
                 .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(picture)
                 .when()
                 .put(PUT_PROFILE_PICTURE)
