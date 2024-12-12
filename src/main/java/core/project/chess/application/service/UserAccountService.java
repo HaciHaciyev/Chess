@@ -204,7 +204,7 @@ public class UserAccountService {
         final ProfilePicture profilePicture = Result
                 .ofThrowable(() -> ProfilePicture.of(picture, userAccount))
                 .orElseThrow(() -> {
-                    String errorMessage = "Disabled image or image size is too big";
+                    String errorMessage = "Invalid image or image size is too big";
                     Log.error(errorMessage);
                     return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build());
                 });
