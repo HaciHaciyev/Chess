@@ -204,8 +204,9 @@ public class UserAccountService {
         final ProfilePicture profilePicture = Result
                 .ofThrowable(() -> ProfilePicture.of(picture, userAccount))
                 .orElseThrow(() -> {
-                    Log.error("Corrupted image.");
-                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Corrupted image.").build());
+                    String errorMessage = "Disabled image or image size is too big";
+                    Log.error(errorMessage);
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build());
                 });
 
         userAccount.setProfilePicture(profilePicture);

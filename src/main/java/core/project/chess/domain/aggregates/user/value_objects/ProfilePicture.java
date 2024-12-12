@@ -12,7 +12,7 @@ public final class ProfilePicture {
     private final String path;
     private final String imageType;
     private final byte[] profilePicture;
-    private static final int MAX_SIZE = 262_144;
+    private static final int MAX_SIZE = 524_288;
     private static final String PATH_FORMAT = "src/main/resources/static/profile/photos/%s";
     private static final String DEFAULT_PROFILE_PICTURE_PATH = "src/main/resources/static/profile/photos/default-profile-picture.png";
 
