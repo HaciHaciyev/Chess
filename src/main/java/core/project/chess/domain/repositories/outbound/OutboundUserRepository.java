@@ -1,9 +1,9 @@
 package core.project.chess.domain.repositories.outbound;
 
-import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
-import core.project.chess.domain.aggregates.user.entities.UserAccount;
-import core.project.chess.domain.aggregates.user.value_objects.Email;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.domain.subdomains.user.entities.EmailConfirmationToken;
+import core.project.chess.domain.subdomains.user.entities.UserAccount;
+import core.project.chess.domain.subdomains.user.value_objects.Email;
+import core.project.chess.domain.subdomains.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 

@@ -1,6 +1,5 @@
 package testUtils;
 
-import core.project.chess.infrastructure.utilities.chess.SimplePGNReader;
 import io.quarkus.logging.Log;
 import org.opentest4j.AssertionFailedError;
 
@@ -10,7 +9,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static core.project.chess.domain.aggregates.chess.entities.ChessGameTest.executeGameFromPGN;
+import static core.project.chess.domain.subdomains.chess.entities.ChessGameTest.executeGameFromPGN;
 
 /**
  * A utility class for executing chess games from PGN files using a fixed thread pool.

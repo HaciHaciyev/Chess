@@ -1,6 +1,6 @@
 package core.project.chess.domain.repositories.inbound;
 
-import core.project.chess.domain.aggregates.chess.entities.ChessGame;
+import core.project.chess.domain.subdomains.chess.entities.ChessGame;
 
 public interface InboundChessRepository {
 

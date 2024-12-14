@@ -1,8 +1,8 @@
 package core.project.chess.application.controller.http;
 
-import core.project.chess.domain.aggregates.chess.value_objects.ChessGameHistory;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
+import core.project.chess.domain.subdomains.user.value_objects.Username;
 import io.quarkus.security.Authenticated;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

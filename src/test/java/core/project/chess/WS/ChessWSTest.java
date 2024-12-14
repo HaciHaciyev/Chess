@@ -2,14 +2,12 @@ package core.project.chess.WS;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.chess.application.dto.gamesession.MessageType;
-import core.project.chess.infrastructure.config.application.MessageDecoder;
-import core.project.chess.infrastructure.config.application.MessageEncoder;
-import testUtils.LoginForm;
-import testUtils.RegistrationForm;
-import core.project.chess.application.dto.gamesession.Message;
-import core.project.chess.domain.aggregates.chess.entities.ChessGame;
-import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
+import core.project.chess.application.dto.chess.Message;
+import core.project.chess.application.dto.chess.MessageType;
+import core.project.chess.domain.subdomains.chess.entities.ChessGame;
+import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
+import core.project.chess.infrastructure.ws.MessageDecoder;
+import core.project.chess.infrastructure.ws.MessageEncoder;
 import io.quarkus.logging.Log;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -19,16 +17,18 @@ import jakarta.inject.Inject;
 import jakarta.websocket.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import testUtils.LoginForm;
+import testUtils.RegistrationForm;
 import testUtils.UserDBManagement;
 
 import java.net.URI;
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static io.restassured.RestAssured.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.Matchers.*;
+import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.notNullValue;
 
 @Slf4j
 @QuarkusTest

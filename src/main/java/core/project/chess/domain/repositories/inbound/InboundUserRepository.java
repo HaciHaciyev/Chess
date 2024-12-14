@@ -1,7 +1,7 @@
 package core.project.chess.domain.repositories.inbound;
 
-import core.project.chess.domain.aggregates.user.entities.EmailConfirmationToken;
-import core.project.chess.domain.aggregates.user.entities.UserAccount;
+import core.project.chess.domain.subdomains.user.entities.EmailConfirmationToken;
+import core.project.chess.domain.subdomains.user.entities.UserAccount;
 
 public interface InboundUserRepository {
 
