@@ -1,11 +1,11 @@
 package core.project.chess.application.controller.ws;
 
-import core.project.chess.application.dto.gamesession.Message;
+import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.service.ChessGameService;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
-import core.project.chess.infrastructure.config.application.MessageDecoder;
-import core.project.chess.infrastructure.config.application.MessageEncoder;
-import core.project.chess.infrastructure.config.security.JwtUtility;
+import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.infrastructure.security.JwtUtility;
+import core.project.chess.infrastructure.ws.MessageDecoder;
+import core.project.chess.infrastructure.ws.MessageEncoder;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
@@ -17,7 +17,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.Optional;
 
-import static core.project.chess.infrastructure.utilities.web.WSUtilities.closeSession;
+import static core.project.chess.application.util.WSUtilities.closeSession;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @ServerEndpoint(value = "/chessland/chess-game", decoders = MessageDecoder.class, encoders = MessageEncoder.class)

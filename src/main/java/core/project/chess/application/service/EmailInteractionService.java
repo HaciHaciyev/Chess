@@ -1,12 +1,9 @@
 package core.project.chess.application.service;
 
-import core.project.chess.domain.aggregates.user.value_objects.Email;
-import io.quarkus.logging.Log;
+import core.project.chess.domain.subdomains.user.value_objects.Email;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
-
-import java.util.Objects;
 
 @ApplicationScoped
 public class EmailInteractionService {

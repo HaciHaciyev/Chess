@@ -1,21 +1,21 @@
 package core.project.chess.application.service;
 
-import core.project.chess.application.dto.gamesession.GameParameters;
-import core.project.chess.application.dto.gamesession.Message;
-import core.project.chess.application.dto.gamesession.MessageType;
-import core.project.chess.domain.aggregates.chess.entities.AlgebraicNotation;
-import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
-import core.project.chess.domain.aggregates.chess.entities.ChessGame;
-import core.project.chess.domain.aggregates.chess.enumerations.Color;
-import core.project.chess.domain.aggregates.chess.events.SessionEvents;
-import core.project.chess.domain.aggregates.chess.value_objects.ChatMessage;
-import core.project.chess.domain.aggregates.user.entities.UserAccount;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.application.dto.chess.GameParameters;
+import core.project.chess.application.dto.chess.Message;
+import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
 import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
-import core.project.chess.infrastructure.cache.GameInvitationsRepository;
+import core.project.chess.domain.subdomains.chess.entities.AlgebraicNotation;
+import core.project.chess.domain.subdomains.chess.entities.ChessBoard;
+import core.project.chess.domain.subdomains.chess.entities.ChessGame;
+import core.project.chess.domain.subdomains.chess.enumerations.Color;
+import core.project.chess.domain.subdomains.chess.events.SessionEvents;
+import core.project.chess.domain.subdomains.chess.value_objects.ChatMessage;
+import core.project.chess.domain.subdomains.user.entities.UserAccount;
+import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
@@ -32,8 +32,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static core.project.chess.infrastructure.utilities.web.WSUtilities.closeSession;
-import static core.project.chess.infrastructure.utilities.web.WSUtilities.sendMessage;
+import static core.project.chess.application.util.WSUtilities.closeSession;
+import static core.project.chess.application.util.WSUtilities.sendMessage;
 
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -350,7 +350,9 @@ public class ChessGameService {
 
         try {
             cg.makeMovement(
-                    username, move.from(), move.to(),
+                    username,
+                    move.from(),
+                    move.to(),
                     Objects.isNull(move.inCaseOfPromotion()) ? null : AlgebraicNotation.fromSymbol(move.inCaseOfPromotion())
             );
         } catch (IllegalArgumentException | IllegalStateException e) {

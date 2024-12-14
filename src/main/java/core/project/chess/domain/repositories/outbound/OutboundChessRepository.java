@@ -1,7 +1,7 @@
 package core.project.chess.domain.repositories.outbound;
 
-import core.project.chess.domain.aggregates.chess.value_objects.ChessGameHistory;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
+import core.project.chess.application.dto.chess.ChessGameHistory;
+import core.project.chess.domain.subdomains.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 
 import java.util.List;

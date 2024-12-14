@@ -1,12 +1,13 @@
 package core.project.chess.infrastructure.repository.inbound;
 
-import core.project.chess.domain.aggregates.chess.entities.ChessBoard;
-import core.project.chess.domain.aggregates.chess.entities.ChessGame;
-import core.project.chess.domain.aggregates.chess.enumerations.Coordinate;
-import core.project.chess.domain.aggregates.chess.events.SessionEvents;
-import core.project.chess.domain.aggregates.user.entities.UserAccount;
-import core.project.chess.domain.aggregates.user.value_objects.Username;
-import core.project.chess.infrastructure.repository.outbound.JdbcOutboundUserRepository;
+import core.project.chess.domain.subdomains.chess.entities.ChessBoard;
+import core.project.chess.domain.subdomains.chess.entities.ChessGame;
+import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
+import core.project.chess.domain.subdomains.chess.events.SessionEvents;
+import core.project.chess.domain.subdomains.user.entities.UserAccount;
+import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.infrastructure.dal.repository.inbound.JdbcInboundChessRepository;
+import core.project.chess.infrastructure.dal.repository.outbound.JdbcOutboundUserRepository;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
