@@ -482,20 +482,23 @@ public class ChessGame {
         private final AtomicBoolean isRunning;
 
         private final Object lock;
-        private final ExecutorService timerService;
+        private final Thread timerThread;
 
         private final Runnable onComplete;
 
         private final String name;
 
+        private static int threadID = 0;
+
         public ChessCountdownTimer(String name, Duration duration, Runnable onComplete) {
-            this.name = name;
             this.gameDuration = duration;
             this.isPaused = new AtomicBoolean();
             this.isRunning = new AtomicBoolean();
             this.lock = new Object();
-            this.timerService = Executors.newSingleThreadExecutor();
+            this.timerThread = Thread.ofVirtual().unstarted(this);
             this.onComplete = onComplete;
+
+            this.name = name + "#" + threadID++;
         }
 
         @Override
@@ -510,9 +513,7 @@ public class ChessGame {
 
                     Duration remaining = remainingTime();
 
-                    //Log.infof("remaining time -> %s", remaining.toString());
-
-
+//                    Log.infof("remaining time -> %s", remaining.toString());
 
                     if (remaining.isNegative() || remaining.isZero()) {
                         onComplete.run();
@@ -525,6 +526,8 @@ public class ChessGame {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+
+            Log.infof("Stopping -> %s", name);
         }
 
         public Duration remainingTime() {
@@ -538,14 +541,14 @@ public class ChessGame {
                 return;
             }
 
-            /*if (!isPaused.get()) {
+            if (!isPaused.get()) {
                 Log.infof("starting {%s}", name);
-            }*/
+            }
 
             isRunning.set(true);
 
             if (isPaused.get()) {
-                //Log.infof("resuming {%s}", name);
+//                Log.infof("resuming {%s}", name);
                 Duration pauseDuration = Duration.between(pauseTime, Instant.now());
                 startTime = startTime.plus(pauseDuration);
                 isPaused.set(false);
@@ -559,12 +562,12 @@ public class ChessGame {
                 startTime = Instant.now();
             }
 
-            timerService.submit(this);
+            timerThread.start();
         }
 
         public void pause() {
             if (isRunning.get() && !isPaused.get()) {
-                //Log.infof("pausing {%s}...", name);
+//                Log.infof("pausing {%s}...", name);
                 pauseTime = Instant.now();
                 isPaused.set(true);
             }
@@ -572,18 +575,9 @@ public class ChessGame {
 
         public void stop() {
             isRunning.set(false);
-            timerService.shutdownNow();
-            //Log.infof("Shutting down {%s}...", name);
+            timerThread.interrupt();
 
-            try {
-                if (!timerService.awaitTermination(1, TimeUnit.SECONDS)) {
-                    Log.warn("Timer service didn't terminate gracefully");
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-
-            //Log.infof("%s is terminated? -> %s", name, timerService.isTerminated());
+            Log.infof("%s is terminated? -> %s", name, timerThread.isAlive());
         }
     }
 }

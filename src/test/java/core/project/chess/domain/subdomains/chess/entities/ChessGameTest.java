@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ChessGameTest {
 
     @Test
-    @Disabled("...")
+//    @Disabled("...")
     @DisplayName("Test chess game with many invalid moves.")
     void testChessGame() {
 
@@ -43,11 +43,11 @@ public class ChessGameTest {
     }
 
     @Test
-    @Disabled("For single running.")
+//    @Disabled("For single running.")
     @DisplayName("100k+ games from lichess")
     void lichess_100k() {
         executeGamesFromPGN(
-                "src/main/resources/chess/pgn/lichess_2013_january_lalg.pgn",
+                "src/main/resources/pgn/lichess_2013_january_lalg.pgn",
                 false,
                 false
         );
@@ -71,7 +71,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Berliner_PGN_Archive_64")
-    @Disabled("no concurrent")
+//    @Disabled("no concurrent")
     void berliner64() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Berliner_lalg.pgn",
@@ -100,7 +100,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Mamedyarov_PGN_Archive_4684")
-    @Disabled("no concurrent")
+//    @Disabled("no concurrent")
     void mamedyarov_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
@@ -127,7 +127,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Hikaru_PGN_Archive_8025")
-    @Disabled("no concurrent")
+//    @Disabled("no concurrent")
     void nakamura_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
@@ -153,7 +153,7 @@ public class ChessGameTest {
 
     @Test
     @DisplayName("Magnus ALL")
-    @Disabled("no concurrent")
+//    @Disabled("no concurrent")
     void magnus_ALL() {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Magnus_lalg.pgn",
@@ -178,7 +178,7 @@ public class ChessGameTest {
     }
 
     @Test
-    @Disabled(",,,")
+//    @Disabled(",,,")
     @DisplayName("Checkmates from Lichess 2013 January")
     void lichessCheckmates() {
         executeGamesFromPGN(

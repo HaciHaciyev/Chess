@@ -97,6 +97,7 @@ public final class ChessGameFixedThreadExecutor {
 
         Log.info("Total game executions: " + totalGameExecutions);
         Log.info("Failures: " + totalGameFailures);
+        gameFailures.forEach(Log::info);
 
         return gameFailures.isEmpty();
     }
