@@ -139,7 +139,7 @@ public final class ChessGameFixedThreadExecutor {
      */
     private void consume() {
         int partitionExecutions = 0;
-        AtomicInteger gameExecutions = new AtomicInteger(0);
+        int gameExecutions = 0;
 
         while (isRunning.get() || !queue.isEmpty()) {
             try {
@@ -147,13 +147,14 @@ public final class ChessGameFixedThreadExecutor {
 
                 if (partition != null) {
                     log("Processing partition#" + partition.num());
-                    executeGames(partition, gameExecutions);
+                    gameExecutions += executeGames(partition);
                     log("Processed partition#" + partition.num());
+                    log("Processed %s games".formatted(gameExecutions));
                     partitionExecutions++;
                 }
 
                 if (!isRunning.get() && queue.isEmpty()) {
-                    log("Processed %d games in %d partitions".formatted(gameExecutions.get(), partitionExecutions));
+                    log("Processed %d games in %d partitions".formatted(gameExecutions, partitionExecutions));
                     break;
                 }
 
@@ -189,13 +190,12 @@ public final class ChessGameFixedThreadExecutor {
      * Executes chess games for a given partition.
      *
      * @param partition The partition containing PGN strings to execute
-     * @param gameExecutions An atomic integer to track the number of game executions
      */
-    private void executeGames(Partition partition, AtomicInteger gameExecutions) {
+    private int executeGames(Partition partition) {
         int gameNum = (partition.num() - 1) * partition.size();
-
+        int gameExecutions = 0;
         for (String pgn : partition.pgnList()) {
-            gameExecutions.incrementAndGet();
+            gameExecutions++;
             totalGameExecutions.incrementAndGet();
 
             try {
@@ -205,6 +205,8 @@ public final class ChessGameFixedThreadExecutor {
                 gameFailures.offer(e.getMessage());
             }
         }
+
+        return gameExecutions;
     }
 
     /**
