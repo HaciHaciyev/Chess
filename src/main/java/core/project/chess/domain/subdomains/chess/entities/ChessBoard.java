@@ -1590,36 +1590,34 @@ public class ChessBoard {
      * @param fen The FEN notation string representing the chess board setup.
      */
     private void initializerFromFEN(String fen) {
-        AtomicInteger counter = new AtomicInteger(0);
+        int pos = 0;
         Coordinate[] coordinates = Coordinate.values();
-        // TODO ?
-        fen
-                .replace(fen.substring(fen.indexOf(" ")), "")
-                .chars()
-                .forEach(c -> {
-                    if (c == '/') {
-                        return;
-                    }
 
-                    Coordinate coordinate = coordinates[counter.get()];
+        for (char c : fen.toCharArray()) {
+            if (c == '/') {
+                continue;
+            }
 
-                    if (Character.isLetter(c)) {
-                        counter.set(counter.get() + 1);
-                        Piece piece = AlgebraicNotation.fromSymbol(String.valueOf(c));
+            if (c == ' ') {
+                break;
+            }
 
-                        fieldMap.put(coordinate, new Field(coordinate, piece));
-                        return;
-                    }
+            Coordinate coordinate = coordinates[pos];
 
-                    assert Character.isDigit(c);
+            if (Character.isLetter(c)) {
+                pos++;
+                Piece piece = AlgebraicNotation.fromSymbol(String.valueOf(c));
+                fieldMap.put(coordinate, new Field(coordinate, piece));
+                continue;
+            }
 
-                    fieldMap.put(coordinate, new Field(coordinate, null));
-                    counter.set(counter.get() + 1);
+            fieldMap.put(coordinate, new Field(coordinate, null));
+            pos++;
 
-                    for (int i = 1; i < c; i++) {
-                        Coordinate nextCoordinate = coordinates[counter.getAndIncrement()];
-                        fieldMap.put(nextCoordinate, new Field(nextCoordinate, null));
-                    }
-                });
+            for (int i = 1; i < c; i++) {
+                Coordinate nextCoordinate = coordinates[pos++];
+                fieldMap.put(nextCoordinate, new Field(nextCoordinate, null));
+            }
+        }
     }
 }
