@@ -6,7 +6,7 @@ import core.project.chess.domain.subdomains.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.services.ChessBoardNavigator;
-import core.project.chess.domain.subdomains.chess.services.ChessNotationValidator;
+import core.project.chess.domain.subdomains.chess.services.ChessNotationsValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
@@ -234,7 +234,7 @@ public record Pawn(Color color)
         Objects.requireNonNull(algebraicNotationVO);
 
         final String algebraicNotation = algebraicNotationVO.algebraicNotation();
-        if (!ChessNotationValidator.isSimplePawnMovement(algebraicNotation)) {
+        if (!ChessNotationsValidator.isSimplePawnMovement(algebraicNotation)) {
             return false;
         }
 

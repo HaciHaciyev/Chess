@@ -3,7 +3,7 @@ package core.project.chess.domain.subdomains.chess.entities;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.pieces.*;
-import core.project.chess.domain.subdomains.chess.services.ChessNotationValidator;
+import core.project.chess.domain.subdomains.chess.services.ChessNotationsValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
@@ -103,7 +103,7 @@ public class AlgebraicNotation {
             throw new IllegalArgumentException("Algebraic notation can`t be black.");
         }
 
-        ChessNotationValidator.validateAlgebraicNotation(algebraicNotation);
+        ChessNotationsValidator.validateAlgebraicNotation(algebraicNotation);
 
         return new AlgebraicNotation(algebraicNotation);
     }
@@ -352,6 +352,28 @@ public class AlgebraicNotation {
         };
     }
 
+    public static byte pieceRank(Piece piece) {
+        return switch (piece) {
+            case Pawn pawn -> 1;
+            case Knight knight -> 2;
+            case Bishop bishop -> 3;
+            case Rook rook -> 4;
+            case Queen queen -> 5;
+            default -> throw new IllegalStateException("Unexpected value: " + piece);
+        };
+    }
+
+    public static byte pieceRank(PieceTYPE piece) {
+        return switch (piece) {
+            case PieceTYPE.P -> 1;
+            case PieceTYPE.N -> 2;
+            case PieceTYPE.B -> 3;
+            case PieceTYPE.R -> 4;
+            case PieceTYPE.Q -> 5;
+            default -> throw new IllegalStateException("Unexpected value: " + piece);
+        };
+    }
+
     /**
      * Determines the type of castling move (short or long) based on the ending coordinate.
      *
@@ -425,7 +447,7 @@ public class AlgebraicNotation {
      * @throws IllegalStateException if the promotion type is unexpected.
      */
     public StatusPair<PieceTYPE> promotionType() {
-        if (ChessNotationValidator.isPromotion(this.algebraicNotation) && ChessNotationValidator.isPromotionPlusOperation(this.algebraicNotation)) {
+        if (ChessNotationsValidator.isPromotion(this.algebraicNotation) && ChessNotationsValidator.isPromotionPlusOperation(this.algebraicNotation)) {
             final char promotionType = this.algebraicNotation.charAt(6);
 
             return switch (promotionType) {

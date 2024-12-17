@@ -19,9 +19,6 @@ import lombok.Getter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static core.project.chess.domain.subdomains.chess.enumerations.GameResultMessage.*;
@@ -313,7 +310,6 @@ public class ChessGame {
         }
 
         gameOver(Operations.STALEMATE);
-        return;
     }
 
     public void agreement(final String username) {
@@ -527,7 +523,7 @@ public class ChessGame {
                 Thread.currentThread().interrupt();
             }
 
-            Log.infof("Stopping -> %s", name);
+//            Log.infof("Stopping -> %s", name);
         }
 
         public Duration remainingTime() {
@@ -541,9 +537,9 @@ public class ChessGame {
                 return;
             }
 
-            if (!isPaused.get()) {
-                Log.infof("starting {%s}", name);
-            }
+//            if (!isPaused.get()) {
+//                Log.infof("starting {%s}", name);
+//            }
 
             isRunning.set(true);
 
@@ -577,7 +573,7 @@ public class ChessGame {
             isRunning.set(false);
             timerThread.interrupt();
 
-            Log.infof("%s is terminated? -> %s", name, timerThread.isAlive());
+//            Log.infof("%s is terminated? -> %s", name, timerThread.isAlive());
         }
     }
 }

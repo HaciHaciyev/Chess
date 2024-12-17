@@ -155,6 +155,16 @@ public record King(Color color)
         return checkOrMate(boardNavigator, kingColor, latestMovement);
     }
 
+    // TODO for AinGrace
+    public boolean checkmate(final ChessBoard chessBoard) {
+        return false;
+    }
+
+    // TODO for AinGrace
+    public boolean stalemate(final ChessBoard chessBoard) {
+        return false;
+    }
+
     /**
      * Determines if the current position is a stalemate.
      *

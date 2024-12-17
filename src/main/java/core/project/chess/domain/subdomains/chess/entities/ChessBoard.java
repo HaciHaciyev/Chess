@@ -4,7 +4,7 @@ import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.subdomains.chess.pieces.*;
-import core.project.chess.domain.subdomains.chess.services.ChessNotationValidator;
+import core.project.chess.domain.subdomains.chess.services.ChessNotationsValidator;
 import core.project.chess.domain.subdomains.chess.value_objects.FromFEN;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
@@ -60,8 +60,8 @@ import static core.project.chess.domain.subdomains.chess.entities.ChessBoard.Ope
 public class ChessBoard {
     private final @Getter UUID chessBoardId;
     private Color figuresTurn;
-    private byte ruleOf50MovesForWhite;
-    private byte ruleOf50MovesForBlack;
+    private byte ruleOf50Moves;
+    private byte countOfFullMoves;
     private byte materialAdvantageOfWhite;
     private byte materialAdvantageOfBlack;
     private boolean validWhiteShortCasting;
@@ -85,27 +85,24 @@ public class ChessBoard {
      * @param initializationTYPE       The type of initialization for the chess board.
      * @param inCaseOfInitFromFEN      The data for initialization of chess board from FEN.
      */
-    private ChessBoard(
-            final UUID chessBoardId, final InitializationTYPE initializationTYPE, @Nullable final FromFEN inCaseOfInitFromFEN
-    ) {
+    private ChessBoard(final UUID chessBoardId, final InitializationTYPE initializationTYPE, @Nullable final FromFEN inCaseOfInitFromFEN) {
         Objects.requireNonNull(chessBoardId);
         Objects.requireNonNull(initializationTYPE);
 
         this.chessBoardId = chessBoardId;
         this.initializationTYPE = initializationTYPE;
         this.fieldMap = new EnumMap<>(Coordinate.class);
+        this.listOfAlgebraicNotations = new ArrayList<>();
+        this.fenRepresentationsOfBoard = new ArrayList<>(10);
+        this.hashCodeOfBoard = new HashMap<>(10, 0.75f);
 
         if (InitializationTYPE.STANDARD.equals(initializationTYPE)) {
-            this.listOfAlgebraicNotations = new ArrayList<>();
-            this.fenRepresentationsOfBoard = new ArrayList<>(10);
-            this.hashCodeOfBoard = new HashMap<>(10, 0.75f);
-
             this.figuresTurn = Color.WHITE;
             this.currentWhiteKingPosition = Coordinate.e1;
             this.currentBlackKingPosition = Coordinate.e8;
 
-            this.ruleOf50MovesForWhite = 0;
-            this.ruleOf50MovesForBlack = 0;
+            this.ruleOf50Moves = 0;
+            this.countOfFullMoves = 0;
             this.materialAdvantageOfWhite = 39;
             this.materialAdvantageOfBlack = 39;
 
@@ -119,17 +116,18 @@ public class ChessBoard {
         }
 
         Objects.requireNonNull(inCaseOfInitFromFEN);
+        String FEN = inCaseOfInitFromFEN.fen();
 
-        this.listOfAlgebraicNotations = inCaseOfInitFromFEN.pgn();
-        this.hashCodeOfBoard = inCaseOfInitFromFEN.hashCodeOfBoard();
-        this.fenRepresentationsOfBoard = (ArrayList<String>) inCaseOfInitFromFEN.fenRepresentationsOfBoard();
+        String currentPositionHash = FEN.substring(0, FEN.length() - 6);
+        hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
+        fenRepresentationsOfBoard.add(FEN);
 
         this.figuresTurn = inCaseOfInitFromFEN.figuresTurn();
         this.currentWhiteKingPosition = inCaseOfInitFromFEN.whiteKing();
         this.currentBlackKingPosition = inCaseOfInitFromFEN.blackKing();
 
-        this.ruleOf50MovesForWhite = inCaseOfInitFromFEN.ruleOf50MovesForWhite();
-        this.ruleOf50MovesForBlack = inCaseOfInitFromFEN.ruleOf50MovesForBlack();
+        this.ruleOf50Moves = inCaseOfInitFromFEN.ruleOf50Moves();
+        this.countOfFullMoves = inCaseOfInitFromFEN.countOfFullMoves();
         this.materialAdvantageOfWhite = inCaseOfInitFromFEN.materialAdvantageOfWhite();
         this.materialAdvantageOfBlack = inCaseOfInitFromFEN.materialAdvantageOfBlack();
 
@@ -138,7 +136,8 @@ public class ChessBoard {
         this.validBlackShortCasting = inCaseOfInitFromFEN.validBlackShortCasting();
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
 
-        initializerFromFEN(inCaseOfInitFromFEN.fen());
+        initializerFromFEN(FEN);
+        validateStalemateAndCheckmate();
     }
 
     /**
@@ -156,7 +155,6 @@ public class ChessBoard {
      * Factory method.
      * Creates a new ChessBoard instance from a specific position defined by FEN notation.
      *
-     * @param chessBoardId The unique identifier of the chess board.
      * @param fen The FEN notation representing the current position of the board.
      * @return A new ChessBoard instance initialized from the provided FEN notation.
      * @throws IllegalArgumentException If the provided FEN notation are invalid.
@@ -167,7 +165,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid FEN.");
         }
 
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, null);
+        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, statusPair.orElseThrow());
     }
 
     private static StatusPair<FromFEN> validateNotations(String fen) {
@@ -175,7 +173,7 @@ public class ChessBoard {
             return StatusPair.ofFalse();
         }
 
-        return ChessNotationValidator.validateFEN(fen);
+        return ChessNotationsValidator.validateFEN(fen);
     }
 
     /**
@@ -261,10 +259,28 @@ public class ChessBoard {
      */
     public String actualRepresentationOfChessBoard() {
         if (fenRepresentationsOfBoard.isEmpty()) {
-            return this.toString();
+            return FEN();
         }
 
         return fenRepresentationsOfBoard.getLast();
+    }
+
+    private String FEN() {
+        return new StringBuilder(this.toString())
+                .append(" ")
+                .append(this.ruleOf50Moves)
+                .append(" ")
+                .append(this.countOfFullMoves)
+                .toString();
+    }
+
+    private String FEN(final String hashCodeOfBoard) {
+        return new StringBuilder(hashCodeOfBoard)
+                .append(" ")
+                .append(this.ruleOf50Moves)
+                .append(" ")
+                .append(this.countOfFullMoves)
+                .toString();
     }
 
     /**
@@ -617,49 +633,21 @@ public class ChessBoard {
      * Updates the count of moves for the 50-move rule based on the current piece and operations performed.
      * <p>
      * The 50-move rule states that a player can claim a draw if no pawn has been moved and no capture has been made
-     * in the last 50 moves. This method checks the current piece and the operations performed during the turn to
-     * determine whether to increment the move counters for the respective player (White or Black).
+     * in the last 50 full moves. This method checks the current piece and the operations performed during the turn to
+     * determine whether to increment the move counters.
      *
      * @param piece The piece that is currently being moved. This is used to check if the piece is a pawn.
      * @param operations A set of operations that were performed during the turn. This is used to check if a capture
      *                   occurred.
-     *
-     * <p>
-     * The method works as follows:
-     * <ul>
-     *     <li>If the current piece is a pawn and no capture operation is present, the method increments the move
-     *         counter for the respective player (White or Black).</li>
-     *     <li>If the current piece is a pawn or a capture operation has occurred, the method resets the move counter
-     *         for the respective player to zero.</li>
-     * </ul>
-     * </p>
-     *
-     * <p>
-     * Note: The counters for the 50-move rule are maintained separately for White and Black, allowing each player
-     * to track their own move counts independently.
      * </p>
      */
     private void ruleOf50MovesAbility(final Piece piece, final Set<Operations> operations) {
         if (!operations.contains(CAPTURE) && piece instanceof Pawn) {
-
-            if (figuresTurn.equals(Color.WHITE)) {
-                ruleOf50MovesForWhite++;
-            }
-
-            if (figuresTurn.equals(Color.BLACK)) {
-                ruleOf50MovesForBlack++;
-            }
+            this.ruleOf50Moves++;
         }
 
         if (piece instanceof Pawn || operations.contains(CAPTURE)) {
-
-            if (figuresTurn.equals(Color.WHITE)) {
-                ruleOf50MovesForWhite = 0;
-            }
-
-            if (figuresTurn.equals(Color.BLACK)) {
-                ruleOf50MovesForBlack = 0;
-            }
+            this.ruleOf50Moves = 0;
         }
     }
 
@@ -767,6 +755,31 @@ public class ChessBoard {
         return validBlackLongCasting;
     }
 
+    private void validateStalemateAndCheckmate() {
+        final King whiteKing = theKing(Color.WHITE);
+        final King blackKing = theKing(Color.BLACK);
+
+        final boolean checkmateForWhite = whiteKing.checkmate(this);
+        if (checkmateForWhite) {
+            throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
+        }
+
+        final boolean checkmateForBlack = blackKing.checkmate(this);
+        if (checkmateForBlack) {
+            throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
+        }
+
+        final boolean stalemateForWhite = whiteKing.stalemate(this);
+        if (stalemateForWhite) {
+            throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
+        }
+
+        final boolean stalemateForBlack = blackKing.stalemate(this);
+        if (stalemateForBlack) {
+            throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
+        }
+    }
+
     /**
      * Processes a piece repositioning on the chess board.
      *
@@ -819,6 +832,7 @@ public class ChessBoard {
         }
 
         /** Process operations from StatusPair. All validation need to be processed before that.*/
+        this.countOfFullMoves++;
         final Set<Operations> operations = statusPair.orElseThrow();
 
         startField.removeFigure();
@@ -865,8 +879,7 @@ public class ChessBoard {
 
         /** Recording the move made in algebraic notation and Fen.*/
         final String currentPositionHash = this.toString();
-        fenRepresentationsOfBoard.add(currentPositionHash);
-
+        fenRepresentationsOfBoard.add(FEN(currentPositionHash));
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
         final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
@@ -891,7 +904,7 @@ public class ChessBoard {
             return GameResultMessage.InsufficientMatingMaterial;
         }
 
-        if (ruleOf50MovesForWhite == 50 && ruleOf50MovesForBlack == 50) {
+        if (ruleOf50Moves == 100) {
             return GameResultMessage.RuleOf50Moves;
         }
 
@@ -964,6 +977,7 @@ public class ChessBoard {
         final Set<Operations> operations = statusPair.orElseThrow();
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
+        this.countOfFullMoves++;
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
 
@@ -995,8 +1009,7 @@ public class ChessBoard {
 
         /** Recording the move made in algebraic notation.*/
         final String currentPositionHash = toString();
-        fenRepresentationsOfBoard.add(currentPositionHash);
-
+        fenRepresentationsOfBoard.add(FEN(currentPositionHash));
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
 
         listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
@@ -1012,7 +1025,7 @@ public class ChessBoard {
             return GameResultMessage.Checkmate;
         }
 
-        if (ruleOf50MovesForWhite == 50 && ruleOf50MovesForBlack == 50) {
+        if (ruleOf50Moves == 100) {
             return GameResultMessage.RuleOf50Moves;
         }
 
@@ -1085,6 +1098,8 @@ public class ChessBoard {
             return false;
         }
 
+        this.countOfFullMoves--;
+
         final String currentPositionHash = fenRepresentationsOfBoard.getLast();
         final AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
         final StatusPair<AlgebraicNotation.Castle> isCastling = AlgebraicNotation.isCastling(lastMovement);
@@ -1111,12 +1126,7 @@ public class ChessBoard {
         }
 
         if (!isCapture && !(piece instanceof Pawn)){
-
-            if (this.figuresTurn.equals(Color.WHITE)) {
-                ruleOf50MovesForBlack--;
-            } else {
-                ruleOf50MovesForWhite--;
-            }
+            this.ruleOf50Moves--;
         }
 
         fenRepresentationsOfBoard.removeLast();
@@ -1502,10 +1512,7 @@ public class ChessBoard {
             final Coordinate to = lastMovement.orElseThrow().getSecond();
 
             final Coordinate intermediateFieldOfPassage = Coordinate
-                    .of(
-                            to.getRow() == 4 ? to.getRow() - 1 : to.getRow() + 1,
-                            to.columnToInt()
-                    )
+                    .of(to.getRow() == 4 ? to.getRow() - 1 : to.getRow() + 1, to.columnToInt())
                     .orElseThrow();
 
             final String result = " " + intermediateFieldOfPassage.getColumn() + intermediateFieldOfPassage.getRow();
@@ -1614,16 +1621,5 @@ public class ChessBoard {
                         fieldMap.put(nextCoordinate, new Field(nextCoordinate, null));
                     }
                 });
-    }
-
-    private int pieceRank(Piece piece) {
-        return switch (piece) {
-            case Pawn pawn -> 1;
-            case Knight knight -> 2;
-            case Bishop bishop -> 3;
-            case Rook rook -> 4;
-            case Queen queen -> 5;
-            default -> throw new IllegalStateException("Unexpected value: " + piece);
-        };
     }
 }
