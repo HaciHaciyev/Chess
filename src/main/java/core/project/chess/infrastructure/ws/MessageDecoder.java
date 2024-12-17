@@ -2,6 +2,7 @@ package core.project.chess.infrastructure.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.dto.chess.Message;
+import io.quarkus.logging.Log;
 import jakarta.websocket.DecodeException;
 import jakarta.websocket.Decoder;
 
@@ -20,6 +21,7 @@ public class MessageDecoder implements Decoder.Text<Message> {
         try {
             return objectMapper.readValue(json, Message.class);
         } catch (Exception e) {
+            Log.errorf("can't decode %s", json);
             throw new DecodeException(json, "Unable to decode JSON", e);
         }
     }
