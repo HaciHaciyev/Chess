@@ -6,9 +6,7 @@ import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.value_objects.FromFEN;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,7 +28,6 @@ import static core.project.chess.domain.subdomains.chess.entities.AlgebraicNotat
  *
  * @author Hadzhyiev Hadzhy
  */
-@Slf4j
 public class ChessNotationsValidator {
 
     private ChessNotationsValidator() {}
@@ -43,10 +40,10 @@ public class ChessNotationsValidator {
 
     private static final Pattern coordinatePattern = Pattern.compile("\\b[a-h][1-8]\\b");
 
-    private static final  Pattern patternOf50MovesRuleOnFEN = Pattern.compile("(\\d{1,2})");
+    private static final  Pattern patternOf50MovesRuleOnFEN = Pattern.compile("( \\d)");
 
-    // TODO AinGrace, check this regex
-    private static final String FEN_FORMAT = "^((([pnbrqkPNBRQK1-8]{1,8})/){7}([pnbrqkPNBRQK1-8]{1,8}))\\s([wb])\\s(-|[KQkq]{1,4})\\s(-|[a-h][36])\\s(\\d+)\\s(\\d+)$";
+    // TODO AinGrace, check this regex. SPlit regex
+    private static final String FEN_FORMAT = "^((([pnbrqkPNBRQK1-8]{1,8})/){7}([pnbrqkPNBRQK1-8]{1,8}))\\s([wb])\\s(-|[KQkq]{1,4})((\\s-)|(\\s[a-h][36])){1,2}?(\\s(\\d+)\\s(\\d+))?$";
 
     public static StatusPair<FromFEN> validateFEN(final String fen) {
         if (!Pattern.matches(FEN_FORMAT, fen)) {
@@ -276,7 +273,7 @@ public class ChessNotationsValidator {
         final Matcher matcher = coordinatePattern.matcher(tail);
         final Optional<Coordinate> passage = matcher.find() ? Optional.of(Coordinate.valueOf(matcher.group())) : Optional.empty();
 
-        final boolean invalidRowForCaptureOnPassage = passage.isPresent() && (passage.get().getRow() != 3 && passage.get().getColumn() != 6);
+        final boolean invalidRowForCaptureOnPassage = passage.isPresent() && (passage.get().getRow() != 3 && passage.get().getRow() != 6);
         if (invalidRowForCaptureOnPassage) {
             return StatusPair.ofFalse();
         }
@@ -322,11 +319,10 @@ public class ChessNotationsValidator {
         int row = 8;
         String[] boardRows = board.split("/");
         for (String s : boardRows) {
-
             int columnNum = 1;
             for (char c : s.toCharArray()) {
                 if (Character.isDigit(c)) {
-                    columnNum += c;
+                    columnNum += Character.getNumericValue(c);
                     if (columnNum > 8) {
                         return StatusPair.ofFalse();
                     }
@@ -345,12 +341,12 @@ public class ChessNotationsValidator {
                         if (isWhiteKingExists) {
                             return StatusPair.ofFalse();
                         }
-                        final boolean isKingAbleToShortCastle = shortWhiteCastling && !coordinate.equals(Coordinate.e1);
-                        if (isKingAbleToShortCastle) {
+                        final boolean isInvalidKingShortCastleCoordinate = shortWhiteCastling && !coordinate.equals(Coordinate.e1);
+                        if (isInvalidKingShortCastleCoordinate) {
                             return StatusPair.ofFalse();
                         }
-                        final boolean isKingAbleToLongCastle = longWhiteCastling && !coordinate.equals(Coordinate.e1);
-                        if (isKingAbleToLongCastle) {
+                        final boolean isInvalidKingLongCastleCoordinate = longWhiteCastling && !coordinate.equals(Coordinate.e1);
+                        if (isInvalidKingLongCastleCoordinate) {
                             return StatusPair.ofFalse();
                         }
 
@@ -361,12 +357,12 @@ public class ChessNotationsValidator {
                         if (isBlackKingExists) {
                             return StatusPair.ofFalse();
                         }
-                        final boolean isKingAbleToShortCastle = shortBlackCastling && !coordinate.equals(Coordinate.e8);
-                        if (isKingAbleToShortCastle) {
+                        final boolean isInvalidKingShortCastleCoordinate = shortBlackCastling && !coordinate.equals(Coordinate.e8);
+                        if (isInvalidKingShortCastleCoordinate) {
                             return StatusPair.ofFalse();
                         }
-                        final boolean isKingAbleToLongCastle = longBlackCastling && !coordinate.equals(Coordinate.e8);
-                        if (isKingAbleToLongCastle) {
+                        final boolean isInvalidKingLongCastleCoordinate = longBlackCastling && !coordinate.equals(Coordinate.e8);
+                        if (isInvalidKingLongCastleCoordinate) {
                             return StatusPair.ofFalse();
                         }
 
@@ -471,7 +467,7 @@ public class ChessNotationsValidator {
             }
 
             row--;
-            if (row < 1) {
+            if (row < 0) {
                 return StatusPair.ofFalse();
             }
         }
@@ -500,13 +496,19 @@ public class ChessNotationsValidator {
                 Optional.empty() :
                 Optional.of(passageCoordinates(passage.orElseThrow()));
 
+        Matcher match = patternOf50MovesRuleOnFEN.matcher(tail);
+        byte countOfFullMoves = 1;
+        if (match.find()) {
+            countOfFullMoves = Byte.parseByte(match.group(2).strip());
+        }
+
         final FromFEN result = new FromFEN(
                 fen,
                 moveTurn,
                 whiteKingCoordinate,
                 blackKingCoordinate,
                 fiftyMovesRule.orElseThrow(),
-                Byte.parseByte(tail.substring(tail.length() - 2)),
+                countOfFullMoves,
                 materialAdvantageOfWhite,
                 materialAdvantageOfBlack,
                 shortWhiteCastling,
@@ -544,8 +546,9 @@ public class ChessNotationsValidator {
             if (moveCount >= 0 && moveCount < 100) {
                 return StatusPair.ofTrue(moveCount);
             }
+            return StatusPair.ofFalse();
         }
 
-        return StatusPair.ofFalse();
+        return StatusPair.ofTrue((byte) 0);
     }
 }
