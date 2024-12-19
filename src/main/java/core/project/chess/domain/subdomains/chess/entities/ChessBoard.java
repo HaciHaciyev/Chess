@@ -1483,21 +1483,14 @@ public class ChessBoard {
         if (validWhiteLongCasting) {
             fen.append("Q");
         }
-        if (!validWhiteShortCasting && !validWhiteLongCasting) {
-            if (fen.charAt(fen.length() - 1) == ' ') {
-                fen.append("- ");
-            } else {
-                fen.append(" - ");
-            }
-        }
-
         if (validBlackShortCasting) {
             fen.append("k");
         }
         if (validBlackLongCasting) {
             fen.append("q");
         }
-        if (!validBlackShortCasting && !validBlackLongCasting) {
+
+        if (!validWhiteShortCasting && !validWhiteLongCasting && !validBlackLongCasting && !validBlackShortCasting) {
             if (fen.charAt(fen.length() - 1) == ' ') {
                 fen.append("- ");
             } else {
@@ -1506,15 +1499,32 @@ public class ChessBoard {
         }
 
         final var lastMovement = latestMovement();
-        if (latestMovement().isPresent() && new Pawn(Color.WHITE).previousMoveWasPassage(this)) {
-            final Coordinate to = lastMovement.orElseThrow().getSecond();
+        if (lastMovement.isEmpty()) {
+            if (fen.charAt(fen.length() - 1) == ' ') {
+                fen.append("- ");
+            } else {
+                fen.append(" - ");
+            }
+        }
 
-            final Coordinate intermediateFieldOfPassage = Coordinate
-                    .of(to.getRow() == 4 ? to.getRow() - 1 : to.getRow() + 1, to.columnToInt())
-                    .orElseThrow();
+        if (latestMovement().isPresent()) {
+            final boolean previousMoveWasPassage = new Pawn(Color.WHITE).previousMoveWasPassage(this);
+            if (previousMoveWasPassage) {
+                final Coordinate to = lastMovement.orElseThrow().getSecond();
 
-            final String result = " " + intermediateFieldOfPassage.getColumn() + intermediateFieldOfPassage.getRow();
-            fen.append(result);
+                final Coordinate intermediateFieldOfPassage = Coordinate
+                        .of(to.getRow() == 4 ? to.getRow() - 1 : to.getRow() + 1, to.columnToInt())
+                        .orElseThrow();
+
+                final String result = " " + intermediateFieldOfPassage.getColumn() + intermediateFieldOfPassage.getRow();
+                fen.append(result);
+            } else {
+                if (fen.charAt(fen.length() - 1) == ' ') {
+                    fen.append("- ");
+                } else {
+                    fen.append(" - ");
+                }
+            }
         }
 
         return fen.toString();
