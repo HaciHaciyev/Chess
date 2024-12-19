@@ -9,6 +9,7 @@ import core.project.chess.domain.subdomains.chess.enumerations.Direction;
 import core.project.chess.domain.subdomains.chess.services.ChessBoardNavigator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import jakarta.annotation.Nullable;
 
 import java.util.*;
 
@@ -150,33 +151,31 @@ public record King(Color color)
      * - {Operations.CHECKMATE} if the king is in checkmate after the move,
      * - {Operations.EMPTY} if the king is not in check or checkmate.
      */
-    public Operations kingStatus(final ChessBoard chessBoard, final Color kingColor, final Pair<Coordinate, Coordinate> latestMovement) {
+    public Operations kingStatus(final ChessBoard chessBoard, final Color kingColor, @Nullable final Pair<Coordinate, Coordinate> latestMovement) {
         ChessBoardNavigator boardNavigator = new ChessBoardNavigator(chessBoard);
         return checkOrMate(boardNavigator, kingColor, latestMovement);
-    }
-
-    // TODO for AinGrace
-    public boolean checkmate(final ChessBoard chessBoard) {
-        return false;
-    }
-
-    // TODO for AinGrace
-    public boolean stalemate(final ChessBoard chessBoard) {
-        return false;
     }
 
     /**
      * Determines if the current position is a stalemate.
      *
      * @param chessBoard The current state of the chess board.
-     * @param color      color of the king
+     * @param color      The color of the king whose stalemate status is being checked.
+     * @param latestMovement The latest movement made on the chessboard, represented as a pair of coordinates,
+     *                       or {@code null} if the last move is guaranteed not to involve a pawn's en passant.
      * @return true if the position is a stalemate, false otherwise.
      * <p>
      * This method checks if the current position is a stalemate, meaning the player has no legal moves
      * and their king is not in check. It evaluates the surrounding fields of the king to determine if
      * they are blocked or dangerous, and checks all friendly fields to see if any legal moves are available.
+     * <p>
+     * Note: The parameter {@code latestMovement} is used solely for validating pawn moves,
+     * particularly for en passant captures. It has no impact on other pieces' movement checks.
      */
-    public boolean stalemate(final ChessBoard chessBoard, final Color color, final Pair<Coordinate, Coordinate> latestMovement) {
+    public boolean stalemate(final ChessBoard chessBoard, final Color color, @Nullable final Pair<Coordinate, Coordinate> latestMovement) {
+        Objects.requireNonNull(chessBoard);
+        Objects.requireNonNull(color);
+
         final ChessBoardNavigator boardNavigator = new ChessBoardNavigator(chessBoard);
         final Coordinate kingCoordinate = boardNavigator.kingCoordinate(color);
 
@@ -204,7 +203,8 @@ public record King(Color color)
         return true;
     }
 
-    private boolean processStalemate(final ChessBoardNavigator boardNavigator, final Field ourField, final Pair<Coordinate, Coordinate> latestMovement) {
+    private boolean processStalemate(final ChessBoardNavigator boardNavigator, final Field ourField,
+                                     @Nullable final Pair<Coordinate, Coordinate> latestMovement) {
         final Piece piece = ourField.pieceOptional().orElseThrow();
         final Coordinate coordinate = ourField.getCoordinate();
         final ChessBoard board = boardNavigator.board();
@@ -312,7 +312,9 @@ public record King(Color color)
         return enemies;
     }
 
-    private Operations checkOrMate(final ChessBoardNavigator boardNavigator, final Color kingColor, final Pair<Coordinate, Coordinate> latestMovement) {
+    private Operations checkOrMate(final ChessBoardNavigator boardNavigator,
+                                   final Color kingColor,
+                                   @Nullable final Pair<Coordinate, Coordinate> latestMovement) {
         final List<Field> enemies = check(boardNavigator, kingColor);
         if (enemies.isEmpty()) {
             return Operations.EMPTY;
@@ -601,11 +603,13 @@ public record King(Color color)
         return true;
     }
 
-    private boolean canEat(final ChessBoardNavigator boardNavigator, final Field enemyField,
-                           final Color kingColor, final Pair<Coordinate, Coordinate> latestMovement) {
+    private boolean canEat(final ChessBoardNavigator boardNavigator,
+                           final Field enemyField,
+                           final Color kingColor,
+                           @Nullable final Pair<Coordinate, Coordinate> latestMovement) {
 
         final boolean kingAttackedByPawn = enemyField.pieceOptional().orElseThrow() instanceof Pawn;
-        if (kingAttackedByPawn) {
+        if (kingAttackedByPawn && Objects.nonNull(latestMovement)) {
             final Coordinate startOfLastMove = latestMovement.getFirst();
             final Coordinate endOfLastMove = latestMovement.getSecond();
 

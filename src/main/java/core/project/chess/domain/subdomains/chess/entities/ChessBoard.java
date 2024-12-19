@@ -137,7 +137,7 @@ public class ChessBoard {
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
 
         initializerFromFEN(FEN);
-        validateStalemateAndCheckmate();
+        validateStalemateAndCheckmate(inCaseOfInitFromFEN);
     }
 
     /**
@@ -590,22 +590,21 @@ public class ChessBoard {
                 validWhiteShortCasting = false;
             }
 
-        } else {
+            return;
+        }
 
-            if (piece instanceof King) {
-                this.validBlackShortCasting = false;
-                this.validBlackLongCasting = false;
-                return;
-            }
+        if (piece instanceof King) {
+            this.validBlackShortCasting = false;
+            this.validBlackLongCasting = false;
+            return;
+        }
 
-            if (from.equals(Coordinate.a8)) {
-                validBlackLongCasting = false;
-            }
+        if (from.equals(Coordinate.a8)) {
+            validBlackLongCasting = false;
+        }
 
-            if (from.equals(Coordinate.h8)) {
-                validBlackShortCasting = false;
-            }
-
+        if (from.equals(Coordinate.h8)) {
+            validBlackShortCasting = false;
         }
     }
 
@@ -755,26 +754,28 @@ public class ChessBoard {
         return validBlackLongCasting;
     }
 
-    private void validateStalemateAndCheckmate() {
+    private void validateStalemateAndCheckmate(FromFEN fromFEN) {
+        final Optional<Pair<Coordinate, Coordinate>> lastMove = fromFEN.isLastMovementWasPassage();
+        final Pair<Coordinate, Coordinate> latestMovement = lastMove.isEmpty() ? null : lastMove.orElseThrow();
         final King whiteKing = theKing(Color.WHITE);
         final King blackKing = theKing(Color.BLACK);
 
-        final boolean checkmateForWhite = whiteKing.checkmate(this);
-        if (checkmateForWhite) {
+        final Operations checkmateForWhite = whiteKing.kingStatus(this, Color.WHITE, latestMovement);
+        if (!checkmateForWhite.equals(Operations.CHECKMATE)) {
             throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
         }
 
-        final boolean checkmateForBlack = blackKing.checkmate(this);
-        if (checkmateForBlack) {
+        final Operations checkmateForBlack = blackKing.kingStatus(this, Color.BLACK, latestMovement);
+        if (!checkmateForBlack.equals(Operations.CHECKMATE)) {
             throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
         }
 
-        final boolean stalemateForWhite = whiteKing.stalemate(this);
+        final boolean stalemateForWhite = whiteKing.stalemate(this, Color.WHITE, latestMovement);
         if (stalemateForWhite) {
             throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
         }
 
-        final boolean stalemateForBlack = blackKing.stalemate(this);
+        final boolean stalemateForBlack = blackKing.stalemate(this, Color.BLACK, latestMovement);
         if (stalemateForBlack) {
             throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
         }
@@ -900,7 +901,11 @@ public class ChessBoard {
             return GameResultMessage.Continue;
         }
 
-        if (materialAdvantageOfWhite <= 3 && materialAdvantageOfBlack <= 3 && !isAtLeastOnePawnOnBoard()) {
+        final boolean insufficientMatingMaterial = (materialAdvantageOfWhite <= 3 && materialAdvantageOfBlack == 0 ||
+                materialAdvantageOfWhite == 0 && materialAdvantageOfBlack <= 3) &&
+                !isAtLeastOnePawnOnBoard();
+
+        if (insufficientMatingMaterial) {
             return GameResultMessage.InsufficientMatingMaterial;
         }
 
@@ -1436,16 +1441,12 @@ public class ChessBoard {
                 if (countOfEmptyFields == 0) {
                     fen.append("/");
                 } else {
-                    fen
-                            .append(countOfEmptyFields)
-                            .append("/");
-
+                    fen.append(countOfEmptyFields).append("/");
                     countOfEmptyFields = 0;
                 }
             }
 
             final Field field = fieldMap.get(coordinate);
-
             if (field.isEmpty()) {
                 countOfEmptyFields++;
             }
@@ -1453,23 +1454,12 @@ public class ChessBoard {
             if (countOfEmptyFields == 8) {
                 fen.append(countOfEmptyFields);
                 countOfEmptyFields = 0;
-            }
-
-            else if (field.isPresent()) {
-
+            } else if (field.isPresent()) {
                 if (countOfEmptyFields != 0) {
-                    fen
-                            .append(countOfEmptyFields)
-                            .append(
-                                    convertPieceToHash(field.pieceOptional().orElseThrow())
-                            );
-
+                    fen.append(countOfEmptyFields).append(convertPieceToHash(field.pieceOptional().orElseThrow()));
                     countOfEmptyFields = 0;
                 } else {
-                    fen
-                            .append(
-                                    convertPieceToHash(field.pieceOptional().orElseThrow())
-                            );
+                    fen.append(convertPieceToHash(field.pieceOptional().orElseThrow()));
                 }
             }
         }
@@ -1494,7 +1484,11 @@ public class ChessBoard {
             fen.append("Q");
         }
         if (!validWhiteShortCasting && !validWhiteLongCasting) {
-            fen.append("- ");
+            if (fen.charAt(fen.length() - 1) == ' ') {
+                fen.append("- ");
+            } else {
+                fen.append(" - ");
+            }
         }
 
         if (validBlackShortCasting) {
@@ -1504,7 +1498,11 @@ public class ChessBoard {
             fen.append("q");
         }
         if (!validBlackShortCasting && !validBlackLongCasting) {
-            fen.append("- ");
+            if (fen.charAt(fen.length() - 1) == ' ') {
+                fen.append("- ");
+            } else {
+                fen.append(" - ");
+            }
         }
 
         final var lastMovement = latestMovement();

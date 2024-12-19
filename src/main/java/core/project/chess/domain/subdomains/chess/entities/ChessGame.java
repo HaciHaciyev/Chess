@@ -509,8 +509,6 @@ public class ChessGame {
 
                     Duration remaining = remainingTime();
 
-//                    Log.infof("remaining time -> %s", remaining.toString());
-
                     if (remaining.isNegative() || remaining.isZero()) {
                         onComplete.run();
                         stop();
@@ -523,7 +521,6 @@ public class ChessGame {
                 Thread.currentThread().interrupt();
             }
 
-//            Log.infof("Stopping -> %s", name);
         }
 
         public Duration remainingTime() {
@@ -537,14 +534,10 @@ public class ChessGame {
                 return;
             }
 
-//            if (!isPaused.get()) {
-//                Log.infof("starting {%s}", name);
-//            }
 
             isRunning.set(true);
 
             if (isPaused.get()) {
-//                Log.infof("resuming {%s}", name);
                 Duration pauseDuration = Duration.between(pauseTime, Instant.now());
                 startTime = startTime.plus(pauseDuration);
                 isPaused.set(false);
@@ -563,7 +556,6 @@ public class ChessGame {
 
         public void pause() {
             if (isRunning.get() && !isPaused.get()) {
-//                Log.infof("pausing {%s}...", name);
                 pauseTime = Instant.now();
                 isPaused.set(true);
             }
@@ -572,8 +564,6 @@ public class ChessGame {
         public void stop() {
             isRunning.set(false);
             timerThread.interrupt();
-
-//            Log.infof("%s is terminated? -> %s", name, timerThread.isAlive());
         }
     }
 }

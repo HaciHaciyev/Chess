@@ -9,6 +9,7 @@ import core.project.chess.domain.subdomains.chess.services.ChessBoardNavigator;
 import core.project.chess.domain.subdomains.chess.services.ChessNotationsValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import jakarta.annotation.Nullable;
 
 import java.util.*;
 
@@ -108,20 +109,23 @@ public record Pawn(Color color)
      * <p>
      * This method checks all possible moves for the given pawn, including straight moves, diagonal captures,
      * passage moves, and captures on passage. If none of these moves are valid, the method returns true.
+     * <p>
+     * Note: The parameter {@code latestMovement} may be {@code null} only if the caller is certain that the latest move
+     * was not an en passant move. Otherwise, {@code latestMovement} should always represent the last move made on the board.
      *
      * @param boardNavigator An instance of ChessBoardNavigator that provides navigation functionality for the chessboard.
      * @param ourField The field on the chessboard where the pawn is currently located.
      * @param kingColor The color of the king that the pawn belongs to.
-     * @param latestMovement The latest movement made on the chessboard, represented as a pair of coordinates.
+     * @param latestMovement The latest movement made on the chessboard, represented as a pair of coordinates, or {@code null} if the last move was definitely not en passant.
      * @param pawn The pawn piece that is being checked for valid moves.
      * @return true if the pawn has no valid moves, false otherwise.
      */
     public boolean isPawnOnStalemate(final ChessBoardNavigator boardNavigator, final Field ourField,
-                                     final Color kingColor, final Pair<Coordinate, Coordinate> latestMovement, final Pawn pawn) {
+                                     final Color kingColor, @Nullable final Pair<Coordinate, Coordinate> latestMovement,
+                                     final Pawn pawn) {
         Objects.requireNonNull(boardNavigator);
         Objects.requireNonNull(ourField);
         Objects.requireNonNull(kingColor);
-        Objects.requireNonNull(latestMovement);
         Objects.requireNonNull(pawn);
 
         final ChessBoard chessBoard = boardNavigator.board();
@@ -148,10 +152,8 @@ public record Pawn(Color color)
             }
 
             final boolean diagonalCapture = Math.abs(startColumn - endColumn) == 1 && Math.abs(startRow - endRow) == 1;
-            if (
-                    diagonalCapture && endFieldOccupied && !endFieldOccupiedByAllies &&
-                            king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)
-            ) {
+            if (diagonalCapture && endFieldOccupied && !endFieldOccupiedByAllies &&
+                    king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)) {
                 return false;
             }
 
@@ -167,7 +169,7 @@ public record Pawn(Color color)
                 }
             }
 
-            final boolean isCaptureOnPassage = isValidCaptureOnPassage(latestMovement, currentCoordinate, pawn.color());
+            final boolean isCaptureOnPassage = Objects.nonNull(latestMovement) && isValidCaptureOnPassage(latestMovement, currentCoordinate, pawn.color());
             if (isCaptureOnPassage && !endFieldOccupied && king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)) {
                 return false;
             }
