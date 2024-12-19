@@ -28,6 +28,22 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ChessGameTest {
 
     @Test
+    void pgnUtil() {
+        final String pgn = """
+                1. d2-d4 Ng8-f6 2. c2-c4 e7-e6 3. Ng1-f3 d7-d5 4. Nb1-c3 c7-c5 5. c4xd5 c5xd4 6. Qd1xd4 e6xd5 7. Bc1-g5 Bf8-e7 8. e2-e3 O-O 9. Bf1-e2 Nb8-c6 10. Qd4-d3 h7-h6 11. Bg5-h4 Qd8-b6 12. O-O Rf8-d8 13. Rf1-d1 Qb6xb2 14. Ra1-b1 Qb2-a3 15. Bh4xf6 Be7xf6 16. Nc3xd5 Qa3xd3 17. Nd5xf6+ g7xf6 18. Rd1xd3 Bc8-f5 19. Rd3xd8+ Nc6xd8 20. Rb1-b2 Ra8-c8 21. h2-h4 Rc8-c1+ 22. Kg1-h2 Rc1-b1 23. Rb2xb1 Bf5xb1 24. a2-a3 Kg8-f8 25. g2-g4 Nd8-e6 26. Kh2-g3 Kf8-e7 27. Nf3-d2 Bb1-c2 28. f2-f4 Ne6-c5 29. Kg3-f3 Nc5-b3 30. Nd2xb3 Bc2xb3 31. Kf3-e4 Bb3-e6 32. Ke4-d4 b7-b6 33. e3-e4 a7-a5 34. e4-e5 f6xe5+ 35. Kd4xe5 f7-f6+ 36. Ke5-d4 Be6-d7 37. g4-g5 f6xg5 38. h4xg5 h6xg5 39. f4xg5 b6-b5 40. Kd4-c5 b5-b4 41. a3xb4 a5xb4 42. Be2-c4 Bd7-e6 43. Kc5xb4 Be6xc4 44. Kb4xc4 Ke7-e6 45. g5-g6 Ke6-f6 46. Kc4-d4 Kf6xg6
+                """;
+
+        final String result = pgn.replaceAll("(-)(?![O-])", "");
+        Log.info(result);
+    }
+
+    @Test
+    @Disabled("For single purposes.")
+    void temp() {
+        executeGamesFromPGN("src/main/resources/pgn/temp.pgn", true, true, true);
+    }
+
+    @Test
     @Disabled("...")
     @DisplayName("Test chess game with many invalid moves.")
     void testChessGame() {
@@ -49,8 +65,8 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/pgn/lichess_2013_january_lalg.pgn",
                 false,
-                false
-        );
+                false,
+                false);
     }
 
     @Test
@@ -76,8 +92,8 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Berliner_lalg.pgn",
                 false,
-                false
-        );
+                false,
+                false);
     }
 
     @Test
@@ -105,8 +121,8 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Mamedyarov_lalg.pgn",
                 false,
-                false
-        );
+                false,
+                false);
     }
 
     @Test
@@ -132,8 +148,8 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Hikaru_lalg.pgn",
                 false,
-                false
-        );
+                false,
+                false);
     }
 
     @Test
@@ -158,8 +174,8 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/Magnus_lalg.pgn",
                 false,
-                false
-        );
+                false,
+                false);
     }
 
     @Test
@@ -184,8 +200,8 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/chess/pgn/lichess_2013_january_checkmates_lalg.pgn",
                 false,
-                true
-        );
+                true,
+                false);
     }
 
     @Test
@@ -209,8 +225,8 @@ public class ChessGameTest {
         executeGamesFromPGN(
                 "src/main/resources/pgn/lichess_2013_january_stalemates_lalg.pgn",
                 false,
-                true
-        );
+                true,
+                false);
     }
 
     @Test
@@ -276,21 +292,22 @@ public class ChessGameTest {
         System.out.println(navigator.board().listOfAlgebraicNotations());
     }
 
-    public static void executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions) {
+    public static void executeGamesFromPGN(String path, boolean enableLogging, boolean enableAssertions, boolean enablePGN) {
         List<String> strings = SimplePGNReader.extractFromPGN(path);
         int pgnNum = 1;
         for (String pgn : strings) {
 
             try {
-                executeGameFromPGN(pgn, pgnNum, enableLogging, enableAssertions);
+                executeGameFromPGN(pgn, pgnNum, enableLogging, enableAssertions, enablePGN);
             } catch (AssertionFailedError | IllegalStateException e) {
-                Log.info(e.getMessage());
+                Log.error(e.getMessage());
+                throw new IllegalStateException(e.getMessage());
             }
             pgnNum++;
         }
     }
 
-    public static void executeGameFromPGN(String pgn, int pgnNum, boolean enableLogging, boolean enableAssertions) {
+    public static void executeGameFromPGN(String pgn, int pgnNum, boolean enableLogging, boolean enableAssertions, boolean enablePGN) {
         ChessGame game = defaultChessGameSupplier().get();
 
         String white = game.getPlayerForWhite().getUsername().username();
@@ -299,7 +316,7 @@ public class ChessGameTest {
         ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
 
         if (enableLogging) {
-            Log.info("reading game#" + pgnNum);
+            Log.infof("Reading game#%s.", pgnNum);
         }
 
         SimplePGNReader pgnReader = new SimplePGNReader(pgn);
@@ -313,19 +330,17 @@ public class ChessGameTest {
 
             moveNum++;
             if (enableLogging) {
-                Log.info(
-                        String.format("Cite: %s. Game: %d. Movement: %d.", pgnReader.tag("Site"), pgnNum, moveNum)
-                );
+                Log.infof("Cite: %s. Game: %d. Movement: %d.", pgnReader.tag("Site"), pgnNum, moveNum);
             }
 
             if (enableLogging) {
-                Log.info("White: " + move.white());
+                Log.infof("White: %s", move.white());
             }
             try {
                 var whiteMessage = game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
 
                 if (enableLogging) {
-                    Log.info("Movement result for white: " + whiteMessage);
+                    Log.infof("Movement result for white: %s", whiteMessage);
                 }
 
                 if (enableLogging) {
@@ -344,12 +359,16 @@ public class ChessGameTest {
 
                 if (enableLogging) {
                     System.out.println(navigator.prettyToString());
+
+                    if (enablePGN) {
+                        System.out.println();
+                        System.out.println(navigator.board().pgn());
+                    }
                 }
 
                 if (enableLogging) {
-                    Log.info("Movement result for black: " + blackMessage);
+                    Log.infof("Movement result for black: %s.", blackMessage);
                 }
-
             } catch (IllegalStateException e) {
                 String err = """
                 
@@ -363,6 +382,7 @@ public class ChessGameTest {
 
         String result = pgnReader.tag("Result");
 
+        Log.infof("Chessland PGN: %s.", game.getChessBoard().pgn());
         if (enableLogging) {
             Log.info("Result of PGN: " + result);
             Log.info("Game status: " + game.gameResult());

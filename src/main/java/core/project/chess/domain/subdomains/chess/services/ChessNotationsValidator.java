@@ -4,6 +4,7 @@ import core.project.chess.domain.subdomains.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.value_objects.FromFEN;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import lombok.extern.slf4j.Slf4j;
 
@@ -495,6 +496,10 @@ public class ChessNotationsValidator {
             return StatusPair.ofFalse();
         }
 
+        final Optional<Pair<Coordinate, Coordinate>> isLastMovementWasPassage = passage.isEmpty() ?
+                Optional.empty() :
+                Optional.of(passageCoordinates(passage.orElseThrow()));
+
         final FromFEN result = new FromFEN(
                 fen,
                 moveTurn,
@@ -507,10 +512,28 @@ public class ChessNotationsValidator {
                 shortWhiteCastling,
                 shortBlackCastling,
                 longWhiteCastling,
-                longBlackCastling
+                longBlackCastling,
+                isLastMovementWasPassage
         );
 
         return StatusPair.ofTrue(result);
+    }
+
+    private static Pair<Coordinate, Coordinate> passageCoordinates(Coordinate passageCaptureCoordinate) {
+        final int row = passageCaptureCoordinate.getRow();
+        final int column = passageCaptureCoordinate.columnToInt();
+
+        int startRow = row;
+        int endRow = row;
+        if (row == 3) {
+            startRow--;
+            endRow++;
+        } else {
+            startRow++;
+            endRow--;
+        }
+
+        return Pair.of(Coordinate.of(startRow, column).orElseThrow(), Coordinate.of(endRow, column).orElseThrow());
     }
 
     public static StatusPair<Byte> validateFiftyMovesRule(String tail) {

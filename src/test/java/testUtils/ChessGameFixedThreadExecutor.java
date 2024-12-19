@@ -97,7 +97,7 @@ public final class ChessGameFixedThreadExecutor {
 
         Log.info("Total game executions: " + totalGameExecutions);
         Log.info("Failures: " + totalGameFailures);
-        gameFailures.forEach(Log::info);
+        gameFailures.forEach(Log::error);
 
         return gameFailures.isEmpty();
     }
@@ -199,7 +199,7 @@ public final class ChessGameFixedThreadExecutor {
             totalGameExecutions.incrementAndGet();
 
             try {
-                executeGameFromPGN(pgn, gameNum++, enableGameLogging, enableAssertions);
+                executeGameFromPGN(pgn, gameNum++, enableGameLogging, enableAssertions, false);
             } catch (AssertionFailedError | IllegalStateException e) {
                 totalGameFailures.incrementAndGet();
                 gameFailures.offer(e.getMessage());

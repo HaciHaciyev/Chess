@@ -2,6 +2,9 @@ package core.project.chess.domain.subdomains.chess.value_objects;
 
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
+import core.project.chess.infrastructure.utilities.containers.Pair;
+
+import java.util.Optional;
 
 public record FromFEN(String fen,
                       Color figuresTurn,
@@ -14,4 +17,5 @@ public record FromFEN(String fen,
                       boolean validWhiteShortCasting,
                       boolean validBlackShortCasting,
                       boolean validWhiteLongCasting,
-                      boolean validBlackLongCasting) {}
+                      boolean validBlackLongCasting,
+                      Optional<Pair<Coordinate, Coordinate>> isLastMovementWasPassage) {}
