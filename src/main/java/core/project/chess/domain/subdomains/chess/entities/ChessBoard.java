@@ -102,7 +102,7 @@ public class ChessBoard {
             this.currentBlackKingPosition = Coordinate.e8;
 
             this.ruleOf50Moves = 0;
-            this.countOfFullMoves = 0;
+            this.countOfFullMoves = 1;
             this.materialAdvantageOfWhite = 39;
             this.materialAdvantageOfBlack = 39;
 
