@@ -382,8 +382,8 @@ public class ChessGameTest {
 
         String result = pgnReader.tag("Result");
 
-        Log.infof("Chessland PGN: %s.", game.getChessBoard().pgn());
         if (enableLogging) {
+            Log.infof("Chessland PGN: %s.", game.getChessBoard().pgn());
             Log.info("Result of PGN: " + result);
             Log.info("Game status: " + game.gameResult());
             System.out.println();
