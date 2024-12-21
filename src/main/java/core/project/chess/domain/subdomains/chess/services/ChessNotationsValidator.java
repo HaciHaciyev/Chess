@@ -1,10 +1,8 @@
 package core.project.chess.domain.subdomains.chess.services;
 
-import core.project.chess.domain.subdomains.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.value_objects.FromFEN;
-import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
 import java.util.Optional;
@@ -38,11 +36,8 @@ public class ChessNotationsValidator {
 
     private static final String PAWN_START_MOVEMENT_COORDINATES = "[a-h][2-7]";
 
-    private static final Pattern coordinatePattern = Pattern.compile("\\b[a-h][1-8]\\b");
+    private static final Pattern passageCoordinatePattern = Pattern.compile("\\b[a-h][36]\\b");
 
-    private static final  Pattern patternOf50MovesRuleOnFEN = Pattern.compile("( \\d)");
-
-    // TODO AinGrace, check this regex. SPlit regex
     private static final String FEN_FORMAT = "^((([pnbrqkPNBRQK1-8]{1,8})/){7}([pnbrqkPNBRQK1-8]{1,8}))\\s([wb])\\s(-|[KQkq]{1,4})((\\s-)|(\\s[a-h][36])){1,2}?(\\s(\\d+)\\s(\\d+))?$";
 
     public static StatusPair<FromFEN> validateFEN(final String fen) {
@@ -50,7 +45,7 @@ public class ChessNotationsValidator {
             return StatusPair.ofFalse();
         }
 
-        return validate(fen);
+        return validateForsythEdwardsNotation(fen);
     }
 
     public static void validateAlgebraicNotation(String algebraicNotation) {
@@ -258,7 +253,23 @@ public class ChessNotationsValidator {
         }
     }
 
-    private static StatusPair<FromFEN> validate(String fen) {
+    private static StatusPair<FromFEN> validateForsythEdwardsNotation(String fen) {
+        final String[] split = fen.split(" ", 2);
+        final String board = split[0];
+        final String tail = split[1];
+
+        final Color activeColor = fen.contains("w") ? Color.WHITE : Color.BLACK;
+        final Optional<Coordinate> passagePawnCaptureCoord = getPassagePawnCaptureCoord(tail);
+
+        return null;
+    }
+
+    private static Optional<Coordinate> getPassagePawnCaptureCoord(String tail) {
+        final Matcher matcher = passageCoordinatePattern.matcher(tail);
+        return matcher.find() ? Optional.of(Coordinate.valueOf(matcher.group())) : Optional.empty();
+    }
+
+    /**private static StatusPair<FromFEN> validate(String fen) {
         final String[] split = fen.split(" ", 2);
         final String board = split[0];
         final String tail = split[1];
@@ -270,7 +281,7 @@ public class ChessNotationsValidator {
             return StatusPair.ofFalse();
         }
 
-        final Matcher matcher = coordinatePattern.matcher(tail);
+        final Matcher matcher = passageCoordinatePattern.matcher(tail);
         final Optional<Coordinate> passage = matcher.find() ? Optional.of(Coordinate.valueOf(matcher.group())) : Optional.empty();
 
         final boolean invalidRowForCaptureOnPassage = passage.isPresent() && (passage.get().getRow() != 3 && passage.get().getRow() != 6);
@@ -507,8 +518,6 @@ public class ChessNotationsValidator {
                 moveTurn,
                 whiteKingCoordinate,
                 blackKingCoordinate,
-                fiftyMovesRule.orElseThrow(),
-                countOfFullMoves,
                 materialAdvantageOfWhite,
                 materialAdvantageOfBlack,
                 shortWhiteCastling,
@@ -550,5 +559,5 @@ public class ChessNotationsValidator {
         }
 
         return StatusPair.ofTrue((byte) 0);
-    }
+    }*/
 }

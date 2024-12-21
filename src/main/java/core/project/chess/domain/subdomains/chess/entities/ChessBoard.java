@@ -13,9 +13,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static core.project.chess.domain.subdomains.chess.entities.ChessBoard.Operations.*;
+import static core.project.chess.domain.subdomains.chess.enumerations.Color.BLACK;
+import static core.project.chess.domain.subdomains.chess.enumerations.Color.WHITE;
 
 /**
  * The `ChessBoard` class represents the central entity of the Chess Aggregate. It encapsulates the state and behavior of a chess board,
@@ -62,6 +63,7 @@ public class ChessBoard {
     private Color figuresTurn;
     private byte ruleOf50Moves;
     private byte countOfFullMoves;
+    private final boolean isPureChess;
     private byte materialAdvantageOfWhite;
     private byte materialAdvantageOfBlack;
     private boolean validWhiteShortCasting;
@@ -81,15 +83,24 @@ public class ChessBoard {
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
      *
-     * @param chessBoardId             The unique identifier of the chess board.
-     * @param initializationTYPE       The type of initialization for the chess board.
-     * @param inCaseOfInitFromFEN      The data for initialization of chess board from FEN.
+     * @param chessBoardId        The unique identifier of the chess board.
+     * @param initializationTYPE  The type of initialization for the chess board.
+     * @param inCaseOfInitFromFEN The data for initialization of chess board from FEN.
+     * @param isPureChess         The data which disables the following chess rules:
+     *      - insufficient mating material;
+     *      - three-fold rule;
+     *      - fifty moves rule.
      */
-    private ChessBoard(final UUID chessBoardId, final InitializationTYPE initializationTYPE, @Nullable final FromFEN inCaseOfInitFromFEN) {
+    private ChessBoard(
+            final UUID chessBoardId, final InitializationTYPE initializationTYPE, @Nullable final FromFEN inCaseOfInitFromFEN, boolean isPureChess
+    ) {
         Objects.requireNonNull(chessBoardId);
         Objects.requireNonNull(initializationTYPE);
 
         this.chessBoardId = chessBoardId;
+        this.ruleOf50Moves = 0;
+        this.countOfFullMoves = 1;
+        this.isPureChess = isPureChess;
         this.initializationTYPE = initializationTYPE;
         this.fieldMap = new EnumMap<>(Coordinate.class);
         this.listOfAlgebraicNotations = new ArrayList<>();
@@ -97,12 +108,10 @@ public class ChessBoard {
         this.hashCodeOfBoard = new HashMap<>(10, 0.75f);
 
         if (InitializationTYPE.STANDARD.equals(initializationTYPE)) {
-            this.figuresTurn = Color.WHITE;
+            this.figuresTurn = WHITE;
             this.currentWhiteKingPosition = Coordinate.e1;
             this.currentBlackKingPosition = Coordinate.e8;
 
-            this.ruleOf50Moves = 0;
-            this.countOfFullMoves = 1;
             this.materialAdvantageOfWhite = 39;
             this.materialAdvantageOfBlack = 39;
 
@@ -126,8 +135,6 @@ public class ChessBoard {
         this.currentWhiteKingPosition = inCaseOfInitFromFEN.whiteKing();
         this.currentBlackKingPosition = inCaseOfInitFromFEN.blackKing();
 
-        this.ruleOf50Moves = inCaseOfInitFromFEN.ruleOf50Moves();
-        this.countOfFullMoves = inCaseOfInitFromFEN.countOfFullMoves();
         this.materialAdvantageOfWhite = inCaseOfInitFromFEN.materialAdvantageOfWhite();
         this.materialAdvantageOfBlack = inCaseOfInitFromFEN.materialAdvantageOfBlack();
 
@@ -148,12 +155,29 @@ public class ChessBoard {
      * @return A new `ChessBoard` instance with the standard chess board initialization.
      */
     public static ChessBoard starndardChessBoard(final UUID chessBoardId) {
-        return new ChessBoard(chessBoardId, InitializationTYPE.STANDARD, null);
+        return new ChessBoard(chessBoardId, InitializationTYPE.STANDARD, null, false);
+    }
+
+    /**
+     *  Factory method.
+     *   Creates a new `ChessBoard` instance with the chess board which will ignore next logic:
+     *      - insufficient mating material;
+     *      - three-fold rule;
+     *      - fifty moves rule.
+     *
+     *  @param chessBoardId The unique identifier of the chess board.
+     *  @return A new `ChessBoard` instance with the standard chess board initialization.
+     */
+    public static ChessBoard pureChess(final UUID chessBoardId) {
+        return new ChessBoard(chessBoardId, InitializationTYPE.STANDARD, null, true);
     }
 
     /**
      * Factory method.
-     * Creates a new ChessBoard instance from a specific position defined by FEN notation.
+     * Creates a new ChessBoard instance from a specific position defined by FEN notation which will ignore next logic:
+     *      - insufficient mating material;
+     *      - three-fold rule;
+     *      - fifty moves rule.
      *
      * @param fen The FEN notation representing the current position of the board.
      * @return A new ChessBoard instance initialized from the provided FEN notation.
@@ -165,8 +189,27 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid FEN.");
         }
 
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, statusPair.orElseThrow());
+        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, statusPair.orElseThrow(), false);
     }
+
+    /**
+     * Factory method.
+     * Creates a new ChessBoard instance from a specific position defined by FEN notation.
+     *
+     * @param fen The FEN notation representing the current position of the board.
+     * @return A new ChessBoard instance initialized from the provided FEN notation.
+     *
+     * @throws IllegalArgumentException If the provided FEN notation are invalid.
+     */
+    public static ChessBoard fromPositionPureChess(final UUID chessBoardId, final String fen) {
+        StatusPair<FromFEN> statusPair = validateNotations(fen);
+        if (!statusPair.status()) {
+            throw new IllegalArgumentException("Invalid FEN.");
+        }
+
+        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, statusPair.orElseThrow(), true);
+    }
+
 
     private static StatusPair<FromFEN> validateNotations(String fen) {
         if (Objects.isNull(fen) || fen.isBlank()) {
@@ -407,7 +450,7 @@ public class ChessBoard {
      */
     public King theKing(final Color kingColor) {
         Objects.requireNonNull(kingColor);
-        return kingColor.equals(Color.WHITE) ?
+        return kingColor.equals(WHITE) ?
 
                 (King) fieldMap
                         .get(currentWhiteKingPosition)
@@ -425,10 +468,10 @@ public class ChessBoard {
     }
 
     private void switchFiguresTurn() {
-        if (figuresTurn.equals(Color.WHITE)) {
-            figuresTurn = Color.BLACK;
+        if (figuresTurn.equals(WHITE)) {
+            figuresTurn = BLACK;
         } else {
-            figuresTurn = Color.WHITE;
+            figuresTurn = WHITE;
         }
     }
 
@@ -453,7 +496,7 @@ public class ChessBoard {
      * @param coordinate  The new coordinate of the king.
      */
     private void changedKingPosition(final King king, final Coordinate coordinate) {
-        if (king.color().equals(Color.WHITE)) {
+        if (king.color().equals(WHITE)) {
             this.currentWhiteKingPosition = coordinate;
         } else {
             this.currentBlackKingPosition = coordinate;
@@ -472,11 +515,11 @@ public class ChessBoard {
     private void changeInMaterialAdvantage(final Piece removedPiece) {
         final byte price = materialAdvantageOfFigure(removedPiece);
 
-        if (removedPiece.color().equals(Color.WHITE)) {
+        if (removedPiece.color().equals(WHITE)) {
             materialAdvantageOfWhite -= price;
         }
 
-        if (removedPiece.color().equals(Color.BLACK)) {
+        if (removedPiece.color().equals(BLACK)) {
             materialAdvantageOfBlack -= price;
         }
     }
@@ -498,12 +541,12 @@ public class ChessBoard {
 
         final byte price = materialAdvantageOfFigure(promotionFigure);
 
-        if (promotionFigure.color().equals(Color.WHITE)) {
+        if (promotionFigure.color().equals(WHITE)) {
             materialAdvantageOfWhite -= 1;
             materialAdvantageOfBlack += price;
         }
 
-        if (promotionFigure.color().equals(Color.BLACK)) {
+        if (promotionFigure.color().equals(BLACK)) {
             materialAdvantageOfBlack -= 1;
             materialAdvantageOfWhite += price;
         }
@@ -543,11 +586,11 @@ public class ChessBoard {
                 return false;
             }
 
-            if (piece.color().equals(Color.WHITE) && lastMoveEnd.getRow() - to.getRow() == -1) {
+            if (piece.color().equals(WHITE) && lastMoveEnd.getRow() - to.getRow() == -1) {
                 return true;
             }
 
-            return piece.color().equals(Color.BLACK) && lastMoveEnd.getRow() - to.getRow() == 1;
+            return piece.color().equals(BLACK) && lastMoveEnd.getRow() - to.getRow() == 1;
         }
 
         return false;
@@ -573,7 +616,7 @@ public class ChessBoard {
 
         final Color color = piece.color();
 
-        final boolean whiteColorFigure = color.equals(Color.WHITE);
+        final boolean whiteColorFigure = color.equals(WHITE);
         if (whiteColorFigure) {
 
             if (piece instanceof King) {
@@ -659,14 +702,14 @@ public class ChessBoard {
     private Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle) {
         final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
         if (shortCastling) {
-            if (figuresTurn.equals(Color.WHITE)) {
+            if (figuresTurn.equals(WHITE)) {
                 return Pair.of(Coordinate.e1, Coordinate.h1);
             } else {
                 return Pair.of(Coordinate.e8, Coordinate.h8);
             }
         }
 
-        if (figuresTurn.equals(Color.WHITE)) {
+        if (figuresTurn.equals(WHITE)) {
             return Pair.of(Coordinate.e1, Coordinate.a1);
         } else {
             return Pair.of(Coordinate.e1, Coordinate.a8);
@@ -738,16 +781,16 @@ public class ChessBoard {
         final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(castle);
         if (shortCasting) {
 
-            if (color.equals(Color.WHITE)) {
+            if (color.equals(WHITE)) {
                 return validWhiteShortCasting;
             }
 
-            if (color.equals(Color.BLACK)) {
+            if (color.equals(BLACK)) {
                 return validBlackShortCasting;
             }
         }
 
-        if (color.equals(Color.WHITE)) {
+        if (color.equals(WHITE)) {
             return validWhiteLongCasting;
         }
 
@@ -755,27 +798,28 @@ public class ChessBoard {
     }
 
     private void validateStalemateAndCheckmate(FromFEN fromFEN) {
+        final Color activeColor = fromFEN.figuresTurn();
         final Optional<Pair<Coordinate, Coordinate>> lastMove = fromFEN.isLastMovementWasPassage();
         final Pair<Coordinate, Coordinate> latestMovement = lastMove.isEmpty() ? null : lastMove.orElseThrow();
-        final King whiteKing = theKing(Color.WHITE);
-        final King blackKing = theKing(Color.BLACK);
+        final King whiteKing = theKing(WHITE);
+        final King blackKing = theKing(BLACK);
 
-        final Operations checkmateForWhite = whiteKing.kingStatus(this, Color.WHITE, latestMovement);
-        if (!checkmateForWhite.equals(Operations.CHECKMATE)) {
+        final Operations checkOrMateForWhite = whiteKing.kingStatus(this, WHITE, latestMovement);
+        if (checkOrMateForWhite.equals(CHECKMATE) || !activeColor.equals(WHITE) && checkOrMateForWhite.equals(CHECK)) {
             throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
         }
 
-        final Operations checkmateForBlack = blackKing.kingStatus(this, Color.BLACK, latestMovement);
-        if (!checkmateForBlack.equals(Operations.CHECKMATE)) {
+        final Operations checkOrMateForBlack = blackKing.kingStatus(this, BLACK, latestMovement);
+        if (checkOrMateForBlack.equals(CHECKMATE) || !activeColor.equals(BLACK) && checkOrMateForBlack.equals(CHECK)) {
             throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
         }
 
-        final boolean stalemateForWhite = whiteKing.stalemate(this, Color.WHITE, latestMovement);
+        final boolean stalemateForWhite = activeColor.equals(WHITE) && whiteKing.stalemate(this, WHITE, latestMovement);
         if (stalemateForWhite) {
             throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
         }
 
-        final boolean stalemateForBlack = blackKing.stalemate(this, Color.BLACK, latestMovement);
+        final boolean stalemateForBlack = activeColor.equals(BLACK) && blackKing.stalemate(this, BLACK, latestMovement);
         if (stalemateForBlack) {
             throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
         }
@@ -854,7 +898,7 @@ public class ChessBoard {
         }
 
         /** Check for Checkmate, Stalemate, Check after move executed...*/
-        final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
+        final King opponentKing = theKing(piece.color().equals(WHITE) ? BLACK : WHITE);
 
         operations.add(
                 opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
@@ -901,19 +945,20 @@ public class ChessBoard {
             return GameResultMessage.Continue;
         }
 
-        final boolean insufficientMatingMaterial = (materialAdvantageOfWhite <= 3 && materialAdvantageOfBlack == 0 ||
+        final boolean insufficientMatingMaterial = !isPureChess &&
+                ((materialAdvantageOfWhite <= 3 && materialAdvantageOfBlack == 0 ||
                 materialAdvantageOfWhite == 0 && materialAdvantageOfBlack <= 3) &&
-                !isAtLeastOnePawnOnBoard();
+                !isAtLeastOnePawnOnBoard());
 
         if (insufficientMatingMaterial) {
             return GameResultMessage.InsufficientMatingMaterial;
         }
 
-        if (ruleOf50Moves == 100) {
+        if (!isPureChess && ruleOf50Moves == 100) {
             return GameResultMessage.RuleOf50Moves;
         }
 
-        if (hashCodeOfBoard.get(currentPositionHash) == 3) {
+        if (!isPureChess && hashCodeOfBoard.get(currentPositionHash) == 3) {
             return GameResultMessage.RuleOf3EqualsPositions;
         }
 
@@ -925,11 +970,11 @@ public class ChessBoard {
         if (captureOnPassage) {
             Field field = fieldMap.get(latestMovement().orElseThrow().getSecond());
 
-            if (piece.color().equals(Color.WHITE)) {
+            if (piece.color().equals(WHITE)) {
                 capturedWhitePieces.add(field.piece);
             }
 
-            if (piece.color().equals(Color.BLACK)) {
+            if (piece.color().equals(BLACK)) {
                 capturedBlackPieces.add(field.piece);
             }
 
@@ -938,11 +983,11 @@ public class ChessBoard {
             return;
         }
 
-        if (piece.color().equals(Color.WHITE)) {
+        if (piece.color().equals(WHITE)) {
             capturedWhitePieces.add(endField.piece);
         }
 
-        if (piece.color().equals(Color.BLACK)) {
+        if (piece.color().equals(BLACK)) {
             capturedBlackPieces.add(endField.piece);
         }
 
@@ -994,7 +1039,7 @@ public class ChessBoard {
         }
 
         /** Check for Checkmate, Stalemate, Check after move executed...*/
-        final King opponentKing = theKing(piece.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE);
+        final King opponentKing = theKing(piece.color().equals(WHITE) ? BLACK : WHITE);
 
         operations.add(
                 opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
@@ -1030,11 +1075,11 @@ public class ChessBoard {
             return GameResultMessage.Checkmate;
         }
 
-        if (ruleOf50Moves == 100) {
+        if (!isPureChess && ruleOf50Moves == 100) {
             return GameResultMessage.RuleOf50Moves;
         }
 
-        if (hashCodeOfBoard.get(currentPositionHash) == 3) {
+        if (!isPureChess && hashCodeOfBoard.get(currentPositionHash) == 3) {
             return GameResultMessage.RuleOf3EqualsPositions;
         }
 
@@ -1255,7 +1300,7 @@ public class ChessBoard {
         }
 
         final Piece previouslyCapturedPiece;
-        if (figuresTurn.equals(Color.WHITE)) {
+        if (figuresTurn.equals(WHITE)) {
             previouslyCapturedPiece = capturedBlackPieces.removeLast();
             endedField.addFigure(previouslyCapturedPiece);
             return;
@@ -1293,13 +1338,13 @@ public class ChessBoard {
             return false;
         }
 
-        if (piece.color().equals(Color.WHITE)) {
+        if (piece.color().equals(WHITE)) {
             final boolean isValidRows = endRow - passageEnd.getRow() == 1;
             if (!isValidRows) {
                 return false;
             }
 
-            fieldMap.get(passageEnd).addFigure(new Pawn(Color.BLACK));
+            fieldMap.get(passageEnd).addFigure(new Pawn(BLACK));
             return true;
         }
 
@@ -1308,7 +1353,7 @@ public class ChessBoard {
             return false;
         }
 
-        fieldMap.get(passageEnd).addFigure(new Pawn(Color.WHITE));
+        fieldMap.get(passageEnd).addFigure(new Pawn(WHITE));
         return true;
     }
 
@@ -1469,7 +1514,7 @@ public class ChessBoard {
         }
 
         fen.append(" ");
-        if (figuresTurn.equals(Color.WHITE)) {
+        if (figuresTurn.equals(WHITE)) {
             fen.append("w");
         } else {
             fen.append("b");
@@ -1508,7 +1553,7 @@ public class ChessBoard {
         }
 
         if (latestMovement().isPresent()) {
-            final boolean previousMoveWasPassage = new Pawn(Color.WHITE).previousMoveWasPassage(this);
+            final boolean previousMoveWasPassage = new Pawn(WHITE).previousMoveWasPassage(this);
             if (previousMoveWasPassage) {
                 final Coordinate to = lastMovement.orElseThrow().getSecond();
 
@@ -1532,12 +1577,12 @@ public class ChessBoard {
 
     private String convertPieceToHash(final Piece piece) {
         return switch (piece) {
-            case King(Color color) -> color.equals(Color.WHITE) ? "K" : "k";
-            case Queen(Color color) -> color.equals(Color.WHITE) ? "Q" : "q";
-            case Rook(Color color) -> color.equals(Color.WHITE) ? "R" : "r";
-            case Bishop(Color color) -> color.equals(Color.WHITE) ? "B" : "b";
-            case Knight(Color color) -> color.equals(Color.WHITE) ? "N" : "n";
-            case Pawn(Color color) -> color.equals(Color.WHITE) ? "P" : "p";
+            case King(Color color) -> color.equals(WHITE) ? "K" : "k";
+            case Queen(Color color) -> color.equals(WHITE) ? "Q" : "q";
+            case Rook(Color color) -> color.equals(WHITE) ? "R" : "r";
+            case Bishop(Color color) -> color.equals(WHITE) ? "B" : "b";
+            case Knight(Color color) -> color.equals(WHITE) ? "N" : "n";
+            case Pawn(Color color) -> color.equals(WHITE) ? "P" : "p";
         };
     }
 
@@ -1549,22 +1594,22 @@ public class ChessBoard {
      * The remaining fields are left empty.
      */
     private void standardInitializer() {
-        fieldMap.put(Coordinate.a1, new Field(Coordinate.a1, new Rook(Color.WHITE)));
-        fieldMap.put(Coordinate.b1, new Field(Coordinate.b1, new Knight(Color.WHITE)));
-        fieldMap.put(Coordinate.c1, new Field(Coordinate.c1, new Bishop(Color.WHITE)));
-        fieldMap.put(Coordinate.d1, new Field(Coordinate.d1, new Queen(Color.WHITE)));
-        fieldMap.put(Coordinate.e1, new Field(Coordinate.e1, new King(Color.WHITE)));
-        fieldMap.put(Coordinate.f1, new Field(Coordinate.f1, new Bishop(Color.WHITE)));
-        fieldMap.put(Coordinate.g1, new Field(Coordinate.g1, new Knight(Color.WHITE)));
-        fieldMap.put(Coordinate.h1, new Field(Coordinate.h1, new Rook(Color.WHITE)));
-        fieldMap.put(Coordinate.a8, new Field(Coordinate.a8, new Rook(Color.BLACK)));
-        fieldMap.put(Coordinate.b8, new Field(Coordinate.b8, new Knight(Color.BLACK)));
-        fieldMap.put(Coordinate.c8, new Field(Coordinate.c8, new Bishop(Color.BLACK)));
-        fieldMap.put(Coordinate.d8, new Field(Coordinate.d8, new Queen(Color.BLACK)));
-        fieldMap.put(Coordinate.e8, new Field(Coordinate.e8, new King(Color.BLACK)));
-        fieldMap.put(Coordinate.f8, new Field(Coordinate.f8, new Bishop(Color.BLACK)));
-        fieldMap.put(Coordinate.g8, new Field(Coordinate.g8, new Knight(Color.BLACK)));
-        fieldMap.put(Coordinate.h8, new Field(Coordinate.h8, new Rook(Color.BLACK)));
+        fieldMap.put(Coordinate.a1, new Field(Coordinate.a1, new Rook(WHITE)));
+        fieldMap.put(Coordinate.b1, new Field(Coordinate.b1, new Knight(WHITE)));
+        fieldMap.put(Coordinate.c1, new Field(Coordinate.c1, new Bishop(WHITE)));
+        fieldMap.put(Coordinate.d1, new Field(Coordinate.d1, new Queen(WHITE)));
+        fieldMap.put(Coordinate.e1, new Field(Coordinate.e1, new King(WHITE)));
+        fieldMap.put(Coordinate.f1, new Field(Coordinate.f1, new Bishop(WHITE)));
+        fieldMap.put(Coordinate.g1, new Field(Coordinate.g1, new Knight(WHITE)));
+        fieldMap.put(Coordinate.h1, new Field(Coordinate.h1, new Rook(WHITE)));
+        fieldMap.put(Coordinate.a8, new Field(Coordinate.a8, new Rook(BLACK)));
+        fieldMap.put(Coordinate.b8, new Field(Coordinate.b8, new Knight(BLACK)));
+        fieldMap.put(Coordinate.c8, new Field(Coordinate.c8, new Bishop(BLACK)));
+        fieldMap.put(Coordinate.d8, new Field(Coordinate.d8, new Queen(BLACK)));
+        fieldMap.put(Coordinate.e8, new Field(Coordinate.e8, new King(BLACK)));
+        fieldMap.put(Coordinate.f8, new Field(Coordinate.f8, new Bishop(BLACK)));
+        fieldMap.put(Coordinate.g8, new Field(Coordinate.g8, new Knight(BLACK)));
+        fieldMap.put(Coordinate.h8, new Field(Coordinate.h8, new Rook(BLACK)));
 
         for (Coordinate coordinate : Coordinate.values()) {
             if (coordinate.getRow() == 1 || coordinate.getRow() == 8) {
@@ -1572,8 +1617,8 @@ public class ChessBoard {
             }
 
             switch (coordinate.getRow()) {
-                case 2 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(Color.WHITE)));
-                case 7 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(Color.BLACK)));
+                case 2 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(WHITE)));
+                case 7 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(BLACK)));
                 default -> fieldMap.put(coordinate, new Field(coordinate, null));
             }
         }
