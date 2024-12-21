@@ -4,12 +4,16 @@ import core.project.chess.application.service.UserAccountService;
 import core.project.chess.domain.subdomains.user.value_objects.ProfilePicture;
 import core.project.chess.domain.subdomains.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
+import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Objects;
 
@@ -29,8 +33,8 @@ public class ProfilePictureResource {
     @PUT
     @Path("/put-profile-picture")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    public Response putProfilePicture(byte[] picture) {
-        if (Objects.isNull(picture)) {
+    public Response putProfilePicture(InputStream inputStream) {
+        if (Objects.isNull(inputStream)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Picture can`t be null.").build());
         }
 
@@ -40,8 +44,14 @@ public class ProfilePictureResource {
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
                 );
 
-        userAccountService.putProfilePicture(picture, username);
-        return Response.accepted("Successfully saved picture.").build();
+        try {
+            userAccountService.putProfilePicture(IOUtils.toByteArray(inputStream), username);
+            inputStream.close();
+        } catch (IOException e) {
+            Log.errorf("Can`t read input stream for profile inputStream as bytes: %s", e.getMessage());
+            throw new WebApplicationException("Invalid file");
+        }
+        return Response.accepted("Successfully saved inputStream.").build();
     }
 
     @GET

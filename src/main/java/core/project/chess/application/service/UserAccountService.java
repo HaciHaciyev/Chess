@@ -209,6 +209,7 @@ public class UserAccountService {
                     return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build());
                 });
 
+        Log.info("Successfully validate image.");
         userAccount.setProfilePicture(profilePicture);
 
         imageFileRepository.put(userAccount);

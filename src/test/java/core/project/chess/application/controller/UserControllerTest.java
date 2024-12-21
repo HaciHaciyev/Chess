@@ -6,12 +6,12 @@ import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import testUtils.ByteArrayToImageConsole;
 import testUtils.UserDBManagement;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,7 +88,7 @@ class UserControllerTest {
     }
 
     @Test
-    void profilePicture() {
+    void profilePicture() throws IOException {
         registrationLoad();
 
         String emailConfirmationToken = userDBManagement.getToken("HHadzhy");
@@ -106,14 +106,14 @@ class UserControllerTest {
         getUserProfilePicture(token);
 
         // PUT
-        byte[] tacoImage = readImageToByteArray("src/main/resources/static/profile/photos/others/TacoCloud.jpg");
+        final File tacoImage = new File("src/main/resources/static/profile/photos/others/TacoCloud.jpg");
         putUserProfilePicture(token, tacoImage);
 
         // GET
         getUserProfilePicture(token);
 
         // PUT
-        byte[] picture = readImageToByteArray("src/main/resources/static/profile/photos/others/democracy.png");
+        final File picture = new File("src/main/resources/static/profile/photos/others/democracy.png");
         putUserProfilePicture(token, picture);
 
         // GET
@@ -132,13 +132,12 @@ class UserControllerTest {
                 .statusCode(202);
     }
 
-    private static void putUserProfilePicture(String token, byte[] picture) {
+    private static void putUserProfilePicture(String token, File picture) {
         Log.info("Profile picture test: PUT");
 
         given()
                 .header("Authorization", "Bearer " + token)
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(picture)
+                .multiPart("image", picture)
                 .when()
                 .put(PUT_PROFILE_PICTURE)
                 .then()
@@ -146,17 +145,22 @@ class UserControllerTest {
         Log.info("Successfully upload image.");
     }
 
-    private static void getUserProfilePicture(String token) {
+    private static void getUserProfilePicture(String token) throws IOException {
         Log.info("Profile picture test: GET");
-        byte[] bytes = given()
+        String response = given()
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .get(GET_PROFILE_PICTURE)
                 .then()
                 .statusCode(200)
                 .extract()
-                .asByteArray();
+                .body()
+                .asString();
 
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode node = mapper.readTree(response);
+
+        byte[] bytes = node.get("profilePicture").binaryValue();
         ByteArrayToImageConsole.renderImage(bytes);
     }
 
