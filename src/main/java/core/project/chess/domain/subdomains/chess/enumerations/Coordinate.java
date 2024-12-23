@@ -73,4 +73,29 @@ public enum Coordinate {
             default -> throw new IllegalStateException("Unexpected value: " + column);
         };
     }
+
+    @Getter
+    public enum Column {
+        A(1), B(2), C(3), D(4), E(5), F(6), G(7), H(8);
+
+        final int column;
+
+        Column(int i) {
+            this.column = i;
+        }
+
+        public static Column of(final int column) {
+            return switch (column) {
+                case 1 -> Column.A;
+                case 2 -> Column.B;
+                case 3 -> Column.C;
+                case 4 -> Column.D;
+                case 5 -> Column.E;
+                case 6 -> Column.F;
+                case 7 -> Column.G;
+                case 8 -> Column.H;
+                default -> throw new IllegalArgumentException("Invalid column number: " + column);
+            };
+        }
+    }
 }

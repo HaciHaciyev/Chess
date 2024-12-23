@@ -1,18 +1,23 @@
 package core.project.chess.domain.subdomains.chess.services;
 
+import core.project.chess.domain.subdomains.chess.entities.AlgebraicNotation;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.value_objects.FromFEN;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static core.project.chess.domain.subdomains.chess.entities.AlgebraicNotation.*;
+import static core.project.chess.domain.subdomains.chess.enumerations.Color.BLACK;
+import static core.project.chess.domain.subdomains.chess.enumerations.Color.WHITE;
+import static core.project.chess.domain.subdomains.chess.enumerations.Coordinate.*;
 
 /**
- * This class provides methods to validate and process chess move notations in algebraic notation.
+ * This class provides methods to validate and process chess move notations in algebraic notation and Forsyth-Edwards Notation (FEN).
  * Algebraic notation is a standard way of recording and communicating chess moves, where each square on
  * the chessboard is identified by a unique combination of a letter (a-h) and a number (1-8).
  * <p>
@@ -23,9 +28,19 @@ import static core.project.chess.domain.subdomains.chess.entities.AlgebraicNotat
  * <p>
  * The class also provides a set of helper methods that check for specific types of chess moves, such as simple pawn movements,
  * figure movements, capture operations, castling, and promotions.
+ * <p>
+ * Additionally, this class includes methods for validating Forsyth-Edwards Notation (FEN), which is used to represent
+ * a chess position. The `validateFEN(String fen)` method checks the validity of a FEN string, ensuring that the position
+ * is correctly formatted and that the rules of chess are respected in terms of piece placement, castling rights, and other
+ * board characteristics.
+ * <p>
+ * The `ChessBoard` class integrates with this validation system to perform further checks on the FEN string. After a valid FEN
+ * string is processed, the `ChessBoard` constructor performs additional checks related to the game state -
+ * checkmate, check on non-active king, stalemate, non-jumpers on first and last row.
  *
  * @author Hadzhyiev Hadzhy
  */
+
 public class ChessNotationsValidator {
 
     private ChessNotationsValidator() {}
@@ -40,14 +55,51 @@ public class ChessNotationsValidator {
 
     private static final String FEN_FORMAT = "^((([pnbrqkPNBRQK1-8]{1,8})/){7}([pnbrqkPNBRQK1-8]{1,8}))\\s([wb])\\s(-|[KQkq]{1,4})((\\s-)|(\\s[a-h][36])){1,2}?(\\s(\\d+)\\s(\\d+))?$";
 
+    /**
+     * Validates a given FEN (Forsyth-Edwards Notation) string.
+     * <p>
+     * This method performs a basic syntax validation of the FEN string to ensure that:
+     * 1. The FEN string consists of exactly 6 parts separated by spaces.
+     * 2. The board layout is correct, with valid pieces and empty spaces, and the total number of squares in each row is 8.
+     * 3. The castling rights field is properly formatted.
+     * 4. The en passant square is valid or marked as '-' for no en passant.
+     * <p>
+     * However, this method does not perform a complete game state validation. The following checks are not covered here:
+     * <ul>
+     *   <li><b>Checkmate:</b> This method does not check if either player is in checkmate.</li>
+     *   <li><b>Check on non-active king:</b> The method does not verify if a non-active king (the player whose turn it isn't) is in check.</li>
+     *   <li><b>Stalemate:</b> The method does not check for a stalemate situation.</li>
+     *   <li><b>Non-jumpers on first and last rows:</b> This method does not validate if non-jumping pieces (like rooks, bishops, and queens) are placed on their initial ranks or moved correctly.</li>
+     * </ul>
+     *
+     * These additional game state checks, including whether the positions are logically possible, are handled later by the
+     * {@link core.project.chess.domain.subdomains.chess.entities.ChessBoard} class. Specifically, the ChessBoard constructor performs these validations after the pieces have been placed
+     * on the board.
+     *
+     * @param fen A string representing a chess position in Forsyth-Edwards Notation (FEN).
+     * @return A {@link StatusPair} object, where the first value indicates whether the FEN string is valid, and the second value contains
+     *         a message about the validation result. If invalid, the message will describe the error.
+     */
     public static StatusPair<FromFEN> validateFEN(final String fen) {
-        if (!Pattern.matches(FEN_FORMAT, fen)) {
-            return StatusPair.ofFalse();
-        }
-
         return validateForsythEdwardsNotation(fen);
     }
 
+    /**
+     * Validates a given chess move in algebraic notation.
+     * <p>
+     * This method checks the provided algebraic notation and validates it based on the move type:
+     * <ul>
+     *   <li>Simple figure movement or capture.</li>
+     *   <li>Pawn movement or capture.</li>
+     *   <li>Pawn promotion.</li>
+     *   <li>Castling.</li>
+     * </ul>
+     *
+     * If the notation is invalid, an {@link IllegalArgumentException} is thrown.
+     *
+     * @param algebraicNotation The chess move in algebraic notation to validate.
+     * @throws IllegalArgumentException If the notation format is invalid.
+     */
     public static void validateAlgebraicNotation(String algebraicNotation) {
         if (isSimpleFigureMovement(algebraicNotation) || isFigureCaptureOperation(algebraicNotation)) {
             validateSimpleFigureMovementOrCapture(algebraicNotation);
@@ -254,233 +306,255 @@ public class ChessNotationsValidator {
     }
 
     private static StatusPair<FromFEN> validateForsythEdwardsNotation(String fen) {
+        if (!Pattern.matches(FEN_FORMAT, fen)) {
+            return StatusPair.ofFalse();
+        }
+
         final String[] split = fen.split(" ", 2);
         final String board = split[0];
         final String tail = split[1];
 
-        final Color activeColor = fen.contains("w") ? Color.WHITE : Color.BLACK;
-        final Optional<Coordinate> passagePawnCaptureCoord = getPassagePawnCaptureCoord(tail);
+        final Color activeColor = fen.contains("w") ? WHITE : BLACK;
 
-        return null;
-    }
+        final Optional<Coordinate> passagePawnCoordinate = getPassagePawnCoordinate(tail);
+        boolean isValidPassage = passagePawnCoordinate.isEmpty();
 
-    private static Optional<Coordinate> getPassagePawnCaptureCoord(String tail) {
-        final Matcher matcher = passageCoordinatePattern.matcher(tail);
-        return matcher.find() ? Optional.of(Coordinate.valueOf(matcher.group())) : Optional.empty();
-    }
-
-    /**private static StatusPair<FromFEN> validate(String fen) {
-        final String[] split = fen.split(" ", 2);
-        final String board = split[0];
-        final String tail = split[1];
-
-        final Color moveTurn = fen.contains("w") ? Color.WHITE : Color.BLACK;
-
-        final StatusPair<Byte> fiftyMovesRule = validateFiftyMovesRule(tail);
-        if (!fiftyMovesRule.status()) {
-            return StatusPair.ofFalse();
-        }
-
-        final Matcher matcher = passageCoordinatePattern.matcher(tail);
-        final Optional<Coordinate> passage = matcher.find() ? Optional.of(Coordinate.valueOf(matcher.group())) : Optional.empty();
-
-        final boolean invalidRowForCaptureOnPassage = passage.isPresent() && (passage.get().getRow() != 3 && passage.get().getRow() != 6);
-        if (invalidRowForCaptureOnPassage) {
-            return StatusPair.ofFalse();
-        }
-
-        boolean isValidPassage = passage.isEmpty();
-
-        boolean isWhiteKingExists = false;
         Coordinate whiteKingCoordinate = null;
-
-        boolean isBlackKingExists = false;
         Coordinate blackKingCoordinate = null;
 
         boolean shortWhiteCastling = tail.contains("K");
         boolean isRookForShortWhiteCastlingExists = false;
-
         boolean longWhiteCastling = tail.contains("Q");
         boolean isRookForLongWhiteCastlingExists = false;
-
         boolean shortBlackCastling = tail.contains("k");
         boolean isRookForShortBlackCastlingExists = false;
-
         boolean longBlackCastling = tail.contains("q");
         boolean isRookForLongBlackCastlingExists = false;
 
-        byte countOfWhitePawns = 0;
-        byte countOfBlackPawns = 0;
+        final Map<Coordinate.Column, Integer> countOfPawnsOnEveryColumnForWhites = new EnumMap<>(Column.class);
+        for (Coordinate.Column column : Coordinate.Column.values()) {
+            countOfPawnsOnEveryColumnForWhites.put(column, 0);
+        }
 
-        byte countOfWhiteQueens = 0;
-        byte countOfBlackQueens = 0;
+        final Map<Coordinate.Column, Integer> countOfPawnsOnEveryColumnForBlacks = new EnumMap<>(Column.class);
+        for (Coordinate.Column column : Coordinate.Column.values()) {
+            countOfPawnsOnEveryColumnForBlacks.put(column, 0);
+        }
 
-        byte countOfWhiteRooks = 0;
-        byte countOfBlackRooks = 0;
-
-        byte countOfWhiteKnights = 0;
-        byte countOfBlackKnights = 0;
-
-        byte countOfWhiteBishops = 0;
-        byte countOfBlackBishops = 0;
-
+        int countOfWhitePawns = 0;
+        int countOfBlackPawns = 0;
+        int countOfWhiteQueens = 0;
+        int countOfBlackQueens = 0;
+        int countOfWhiteRooks = 0;
+        int countOfBlackRooks = 0;
+        int countOfWhiteKnights = 0;
+        int countOfBlackKnights = 0;
+        int countOfWhiteBishopsOnWhiteFields = 0;
+        int countOfWhiteBishopsOnBlackFields = 0;
+        int countOfBlackBishopsOnWhiteFields = 0;
+        int countOfBlackBishopsOnBlackFields = 0;
         byte materialAdvantageOfWhite = 0;
         byte materialAdvantageOfBlack = 0;
 
         int row = 8;
-        String[] boardRows = board.split("/");
-        for (String s : boardRows) {
-            int columnNum = 1;
-            for (char c : s.toCharArray()) {
-                if (Character.isDigit(c)) {
-                    columnNum += Character.getNumericValue(c);
-                    if (columnNum > 8) {
-                        return StatusPair.ofFalse();
-                    }
-                    continue;
-                }
-                if (Character.isLetter(c)) {
-                    columnNum++;
-                    if (columnNum > 8) {
-                        return StatusPair.ofFalse();
-                    }
-                }
-
-                final Coordinate coordinate = Coordinate.of(row, columnNum).orElseThrow();
-                switch (c) {
-                    case 'K' -> {
-                        if (isWhiteKingExists) {
-                            return StatusPair.ofFalse();
-                        }
-                        final boolean isInvalidKingShortCastleCoordinate = shortWhiteCastling && !coordinate.equals(Coordinate.e1);
-                        if (isInvalidKingShortCastleCoordinate) {
-                            return StatusPair.ofFalse();
-                        }
-                        final boolean isInvalidKingLongCastleCoordinate = longWhiteCastling && !coordinate.equals(Coordinate.e1);
-                        if (isInvalidKingLongCastleCoordinate) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        isWhiteKingExists = true;
-                        whiteKingCoordinate = coordinate;
-                    }
-                    case 'k' -> {
-                        if (isBlackKingExists) {
-                            return StatusPair.ofFalse();
-                        }
-                        final boolean isInvalidKingShortCastleCoordinate = shortBlackCastling && !coordinate.equals(Coordinate.e8);
-                        if (isInvalidKingShortCastleCoordinate) {
-                            return StatusPair.ofFalse();
-                        }
-                        final boolean isInvalidKingLongCastleCoordinate = longBlackCastling && !coordinate.equals(Coordinate.e8);
-                        if (isInvalidKingLongCastleCoordinate) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        isBlackKingExists = true;
-                        blackKingCoordinate = coordinate;
-                    }
-                    case 'R' -> {
-                        if (++countOfWhiteRooks > 10) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.R);
-
-                        if (shortWhiteCastling && coordinate.equals(Coordinate.h1)) {
-                            isRookForShortWhiteCastlingExists = true;
-                        }
-                        if (longWhiteCastling && coordinate.equals(Coordinate.a1)) {
-                            isRookForLongWhiteCastlingExists = true;
-                        }
-                    }
-                    case 'r' -> {
-                        if (++countOfBlackRooks > 10) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.R);
-
-                        if (shortBlackCastling && coordinate.equals(Coordinate.h8)) {
-                            isRookForShortBlackCastlingExists = true;
-                        }
-                        if (longBlackCastling && coordinate.equals(Coordinate.a8)) {
-                            isRookForLongBlackCastlingExists = true;
-                        }
-                    }
-                    case 'Q' -> {
-                        if (++countOfWhiteQueens > 9) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.Q);
-                    }
-                    case 'q' -> {
-                        if (++countOfBlackQueens > 9) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.Q);
-                    }
-                    case 'B' -> {
-                        if (++countOfWhiteBishops > 10) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.B);
-                    }
-                    case 'b' -> {
-                        if (++countOfBlackBishops > 10) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.B);
-                    }
-                    case 'N' -> {
-                        if (++countOfWhiteKnights > 10) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.N);
-                    }
-                    case 'n' -> {
-                        if (++countOfBlackKnights > 10) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.N);
-                    }
-                    case 'P' -> {
-                        if (row == 1 || ++countOfWhitePawns > 8) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.P);
-
-                        if (passage.isPresent() && coordinate.equals(passage.orElseThrow()) && moveTurn.equals(Color.BLACK)) {
-                            isValidPassage = true;
-                        }
-                    }
-                    case 'p' -> {
-                        if (row == 8 || ++countOfBlackPawns > 8) {
-                            return StatusPair.ofFalse();
-                        }
-
-                        materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.P);
-
-                        if (passage.isPresent() && coordinate.equals(passage.orElseThrow()) && moveTurn.equals(Color.WHITE)) {
-                            isValidPassage = true;
-                        }
-                    }
-                    default -> throw new IllegalArgumentException("This symbol can`t exists in FEN.");
-                }
-
+        int column = 0;
+        for (char c : board.toCharArray()) {
+            if (c == '/') {
+                row++;
+                column = 0;
+                continue;
             }
 
-            row--;
-            if (row < 0) {
+            if (Character.isDigit(c)) {
+                column += Character.getNumericValue(c);
+                if (column > 8) {
+                    return StatusPair.ofFalse();
+                }
+                continue;
+            }
+
+            column++;
+            if (column > 8) {
                 return StatusPair.ofFalse();
             }
+
+            final Coordinate coordinate = Coordinate.of(row, column).orElseThrow();
+            final Color fieldColor = getColorOfField(coordinate);
+            switch (c) {
+                case 'K' -> {
+                    if (Objects.nonNull(whiteKingCoordinate)) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    whiteKingCoordinate = coordinate;
+
+                    if ((shortWhiteCastling || longWhiteCastling) && !whiteKingCoordinate.equals(e1)) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    if (Objects.nonNull(blackKingCoordinate)) {
+                        final boolean isSurround = Math.abs(whiteKingCoordinate.getRow() - blackKingCoordinate.getRow()) <= 1
+                                && Math.abs(whiteKingCoordinate.columnToInt() - blackKingCoordinate.columnToInt()) <= 1;
+
+                        if (isSurround) {
+                            return StatusPair.ofFalse();
+                        }
+                    }
+                }
+                case 'k' -> {
+                    if (Objects.nonNull(blackKingCoordinate)) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    blackKingCoordinate = coordinate;
+
+                    if ((shortBlackCastling || longBlackCastling) && !blackKingCoordinate.equals(e8)) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    if (Objects.nonNull(whiteKingCoordinate)) {
+                        final boolean isSurround = Math.abs(whiteKingCoordinate.getRow() - blackKingCoordinate.getRow()) <= 1
+                                && Math.abs(whiteKingCoordinate.columnToInt() - blackKingCoordinate.columnToInt()) <= 1;
+
+                        if (isSurround) {
+                            return StatusPair.ofFalse();
+                        }
+                    }
+                }
+                case 'Q' -> {
+                    countOfWhiteQueens++;
+                    if (countOfWhiteQueens > 9) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.Q);
+                }
+                case 'q' -> {
+                    countOfBlackQueens++;
+                    if (countOfBlackQueens > 9) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.Q);
+                }
+                case 'B' -> {
+                    if (fieldColor.equals(WHITE)) {
+                        countOfWhiteBishopsOnWhiteFields++;
+                    } else {
+                        countOfWhiteBishopsOnBlackFields++;
+                    }
+
+                    if (countOfWhiteBishopsOnWhiteFields + countOfWhiteBishopsOnBlackFields > 10) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.B);
+                }
+                case 'b' -> {
+                    if (fieldColor.equals(WHITE)) {
+                        countOfBlackBishopsOnWhiteFields++;
+                    } else {
+                        countOfBlackBishopsOnBlackFields++;
+                    }
+
+                    if (countOfBlackBishopsOnBlackFields + countOfBlackBishopsOnWhiteFields > 10) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.B);
+                }
+                case 'N' -> {
+                    countOfWhiteKnights++;
+                    if (countOfWhiteKnights > 10) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.N);
+                }
+                case 'n' -> {
+                    countOfBlackKnights++;
+                    if (countOfBlackKnights > 10) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.N);
+                }
+                case 'R' -> {
+                    countOfWhiteRooks++;
+                    if (countOfWhiteRooks > 10) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.R);
+
+                    if (shortWhiteCastling && !isRookForShortWhiteCastlingExists) {
+                        isRookForShortWhiteCastlingExists = coordinate.equals(h1);
+                    }
+
+                    if (longWhiteCastling && !isRookForLongWhiteCastlingExists) {
+                        isRookForLongWhiteCastlingExists = coordinate.equals(a1);
+                    }
+                }
+                case 'r' -> {
+                    countOfBlackRooks++;
+                    if (countOfBlackRooks > 10) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.R);
+
+                    if (shortBlackCastling && !isRookForShortBlackCastlingExists) {
+                        isRookForShortBlackCastlingExists = coordinate.equals(h8);
+                    }
+
+                    if (longBlackCastling && !isRookForLongBlackCastlingExists) {
+                        isRookForLongBlackCastlingExists = coordinate.equals(a8);
+                    }
+                }
+                case 'P' -> {
+                    if (coordinate.getRow() == 1 || coordinate.getRow() == 8) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    countOfWhitePawns++;
+                    if (countOfWhitePawns > 8) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.P);
+
+                    final boolean isPassagePawnFound = passagePawnCoordinate.isPresent() && passagePawnCoordinate.orElseThrow().equals(coordinate);
+                    if (isPassagePawnFound) {
+                        isValidPassage = true;
+                    }
+
+                    countOfPawnsOnEveryColumnForWhites.merge(Column.of(coordinate.columnToInt()), 1, Integer::sum);
+                }
+                case 'p' -> {
+                    if (coordinate.getRow() == 1 || coordinate.getRow() == 8) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    countOfBlackPawns++;
+                    if (countOfBlackPawns > 8) {
+                        return StatusPair.ofFalse();
+                    }
+
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.P);
+
+                    final boolean isPassagePawnFound = passagePawnCoordinate.isPresent() && passagePawnCoordinate.orElseThrow().equals(coordinate);
+                    if (isPassagePawnFound) {
+                        isValidPassage = true;
+                    }
+
+                    countOfPawnsOnEveryColumnForBlacks.merge(Column.of(coordinate.columnToInt()), 1, Integer::sum);
+                }
+                default -> throw new IllegalArgumentException("Invalid FEN.");
+            }
+        }
+
+        if (!isValidPassage) {
+            return StatusPair.ofFalse();
         }
 
         if (shortWhiteCastling && !isRookForShortWhiteCastlingExists) {
@@ -495,27 +569,36 @@ public class ChessNotationsValidator {
         if (longBlackCastling && !isRookForLongBlackCastlingExists) {
             return StatusPair.ofFalse();
         }
-        if (!isValidPassage) {
+
+        final int extraPiecesOfWhites = Math.max(0, countOfWhiteQueens - 1) +
+                (Math.max(0, countOfWhiteBishopsOnWhiteFields - 1) + Math.max(0, countOfWhiteBishopsOnBlackFields - 1)) +
+                Math.max(0, countOfWhiteKnights - 2) +
+                Math.max(0, countOfWhiteRooks - 2);
+
+        final boolean isCountOfExtraPiecesForWhiteValid = extraPiecesOfWhites <= 8 - countOfWhitePawns;
+        if (!isCountOfExtraPiecesForWhiteValid) {
             return StatusPair.ofFalse();
         }
 
-        if (!isWhiteKingExists || !isBlackKingExists) {
+        final int extraPiecesOfBlacks = Math.max(0, countOfBlackQueens - 1) +
+                (Math.max(0, countOfBlackBishopsOnWhiteFields - 1) + Math.max(0, countOfBlackBishopsOnBlackFields - 1)) +
+                Math.max(0, countOfBlackKnights - 2) +
+                Math.max(0, countOfBlackRooks - 2);
+
+        final boolean isCountOfExtraPiecesForBlackValid = extraPiecesOfBlacks <= 8 - countOfBlackPawns;
+        if (!isCountOfExtraPiecesForBlackValid) {
             return StatusPair.ofFalse();
         }
 
-        final Optional<Pair<Coordinate, Coordinate>> isLastMovementWasPassage = passage.isEmpty() ?
-                Optional.empty() :
-                Optional.of(passageCoordinates(passage.orElseThrow()));
+        final int countOfBlackPieces = countOfBlackPawns + countOfBlackRooks + countOfBlackBishopsOnWhiteFields +
+                countOfBlackBishopsOnBlackFields + countOfBlackKnights + countOfBlackQueens + 1;
 
-        Matcher match = patternOf50MovesRuleOnFEN.matcher(tail);
-        byte countOfFullMoves = 1;
-        if (match.find()) {
-            countOfFullMoves = Byte.parseByte(match.group(2).strip());
-        }
+        final int countOfWhitePieces = countOfWhitePawns + countOfWhiteRooks + countOfWhiteBishopsOnWhiteFields +
+                countOfWhiteBishopsOnBlackFields + countOfWhiteKnights + countOfWhiteQueens + 1;
 
-        final FromFEN result = new FromFEN(
+        return StatusPair.ofTrue(new FromFEN(
                 fen,
-                moveTurn,
+                activeColor,
                 whiteKingCoordinate,
                 blackKingCoordinate,
                 materialAdvantageOfWhite,
@@ -524,40 +607,58 @@ public class ChessNotationsValidator {
                 shortBlackCastling,
                 longWhiteCastling,
                 longBlackCastling,
-                isLastMovementWasPassage
-        );
-
-        return StatusPair.ofTrue(result);
+                countOfPawnsOnEveryColumnForWhites,
+                countOfWhitePieces,
+                countOfPawnsOnEveryColumnForBlacks,
+                countOfBlackPieces,
+                passagePawnCoordinate.isEmpty() ? Optional.empty() : Optional.of(passageCoordinates(passagePawnCoordinate.orElseThrow()))
+        ));
     }
 
-    private static Pair<Coordinate, Coordinate> passageCoordinates(Coordinate passageCaptureCoordinate) {
-        final int row = passageCaptureCoordinate.getRow();
-        final int column = passageCaptureCoordinate.columnToInt();
+    private static Color getColorOfField(final Coordinate coordinate) {
+        final int row = coordinate.getRow();
+        final int column = coordinate.columnToInt();
+
+        if (row % 2 != 0) {
+            if (column % 2 != 0) {
+                return BLACK;
+            }
+            return WHITE;
+        }
+
+        if (column % 2 != 0) {
+            return WHITE;
+        }
+        return BLACK;
+    }
+
+    private static Optional<Coordinate> getPassagePawnCoordinate(String tail) {
+        final Matcher matcher = passageCoordinatePattern.matcher(tail);
+        if (matcher.find()) {
+            final Coordinate captureCoord = Coordinate.valueOf(matcher.group());
+
+            if (captureCoord.getRow() == 3) {
+                return Optional.of(Coordinate.of(4, captureCoord.columnToInt()).orElseThrow());
+            }
+
+            return Optional.of(Coordinate.of(5, captureCoord.columnToInt()).orElseThrow());
+        }
+
+        return Optional.empty();
+    }
+
+    private static Pair<Coordinate, Coordinate> passageCoordinates(Coordinate endCoordinate) {
+        final int row = endCoordinate.getRow();
+        final int column = endCoordinate.columnToInt();
 
         int startRow = row;
-        int endRow = row;
-        if (row == 3) {
-            startRow--;
-            endRow++;
+        if (row == 4) {
+            startRow -= 2;
         } else {
-            startRow++;
-            endRow--;
+            startRow += 2;
         }
 
-        return Pair.of(Coordinate.of(startRow, column).orElseThrow(), Coordinate.of(endRow, column).orElseThrow());
+        return Pair.of(Coordinate.of(startRow, column).orElseThrow(), endCoordinate);
     }
 
-    public static StatusPair<Byte> validateFiftyMovesRule(String tail) {
-        final Matcher matcher = patternOf50MovesRuleOnFEN.matcher(tail);
-
-        if (matcher.find()) {
-            final byte moveCount = Byte.parseByte(matcher.group());
-            if (moveCount >= 0 && moveCount < 100) {
-                return StatusPair.ofTrue(moveCount);
-            }
-            return StatusPair.ofFalse();
-        }
-
-        return StatusPair.ofTrue((byte) 0);
-    }*/
 }

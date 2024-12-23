@@ -145,6 +145,9 @@ public class ChessBoard {
 
         initializerFromFEN(FEN);
         validateStalemateAndCheckmate(inCaseOfInitFromFEN);
+        validateForNonJumpers();
+        validatePawnsFormation(inCaseOfInitFromFEN.countOfPawnsOnEveryColumnForWhites(), inCaseOfInitFromFEN.countOfBlackPieces());
+        validatePawnsFormation(inCaseOfInitFromFEN.countOfPawnsOnEveryColumnForBlack(), inCaseOfInitFromFEN.countOfWhitePieces());
     }
 
     /**
@@ -825,6 +828,16 @@ public class ChessBoard {
         }
     }
 
+    private void validateForNonJumpers() {
+        // TODO
+    }
+
+    private void validatePawnsFormation(final Map<Coordinate.Column, Integer> countOfPawnsOnEveryColumn, final int countOfOpponentPieces) {
+
+
+        // TODO
+    }
+
     /**
      * Processes a piece repositioning on the chess board.
      *
@@ -840,9 +853,7 @@ public class ChessBoard {
         Objects.requireNonNull(to);
 
         if (!validateFiguresTurnAndPieceExisting(from)) {
-            throw new IllegalArgumentException(
-                    String.format("At the moment, the player for %s must move and not the opponent", figuresTurn)
-            );
+            throw new IllegalArgumentException(String.format("At the moment, the player for %s must move and not the opponent", figuresTurn));
         }
 
         if (from.equals(to)) {
