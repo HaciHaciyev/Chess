@@ -1,9 +1,10 @@
-package core.project.chess.domain.subdomains.chess.entities;
+package core.project.chess.domain.subdomains.chess.value_objects;
 
+import core.project.chess.domain.subdomains.chess.entities.ChessBoard;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.pieces.*;
-import core.project.chess.domain.subdomains.chess.services.ChessNotationsValidator;
+import core.project.chess.domain.subdomains.chess.util.ChessNotationValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
@@ -103,7 +104,7 @@ public class AlgebraicNotation {
             throw new IllegalArgumentException("Algebraic notation can`t be black.");
         }
 
-        ChessNotationsValidator.validateAlgebraicNotation(algebraicNotation);
+        ChessNotationValidator.validateAlgebraicNotation(algebraicNotation);
 
         return new AlgebraicNotation(algebraicNotation);
     }
@@ -119,7 +120,7 @@ public class AlgebraicNotation {
      * @return An `AlgebraicNotation` object representing the algebraic notation of the move.
      * @throws NullPointerException if any of the required parameters are null.
      */
-    static AlgebraicNotation of(
+    public static AlgebraicNotation of(
             final PieceTYPE piece, final Set<ChessBoard.Operations> operationsSet,
             final Coordinate from, final Coordinate to, final @Nullable PieceTYPE inCaseOfPromotion
     ) {
@@ -273,7 +274,7 @@ public class AlgebraicNotation {
      *         - {@link ChessBoard.Operations#EMPTY} if none of the above conditions are met
      * @throws IllegalArgumentException if the set of operations contains more than one operation involving the opponent's king or stalemate
      */
-    static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
+    public static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
         int opponentKingStatusCount = 0;
         if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) {
             opponentKingStatusCount++;
@@ -380,7 +381,7 @@ public class AlgebraicNotation {
      * @param to The ending coordinate of the castling move.
      * @return The type of castling move (short or long).
      */
-    static Castle castle(final Coordinate to) {
+    public static Castle castle(final Coordinate to) {
         final boolean isShortCasting = to.equals(Coordinate.g1) || to.equals(Coordinate.g8);
         if (isShortCasting) {
             return Castle.SHORT_CASTLING;
@@ -447,7 +448,7 @@ public class AlgebraicNotation {
      * @throws IllegalStateException if the promotion type is unexpected.
      */
     public StatusPair<PieceTYPE> promotionType() {
-        if (ChessNotationsValidator.isPromotion(this.algebraicNotation) && ChessNotationsValidator.isPromotionPlusOperation(this.algebraicNotation)) {
+        if (ChessNotationValidator.isPromotion(this.algebraicNotation) && ChessNotationValidator.isPromotionPlusOperation(this.algebraicNotation)) {
             final char promotionType = this.algebraicNotation.charAt(6);
 
             return switch (promotionType) {

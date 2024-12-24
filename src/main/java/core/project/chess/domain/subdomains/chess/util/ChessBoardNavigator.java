@@ -1,6 +1,6 @@
-package core.project.chess.domain.subdomains.chess.services;
+package core.project.chess.domain.subdomains.chess.util;
 
-import core.project.chess.domain.subdomains.chess.entities.AlgebraicNotation;
+import core.project.chess.domain.subdomains.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.subdomains.chess.entities.ChessBoard;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;

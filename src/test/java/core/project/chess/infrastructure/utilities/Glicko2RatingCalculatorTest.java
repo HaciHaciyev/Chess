@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.utilities;
 
-import core.project.chess.domain.subdomains.user.services.Glicko2RatingCalculator;
+import core.project.chess.domain.subdomains.user.util.Glicko2RatingCalculator;
 import core.project.chess.domain.subdomains.user.value_objects.Rating;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

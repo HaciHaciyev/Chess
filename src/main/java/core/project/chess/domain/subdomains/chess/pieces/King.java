@@ -1,12 +1,12 @@
 package core.project.chess.domain.subdomains.chess.pieces;
 
-import core.project.chess.domain.subdomains.chess.entities.AlgebraicNotation.Castle;
+import core.project.chess.domain.subdomains.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.domain.subdomains.chess.entities.ChessBoard;
 import core.project.chess.domain.subdomains.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.enumerations.Direction;
-import core.project.chess.domain.subdomains.chess.services.ChessBoardNavigator;
+import core.project.chess.domain.subdomains.chess.util.ChessBoardNavigator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;

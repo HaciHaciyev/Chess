@@ -1,4 +1,4 @@
-package core.project.chess.domain.subdomains.user.services;
+package core.project.chess.domain.subdomains.user.util;
 
 import core.project.chess.domain.subdomains.user.value_objects.Rating;
 

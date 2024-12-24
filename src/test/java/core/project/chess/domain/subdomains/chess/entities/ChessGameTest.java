@@ -3,7 +3,7 @@ package core.project.chess.domain.subdomains.chess.entities;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.enumerations.GameResult;
 import core.project.chess.domain.subdomains.chess.events.SessionEvents;
-import core.project.chess.domain.subdomains.chess.services.ChessBoardNavigator;
+import core.project.chess.domain.subdomains.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.subdomains.chess.value_objects.ChessMove;
 import core.project.chess.domain.subdomains.user.entities.UserAccount;
 import core.project.chess.domain.subdomains.user.value_objects.Email;

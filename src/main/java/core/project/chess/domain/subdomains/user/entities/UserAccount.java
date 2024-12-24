@@ -4,7 +4,7 @@ import core.project.chess.domain.subdomains.chess.entities.ChessGame;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.GameResult;
 import core.project.chess.domain.subdomains.user.events.AccountEvents;
-import core.project.chess.domain.subdomains.user.services.Glicko2RatingCalculator;
+import core.project.chess.domain.subdomains.user.util.Glicko2RatingCalculator;
 import core.project.chess.domain.subdomains.user.value_objects.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

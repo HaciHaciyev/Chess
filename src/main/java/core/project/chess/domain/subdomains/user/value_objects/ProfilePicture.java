@@ -1,7 +1,7 @@
 package core.project.chess.domain.subdomains.user.value_objects;
 
 import core.project.chess.domain.subdomains.user.entities.UserAccount;
-import core.project.chess.domain.subdomains.user.services.PictureUtility;
+import core.project.chess.domain.subdomains.user.util.PictureUtility;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
 

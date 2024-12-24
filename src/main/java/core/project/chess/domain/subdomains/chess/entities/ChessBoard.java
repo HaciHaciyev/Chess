@@ -4,7 +4,7 @@ import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.subdomains.chess.pieces.*;
-import core.project.chess.domain.subdomains.chess.services.ChessNotationsValidator;
+import core.project.chess.domain.subdomains.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.subdomains.chess.value_objects.FromFEN;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
@@ -121,13 +121,17 @@ public class ChessBoard {
             this.validBlackLongCasting = true;
 
             standardInitializer();
+
+            final String currentBoard = this.toString();
+            this.hashCodeOfBoard.put(currentBoard, (byte) 0);
+            this.fenRepresentationsOfBoard.add(FEN(currentBoard));
             return;
         }
 
         Objects.requireNonNull(inCaseOfInitFromFEN);
         String FEN = inCaseOfInitFromFEN.fen();
 
-        String currentPositionHash = FEN.substring(0, FEN.length() - 6);
+        String currentPositionHash = fenToHashCodeOfBoard(FEN);
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
         fenRepresentationsOfBoard.add(FEN);
 
@@ -144,10 +148,6 @@ public class ChessBoard {
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
 
         initializerFromFEN(FEN);
-        validateStalemateAndCheckmate(inCaseOfInitFromFEN);
-        validateForNonJumpers();
-        validatePawnsFormation(inCaseOfInitFromFEN.countOfPawnsOnEveryColumnForWhites(), inCaseOfInitFromFEN.countOfBlackPieces());
-        validatePawnsFormation(inCaseOfInitFromFEN.countOfPawnsOnEveryColumnForBlack(), inCaseOfInitFromFEN.countOfWhitePieces());
     }
 
     /**
@@ -187,12 +187,8 @@ public class ChessBoard {
      * @throws IllegalArgumentException If the provided FEN notation are invalid.
      */
     public static ChessBoard fromPosition(final UUID chessBoardId, final String fen) {
-        StatusPair<FromFEN> statusPair = validateNotations(fen);
-        if (!statusPair.status()) {
-            throw new IllegalArgumentException("Invalid FEN.");
-        }
-
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, statusPair.orElseThrow(), false);
+        // TODO
+        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, null, false);
     }
 
     /**
@@ -205,21 +201,8 @@ public class ChessBoard {
      * @throws IllegalArgumentException If the provided FEN notation are invalid.
      */
     public static ChessBoard fromPositionPureChess(final UUID chessBoardId, final String fen) {
-        StatusPair<FromFEN> statusPair = validateNotations(fen);
-        if (!statusPair.status()) {
-            throw new IllegalArgumentException("Invalid FEN.");
-        }
-
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, statusPair.orElseThrow(), true);
-    }
-
-
-    private static StatusPair<FromFEN> validateNotations(String fen) {
-        if (Objects.isNull(fen) || fen.isBlank()) {
-            return StatusPair.ofFalse();
-        }
-
-        return ChessNotationsValidator.validateFEN(fen);
+        // TODO
+        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, null, true);
     }
 
     /**
@@ -800,44 +783,6 @@ public class ChessBoard {
         return validBlackLongCasting;
     }
 
-    private void validateStalemateAndCheckmate(FromFEN fromFEN) {
-        final Color activeColor = fromFEN.figuresTurn();
-        final Optional<Pair<Coordinate, Coordinate>> lastMove = fromFEN.isLastMovementWasPassage();
-        final Pair<Coordinate, Coordinate> latestMovement = lastMove.isEmpty() ? null : lastMove.orElseThrow();
-        final King whiteKing = theKing(WHITE);
-        final King blackKing = theKing(BLACK);
-
-        final Operations checkOrMateForWhite = whiteKing.kingStatus(this, WHITE, latestMovement);
-        if (checkOrMateForWhite.equals(CHECKMATE) || !activeColor.equals(WHITE) && checkOrMateForWhite.equals(CHECK)) {
-            throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
-        }
-
-        final Operations checkOrMateForBlack = blackKing.kingStatus(this, BLACK, latestMovement);
-        if (checkOrMateForBlack.equals(CHECKMATE) || !activeColor.equals(BLACK) && checkOrMateForBlack.equals(CHECK)) {
-            throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
-        }
-
-        final boolean stalemateForWhite = activeColor.equals(WHITE) && whiteKing.stalemate(this, WHITE, latestMovement);
-        if (stalemateForWhite) {
-            throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
-        }
-
-        final boolean stalemateForBlack = activeColor.equals(BLACK) && blackKing.stalemate(this, BLACK, latestMovement);
-        if (stalemateForBlack) {
-            throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
-        }
-    }
-
-    private void validateForNonJumpers() {
-        // TODO
-    }
-
-    private void validatePawnsFormation(final Map<Coordinate.Column, Integer> countOfPawnsOnEveryColumn, final int countOfOpponentPieces) {
-
-
-        // TODO
-    }
-
     /**
      * Processes a piece repositioning on the chess board.
      *
@@ -1161,12 +1106,12 @@ public class ChessBoard {
 
         this.countOfFullMoves--;
 
-        final String currentPositionHash = fenRepresentationsOfBoard.getLast();
+        final String currentPositionHash = fenToHashCodeOfBoard(fenRepresentationsOfBoard.getLast());
         final AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
         final StatusPair<AlgebraicNotation.Castle> isCastling = AlgebraicNotation.isCastling(lastMovement);
 
         if (isCastling.status()) {
-            revertCastling(isCastling.orElseThrow());
+            revertCastling(isCastling.orElseThrow(), currentPositionHash);
             return true;
         }
 
@@ -1215,11 +1160,10 @@ public class ChessBoard {
     /**
      * Reverts a castling move.
      *
-     * @param castle the castling information
+     * @param castle              the castling information
+     * @param currentPositionHash represent current position of
      */
-    private void revertCastling(final AlgebraicNotation.Castle castle) {
-        final String currentPositionHash = toString();
-
+    private void revertCastling(final AlgebraicNotation.Castle castle, final String currentPositionHash) {
         final var movementPair = castlingCoordinates(castle);
         final Coordinate from = movementPair.getFirst();
         final Coordinate to = movementPair.getSecond();
@@ -1595,6 +1539,24 @@ public class ChessBoard {
             case Knight(Color color) -> color.equals(WHITE) ? "N" : "n";
             case Pawn(Color color) -> color.equals(WHITE) ? "P" : "p";
         };
+    }
+
+    private String fenToHashCodeOfBoard(final String fen) {
+        return fen.transform(s -> {
+            int i = 0;
+            int limit = 0;
+            for (char c : fen.toCharArray()) {
+                if (c == ' ') {
+                    i++;
+                    limit++;
+
+                    if (limit == 3) {
+                        break;
+                    }
+                }
+            }
+            return s.substring(0, i);
+        });
     }
 
     /**
