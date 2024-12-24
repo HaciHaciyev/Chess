@@ -1546,11 +1546,11 @@ public class ChessBoard {
             int i = 0;
             int limit = 0;
             for (char c : fen.toCharArray()) {
+                i++;
                 if (c == ' ') {
-                    i++;
                     limit++;
 
-                    if (limit == 3) {
+                    if (limit == 4) {
                         break;
                     }
                 }
