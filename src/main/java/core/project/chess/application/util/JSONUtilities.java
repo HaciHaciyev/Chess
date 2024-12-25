@@ -8,12 +8,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import core.project.chess.application.dto.chess.GameParameters;
 import core.project.chess.application.dto.chess.Message;
-import core.project.chess.domain.subdomains.chess.entities.ChessGame.TimeControllingTYPE;
-import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class JSONUtilities {
@@ -55,18 +52,11 @@ public class JSONUtilities {
     }
 
     public static Result<GameParameters, Throwable> gameParameters(String value) {
-        final Result<JsonNode, Throwable> node = jsonTree(value);
-        if (!node.success()) {
-            return Result.failure(node.throwable());
+        try {
+            return Result.success(objectMapper.readValue(value, GameParameters.class));
+        } catch (JsonProcessingException e) {
+            return Result.failure(e);
         }
-
-        GameParameters gameParameters = new GameParameters(
-                Color.valueOf(node.value().get("color").asText()),
-                TimeControllingTYPE.valueOf(node.value().get("timeControllingTYPE").asText()),
-                LocalDateTime.parse(node.value().get("creationTime").asText())
-        );
-
-        return Result.success(gameParameters);
     }
 
     public static String prettyWrite(Message message) {

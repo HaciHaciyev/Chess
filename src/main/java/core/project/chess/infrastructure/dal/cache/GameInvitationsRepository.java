@@ -15,7 +15,7 @@ import java.util.Objects;
 @ApplicationScoped
 public class GameInvitationsRepository {
 
-    private static final String KEY_FORMAT = "Partnership game invitations {%s}";
+    private static final String KEY_FORMAT = "PGI {%s}";
 
     private final HashCommands<String, String, String> hashCommands;
 

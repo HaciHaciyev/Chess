@@ -3,6 +3,7 @@ package core.project.chess.application.service;
 import core.project.chess.application.dto.chess.GameParameters;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
+import core.project.chess.domain.api.engine.ChessEngineAPI;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
@@ -37,6 +38,8 @@ import static core.project.chess.application.util.WSUtilities.sendMessage;
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameService {
+
+    private final ChessEngineAPI chessEngineAPI;
 
     private final InboundUserRepository inboundUserRepository;
 
@@ -122,6 +125,10 @@ public class ChessGameService {
             default -> Pair.of(MessageAddressee.ONLY_ADDRESSER, Message.error("Invalid message type."));
         };
 
+        messages(session, gameSessions.getSecond(), result);
+    }
+
+    private static void messages(Session session, Set<Session> sessions, Pair<MessageAddressee, Message> result) {
         final MessageAddressee messageAddressee = result.getFirst();
         final Message resultMessage = result.getSecond();
 
@@ -130,7 +137,7 @@ public class ChessGameService {
             return;
         }
 
-        gameSessions.getSecond().forEach(currentSession -> sendMessage(currentSession, resultMessage));
+        sessions.forEach(currentSession -> sendMessage(currentSession, resultMessage));
     }
 
     private void initializeGameSession(Session session, Username username, Message message) {
@@ -174,7 +181,7 @@ public class ChessGameService {
     private void startNewGame(Session session, Username username, GameParameters gameParameters) {
         final UserAccount firstPlayer = outboundUserRepository.findByUsername(username).orElseThrow();
 
-        sendMessage(session, Message.info("Finding opponent..."));
+        sendMessage(session, Message.userInfo("Finding opponent..."));
 
         final StatusPair<Triple<Session, UserAccount, GameParameters>> potentialOpponent = locateOpponentForGame(firstPlayer, gameParameters);
         if (!potentialOpponent.status()) {
@@ -206,35 +213,13 @@ public class ChessGameService {
                 continue;
             }
 
-            final boolean isOpponent = this.validateOpponentEligibility(firstPlayer, gameParameters, potentialOpponent, gameParametersOfPotentialOpponent);
+            final boolean isOpponent = this.validateOpponentEligibility(firstPlayer, gameParameters, potentialOpponent, gameParametersOfPotentialOpponent, false);
             if (isOpponent) {
                 return StatusPair.ofTrue(entry.getValue());
             }
         }
 
         return StatusPair.ofFalse();
-    }
-
-    private boolean validateOpponentEligibility(final UserAccount player, final GameParameters gameParameters,
-                                                final UserAccount opponent, final GameParameters opponentGameParameters) {
-        assert gameParameters.timeControllingTYPE() != null;
-        final boolean sameTimeControlling = gameParameters.timeControllingTYPE().equals(opponentGameParameters.timeControllingTYPE());
-        if (!sameTimeControlling) {
-            return false;
-        }
-
-        final boolean validRatingDiff = Math.abs(player.getRating().rating() - opponent.getRating().rating()) <= 1500;
-        if (!validRatingDiff) {
-            return false;
-        }
-
-        final boolean colorNotSpecified = gameParameters.color() == null || opponentGameParameters.color() == null;
-        if (colorNotSpecified) {
-            return true;
-        }
-
-        final boolean sameColor = gameParameters.color().equals(opponentGameParameters.color());
-        return !sameColor;
     }
 
     private void handlePartnershipGameRequest(Session session, Username addresserUsername, Username addresseeUsername, GameParameters gameParameters) {
@@ -256,9 +241,15 @@ public class ChessGameService {
             return;
         }
 
+        final boolean isValidFEN = Objects.isNull(gameParameters.FEN()) || chessEngineAPI.validateFEN(gameParameters.FEN());
+        if (!isValidFEN) {
+            sendMessage(session, Message.error("Invalid FEN"));
+            return;
+        }
+
         partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
 
-        final StatusPair<GameParameters> isPartnershipGameAgreed = checkPartnershipAgreement(addressee, addresserUsername.username());
+        final StatusPair<GameParameters> isPartnershipGameAgreed = checkPartnershipAgreement(addresseeAccount, addresserAccount, gameParameters);
         if (isPartnershipGameAgreed.status()) {
             var addresserSession = sessions.get(addresserUsername).getFirst();
             var addresseeSession = sessions.get(addresseeAccount.getUsername()).getFirst();
@@ -269,15 +260,87 @@ public class ChessGameService {
                     true
             );
         }
+
+        final boolean isAddresseeActive = Objects.nonNull(sessions.get(addresseeUsername));
+        if (isAddresseeActive) {
+            Color color = null;
+            if (Objects.nonNull(gameParameters.color())) {
+                color = gameParameters.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
+            }
+
+            Message message = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                    .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
+                    .time(gameParameters.timeControllingTYPE())
+                    .FEN(gameParameters.FEN())
+                    .color(color)
+                    .build();
+
+            sendMessage(sessions.get(addresseeUsername).getFirst(), message);
+        }
     }
 
-    private StatusPair<GameParameters> checkPartnershipAgreement(String addressee, String addresser) {
-        final Map<String, GameParameters> requests = partnershipGameCacheService.getAll(addresser);
-        if (requests.containsKey(addressee)) {
-            return StatusPair.ofTrue(requests.get(addressee));
+    private StatusPair<GameParameters> checkPartnershipAgreement(UserAccount addressee,
+                                                                 UserAccount addresser,
+                                                                 GameParameters addresserGameParameters) {
+        final Map<String, GameParameters> requests = partnershipGameCacheService.getAll(addresser.getUsername().username());
+
+        if (requests.containsKey(addressee.getUsername().username())) {
+
+            GameParameters addresseeGameParameters = requests.get(addressee.getUsername().username());
+
+            final boolean isOpponentEligible = validateOpponentEligibility(
+                    addresser, addresserGameParameters,
+                    addressee, addresseeGameParameters,
+                    true
+            );
+
+            if (!isOpponentEligible) {
+                return StatusPair.ofFalse();
+            }
+
+            return StatusPair.ofTrue(addresseeGameParameters);
         }
 
         return StatusPair.ofFalse();
+    }
+
+    private boolean validateOpponentEligibility(final UserAccount player, final GameParameters gameParameters,
+                                                final UserAccount opponent, final GameParameters opponentGameParameters,
+                                                final boolean isPartnershipGame) {
+        assert gameParameters.timeControllingTYPE() != null;
+        final boolean sameTimeControlling = gameParameters.timeControllingTYPE().equals(opponentGameParameters.timeControllingTYPE());
+        if (!sameTimeControlling) {
+            return false;
+        }
+
+        if (!isPartnershipGame) {
+            final boolean validRatingDiff = Math.abs(player.getRating().rating() - opponent.getRating().rating()) <= 1500;
+            if (!validRatingDiff) {
+                return false;
+            }
+        }
+
+        final boolean positionIsNotSpecified = gameParameters.FEN() == null && opponentGameParameters.FEN() == null;
+        if (!positionIsNotSpecified) {
+            final boolean invalidPositionSpecification = gameParameters.FEN() == null && opponentGameParameters.FEN() != null ||
+                    gameParameters.FEN() != null && opponentGameParameters.FEN() == null;
+            if (invalidPositionSpecification) {
+                return false;
+            }
+
+            final boolean isPositionsEqual = gameParameters.FEN().equals(opponentGameParameters.FEN());
+            if (!isPositionsEqual) {
+                return false;
+            }
+        }
+
+        final boolean colorNotSpecified = gameParameters.color() == null || opponentGameParameters.color() == null;
+        if (colorNotSpecified) {
+            return true;
+        }
+
+        final boolean sameColor = gameParameters.color().equals(opponentGameParameters.color());
+        return !sameColor;
     }
 
     private void startStandardChessGame(Triple<Session, UserAccount, GameParameters> firstPlayerData,
@@ -307,7 +370,13 @@ public class ChessGameService {
 
     private ChessGame createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
                                               final UserAccount secondPlayer, final GameParameters secondGameParameters) {
-        final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
+        final ChessBoard chessBoard;
+        if (Objects.isNull(gameParameters.FEN())) {
+            chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
+        } else {
+            chessBoard = ChessBoard.fromPosition(UUID.randomUUID(), gameParameters.FEN());
+        }
+
         final ChessGame.TimeControllingTYPE timeControlling = gameParameters.timeControllingTYPE();
         final boolean firstPlayerIsWhite = Objects.nonNull(gameParameters.color()) && gameParameters.color().equals(Color.WHITE);
         final boolean secondPlayerIsBlack = Objects.nonNull(secondGameParameters.color()) && secondGameParameters.color().equals(Color.BLACK);

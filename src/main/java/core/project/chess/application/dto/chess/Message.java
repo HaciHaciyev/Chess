@@ -9,7 +9,6 @@ import core.project.chess.domain.subdomains.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -23,7 +22,7 @@ public record Message(MessageType type,
                       Double whitePlayerRating,
                       Double blackPlayerRating,
                       String timeLeft,
-                      String color,
+                      Color color,
                       String partner,
                       Coordinate from,
                       Coordinate to,
@@ -46,7 +45,7 @@ public record Message(MessageType type,
     }
 
     public static Message gameInit(String color, TimeControllingTYPE time) {
-        return builder(MessageType.GAME_INIT).color(color).time(time).build();
+        return builder(MessageType.GAME_INIT).color(Color.valueOf(color)).time(time).build();
     }
 
     public static Message move(String gameID, Coordinate from, Coordinate to) {
@@ -71,7 +70,7 @@ public record Message(MessageType type,
         return builder(MessageType.INVITATION).message(message).build();
     }
 
-    public static Message connectToExistingGame(String gameID, String color, TimeControllingTYPE time) {
+    public static Message connectToExistingGame(String gameID, Color color, TimeControllingTYPE time) {
         return builder(MessageType.GAME_INIT)
                 .gameID(gameID)
                 .color(color)
@@ -81,7 +80,7 @@ public record Message(MessageType type,
 
     public static Message partnershipGame(String color, String partner, TimeControllingTYPE time) {
         return builder(MessageType.GAME_INIT)
-                .color(color)
+                .color(Color.valueOf(color))
                 .partner(partner)
                 .time(time)
                 .build();
@@ -149,10 +148,8 @@ public record Message(MessageType type,
 
     public Result<GameParameters, IllegalArgumentException> gameParameters() {
         try {
-            Color color = Objects.nonNull(this.color) ? Color.valueOf(this.color) : null;
             TimeControllingTYPE time = Objects.requireNonNullElse(this.time, TimeControllingTYPE.DEFAULT);
-
-            return Result.success(new GameParameters(color, time, LocalDateTime.now()));
+            return Result.success(new GameParameters(this.color, time, this.FEN));
         } catch (IllegalArgumentException e) {
             return Result.failure(e);
         }
@@ -183,7 +180,7 @@ public record Message(MessageType type,
         private Double whitePlayerRating;
         private Double blackPlayerRating;
         private String timeLeft;
-        private String color;
+        private Color color;
         private String partner;
         private Coordinate from;
         private Coordinate to;
@@ -235,7 +232,7 @@ public record Message(MessageType type,
             return this;
         }
 
-        public Builder color(String color) {
+        public Builder color(Color color) {
             this.color = color;
             return this;
         }
