@@ -4,6 +4,7 @@ import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.subdomains.chess.pieces.*;
+import core.project.chess.domain.subdomains.chess.util.ChessNotationsValidator;
 import core.project.chess.domain.subdomains.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.subdomains.chess.value_objects.FromFEN;
 import core.project.chess.infrastructure.utilities.containers.Pair;
@@ -187,8 +188,12 @@ public class ChessBoard {
      * @throws IllegalArgumentException If the provided FEN notation are invalid.
      */
     public static ChessBoard fromPosition(final UUID chessBoardId, final String fen) {
-        // TODO
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, null, false);
+        StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
+        if (!isValidFEN.status()) {
+            throw new IllegalArgumentException("Invalid FEN.");
+        }
+
+        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, isValidFEN.orElseThrow(), false);
     }
 
     /**
@@ -201,8 +206,12 @@ public class ChessBoard {
      * @throws IllegalArgumentException If the provided FEN notation are invalid.
      */
     public static ChessBoard fromPositionPureChess(final UUID chessBoardId, final String fen) {
-        // TODO
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, null, true);
+        StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
+        if (!isValidFEN.status()) {
+            throw new IllegalArgumentException("Invalid FEN.");
+        }
+
+        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, isValidFEN.orElseThrow(), true);
     }
 
     /**
@@ -425,6 +434,34 @@ public class ChessBoard {
         King king = theKing(kingColor);
 
         return king.safeForKing(this, kingColor, from, to);
+    }
+
+    private void validateStalemateAndCheckmate(FromFEN fromFEN) {
+        final Color activeColor = fromFEN.figuresTurn();
+        final Optional<Pair<Coordinate, Coordinate>> lastMove = fromFEN.isLastMovementWasPassage();
+        final Pair<Coordinate, Coordinate> latestMovement = lastMove.isEmpty() ? null : lastMove.orElseThrow();
+        final King whiteKing = theKing(WHITE);
+        final King blackKing = theKing(BLACK);
+
+        final Operations checkOrMateForWhite = whiteKing.kingStatus(this, WHITE, latestMovement);
+        if (checkOrMateForWhite.equals(CHECKMATE) || !activeColor.equals(WHITE) && checkOrMateForWhite.equals(CHECK)) {
+            throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
+        }
+
+        final Operations checkOrMateForBlack = blackKing.kingStatus(this, BLACK, latestMovement);
+        if (checkOrMateForBlack.equals(CHECKMATE) || !activeColor.equals(BLACK) && checkOrMateForBlack.equals(CHECK)) {
+            throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
+        }
+
+        final boolean stalemateForWhite = activeColor.equals(WHITE) && whiteKing.stalemate(this, WHITE, latestMovement);
+        if (stalemateForWhite) {
+            throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
+        }
+
+        final boolean stalemateForBlack = activeColor.equals(BLACK) && blackKing.stalemate(this, BLACK, latestMovement);
+        if (stalemateForBlack) {
+            throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
+        }
     }
 
     /**

@@ -4,7 +4,7 @@ import core.project.chess.domain.subdomains.chess.entities.ChessBoard;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.pieces.*;
-import core.project.chess.domain.subdomains.chess.util.ChessNotationValidator;
+import core.project.chess.domain.subdomains.chess.util.ChessNotationsValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
@@ -104,7 +104,7 @@ public class AlgebraicNotation {
             throw new IllegalArgumentException("Algebraic notation can`t be black.");
         }
 
-        ChessNotationValidator.validateAlgebraicNotation(algebraicNotation);
+        ChessNotationsValidator.validateAlgebraicNotation(algebraicNotation);
 
         return new AlgebraicNotation(algebraicNotation);
     }
@@ -448,7 +448,7 @@ public class AlgebraicNotation {
      * @throws IllegalStateException if the promotion type is unexpected.
      */
     public StatusPair<PieceTYPE> promotionType() {
-        if (ChessNotationValidator.isPromotion(this.algebraicNotation) && ChessNotationValidator.isPromotionPlusOperation(this.algebraicNotation)) {
+        if (ChessNotationsValidator.isPromotion(this.algebraicNotation) && ChessNotationsValidator.isPromotionPlusOperation(this.algebraicNotation)) {
             final char promotionType = this.algebraicNotation.charAt(6);
 
             return switch (promotionType) {

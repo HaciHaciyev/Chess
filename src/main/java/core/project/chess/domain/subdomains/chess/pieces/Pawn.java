@@ -1,12 +1,12 @@
 package core.project.chess.domain.subdomains.chess.pieces;
 
+import core.project.chess.domain.subdomains.chess.util.ChessNotationsValidator;
 import core.project.chess.domain.subdomains.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.subdomains.chess.entities.ChessBoard;
 import core.project.chess.domain.subdomains.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.chess.util.ChessBoardNavigator;
-import core.project.chess.domain.subdomains.chess.util.ChessNotationValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
@@ -236,7 +236,7 @@ public record Pawn(Color color)
         Objects.requireNonNull(algebraicNotationVO);
 
         final String algebraicNotation = algebraicNotationVO.algebraicNotation();
-        if (!ChessNotationValidator.isSimplePawnMovement(algebraicNotation)) {
+        if (!ChessNotationsValidator.isSimplePawnMovement(algebraicNotation)) {
             return false;
         }
 
@@ -448,14 +448,8 @@ public record Pawn(Color color)
         final Coordinate to = latestMovement.getSecond();
 
         return switch (color) {
-            case WHITE -> {
-                final boolean passage = from.columnToInt() == to.columnToInt() && from.getRow() == 2 && to.getRow() == 4;
-                yield passage;
-            }
-            case BLACK -> {
-                final boolean passage = from.columnToInt() == to.columnToInt() && from.getRow() == 7 && to.getRow() == 5;
-                yield passage;
-            }
+            case WHITE -> from.columnToInt() == to.columnToInt() && from.getRow() == 2 && to.getRow() == 4;
+            case BLACK -> from.columnToInt() == to.columnToInt() && from.getRow() == 7 && to.getRow() == 5;
         };
     }
 }

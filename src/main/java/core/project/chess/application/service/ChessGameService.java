@@ -3,7 +3,6 @@ package core.project.chess.application.service;
 import core.project.chess.application.dto.chess.GameParameters;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
-import core.project.chess.domain.api.engine.ChessEngineAPI;
 import core.project.chess.domain.repositories.inbound.InboundChessRepository;
 import core.project.chess.domain.repositories.inbound.InboundUserRepository;
 import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
@@ -38,8 +37,6 @@ import static core.project.chess.application.util.WSUtilities.sendMessage;
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameService {
-
-    private final ChessEngineAPI chessEngineAPI;
 
     private final InboundUserRepository inboundUserRepository;
 
@@ -241,12 +238,6 @@ public class ChessGameService {
             return;
         }
 
-        final boolean isValidFEN = Objects.isNull(gameParameters.FEN()) || chessEngineAPI.validateFEN(gameParameters.FEN());
-        if (!isValidFEN) {
-            sendMessage(session, Message.error("Invalid FEN"));
-            return;
-        }
-
         partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
 
         final StatusPair<GameParameters> isPartnershipGameAgreed = checkPartnershipAgreement(addresseeAccount, addresserAccount, gameParameters);
@@ -354,27 +345,38 @@ public class ChessGameService {
         UserAccount secondPlayer = secondPlayerData.getSecond();
         GameParameters secondGameParameters = secondPlayerData.getThird();
 
-        ChessGame chessGame = createChessGameInstance(firstPlayer, firstGameParameters, secondPlayer, secondGameParameters);
-        registerGameAndNotifyPlayers(chessGame, firstSession, secondSession);
+        Result<ChessGame, IllegalArgumentException> chessGame = createChessGameInstance(firstPlayer, firstGameParameters, secondPlayer, secondGameParameters);
+        if (!chessGame.success()) {
+            Message errorMessage = Message.error("Can`t create a chess game.%s".formatted(chessGame.throwable().getMessage()));
+            sendMessage(firstSession, errorMessage);
+            sendMessage(secondSession, errorMessage);
+            return;
+        }
+
+        registerGameAndNotifyPlayers(chessGame.orElseThrow(), firstSession, secondSession);
 
         if (isPartnershipGame) {
             partnershipGameCacheService.delete(firstPlayer.getUsername().username(), secondPlayer.getUsername().username());
             partnershipGameCacheService.delete(secondPlayer.getUsername().username(), firstPlayer.getUsername().username());
         }
 
-        inboundChessRepository.completelySaveStartedChessGame(chessGame);
+        inboundChessRepository.completelySaveStartedChessGame(chessGame.orElseThrow());
 
-        ChessGameSpectator spectator = new ChessGameSpectator(chessGame);
+        ChessGameSpectator spectator = new ChessGameSpectator(chessGame.orElseThrow());
         spectator.start();
     }
 
-    private ChessGame createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
-                                              final UserAccount secondPlayer, final GameParameters secondGameParameters) {
+    private Result<ChessGame, IllegalArgumentException> createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
+                                                                                final UserAccount secondPlayer, final GameParameters secondGameParameters) {
         final ChessBoard chessBoard;
-        if (Objects.isNull(gameParameters.FEN())) {
-            chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
-        } else {
-            chessBoard = ChessBoard.fromPosition(UUID.randomUUID(), gameParameters.FEN());
+        try {
+            if (Objects.isNull(gameParameters.FEN())) {
+                chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
+            } else {
+                chessBoard = ChessBoard.fromPosition(UUID.randomUUID(), gameParameters.FEN());
+            }
+        } catch (IllegalArgumentException e) {
+            return Result.failure(e);
         }
 
         final ChessGame.TimeControllingTYPE timeControlling = gameParameters.timeControllingTYPE();
@@ -382,10 +384,12 @@ public class ChessGameService {
         final boolean secondPlayerIsBlack = Objects.nonNull(secondGameParameters.color()) && secondGameParameters.color().equals(Color.BLACK);
 
         if (firstPlayerIsWhite && secondPlayerIsBlack) {
-            return ChessGame.of(UUID.randomUUID(), chessBoard, firstPlayer, secondPlayer, SessionEvents.defaultEvents(), timeControlling);
+            ChessGame chessGame = ChessGame.of(UUID.randomUUID(), chessBoard, firstPlayer, secondPlayer, SessionEvents.defaultEvents(), timeControlling);
+            return Result.success(chessGame);
         }
 
-        return ChessGame.of(UUID.randomUUID(), chessBoard, secondPlayer, firstPlayer, SessionEvents.defaultEvents(), timeControlling);
+        ChessGame chessGame = ChessGame.of(UUID.randomUUID(), chessBoard, secondPlayer, firstPlayer, SessionEvents.defaultEvents(), timeControlling);
+        return Result.success(chessGame);
     }
 
     private void registerGameAndNotifyPlayers(ChessGame chessGame, Session firstSession, Session secondSession) {
