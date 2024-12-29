@@ -281,6 +281,7 @@ public class ChessGameService {
                 .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
                 .time(gameParameters.time())
                 .FEN(gameParameters.FEN())
+                .PGN(gameParameters.PGN())
                 .color(color)
                 .build();
 

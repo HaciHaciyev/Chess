@@ -155,7 +155,7 @@ public record Message(MessageType type,
     public Result<GameParameters, IllegalArgumentException> gameParameters() {
         try {
             Time time = Objects.requireNonNullElse(this.time, Time.DEFAULT);
-            return Result.success(new GameParameters(this.color, time, this.FEN, this.isCasualGame));
+            return Result.success(new GameParameters(this.color, time, this.FEN, this.isCasualGame, this.PGN));
         } catch (IllegalArgumentException e) {
             return Result.failure(e);
         }

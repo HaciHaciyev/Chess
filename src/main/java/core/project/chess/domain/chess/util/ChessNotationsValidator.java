@@ -8,6 +8,7 @@ import core.project.chess.domain.chess.value_objects.FromFEN;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -59,6 +60,11 @@ public class ChessNotationsValidator {
      */
     public static StatusPair<FromFEN> validateFEN(final String fen) {
         return validateForsythEdwardsNotation(fen);
+    }
+
+    public static StatusPair<List<AlgebraicNotation>> listOfAlgebraicNotations(String pgn) {
+        // TODO for AinGrace
+        return null;
     }
 
     /**
@@ -613,5 +619,4 @@ public class ChessNotationsValidator {
 
         return Pair.of(Coordinate.of(startRow, column).orElseThrow(), endCoordinate);
     }
-
 }

@@ -38,20 +38,6 @@ public class GameFunctionalityService {
             return false;
         }
 
-        final boolean positionIsNotSpecified = gameParameters.FEN() == null && opponentGameParameters.FEN() == null;
-        if (!positionIsNotSpecified) {
-            final boolean invalidPositionSpecification = gameParameters.FEN() == null && opponentGameParameters.FEN() != null ||
-                    gameParameters.FEN() != null && opponentGameParameters.FEN() == null;
-            if (invalidPositionSpecification) {
-                return false;
-            }
-
-            final boolean isPositionsEqual = gameParameters.FEN().equals(opponentGameParameters.FEN());
-            if (!isPositionsEqual) {
-                return false;
-            }
-        }
-
         final boolean colorNotSpecified = gameParameters.color() == null || opponentGameParameters.color() == null;
         if (colorNotSpecified) {
             return true;

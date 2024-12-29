@@ -18,13 +18,17 @@ public class ChessGameFactory {
     public Result<ChessGame, IllegalArgumentException> createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
                                                                                final UserAccount secondPlayer, final GameParameters secondGameParameters) {
         final ChessBoard chessBoard;
-        boolean isCasualGame = false;
+        boolean isCasualGame = gameParameters.isCasualGame();
         try {
-            if (Objects.isNull(gameParameters.FEN())) {
+            if (Objects.isNull(gameParameters.FEN()) && Objects.isNull(gameParameters.PGN())) {
                 chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
             } else {
                 isCasualGame = true;
-                chessBoard = ChessBoard.fromPosition(UUID.randomUUID(), gameParameters.FEN());
+                if (Objects.nonNull(gameParameters.PGN())) {
+                    chessBoard = ChessBoard.fromPGN(UUID.randomUUID(), gameParameters.PGN());
+                } else {
+                    chessBoard = ChessBoard.fromPosition(UUID.randomUUID(), gameParameters.FEN());
+                }
             }
         } catch (IllegalArgumentException e) {
             return Result.failure(e);

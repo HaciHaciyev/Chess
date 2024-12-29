@@ -340,6 +340,17 @@ public class AlgebraicNotation {
         };
     }
 
+    public static Piece fromSymbol(PieceTYPE symbol, Color color) {
+        return switch (symbol) {
+            case K -> new King(color);
+            case Q -> new Queen(color);
+            case R -> new Rook(color);
+            case B -> new Bishop(color);
+            case N -> new Knight(color);
+            case P -> new Pawn(color);
+        };
+    }
+
     public PieceTYPE pieceTYPE() {
         final char firstChar = this.algebraicNotation.charAt(0);
 

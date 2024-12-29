@@ -7,4 +7,5 @@ import jakarta.annotation.Nullable;
 public record GameParameters(@Nullable Color color,
                              @Nullable ChessGame.Time time,
                              @Nullable String FEN,
-                             boolean isCasualGame) {}
+                             boolean isCasualGame,
+                             @Nullable String PGN) {}
