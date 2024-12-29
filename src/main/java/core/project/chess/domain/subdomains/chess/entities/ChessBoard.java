@@ -149,6 +149,7 @@ public class ChessBoard {
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
 
         initializerFromFEN(FEN);
+        validateStalemateAndCheckmate(inCaseOfInitFromFEN);
     }
 
     /**
