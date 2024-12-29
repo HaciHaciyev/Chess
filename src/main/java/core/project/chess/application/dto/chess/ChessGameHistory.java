@@ -15,7 +15,7 @@ public record ChessGameHistory(
         String[] fenRepresentations,
         Username playerForWhite,
         Username playerForBlack,
-        ChessGame.TimeControllingTYPE timeControl,
+        ChessGame.Time timeControl,
         GameResult gameResult,
         double whitePlayerRating,
         double blackPlayerRating,

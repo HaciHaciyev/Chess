@@ -157,7 +157,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                 (String[]) rs.getArray("fenRepresentations").getArray(),
                 new Username(rs.getString("playerForWhite")),
                 new Username(rs.getString("playerForBlack")),
-                ChessGame.TimeControllingTYPE.valueOf(rs.getString("timeControl")),
+                ChessGame.Time.valueOf(rs.getString("timeControl")),
                 GameResult.valueOf(rs.getString("gameResult")),
                 rs.getDouble("whitePlayerRating"),
                 rs.getDouble("blackPlayerRating"),

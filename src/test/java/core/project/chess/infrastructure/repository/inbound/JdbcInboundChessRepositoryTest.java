@@ -78,7 +78,7 @@ class JdbcInboundChessRepositoryTest {
                 userAccountSupplier(first).get(),
                 userAccountSupplier(second).get(),
                 SessionEvents.defaultEvents(),
-                ChessGame.TimeControllingTYPE.DEFAULT);
+                ChessGame.Time.DEFAULT, false);
     }
 
     Supplier<UserAccount> userAccountSupplier(String username) {

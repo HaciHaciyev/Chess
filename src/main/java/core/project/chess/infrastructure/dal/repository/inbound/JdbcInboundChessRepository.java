@@ -48,7 +48,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             chessGame.getChessGameId().toString(),
             chessGame.getPlayerForBlackRating().rating(),
             chessGame.getPlayerForBlackRating().rating(),
-            chessGame.getTimeControllingTYPE().toString(),
+            chessGame.getTime().toString(),
             chessGame.getSessionEvents().creationDate(),
             chessGame.getSessionEvents().lastUpdateDate(),
             false, "NONE",

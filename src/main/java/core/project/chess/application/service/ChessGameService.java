@@ -261,7 +261,7 @@ public class ChessGameService {
 
             Message message = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
-                    .time(gameParameters.timeControllingTYPE())
+                    .time(gameParameters.time())
                     .FEN(gameParameters.FEN())
                     .color(color)
                     .build();
@@ -298,8 +298,8 @@ public class ChessGameService {
     private boolean validateOpponentEligibility(final UserAccount player, final GameParameters gameParameters,
                                                 final UserAccount opponent, final GameParameters opponentGameParameters,
                                                 final boolean isPartnershipGame) {
-        assert gameParameters.timeControllingTYPE() != null;
-        final boolean sameTimeControlling = gameParameters.timeControllingTYPE().equals(opponentGameParameters.timeControllingTYPE());
+        assert gameParameters.time() != null;
+        final boolean sameTimeControlling = gameParameters.time().equals(opponentGameParameters.time());
         if (!sameTimeControlling) {
             return false;
         }
@@ -369,26 +369,44 @@ public class ChessGameService {
     private Result<ChessGame, IllegalArgumentException> createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
                                                                                 final UserAccount secondPlayer, final GameParameters secondGameParameters) {
         final ChessBoard chessBoard;
+        boolean isCasualGame = false;
         try {
             if (Objects.isNull(gameParameters.FEN())) {
                 chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
             } else {
+                isCasualGame = true;
                 chessBoard = ChessBoard.fromPosition(UUID.randomUUID(), gameParameters.FEN());
             }
         } catch (IllegalArgumentException e) {
             return Result.failure(e);
         }
 
-        final ChessGame.TimeControllingTYPE timeControlling = gameParameters.timeControllingTYPE();
+        final ChessGame.Time timeControlling = gameParameters.time();
         final boolean firstPlayerIsWhite = Objects.nonNull(gameParameters.color()) && gameParameters.color().equals(Color.WHITE);
         final boolean secondPlayerIsBlack = Objects.nonNull(secondGameParameters.color()) && secondGameParameters.color().equals(Color.BLACK);
 
         if (firstPlayerIsWhite && secondPlayerIsBlack) {
-            ChessGame chessGame = ChessGame.of(UUID.randomUUID(), chessBoard, firstPlayer, secondPlayer, SessionEvents.defaultEvents(), timeControlling);
+            ChessGame chessGame = ChessGame.of(
+                    UUID.randomUUID(),
+                    chessBoard,
+                    firstPlayer,
+                    secondPlayer,
+                    SessionEvents.defaultEvents(),
+                    timeControlling,
+                    isCasualGame
+            );
             return Result.success(chessGame);
         }
 
-        ChessGame chessGame = ChessGame.of(UUID.randomUUID(), chessBoard, secondPlayer, firstPlayer, SessionEvents.defaultEvents(), timeControlling);
+        ChessGame chessGame = ChessGame.of(
+                UUID.randomUUID(),
+                chessBoard,
+                secondPlayer,
+                firstPlayer,
+                SessionEvents.defaultEvents(),
+                timeControlling,
+                isCasualGame
+        );
         return Result.success(chessGame);
     }
 
@@ -417,7 +435,7 @@ public class ChessGameService {
                 .blackPlayerUsername(chessGame.getPlayerForBlack().getUsername())
                 .whitePlayerRating(chessGame.getPlayerForWhiteRating().rating())
                 .blackPlayerRating(chessGame.getPlayerForBlackRating().rating())
-                .time(chessGame.getTimeControllingTYPE())
+                .time(chessGame.getTime())
                 .build();
 
         final Message message = Message.builder(MessageType.FEN_PGN)

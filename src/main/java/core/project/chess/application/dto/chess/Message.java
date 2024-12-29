@@ -2,7 +2,7 @@ package core.project.chess.application.dto.chess;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import core.project.chess.application.util.JSONUtilities;
-import core.project.chess.domain.subdomains.chess.entities.ChessGame.TimeControllingTYPE;
+import core.project.chess.domain.subdomains.chess.entities.ChessGame.Time;
 import core.project.chess.domain.subdomains.chess.enumerations.Color;
 import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
 import core.project.chess.domain.subdomains.user.value_objects.Username;
@@ -28,7 +28,7 @@ public record Message(MessageType type,
                       Coordinate to,
                       String inCaseOfPromotion,
                       String message,
-                      TimeControllingTYPE time) {
+                      Time time, Boolean isCasualGame) {
 
     private static final Pattern PROMOTION_PATTERN = Pattern.compile("^[QRNBqrnb]$");
     private static final String INVITATION_MESSAGE = "User %s invite you for a chess game with parameters: figures color for you = %s, time control = %s.";
@@ -44,7 +44,7 @@ public record Message(MessageType type,
         return new Builder(type);
     }
 
-    public static Message gameInit(String color, TimeControllingTYPE time) {
+    public static Message gameInit(String color, Time time) {
         return builder(MessageType.GAME_INIT).color(Color.valueOf(color)).time(time).build();
     }
 
@@ -66,11 +66,11 @@ public record Message(MessageType type,
     }
 
     public static Message invitation(String username, GameParameters gameParams) {
-        String message = String.format(INVITATION_MESSAGE, username, gameParams.color(), gameParams.timeControllingTYPE());
+        String message = String.format(INVITATION_MESSAGE, username, gameParams.color(), gameParams.time());
         return builder(MessageType.INVITATION).message(message).build();
     }
 
-    public static Message connectToExistingGame(String gameID, Color color, TimeControllingTYPE time) {
+    public static Message connectToExistingGame(String gameID, Color color, Time time) {
         return builder(MessageType.GAME_INIT)
                 .gameID(gameID)
                 .color(color)
@@ -78,7 +78,7 @@ public record Message(MessageType type,
                 .build();
     }
 
-    public static Message partnershipGame(String color, String partner, TimeControllingTYPE time) {
+    public static Message partnershipGame(String color, String partner, Time time) {
         return builder(MessageType.GAME_INIT)
                 .color(Color.valueOf(color))
                 .partner(partner)
@@ -148,7 +148,7 @@ public record Message(MessageType type,
 
     public Result<GameParameters, IllegalArgumentException> gameParameters() {
         try {
-            TimeControllingTYPE time = Objects.requireNonNullElse(this.time, TimeControllingTYPE.DEFAULT);
+            Time time = Objects.requireNonNullElse(this.time, Time.DEFAULT);
             return Result.success(new GameParameters(this.color, time, this.FEN));
         } catch (IllegalArgumentException e) {
             return Result.failure(e);
@@ -186,7 +186,8 @@ public record Message(MessageType type,
         private Coordinate to;
         private String inCaseOfPromotion;
         private String message;
-        private TimeControllingTYPE time;
+        private Time time;
+        private Boolean isCasualGame;
 
         public Builder(MessageType type) {
             this.type = Objects.requireNonNull(type, "Message type must not be null.");
@@ -262,15 +263,20 @@ public record Message(MessageType type,
             return this;
         }
 
-        public Builder time(TimeControllingTYPE time) {
+        public Builder time(Time time) {
             this.time = time;
+            return this;
+        }
+
+        public Builder isCasualGame(boolean isCasualGame) {
+            this.isCasualGame = isCasualGame;
             return this;
         }
 
         public Message build() {
             return new Message(type, gameID, FEN, PGN, whitePlayerUsername, blackPlayerUsername,
                     whitePlayerRating, blackPlayerRating, timeLeft, color, partner,
-                    from, to, inCaseOfPromotion, message, time);
+                    from, to, inCaseOfPromotion, message, time, isCasualGame);
         }
     }
 }

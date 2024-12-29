@@ -103,7 +103,7 @@ class ChessWSTest {
         String token = login(account);
 
         try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, token))) {
-            sendMessage(session, account.username(), Message.gameInit("WHITE", ChessGame.TimeControllingTYPE.RAPID));
+            sendMessage(session, account.username(), Message.gameInit("WHITE", ChessGame.Time.RAPID));
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
         }
     }
@@ -124,10 +124,10 @@ class ChessWSTest {
              Session bSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))) {
 
             String wName = whiteForm.username();
-            sendMessage(wSession, wName, Message.gameInit("WHITE", ChessGame.TimeControllingTYPE.RAPID));
+            sendMessage(wSession, wName, Message.gameInit("WHITE", ChessGame.Time.RAPID));
 
             String bName = blackForm.username();
-            sendMessage(bSession, bName, Message.gameInit("BLACK", ChessGame.TimeControllingTYPE.RAPID));
+            sendMessage(bSession, bName, Message.gameInit("BLACK", ChessGame.Time.RAPID));
 
             String gameID = extractGameID();
             simulateGame(wSession, wName, gameID, bSession, bName);
@@ -297,8 +297,8 @@ class ChessWSTest {
             String wName = whiteForm.username();
             String bName = blackForm.username();
 
-            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, ChessGame.TimeControllingTYPE.RAPID));
-            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, ChessGame.TimeControllingTYPE.RAPID));
+            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, ChessGame.Time.RAPID));
+            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, ChessGame.Time.RAPID));
 
             Thread.sleep(Duration.ofSeconds(1));
 

@@ -1017,7 +1017,7 @@ public class ChessGameTest {
                 userAccountSupplier("firstPlayer").get(),
                 userAccountSupplier("secondPlayer").get(),
                 SessionEvents.defaultEvents(),
-                ChessGame.TimeControllingTYPE.DEFAULT);
+                ChessGame.Time.DEFAULT, false);
     }
 
     static Supplier<UserAccount> userAccountSupplier(String username) {
