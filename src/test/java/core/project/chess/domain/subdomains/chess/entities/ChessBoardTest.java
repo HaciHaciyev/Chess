@@ -6,8 +6,6 @@ import core.project.chess.domain.chess.pieces.*;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
-
 @Disabled
 class ChessBoardTest {
 
@@ -18,7 +16,7 @@ class ChessBoardTest {
 
             long startTime = System.nanoTime();
 
-            ChessBoard.starndardChessBoard(UUID.randomUUID());
+            ChessBoard.starndardChessBoard();
 
             long endTime = System.nanoTime();
             long duration = endTime - startTime;

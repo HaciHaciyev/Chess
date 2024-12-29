@@ -166,11 +166,10 @@ public class ChessBoard {
      * Factory method.
      * Creates a new `ChessBoard` instance with the standard chess board initialization.
      *
-     * @param chessBoardId The unique identifier of the chess board.
      * @return A new `ChessBoard` instance with the standard chess board initialization.
      */
-    public static ChessBoard starndardChessBoard(final UUID chessBoardId) {
-        return new ChessBoard(chessBoardId, InitializationTYPE.STANDARD, null, false, null);
+    public static ChessBoard starndardChessBoard() {
+        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.STANDARD, null, false, null);
     }
 
     /**
@@ -180,11 +179,10 @@ public class ChessBoard {
      *      - three-fold rule;
      *      - fifty moves rule.
      *
-     *  @param chessBoardId The unique identifier of the chess board.
      *  @return A new `ChessBoard` instance with the standard chess board initialization.
      */
-    public static ChessBoard pureChess(final UUID chessBoardId) {
-        return new ChessBoard(chessBoardId, InitializationTYPE.STANDARD, null, true, null);
+    public static ChessBoard pureChess() {
+        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.STANDARD, null, true, null);
     }
 
     /**
@@ -193,18 +191,18 @@ public class ChessBoard {
      *      - insufficient mating material;
      *      - three-fold rule;
      *      - fifty moves rule.
-     *
+     *final UUID chessBoardId,
      * @param fen The FEN notation representing the current position of the board.
      * @return A new ChessBoard instance initialized from the provided FEN notation.
      * @throws IllegalArgumentException If the provided FEN notation are invalid.
      */
-    public static ChessBoard fromPosition(final UUID chessBoardId, final String fen) {
+    public static ChessBoard fromPosition(final String fen) {
         StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
         if (!isValidFEN.status()) {
             throw new IllegalArgumentException("Invalid FEN.");
         }
 
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, isValidFEN.orElseThrow(), false, null);
+        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, isValidFEN.orElseThrow(), false, null);
     }
 
     /**
@@ -216,13 +214,13 @@ public class ChessBoard {
      *
      * @throws IllegalArgumentException If the provided FEN notation are invalid.
      */
-    public static ChessBoard fromPositionPureChess(final UUID chessBoardId, final String fen) {
+    public static ChessBoard pureChessFromPosition(final String fen) {
         StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
         if (!isValidFEN.status()) {
             throw new IllegalArgumentException("Invalid FEN.");
         }
 
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, isValidFEN.orElseThrow(), true, null);
+        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, isValidFEN.orElseThrow(), true, null);
     }
 
     /**
@@ -231,18 +229,17 @@ public class ChessBoard {
      * <p>
      * The created board will follow all standard chess rules.
      *
-     * @param chessBoardId The unique identifier of the chess board.
      * @param pgn The PGN notation representing the sequence of moves leading to the current position of the board.
      * @return A new `ChessBoard` instance initialized from the provided PGN notation.
      * @throws IllegalArgumentException If the provided PGN notation is invalid.
      */
-    public static ChessBoard fromPGN(final UUID chessBoardId, final String pgn) {
+    public static ChessBoard fromPGN(final String pgn) {
         StatusPair<List<AlgebraicNotation>> listOfAlgebraicNotations = ChessNotationsValidator.listOfAlgebraicNotations(pgn);
         if (!listOfAlgebraicNotations.status()) {
             throw new IllegalArgumentException("Invalid PGN");
         }
 
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, null, false, listOfAlgebraicNotations.orElseThrow());
+        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, null, false, listOfAlgebraicNotations.orElseThrow());
     }
 
     /**
@@ -255,18 +252,17 @@ public class ChessBoard {
      * <p>
      * This allows the creation of chess boards for scenarios where such rules are not enforced.
      *
-     * @param chessBoardId The unique identifier of the chess board.
      * @param pgn The PGN notation representing the sequence of moves leading to the current position of the board.
      * @return A new `ChessBoard` instance initialized from the provided PGN notation.
      * @throws IllegalArgumentException If the provided PGN notation is invalid.
      */
-    public static ChessBoard fromPGNPureChess(final UUID chessBoardId, final String pgn) {
+    public static ChessBoard pureChessFromPGN(final String pgn) {
         StatusPair<List<AlgebraicNotation>> listOfAlgebraicNotations = ChessNotationsValidator.listOfAlgebraicNotations(pgn);
         if (!listOfAlgebraicNotations.status()) {
             throw new IllegalArgumentException("Invalid PGN");
         }
 
-        return new ChessBoard(chessBoardId, InitializationTYPE.DURING_THE_GAME, null, true, listOfAlgebraicNotations.orElseThrow());
+        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, null, true, listOfAlgebraicNotations.orElseThrow());
     }
 
     /**

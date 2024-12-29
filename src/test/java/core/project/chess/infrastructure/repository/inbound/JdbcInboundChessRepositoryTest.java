@@ -70,7 +70,7 @@ class JdbcInboundChessRepositoryTest {
     }
 
     Supplier<ChessGame> defaultChessGameSupplier(final String first, final String second) {
-        final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
+        final ChessBoard chessBoard = ChessBoard.starndardChessBoard();
 
         return () -> ChessGame.of(
                 UUID.randomUUID(),

@@ -1011,7 +1011,7 @@ public class ChessGameTest {
     }
 
     static Supplier<ChessGame> defaultChessGameSupplier() {
-        final ChessBoard chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
+        final ChessBoard chessBoard = ChessBoard.starndardChessBoard();
 
         return () -> ChessGame.of(
                 UUID.randomUUID(),

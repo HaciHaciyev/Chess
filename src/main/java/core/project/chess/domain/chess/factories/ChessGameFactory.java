@@ -21,13 +21,13 @@ public class ChessGameFactory {
         boolean isCasualGame = gameParameters.isCasualGame();
         try {
             if (Objects.isNull(gameParameters.FEN()) && Objects.isNull(gameParameters.PGN())) {
-                chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
+                chessBoard = ChessBoard.starndardChessBoard();
             } else {
                 isCasualGame = true;
                 if (Objects.nonNull(gameParameters.PGN())) {
-                    chessBoard = ChessBoard.fromPGN(UUID.randomUUID(), gameParameters.PGN());
+                    chessBoard = ChessBoard.fromPGN(gameParameters.PGN());
                 } else {
-                    chessBoard = ChessBoard.fromPosition(UUID.randomUUID(), gameParameters.FEN());
+                    chessBoard = ChessBoard.fromPosition(gameParameters.FEN());
                 }
             }
         } catch (IllegalArgumentException e) {
