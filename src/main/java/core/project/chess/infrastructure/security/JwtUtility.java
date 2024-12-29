@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.security;
 
-import core.project.chess.domain.subdomains.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.UserAccount;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.jwt.build.Jwt;

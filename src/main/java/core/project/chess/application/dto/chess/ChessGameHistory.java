@@ -1,8 +1,8 @@
 package core.project.chess.application.dto.chess;
 
-import core.project.chess.domain.subdomains.chess.entities.ChessGame;
-import core.project.chess.domain.subdomains.chess.enumerations.GameResult;
-import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.enumerations.GameResult;
+import core.project.chess.domain.user.value_objects.Username;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;

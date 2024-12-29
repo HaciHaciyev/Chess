@@ -1,6 +1,6 @@
 package core.project.chess.application.service;
 
-import core.project.chess.domain.subdomains.user.value_objects.Email;
+import core.project.chess.domain.user.value_objects.Email;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;

@@ -1,6 +1,6 @@
 package core.project.chess.application.controller.http;
 
-import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
+import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import io.quarkus.security.Authenticated;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

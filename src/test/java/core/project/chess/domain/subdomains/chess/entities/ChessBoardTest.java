@@ -1,7 +1,8 @@
 package core.project.chess.domain.subdomains.chess.entities;
 
-import core.project.chess.domain.subdomains.chess.enumerations.Color;
-import core.project.chess.domain.subdomains.chess.pieces.*;
+import core.project.chess.domain.chess.entities.ChessBoard;
+import core.project.chess.domain.chess.enumerations.Color;
+import core.project.chess.domain.chess.pieces.*;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

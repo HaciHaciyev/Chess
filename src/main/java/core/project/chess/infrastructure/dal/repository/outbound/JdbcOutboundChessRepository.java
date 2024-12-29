@@ -1,10 +1,10 @@
 package core.project.chess.infrastructure.dal.repository.outbound;
 
 import core.project.chess.application.dto.chess.ChessGameHistory;
-import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
-import core.project.chess.domain.subdomains.chess.entities.ChessGame;
-import core.project.chess.domain.subdomains.chess.enumerations.GameResult;
-import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.domain.chess.repositories.OutboundChessRepository;
+import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.enumerations.GameResult;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.JDBC;
 import core.project.chess.infrastructure.exceptions.DataNotFoundException;
 import core.project.chess.infrastructure.utilities.containers.Result;

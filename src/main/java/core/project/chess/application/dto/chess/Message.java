@@ -2,10 +2,11 @@ package core.project.chess.application.dto.chess;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import core.project.chess.application.util.JSONUtilities;
-import core.project.chess.domain.subdomains.chess.entities.ChessGame.Time;
-import core.project.chess.domain.subdomains.chess.enumerations.Color;
-import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
-import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.domain.chess.entities.ChessGame.Time;
+import core.project.chess.domain.chess.enumerations.Color;
+import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.value_objects.GameParameters;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 
@@ -31,7 +32,12 @@ public record Message(MessageType type,
                       Time time, Boolean isCasualGame) {
 
     private static final Pattern PROMOTION_PATTERN = Pattern.compile("^[QRNBqrnb]$");
-    private static final String INVITATION_MESSAGE = "User %s invite you for a chess game with parameters: figures color for you = %s, time control = %s.";
+    private static final String INVITATION_MESSAGE = """
+            User %s invite you for a chess game with parameters:
+                figures color for you: %s,
+                time control: %s,
+                is casual game: %s.
+            """;
 
     public Message {
         Objects.requireNonNull(type, "Message type must not be null.");
@@ -66,7 +72,7 @@ public record Message(MessageType type,
     }
 
     public static Message invitation(String username, GameParameters gameParams) {
-        String message = String.format(INVITATION_MESSAGE, username, gameParams.color(), gameParams.time());
+        String message = String.format(INVITATION_MESSAGE, username, gameParams.color(), gameParams.time(), gameParams.isCasualGame());
         return builder(MessageType.INVITATION).message(message).build();
     }
 
@@ -149,7 +155,7 @@ public record Message(MessageType type,
     public Result<GameParameters, IllegalArgumentException> gameParameters() {
         try {
             Time time = Objects.requireNonNullElse(this.time, Time.DEFAULT);
-            return Result.success(new GameParameters(this.color, time, this.FEN));
+            return Result.success(new GameParameters(this.color, time, this.FEN, this.isCasualGame));
         } catch (IllegalArgumentException e) {
             return Result.failure(e);
         }

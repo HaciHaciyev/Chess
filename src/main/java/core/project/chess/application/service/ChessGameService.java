@@ -1,21 +1,21 @@
 package core.project.chess.application.service;
 
-import core.project.chess.application.dto.chess.GameParameters;
+import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
-import core.project.chess.domain.repositories.inbound.InboundChessRepository;
-import core.project.chess.domain.repositories.inbound.InboundUserRepository;
-import core.project.chess.domain.repositories.outbound.OutboundChessRepository;
-import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
-import core.project.chess.domain.subdomains.chess.entities.ChessBoard;
-import core.project.chess.domain.subdomains.chess.entities.ChessGame;
-import core.project.chess.domain.subdomains.chess.enumerations.Color;
-import core.project.chess.domain.subdomains.chess.enumerations.MessageAddressee;
-import core.project.chess.domain.subdomains.chess.events.SessionEvents;
-import core.project.chess.domain.subdomains.chess.services.GameFunctionalityService;
-import core.project.chess.domain.subdomains.user.entities.UserAccount;
-import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.domain.chess.repositories.InboundChessRepository;
+import core.project.chess.domain.user.repositories.InboundUserRepository;
+import core.project.chess.domain.chess.repositories.OutboundChessRepository;
+import core.project.chess.domain.user.repositories.OutboundUserRepository;
+import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.enumerations.Color;
+import core.project.chess.domain.chess.enumerations.MessageAddressee;
+import core.project.chess.domain.chess.factories.ChessGameFactory;
+import core.project.chess.domain.chess.services.GameFunctionalityService;
+import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
+import core.project.chess.infrastructure.dal.cache.SessionStorage;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static core.project.chess.application.util.WSUtilities.closeSession;
@@ -37,6 +36,10 @@ import static core.project.chess.application.util.WSUtilities.sendMessage;
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameService {
+
+    private final SessionStorage sessionStorage;
+
+    private final ChessGameFactory chessGameFactory;
 
     private final InboundUserRepository inboundUserRepository;
 
@@ -50,12 +53,6 @@ public class ChessGameService {
 
     private final GameInvitationsRepository partnershipGameCacheService;
 
-    private static final ConcurrentHashMap<Username, Pair<Session, UserAccount>> sessions = new ConcurrentHashMap<>();
-
-    private static final ConcurrentHashMap<UUID, Pair<ChessGame, HashSet<Session>>> gameSessions = new ConcurrentHashMap<>();
-
-    private static final ConcurrentHashMap<Username, Triple<Session, UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
-
     public void onOpen(Session session, Username username) {
         CompletableFuture.runAsync(() -> {
             Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(username);
@@ -64,7 +61,7 @@ public class ChessGameService {
                 return;
             }
 
-            sessions.put(username, Pair.of(session, result.value()));
+            sessionStorage.addSession(session, result.value());
             partnershipGameCacheService
                     .getAll(username.username())
                     .forEach((key, value) -> {
@@ -81,24 +78,12 @@ public class ChessGameService {
             return;
         }
 
-        final String gameID = message.gameID();
-        if (Objects.isNull(gameID) || gameID.isBlank()) {
-            sendMessage(session, Message.error("Game id is required."));
+        final Optional<String> gameID = extractAndValidateGameID(session, message);
+        if (gameID.isEmpty()) {
             return;
         }
 
-        final Object gameIdObj = session.getUserProperties().get("game-id");
-        if (Objects.isNull(gameIdObj)) {
-            sendMessage(session, Message.error("Game id is required."));
-            return;
-        }
-
-        if (gameIdObj instanceof List<?> ls && !ls.contains(gameID)) {
-            sendMessage(session, Message.error("This game id is do not exists."));
-            return;
-        }
-
-        final Pair<ChessGame, HashSet<Session>> gamePlusSessions = gameSessions.get(UUID.fromString(gameID));
+        final Pair<ChessGame, HashSet<Session>> gamePlusSessions = sessionStorage.getGameById(UUID.fromString(gameID.orElseThrow()));
         if (Objects.isNull(gamePlusSessions)) {
             sendMessage(session, Message.error("This game session does not exist."));
             return;
@@ -107,6 +92,28 @@ public class ChessGameService {
         CompletableFuture.runAsync(
                 () -> handleWebSocketMessage(session, username.username(), message, gamePlusSessions)
         );
+    }
+
+    private static Optional<String> extractAndValidateGameID(Session session, Message message) {
+        final String gameID = message.gameID();
+
+        if (Objects.isNull(gameID) || gameID.isBlank()) {
+            sendMessage(session, Message.error("Game id is required."));
+            return Optional.empty();
+        }
+
+        final Object gameIdObj = session.getUserProperties().get("game-id");
+        if (Objects.isNull(gameIdObj)) {
+            sendMessage(session, Message.error("Game id is required."));
+            return Optional.empty();
+        }
+
+        if (gameIdObj instanceof List<?> ls && !ls.contains(gameID)) {
+            sendMessage(session, Message.error("This game id is do not exists."));
+            return Optional.empty();
+        }
+
+        return gameID.describeConstable();
     }
 
     private void handleWebSocketMessage(final Session session, final String username, final Message message,
@@ -169,7 +176,7 @@ public class ChessGameService {
     }
 
     private void joinExistingGameSession(Session session, String gameID) {
-        final Pair<ChessGame, HashSet<Session>> gameAndHisSessions = gameSessions.get(UUID.fromString(gameID));
+        final Pair<ChessGame, HashSet<Session>> gameAndHisSessions = sessionStorage.getGameById(UUID.fromString(gameID));
         gameAndHisSessions.getSecond().add(session);
 
         sendGameStartNotifications(session, gameAndHisSessions.getFirst());
@@ -182,7 +189,7 @@ public class ChessGameService {
 
         final StatusPair<Triple<Session, UserAccount, GameParameters>> potentialOpponent = locateOpponentForGame(firstPlayer, gameParameters);
         if (!potentialOpponent.status()) {
-            waitingForTheGame.put(username, Triple.of(session, firstPlayer, gameParameters));
+            sessionStorage.addWaitingUser(session, firstPlayer, gameParameters);
 
             Message message = Message.userInfo("Trying to find an opponent for you %s.".formatted(username.username()));
             sendMessage(session, message);
@@ -192,7 +199,7 @@ public class ChessGameService {
         final Triple<Session, UserAccount, GameParameters> opponentData = potentialOpponent.orElseThrow();
         final UserAccount secondPlayer = opponentData.getSecond();
 
-        waitingForTheGame.remove(secondPlayer.getUsername());
+        sessionStorage.removeWaitingUser(secondPlayer.getUsername());
 
         startStandardChessGame(
                 Triple.of(session, firstPlayer, gameParameters), opponentData, false
@@ -201,7 +208,7 @@ public class ChessGameService {
 
     private StatusPair<Triple<Session, UserAccount, GameParameters>> locateOpponentForGame(final UserAccount firstPlayer,
                                                                                            final GameParameters gameParameters) {
-        for (var entry : waitingForTheGame.entrySet()) {
+        for (var entry : sessionStorage.waitingUsers()) {
             final UserAccount potentialOpponent = entry.getValue().getSecond();
             final GameParameters gameParametersOfPotentialOpponent = entry.getValue().getThird();
 
@@ -210,7 +217,13 @@ public class ChessGameService {
                 continue;
             }
 
-            final boolean isOpponent = this.validateOpponentEligibility(firstPlayer, gameParameters, potentialOpponent, gameParametersOfPotentialOpponent, false);
+            final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer, 
+                    gameParameters, 
+                    potentialOpponent, 
+                    gameParametersOfPotentialOpponent,
+                    false
+            );
+            
             if (isOpponent) {
                 return StatusPair.ofTrue(entry.getValue());
             }
@@ -228,7 +241,7 @@ public class ChessGameService {
         final UserAccount addresserAccount = outboundUserRepository.findByUsername(addresserUsername).orElseThrow();
 
         final UserAccount addresseeAccount = Objects.requireNonNullElseGet(
-                sessions.get(addresseeUsername).getSecond(), () -> outboundUserRepository.findByUsername(addresseeUsername).orElseThrow()
+                sessionStorage.getSessionByUsername(addresseeUsername).getSecond(), () -> outboundUserRepository.findByUsername(addresseeUsername).orElseThrow()
         );
         final String addressee = addresseeAccount.getUsername().username();
 
@@ -242,8 +255,8 @@ public class ChessGameService {
 
         final StatusPair<GameParameters> isPartnershipGameAgreed = checkPartnershipAgreement(addresseeAccount, addresserAccount, gameParameters);
         if (isPartnershipGameAgreed.status()) {
-            var addresserSession = sessions.get(addresserUsername).getFirst();
-            var addresseeSession = sessions.get(addresseeAccount.getUsername()).getFirst();
+            var addresserSession = sessionStorage.getSessionByUsername(addresserUsername).getFirst();
+            var addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.getUsername()).getFirst();
 
             startStandardChessGame(
                     Triple.of(addresserSession, addresserAccount, gameParameters),
@@ -252,22 +265,26 @@ public class ChessGameService {
             );
         }
 
-        final boolean isAddresseeActive = Objects.nonNull(sessions.get(addresseeUsername));
+        final boolean isAddresseeActive = Objects.nonNull(sessionStorage.getSessionByUsername(addresseeUsername));
         if (isAddresseeActive) {
-            Color color = null;
-            if (Objects.nonNull(gameParameters.color())) {
-                color = gameParameters.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
-            }
-
-            Message message = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                    .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
-                    .time(gameParameters.time())
-                    .FEN(gameParameters.FEN())
-                    .color(color)
-                    .build();
-
-            sendMessage(sessions.get(addresseeUsername).getFirst(), message);
+            notifyTheAddressee(addresserUsername, addresseeUsername, gameParameters);
         }
+    }
+
+    private void notifyTheAddressee(Username addresserUsername, Username addresseeUsername, GameParameters gameParameters) {
+        Color color = null;
+        if (Objects.nonNull(gameParameters.color())) {
+            color = gameParameters.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
+        }
+
+        Message message = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
+                .time(gameParameters.time())
+                .FEN(gameParameters.FEN())
+                .color(color)
+                .build();
+
+        sendMessage(sessionStorage.getSessionByUsername(addresseeUsername).getFirst(), message);
     }
 
     private StatusPair<GameParameters> checkPartnershipAgreement(UserAccount addressee,
@@ -279,7 +296,7 @@ public class ChessGameService {
 
             GameParameters addresseeGameParameters = requests.get(addressee.getUsername().username());
 
-            final boolean isOpponentEligible = validateOpponentEligibility(
+            final boolean isOpponentEligible = gameFunctionalityService.validateOpponentEligibility(
                     addresser, addresserGameParameters,
                     addressee, addresseeGameParameters,
                     true
@@ -295,45 +312,6 @@ public class ChessGameService {
         return StatusPair.ofFalse();
     }
 
-    private boolean validateOpponentEligibility(final UserAccount player, final GameParameters gameParameters,
-                                                final UserAccount opponent, final GameParameters opponentGameParameters,
-                                                final boolean isPartnershipGame) {
-        assert gameParameters.time() != null;
-        final boolean sameTimeControlling = gameParameters.time().equals(opponentGameParameters.time());
-        if (!sameTimeControlling) {
-            return false;
-        }
-
-        if (!isPartnershipGame) {
-            final boolean validRatingDiff = Math.abs(player.getRating().rating() - opponent.getRating().rating()) <= 1500;
-            if (!validRatingDiff) {
-                return false;
-            }
-        }
-
-        final boolean positionIsNotSpecified = gameParameters.FEN() == null && opponentGameParameters.FEN() == null;
-        if (!positionIsNotSpecified) {
-            final boolean invalidPositionSpecification = gameParameters.FEN() == null && opponentGameParameters.FEN() != null ||
-                    gameParameters.FEN() != null && opponentGameParameters.FEN() == null;
-            if (invalidPositionSpecification) {
-                return false;
-            }
-
-            final boolean isPositionsEqual = gameParameters.FEN().equals(opponentGameParameters.FEN());
-            if (!isPositionsEqual) {
-                return false;
-            }
-        }
-
-        final boolean colorNotSpecified = gameParameters.color() == null || opponentGameParameters.color() == null;
-        if (colorNotSpecified) {
-            return true;
-        }
-
-        final boolean sameColor = gameParameters.color().equals(opponentGameParameters.color());
-        return !sameColor;
-    }
-
     private void startStandardChessGame(Triple<Session, UserAccount, GameParameters> firstPlayerData,
                                         Triple<Session, UserAccount, GameParameters> secondPlayerData,
                                         final boolean isPartnershipGame) {
@@ -345,7 +323,12 @@ public class ChessGameService {
         UserAccount secondPlayer = secondPlayerData.getSecond();
         GameParameters secondGameParameters = secondPlayerData.getThird();
 
-        Result<ChessGame, IllegalArgumentException> chessGame = createChessGameInstance(firstPlayer, firstGameParameters, secondPlayer, secondGameParameters);
+        Result<ChessGame, IllegalArgumentException> chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
+                firstGameParameters,
+                secondPlayer,
+                secondGameParameters
+        );
+
         if (!chessGame.success()) {
             Message errorMessage = Message.error("Can`t create a chess game.%s".formatted(chessGame.throwable().getMessage()));
             sendMessage(firstSession, errorMessage);
@@ -366,52 +349,8 @@ public class ChessGameService {
         spectator.start();
     }
 
-    private Result<ChessGame, IllegalArgumentException> createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
-                                                                                final UserAccount secondPlayer, final GameParameters secondGameParameters) {
-        final ChessBoard chessBoard;
-        boolean isCasualGame = false;
-        try {
-            if (Objects.isNull(gameParameters.FEN())) {
-                chessBoard = ChessBoard.starndardChessBoard(UUID.randomUUID());
-            } else {
-                isCasualGame = true;
-                chessBoard = ChessBoard.fromPosition(UUID.randomUUID(), gameParameters.FEN());
-            }
-        } catch (IllegalArgumentException e) {
-            return Result.failure(e);
-        }
-
-        final ChessGame.Time timeControlling = gameParameters.time();
-        final boolean firstPlayerIsWhite = Objects.nonNull(gameParameters.color()) && gameParameters.color().equals(Color.WHITE);
-        final boolean secondPlayerIsBlack = Objects.nonNull(secondGameParameters.color()) && secondGameParameters.color().equals(Color.BLACK);
-
-        if (firstPlayerIsWhite && secondPlayerIsBlack) {
-            ChessGame chessGame = ChessGame.of(
-                    UUID.randomUUID(),
-                    chessBoard,
-                    firstPlayer,
-                    secondPlayer,
-                    SessionEvents.defaultEvents(),
-                    timeControlling,
-                    isCasualGame
-            );
-            return Result.success(chessGame);
-        }
-
-        ChessGame chessGame = ChessGame.of(
-                UUID.randomUUID(),
-                chessBoard,
-                secondPlayer,
-                firstPlayer,
-                SessionEvents.defaultEvents(),
-                timeControlling,
-                isCasualGame
-        );
-        return Result.success(chessGame);
-    }
-
     private void registerGameAndNotifyPlayers(ChessGame chessGame, Session firstSession, Session secondSession) {
-        gameSessions.put(chessGame.getChessGameId(), Pair.of(chessGame, new HashSet<>(Arrays.asList(firstSession, secondSession))));
+        sessionStorage.addGame(chessGame, new HashSet<>(Arrays.asList(firstSession, secondSession)));
 
         sendGameStartNotifications(firstSession, chessGame);
         sendGameStartNotifications(secondSession, chessGame);
@@ -457,13 +396,13 @@ public class ChessGameService {
         for (Object gameId : (List<?>) gameIdObj) {
             final UUID gameUuid = UUID.fromString((String) gameId);
 
-            final boolean isGameSessionExists = gameSessions.containsKey(gameUuid);
+            final boolean isGameSessionExists = sessionStorage.containsGame(gameUuid);
             if (!isGameSessionExists) {
                 sendMessage(session, Message.error("Game session with id {%s} does not exist".formatted(gameId)));
                 return;
             }
 
-            final Pair<ChessGame, HashSet<Session>> pair = gameSessions.get(gameUuid);
+            final Pair<ChessGame, HashSet<Session>> pair = sessionStorage.getGameById(gameUuid);
 
             final ChessGame chessGame = pair.getFirst();
             if (chessGame.gameResult().isEmpty()) {
@@ -476,7 +415,7 @@ public class ChessGameService {
 
             sessionHashSet.remove(session);
             if (sessionHashSet.isEmpty()) {
-                gameSessions.remove(gameUuid);
+                sessionStorage.removeGame(gameUuid);
             }
         }
     }
@@ -489,6 +428,11 @@ public class ChessGameService {
 
         Log.infof("Saving finished game %s and changing ratings", chessGame.getChessGameId());
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
+
+        if (chessGame.isCasualGame()) {
+            return;
+        }
+
         inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
         inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
     }
@@ -508,7 +452,7 @@ public class ChessGameService {
                 game.gameResult().ifPresent(gameResult -> {
                     Log.infof("Game is over by result {%s}", gameResult);
                     Log.debugf("Removing game {%s}", game.getChessGameId());
-                    var gameAndSessions = gameSessions.remove(game.getChessGameId());
+                    var gameAndSessions = sessionStorage.removeGame(game.getChessGameId());
 
                     CompletableFuture.runAsync(() -> gameOverOperationsExecutor(game));
 

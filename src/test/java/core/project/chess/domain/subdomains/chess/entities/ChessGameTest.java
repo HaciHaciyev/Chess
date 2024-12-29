@@ -1,14 +1,16 @@
 package core.project.chess.domain.subdomains.chess.entities;
 
-import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
-import core.project.chess.domain.subdomains.chess.enumerations.GameResult;
-import core.project.chess.domain.subdomains.chess.events.SessionEvents;
-import core.project.chess.domain.subdomains.chess.util.ChessBoardNavigator;
-import core.project.chess.domain.subdomains.chess.value_objects.ChessMove;
-import core.project.chess.domain.subdomains.user.entities.UserAccount;
-import core.project.chess.domain.subdomains.user.value_objects.Email;
-import core.project.chess.domain.subdomains.user.value_objects.Password;
-import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.domain.chess.entities.ChessBoard;
+import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.enumerations.GameResult;
+import core.project.chess.domain.chess.events.SessionEvents;
+import core.project.chess.domain.chess.util.ChessBoardNavigator;
+import core.project.chess.domain.chess.value_objects.ChessMove;
+import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.value_objects.Email;
+import core.project.chess.domain.user.value_objects.Password;
+import core.project.chess.domain.user.value_objects.Username;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -22,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import static core.project.chess.domain.subdomains.chess.enumerations.Coordinate.*;
+import static core.project.chess.domain.chess.enumerations.Coordinate.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ChessGameTest {

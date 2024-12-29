@@ -1,10 +1,10 @@
 package testUtils;
 
-import core.project.chess.domain.subdomains.chess.enumerations.Color;
-import core.project.chess.domain.subdomains.chess.enumerations.Coordinate;
-import core.project.chess.domain.subdomains.chess.pieces.*;
-import core.project.chess.domain.subdomains.chess.value_objects.ChessMove;
-import core.project.chess.domain.subdomains.chess.value_objects.PlayerMove;
+import core.project.chess.domain.chess.enumerations.Color;
+import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.pieces.*;
+import core.project.chess.domain.chess.value_objects.ChessMove;
+import core.project.chess.domain.chess.value_objects.PlayerMove;
 
 import java.io.*;
 import java.util.*;

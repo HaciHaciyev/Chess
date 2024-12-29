@@ -1,7 +1,7 @@
 package core.project.chess.infrastructure.dal.files;
 
-import core.project.chess.domain.subdomains.user.entities.UserAccount;
-import core.project.chess.domain.subdomains.user.value_objects.ProfilePicture;
+import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.value_objects.ProfilePicture;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 

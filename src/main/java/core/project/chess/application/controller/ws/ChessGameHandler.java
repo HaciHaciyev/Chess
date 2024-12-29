@@ -2,7 +2,7 @@ package core.project.chess.application.controller.ws;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.service.ChessGameService;
-import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.ws.MessageDecoder;
 import core.project.chess.infrastructure.ws.MessageEncoder;

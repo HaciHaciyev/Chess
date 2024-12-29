@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import core.project.chess.application.dto.chess.GameParameters;
+import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;

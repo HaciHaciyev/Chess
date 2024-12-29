@@ -1,11 +1,11 @@
 package core.project.chess.infrastructure.dal.repository.outbound;
 
-import core.project.chess.domain.repositories.outbound.OutboundUserRepository;
-import core.project.chess.domain.subdomains.user.entities.EmailConfirmationToken;
-import core.project.chess.domain.subdomains.user.entities.UserAccount;
-import core.project.chess.domain.subdomains.user.events.AccountEvents;
-import core.project.chess.domain.subdomains.user.events.TokenEvents;
-import core.project.chess.domain.subdomains.user.value_objects.*;
+import core.project.chess.domain.user.repositories.OutboundUserRepository;
+import core.project.chess.domain.user.entities.EmailConfirmationToken;
+import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.events.AccountEvents;
+import core.project.chess.domain.user.events.TokenEvents;
+import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.dal.JDBC;
 import core.project.chess.infrastructure.exceptions.DataNotFoundException;
 import core.project.chess.infrastructure.utilities.containers.Pair;

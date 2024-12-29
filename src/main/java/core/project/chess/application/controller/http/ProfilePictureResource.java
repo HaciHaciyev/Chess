@@ -1,8 +1,8 @@
 package core.project.chess.application.controller.http;
 
 import core.project.chess.application.service.UserAccountService;
-import core.project.chess.domain.subdomains.user.value_objects.ProfilePicture;
-import core.project.chess.domain.subdomains.user.value_objects.Username;
+import core.project.chess.domain.user.value_objects.ProfilePicture;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;

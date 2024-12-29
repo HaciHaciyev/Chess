@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.security;
 
-import core.project.chess.domain.subdomains.user.value_objects.Password;
+import core.project.chess.domain.user.value_objects.Password;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import jakarta.inject.Singleton;
