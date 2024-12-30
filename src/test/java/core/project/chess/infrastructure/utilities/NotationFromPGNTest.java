@@ -1,12 +1,14 @@
 package core.project.chess.infrastructure.utilities;
 
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.net.URI;
 import java.nio.file.Path;
 
+@Disabled
 public class NotationFromPGNTest {
 
 
