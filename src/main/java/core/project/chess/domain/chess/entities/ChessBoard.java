@@ -328,6 +328,11 @@ public class ChessBoard {
         return listOfAlgebraicNotations.stream().map(AlgebraicNotation::algebraicNotation).toList();
     }
 
+
+    public AlgebraicNotation[] arrayOfAlgebraicNotations() {
+        return this.listOfAlgebraicNotations.toArray(new AlgebraicNotation[0]);
+    }
+
     /**
      * Retrieves the last algebraic notation representing the moves made on the chess board.
      *
@@ -541,7 +546,7 @@ public class ChessBoard {
         }
     }
 
-    private Pair<Coordinate, Coordinate> coordinates(AlgebraicNotation algebraicNotation) {
+    Pair<Coordinate, Coordinate> coordinates(AlgebraicNotation algebraicNotation) {
         Pair<Coordinate, Coordinate> coordinates;
 
         final StatusPair<AlgebraicNotation.Castle> isCastling = AlgebraicNotation.isCastling(algebraicNotation);
@@ -553,7 +558,7 @@ public class ChessBoard {
         return coordinates;
     }
 
-    private Piece getInCaseOfPromotion(AlgebraicNotation algebraicNotation) {
+    Piece getInCaseOfPromotion(AlgebraicNotation algebraicNotation) {
         StatusPair<AlgebraicNotation.PieceTYPE> promotion = algebraicNotation.promotionType();
 
         Piece inCaseOfPromotion = null;
