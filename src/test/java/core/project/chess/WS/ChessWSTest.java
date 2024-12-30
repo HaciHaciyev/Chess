@@ -272,7 +272,7 @@ class ChessWSTest {
                 CHESS_MESSAGES.user2().offer(message);
             });
 
-            Thread.sleep(Duration.ofMillis(100));
+            Thread.sleep(Duration.ofMillis(500));
 
             Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(blackForm.username())
@@ -290,6 +290,7 @@ class ChessWSTest {
                     .build();
 
             sendMessage(bMessagingSession, blackForm.username(), bPartnershipRequest);
+            Thread.sleep(Duration.ofMillis(200));
 
 //            assertThat(USER_MESSAGES.user1()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
 //            assertThat(USER_MESSAGES.user2()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
@@ -297,10 +298,10 @@ class ChessWSTest {
             String wName = whiteForm.username();
             String bName = blackForm.username();
 
-            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, ChessGame.Time.RAPID));
-            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, ChessGame.Time.RAPID));
+            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, null, ChessGame.Time.RAPID));
+            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, null, ChessGame.Time.RAPID));
 
-            Thread.sleep(Duration.ofSeconds(1));
+            Thread.sleep(Duration.ofSeconds(4));
 
             String gameID = extractGameID();
 

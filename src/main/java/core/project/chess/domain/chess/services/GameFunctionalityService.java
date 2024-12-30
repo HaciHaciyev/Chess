@@ -34,7 +34,7 @@ public class GameFunctionalityService {
             }
         }
 
-        if (isPartnershipGame && gameParameters.isCasualGame() != opponentGameParameters.isCasualGame()) {
+        if (isPartnershipGame && !(gameParameters.isCasualGame().equals(opponentGameParameters.isCasualGame()))) {
             return false;
         }
 

@@ -29,7 +29,8 @@ public record Message(MessageType type,
                       Coordinate to,
                       String inCaseOfPromotion,
                       String message,
-                      Time time, Boolean isCasualGame) {
+                      Time time,
+                      Boolean isCasualGame) {
 
     private static final Pattern PROMOTION_PATTERN = Pattern.compile("^[QRNBqrnb]$");
     private static final String INVITATION_MESSAGE = """
@@ -84,11 +85,12 @@ public record Message(MessageType type,
                 .build();
     }
 
-    public static Message partnershipGame(String color, String partner, Time time) {
+    public static Message partnershipGame(String color, String partner, Boolean isCasualGame, Time time) {
         return builder(MessageType.GAME_INIT)
                 .color(Color.valueOf(color))
                 .partner(partner)
                 .time(time)
+                .isCasualGame(isCasualGame)
                 .build();
     }
 
@@ -274,7 +276,7 @@ public record Message(MessageType type,
             return this;
         }
 
-        public Builder isCasualGame(boolean isCasualGame) {
+        public Builder isCasualGame(Boolean isCasualGame) {
             this.isCasualGame = isCasualGame;
             return this;
         }
