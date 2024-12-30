@@ -36,6 +36,11 @@ public class AlgebraicNotation {
         return algebraicNotation;
     }
 
+    @Override
+    public String toString() {
+        return algebraicNotation();
+    }
+
     private AlgebraicNotation(String algebraicNotation) {
         this.algebraicNotation = algebraicNotation;
     }

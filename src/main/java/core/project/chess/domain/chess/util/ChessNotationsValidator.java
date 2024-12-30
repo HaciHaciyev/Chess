@@ -8,9 +8,7 @@ import core.project.chess.domain.chess.value_objects.FromFEN;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -618,5 +616,36 @@ public class ChessNotationsValidator {
         }
 
         return Pair.of(Coordinate.of(startRow, column).orElseThrow(), endCoordinate);
+    }
+
+    public static List<AlgebraicNotation> notationFromPGN(String pgn) {
+        if (pgn == null || pgn.isEmpty()) {
+            throw new IllegalArgumentException("PGN cannot be null or empty");
+        }
+
+        String strMoves = pgn.lines()
+                .dropWhile(string -> string.startsWith("[") && string.endsWith("]") || string.isEmpty())
+                .reduce("", (a, b) -> a +" " + b);
+
+        String[] movesArr = strMoves.substring(3).split("\\d\\.");
+
+        if (movesArr.length == 1) {
+            throw new IllegalArgumentException("Invalid PGN");
+        }
+
+        List<AlgebraicNotation> notation = new ArrayList<>();
+        for (String s : movesArr) {
+            String fullMove = s.strip();
+            String[] halfMoves = fullMove.split(" ");
+
+            if (halfMoves.length == 1) {
+                throw new IllegalArgumentException("Invalid PGN");
+            }
+
+            notation.add(AlgebraicNotation.of(halfMoves[0]));
+            notation.add(AlgebraicNotation.of(halfMoves[1]));
+        }
+
+        return notation;
     }
 }
