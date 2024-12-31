@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
-import java.net.URI;
-import java.nio.file.Path;
 
 @Disabled
 public class NotationFromPGNTest {
@@ -17,7 +15,7 @@ public class NotationFromPGNTest {
         String pgn = getPGN("src/main/resources/pgn/canonicalPGN.pgn");
         System.out.println("RAW PGN: " + pgn);
 
-        ChessNotationsValidator.notationFromPGN(pgn);
+        ChessNotationsValidator.algebraicNotationsOf(pgn);
     }
 
     private String getPGN(String s) {

@@ -80,6 +80,7 @@ public class ChessGameService {
 
         final Optional<String> gameID = extractAndValidateGameID(session, message);
         if (gameID.isEmpty()) {
+            sendMessage(session, Message.error("Can`t find a game id. Yoe need to provide game id,"));
             return;
         }
 
@@ -253,10 +254,21 @@ public class ChessGameService {
 
         partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
 
+        final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername);
+
         final StatusPair<GameParameters> isPartnershipGameAgreed = checkPartnershipAgreement(addresseeAccount, addresserAccount, gameParameters);
         if (isPartnershipGameAgreed.status()) {
-            var addresserSession = sessionStorage.getSessionByUsername(addresserUsername).getFirst();
-            var addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.getUsername()).getFirst();
+            if (!isAddresseeActive) {
+                cancelRequests(addresserAccount, addresseeAccount);
+                sendMessage(session, Message.error("""
+                        The game cannot be created because the user is not online.
+                        You can try re-sending the partner game request when the user is online.
+                        """
+                ));
+            }
+
+            Session addresserSession = sessionStorage.getSessionByUsername(addresserUsername).getFirst();
+            Session addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.getUsername()).getFirst();
 
             startStandardChessGame(
                     Triple.of(addresserSession, addresserAccount, gameParameters),
@@ -265,7 +277,6 @@ public class ChessGameService {
             );
         }
 
-        final boolean isAddresseeActive = Objects.nonNull(sessionStorage.getSessionByUsername(addresseeUsername));
         if (isAddresseeActive) {
             notifyTheAddressee(addresserUsername, addresseeUsername, gameParameters);
         }
@@ -313,6 +324,11 @@ public class ChessGameService {
         return StatusPair.ofFalse();
     }
 
+    private void cancelRequests(UserAccount firstPlayer, UserAccount secondPlayer) {
+        partnershipGameCacheService.delete(firstPlayer.getUsername().username(), secondPlayer.getUsername().username());
+        partnershipGameCacheService.delete(secondPlayer.getUsername().username(), firstPlayer.getUsername().username());
+    }
+
     private void startStandardChessGame(Triple<Session, UserAccount, GameParameters> firstPlayerData,
                                         Triple<Session, UserAccount, GameParameters> secondPlayerData,
                                         final boolean isPartnershipGame) {
@@ -340,8 +356,7 @@ public class ChessGameService {
         registerGameAndNotifyPlayers(chessGame.orElseThrow(), firstSession, secondSession);
 
         if (isPartnershipGame) {
-            partnershipGameCacheService.delete(firstPlayer.getUsername().username(), secondPlayer.getUsername().username());
-            partnershipGameCacheService.delete(secondPlayer.getUsername().username(), firstPlayer.getUsername().username());
+            cancelRequests(firstPlayer, secondPlayer);
         }
 
         inboundChessRepository.completelySaveStartedChessGame(chessGame.orElseThrow());

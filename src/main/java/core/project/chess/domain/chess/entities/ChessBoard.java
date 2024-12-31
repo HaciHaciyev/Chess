@@ -234,12 +234,12 @@ public class ChessBoard {
      * @throws IllegalArgumentException If the provided PGN notation is invalid.
      */
     public static ChessBoard fromPGN(final String pgn) {
-        StatusPair<List<AlgebraicNotation>> listOfAlgebraicNotations = ChessNotationsValidator.listOfAlgebraicNotations(pgn);
-        if (!listOfAlgebraicNotations.status()) {
+        List<AlgebraicNotation> listOfAlgebraicNotations = ChessNotationsValidator.listOfAlgebraicNotations(pgn);
+        if (listOfAlgebraicNotations.isEmpty()) {
             throw new IllegalArgumentException("Invalid PGN");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, null, false, listOfAlgebraicNotations.orElseThrow());
+        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, null, false, listOfAlgebraicNotations);
     }
 
     /**
@@ -257,12 +257,12 @@ public class ChessBoard {
      * @throws IllegalArgumentException If the provided PGN notation is invalid.
      */
     public static ChessBoard pureChessFromPGN(final String pgn) {
-        StatusPair<List<AlgebraicNotation>> listOfAlgebraicNotations = ChessNotationsValidator.listOfAlgebraicNotations(pgn);
-        if (!listOfAlgebraicNotations.status()) {
+        List<AlgebraicNotation> listOfAlgebraicNotations = ChessNotationsValidator.listOfAlgebraicNotations(pgn);
+        if (listOfAlgebraicNotations.isEmpty()) {
             throw new IllegalArgumentException("Invalid PGN");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, null, true, listOfAlgebraicNotations.orElseThrow());
+        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, null, true, listOfAlgebraicNotations);
     }
 
     /**

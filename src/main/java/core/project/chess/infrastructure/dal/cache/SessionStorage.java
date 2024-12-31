@@ -63,4 +63,8 @@ public class SessionStorage {
     public Pair<ChessGame, HashSet<Session>> removeGame(UUID gameUuid) {
         return gameSessions.remove(gameUuid);
     }
+
+    public boolean containsSession(Username addresseeUsername) {
+        return sessions.containsKey(addresseeUsername);
+    }
 }

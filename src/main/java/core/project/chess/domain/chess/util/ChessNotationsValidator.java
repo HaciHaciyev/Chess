@@ -60,9 +60,8 @@ public class ChessNotationsValidator {
         return validateForsythEdwardsNotation(fen);
     }
 
-    public static StatusPair<List<AlgebraicNotation>> listOfAlgebraicNotations(String pgn) {
-        // TODO for AinGrace
-        return null;
+    public static List<AlgebraicNotation> listOfAlgebraicNotations(String pgn) {
+        return algebraicNotationsOf(pgn);
     }
 
     /**
@@ -618,34 +617,34 @@ public class ChessNotationsValidator {
         return Pair.of(Coordinate.of(startRow, column).orElseThrow(), endCoordinate);
     }
 
-    public static List<AlgebraicNotation> notationFromPGN(String pgn) {
-        if (pgn == null || pgn.isEmpty()) {
-            throw new IllegalArgumentException("PGN cannot be null or empty");
+    public static List<AlgebraicNotation> algebraicNotationsOf(String pgn) {
+        final List<AlgebraicNotation> algebraicNotations = new ArrayList<>();
+        if (Objects.nonNull(pgn) || pgn.isBlank()) {
+            return algebraicNotations;
         }
 
-        String strMoves = pgn.lines()
+        String[] fullMoves = pgn.lines()
                 .dropWhile(string -> string.startsWith("[") && string.endsWith("]") || string.isEmpty())
-                .reduce("", (a, b) -> a +" " + b);
+                .reduce("", (a, b) -> a +" " + b)
+                .substring(3)
+                .split("\\d\\.");
 
-        String[] movesArr = strMoves.substring(3).split("\\d\\.");
-
-        if (movesArr.length == 1) {
-            throw new IllegalArgumentException("Invalid PGN");
+        if (fullMoves.length == 1) {
+            return algebraicNotations;
         }
 
-        List<AlgebraicNotation> notation = new ArrayList<>();
-        for (String s : movesArr) {
+        for (String s : fullMoves) {
             String fullMove = s.strip();
             String[] halfMoves = fullMove.split(" ");
 
             if (halfMoves.length == 1) {
-                throw new IllegalArgumentException("Invalid PGN");
+                algebraicNotations.add(AlgebraicNotation.of(halfMoves[0]));
+                return algebraicNotations;
             }
 
-            notation.add(AlgebraicNotation.of(halfMoves[0]));
-            notation.add(AlgebraicNotation.of(halfMoves[1]));
+            algebraicNotations.add(AlgebraicNotation.of(halfMoves[1]));
         }
 
-        return notation;
+        return algebraicNotations;
     }
 }

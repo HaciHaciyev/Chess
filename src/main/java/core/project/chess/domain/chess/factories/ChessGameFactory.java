@@ -1,6 +1,5 @@
 package core.project.chess.domain.chess.factories;
 
-import com.esotericsoftware.minlog.Log;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
