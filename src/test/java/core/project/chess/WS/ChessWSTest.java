@@ -15,7 +15,6 @@ import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.inject.Inject;
 import jakarta.websocket.*;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import testUtils.LoginForm;
 import testUtils.RegistrationForm;
@@ -27,20 +26,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 
-@Slf4j
 @QuarkusTest
-//@Disabled
 class ChessWSTest {
 
     private final Messages USER_MESSAGES = Messages.newInstance();
+
     private final Messages CHESS_MESSAGES = Messages.newInstance();
 
-    public static final String REGISTRATION = "/chessland/account/registration";
-
     public static final String LOGIN = "/chessland/account/login/";
+
+    public static final String REGISTRATION = "/chessland/account/registration";
 
     public static final String TOKEN_VERIFICATION = "/chessland/account/token/verification";
 
@@ -54,7 +53,6 @@ class ChessWSTest {
 
     @Inject
     UserDBManagement userDBManagement;
-
 
     private record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
         public static Messages newInstance() {
@@ -80,29 +78,35 @@ class ChessWSTest {
         System.out.println();
     }
 
+    @Disabled("Tested in other methods.")
     @Test
     @DisplayName("Successful connection")
-    @Disabled
-    void successful_Connection() throws Exception {
+    void successfulConnection() throws Exception {
         RegistrationForm account = registerRandom();
         enableAccount(account);
         String token = login(account);
 
-        try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, token))) {
+        try (Session session = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, serverURIWithToken(serverURI, token))
+        ) {
             sendMessage(session, account.username(), Message.info("Hello, world"));
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
         }
     }
 
+    @Disabled("Tested in other methods.")
     @Test
     @DisplayName("Initialize game")
-    @Disabled
-    void initialize_Game() throws Exception {
+    void initializeGame() throws Exception {
         RegistrationForm account = registerRandom();
         enableAccount(account);
         String token = login(account);
 
-        try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, token))) {
+        try (Session session = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, serverURIWithToken(serverURI, token))
+        ) {
             sendMessage(session, account.username(), Message.gameInit("WHITE", ChessGame.Time.RAPID));
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
         }
@@ -110,8 +114,7 @@ class ChessWSTest {
 
     @Test
     @DisplayName("Custom game matchmaking")
-    @Disabled
-    void custom_Game_Matchmaking() throws Exception {
+    void customGameMatchmaking() throws Exception {
         RegistrationForm whiteForm = registerRandom();
         enableAccount(whiteForm);
         String whiteToken = login(whiteForm);
@@ -120,8 +123,14 @@ class ChessWSTest {
         enableAccount(blackForm);
         String blackToken = login(blackForm);
 
-        try (Session wSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
-             Session bSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))) {
+        try (Session wSession = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
+
+             Session bSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))
+        ) {
 
             String wName = whiteForm.username();
             sendMessage(wSession, wName, Message.gameInit("WHITE", ChessGame.Time.RAPID));
@@ -134,6 +143,97 @@ class ChessWSTest {
 
             wSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
             bSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
+        }
+    }
+
+    @Test
+    @DisplayName("Custom partnership game")
+    void customPartnershipGame() throws Exception {
+        RegistrationForm whiteForm = registerRandom();
+        enableAccount(whiteForm);
+        String whiteToken = login(whiteForm);
+
+        RegistrationForm blackForm = registerRandom();
+        enableAccount(blackForm);
+        String blackToken = login(blackForm);
+
+        try (Session wMessagingSession = ContainerProvider
+                      .getWebSocketContainer()
+                      .connectToServer(WSClient.class, serverURIWithToken(userSessionURI, whiteToken));
+
+             Session bMessagingSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, serverURIWithToken(userSessionURI, blackToken));
+
+             Session wChessSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
+
+             Session bChessSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))
+        ) {
+
+            wMessagingSession.addMessageHandler(Message.class, message -> {
+                Log.infof("%s received -> %s", whiteForm.username(), message);
+                USER_MESSAGES.user1().offer(message);
+            });
+
+            bMessagingSession.addMessageHandler(Message.class, message -> {
+                Log.infof("%s received -> %s", blackForm.username(), message);
+                USER_MESSAGES.user2().offer(message);
+            });
+
+            wChessSession.addMessageHandler(Message.class, message -> {
+                Log.infof("%s received -> %s", whiteForm.username(), message);
+                CHESS_MESSAGES.user1().offer(message);
+            });
+
+            bChessSession.addMessageHandler(Message.class, message -> {
+                Log.infof("%s received -> %s", blackForm.username(), message);
+                CHESS_MESSAGES.user2().offer(message);
+            });
+
+            await().pollDelay(Duration.ofMillis(500));
+
+            Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                    .partner(blackForm.username())
+                    .message("br")
+                    .build();
+
+            sendMessage(wMessagingSession, whiteForm.username(), wPartnershipRequest);
+
+            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.USER_INFO && m.message().contains("invite you"));
+
+            Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                    .partner(whiteForm.username())
+                    .message("brrr")
+                    .build();
+
+            sendMessage(bMessagingSession, blackForm.username(), bPartnershipRequest);
+
+            await().pollDelay(Duration.ofMillis(200));
+
+            assertThat(USER_MESSAGES.user1()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
+            assertThat(USER_MESSAGES.user2()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
+
+            String wName = whiteForm.username();
+            String bName = blackForm.username();
+
+            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, null, ChessGame.Time.RAPID));
+            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, null, ChessGame.Time.RAPID));
+
+            await().pollDelay(Duration.ofSeconds(4));
+
+            String gameID = extractGameID();
+
+            simulateGame(wChessSession, wName, gameID, bChessSession, bName);
+
+            wMessagingSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
+            bMessagingSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
+
+            wChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
+            bChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
         }
     }
 
@@ -233,89 +333,6 @@ class ChessWSTest {
         sendMessage(wSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.d2));
     }
 
-    @Test
-    @DisplayName("Custom partnership game")
-//    @Disabled
-    void custom_Partnership_Game() throws Exception {
-        RegistrationForm whiteForm = registerRandom();
-        enableAccount(whiteForm);
-        String whiteToken = login(whiteForm);
-
-        RegistrationForm blackForm = registerRandom();
-        enableAccount(blackForm);
-        String blackToken = login(blackForm);
-
-        try (Session wMessagingSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(userSessionURI, whiteToken));
-             Session bMessagingSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(userSessionURI, blackToken));
-
-             Session wChessSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
-             Session bChessSession = ContainerProvider.getWebSocketContainer().connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken));
-        ) {
-
-            wMessagingSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", whiteForm.username(), message);
-                USER_MESSAGES.user1().offer(message);
-            });
-
-            bMessagingSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", blackForm.username(), message);
-                USER_MESSAGES.user2().offer(message);
-            });
-
-            wChessSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", whiteForm.username(), message);
-                CHESS_MESSAGES.user1().offer(message);
-            });
-
-            bChessSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", blackForm.username(), message);
-                CHESS_MESSAGES.user2().offer(message);
-            });
-
-            Thread.sleep(Duration.ofMillis(500));
-
-            Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                    .partner(blackForm.username())
-                    .message("br")
-                    .build();
-
-            sendMessage(wMessagingSession, whiteForm.username(), wPartnershipRequest);
-
-            assertThat(USER_MESSAGES.user1().take()).matches(m -> m.type() == MessageType.USER_INFO && m.message().contains("Wait for"));
-            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.USER_INFO && m.message().contains("invite you"));
-
-            Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                    .partner(whiteForm.username())
-                    .message("brrr")
-                    .build();
-
-            sendMessage(bMessagingSession, blackForm.username(), bPartnershipRequest);
-            Thread.sleep(Duration.ofMillis(200));
-
-//            assertThat(USER_MESSAGES.user1()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
-//            assertThat(USER_MESSAGES.user2()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
-
-            String wName = whiteForm.username();
-            String bName = blackForm.username();
-
-            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, null, ChessGame.Time.RAPID));
-            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, null, ChessGame.Time.RAPID));
-
-            Thread.sleep(Duration.ofSeconds(4));
-
-            String gameID = extractGameID();
-
-            simulateGame(wChessSession, wName, gameID, bChessSession, bName);
-
-
-            wMessagingSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
-            bMessagingSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
-
-            wChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
-            bChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
-        }
-    }
-
     private String extractGameID() {
         System.out.println("##############################################################");
         Log.info("Looking for game ID");
@@ -329,18 +346,17 @@ class ChessWSTest {
         }
 
         for (Message message : CHESS_MESSAGES.user1()) {
-                Log.infof("Message -> %s", message);
+            Log.infof("Message -> %s", message);
 
-                if (message.gameID() != null) {
-                    System.out.println("##############################################################");
-                    return message.gameID();
-                }
+            if (message.gameID() != null) {
+                System.out.println("##############################################################");
+                return message.gameID();
+            }
         }
 
         System.out.println("##############################################################");
         throw new IllegalStateException("No gameID found");
     }
-
 
     private void sendMessage(Session session, String username, Message message) {
         Log.infof("%s sending -> %s", username, message);
@@ -349,8 +365,7 @@ class ChessWSTest {
         try {
             Thread.sleep(10);
         } catch (InterruptedException e) {
-            e.printStackTrace();
-            Log.info(e);
+            Log.errorf("Error: %s.", e);
         }
     }
 
@@ -410,20 +425,6 @@ class ChessWSTest {
             String username = extractToken(session);
             Log.infof("User %s connected to the server -> %s", username, session.getRequestURI().getPath());
         }
-
-//        @OnMessage
-//        public void onMessage(Session session, Message message) {
-//            String username = extractToken(session);
-//            String query = session.getRequestURI().getPath();
-//
-//            if (query.contains("user")) {
-//                USER_MESSAGES.add(message);
-//            } else {
-//                CHESS_MESSAGES.add(message);
-//            }
-//
-//            Log.infof("%s received -> %s", username, message);
-//        }
 
         @OnClose
         public void onClose(Session session, CloseReason closeReason) {

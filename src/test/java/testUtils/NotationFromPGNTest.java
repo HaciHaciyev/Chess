@@ -1,4 +1,4 @@
-package core.project.chess.infrastructure.utilities;
+package testUtils;
 
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
 import org.junit.jupiter.api.Disabled;
@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.io.*;
 
 @Disabled
-public class NotationFromPGNTest {
+class NotationFromPGNTest {
 
 
     @Test
