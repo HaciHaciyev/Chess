@@ -6,8 +6,8 @@ import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.value_objects.*;
-import core.project.chess.infrastructure.dal.JDBC;
-import core.project.chess.infrastructure.exceptions.DataNotFoundException;
+import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
+import core.project.chess.infrastructure.dal.util.exceptions.DataNotFoundException;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
@@ -19,43 +19,77 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.select;
+
 @Transactional
 @ApplicationScoped
 public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     private final JDBC jdbc;
 
-    private static final String FIND_EMAIL = "SELECT COUNT(email) FROM UserAccount WHERE email = ?";
-    private static final String FIND_USERNAME = "SELECT COUNT(username) FROM UserAccount WHERE username = ?";
-    private static final String FIND_BY_ID = "SELECT * FROM UserAccount WHERE id = ?";
-    private static final String FIND_BY_USERNAME = "SELECT * FROM UserAccount WHERE username = ?";
-    private static final String FIND_BY_EMAIL = "SELECT * FROM UserAccount WHERE email = ?";
-    private static final String FIND_REFRESH_TOKEN = "SELECT * FROM RefreshToken WHERE token = ?";
-    private static final String IS_PARTNERSHIP_EXISTS = """
-            SELECT COUNT(*) FROM UserPartnership
-            WHERE (user_id = ? AND partner_id = ?) OR (user_id = ? AND partner_id = ?);
-            """;
-    private static final String FIND_TOKEN = """
-            SELECT
-            t.id AS token_id,
-            t.token AS token,
-            t.is_confirmed AS token_confirmation,
-            t.creation_date AS token_creation_date,
-            u.id AS id,
-            u.username AS username,
-            u.email AS email,
-            u.password AS password,
-            u.user_role AS user_role,
-            u.rating AS rating,
-            u.rating_deviation AS rating_deviation,
-            u.rating_volatility AS rating_volatility,
-            u.is_enable AS is_enable,
-            u.creation_date AS creation_date,
-            u.last_updated_date AS last_updated_date
-            FROM UserToken t
-            INNER JOIN UserAccount u ON t.user_id = u.id
-            WHERE t.token = ?
-            """;
+    static final String FIND_BY_ID = select()
+            .all()
+            .from("UserAccount")
+            .where("id = ?")
+            .build();
+
+    static final String FIND_BY_USERNAME = select()
+            .all()
+            .from("UserAccount")
+            .where("username = ?")
+            .build();
+
+    static final String FIND_BY_EMAIL = select()
+            .all()
+            .from("UserAccount")
+            .where("email = ?")
+            .build();
+
+    static final String FIND_REFRESH_TOKEN = select()
+            .all()
+            .from("RefreshToken")
+            .where("token = ?")
+            .build();
+
+    static final String FIND_EMAIL = select()
+            .count("*")
+            .from("UserAccount")
+            .where("email = ?")
+            .build();
+
+    static final String FIND_USERNAME = select()
+            .count("*")
+            .from("UserAccount")
+            .where("username = ?")
+            .build();
+
+    static final String IS_PARTNERSHIP_EXISTS = select()
+            .count("*")
+            .from("UserPartnership")
+            .where("(user_id = ? AND partner_id = ?)")
+            .or("(user_id = ? AND partner_id = ?)")
+            .build();
+
+    static final String FIND_TOKEN = select()
+            .column("t.id").as("token_id")
+            .column("t.token").as("token")
+            .column("t.is_confirmed").as("token_confirmation")
+            .column("t.creation_date").as("token_creation_date")
+            .column("u.id").as("id")
+            .column("u.username").as("username")
+            .column("u.email").as("email")
+            .column("u.password").as("password")
+            .column("u.user_role").as("user_role")
+            .column("u.rating").as("rating")
+            .column("u.rating_deviation").as("rating_deviation")
+            .column("u.rating_volatility").as("rating_volatility")
+            .column("u.is_enable").as("is_enable")
+            .column("u.creation_date").as("creation_date")
+            .column("u.last_updated_date").as("last_updated_date")
+            .from("UserToken t")
+            .innerJoin("UserAccount u", "t.user_id = u.id")
+            .where("t.token = ?")
+            .build();
 
     JdbcOutboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;
@@ -70,13 +104,11 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
         );
 
         if (!result.success()) {
-
             if (result.throwable() instanceof DataNotFoundException) {
                 return false;
             } else {
-                Log.info(result.throwable());
+                Log.error(result.throwable());
             }
-
         }
 
         return result.value() != null && result.value() > 0;
@@ -91,13 +123,11 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
         );
 
         if (!result.success()) {
-
             if (result.throwable() instanceof DataNotFoundException) {
                 return false;
             } else {
-                Log.info(result.throwable());
+                Log.error(result.throwable());
             }
-
         }
 
         return result.value() != null && result.value() > 0;
@@ -106,15 +136,19 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     @Override
     public boolean havePartnership(UserAccount user, UserAccount partner) {
         Result<Boolean, Throwable> result = jdbc.readObjectOf(
-                IS_PARTNERSHIP_EXISTS, Boolean.class, user.getId().toString(), partner.getId().toString(), partner.getId().toString(), user.getId().toString()
+                IS_PARTNERSHIP_EXISTS,
+                Boolean.class,
+                user.getId().toString(),
+                partner.getId().toString(),
+                partner.getId().toString(),
+                user.getId().toString()
         );
-
 
         if (!result.success()) {
             if (result.throwable() instanceof DataNotFoundException) {
                 return false;
             } else {
-                result.throwable().printStackTrace();
+                Log.error(result.throwable());
             }
         }
 
@@ -159,7 +193,6 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     private UserAccount userAccountMapper(final ResultSet rs) throws SQLException {
-
         var events = new AccountEvents(
                 rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("last_updated_date", Timestamp.class).toLocalDateTime()

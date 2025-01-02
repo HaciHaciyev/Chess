@@ -5,8 +5,9 @@ import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.dal.JDBC;
-import core.project.chess.infrastructure.exceptions.DataNotFoundException;
+import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
+import core.project.chess.infrastructure.dal.util.exceptions.DataNotFoundException;
+import core.project.chess.infrastructure.dal.util.sql.Order;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,83 +20,77 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.*;
+
 @Transactional
 @ApplicationScoped
 public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     private final JDBC jdbc;
 
-    public static final String IS_PRESENT = "SELECT COUNT(id) FROM ChessGameHistory WHERE id = ?";
+    static final String IS_PRESENT = select()
+            .count("id")
+            .from("ChessGameHistory")
+            .where("id = ?")
+            .build();
 
-    public static final String GET_PARTNERS_USERNAMES = """
-            SELECT DISTINCT partner.username
-            FROM UserPartnership AS up
-            JOIN UserAccount AS partner ON up.partner_id = partner.id
-            JOIN UserAccount AS user_account ON up.user_id = user_account.id
-            WHERE user_account.username = ?
-            
-            UNION
-            
-            SELECT DISTINCT user_account.username
-            FROM UserPartnership AS up
-            JOIN UserAccount AS user_account ON up.user_id = user_account.id
-            JOIN UserAccount AS partner ON up.partner_id = partner.id
-            WHERE partner.username = ?
-            LIMIT 10 OFFSET ? * 10;
-            """;
+    static final String GET_PARTNERS_USERNAMES = selectDistinct()
+            .caseStatement()
+            .when("user_account.username = ?").then("partner.username")
+            .elseCase("user_account.username")
+            .endAs("username")
+            .from("UserPartnership")
+            .joinAs("UserAccount", "partner", "up.partner_id = partner.id")
+            .joinAs("UserAccount", "user_account", "up.user_id = user_account.id")
+            .where("user_account.username = ?")
+            .or("partner.username = ?")
+            .limitAndOffset(10, 0);
 
-    public static final String GET_CHESS_GAME = """
-            SELECT
-                cgh.id AS chessHistoryId,
-                cgh.pgn_chess_representation AS pgn,
-                cgh.fen_representations_of_board AS fenRepresentations,
-            
-                wa.username AS playerForWhite,
-                ba.username AS playerForBlack,
-            
-                cg.time_controlling_type AS timeControl,
-                cg.game_result_status AS gameResult,
-            	cg.player_for_white_rating AS whitePlayerRating,
-                cg.player_for_black_rating AS blackPlayerRating,
-                cg.creation_date AS gameStart,
-                cg.last_updated_date AS gameEnd
-            
-            FROM ChessGameHistory cgh
-            JOIN ChessGame cg ON cgh.chess_game_id = cg.id
-            JOIN GamePlayers gp ON cg.id = gp.chess_game_id
-            JOIN UserAccount wa ON gp.player_for_white_id = wa.id
-            JOIN UserAccount ba ON gp.player_for_black_id = ba.id;
-            WHERE cgh.id = ?
-            """;
+    static final String GET_CHESS_GAME = select()
+            .column("cgh.id").as("chessHistoryId")
+            .column("cgh.pgn_chess").as("pgn")
+            .column("cgh.fen_representations_of_board").as("fenRepresentations")
+            .column("wa.username").as("playerForWhite")
+            .column("ba.username").as("playerForBlack")
+            .column("cg.time_controlling_type").as("timeControl")
+            .column("cg.game_Result_status").as("gameResult")
+            .column("cg.player_for_white_rating").as("whitePlayerRating")
+            .column("cg.player_for_black_rating").as("blackPlayerRating")
+            .column("cg.creation_date").as("gameStart")
+            .column("cg.last_updated_date").as("gameEnd")
+            .from("ChessGameHistory cgh")
+            .join("ChessGame cg", "cgh.chess_game_id = cg.id")
+            .join("GamePlayers gp", "cg.id = gp.chess_game_id")
+            .join("UserAccount wa", "gp.player_for_white_id = wa.id")
+            .join("UserAccount ba", "gp.player_for_black_id = ba.id")
+            .where("cgh.id = ?")
+            .build();
 
-    public static final String LIST_OF_GAMES = """
-            WITH filtered_games AS (
-                SELECT
-                    cgh.id AS chessHistoryId,
-                    cgh.pgn_chess_representation AS pgn,
-                    cgh.fen_representations_of_board AS fenRepresentations,
-            
-                    wa.username AS playerForWhite,
-                    ba.username AS playerForBlack,
-            
-                    cg.time_controlling_type AS timeControl,
-                    cg.game_result_status AS gameResult,
-            		cg.player_for_white_rating AS whitePlayerRating,
-                    cg.player_for_black_rating AS blackPlayerRating,
-                    cg.creation_date AS gameStart,
-                    cg.last_updated_date AS gameEnd
-            
-                FROM ChessGameHistory cgh
-                JOIN ChessGame cg ON cgh.chess_game_id = cg.id
-                JOIN GamePlayers gp ON cg.id = gp.chess_game_id
-                JOIN UserAccount wa ON gp.player_for_white_id = wa.id
-                JOIN UserAccount ba ON gp.player_for_black_id = ba.id
-                WHERE wa.username = ? OR ba.username = ?
-                ORDER BY cg.creation_date DESC
-            )
-            SELECT * FROM filtered_games
-            LIMIT 10 OFFSET ? * 10;
-            """;
+    static final String LIST_OF_GAMES = withAndSelect(
+            "filtered_games", select()
+                    .column("cgh.id").as("chessHistoryId")
+                    .column("cgh.pgn_chess").as("pgn")
+                    .column("cgh.fen_representations_of_board").as("fenRepresentations")
+                    .column("wa.username").as("playerForWhite")
+                    .column("ba.username").as("playerForBlack")
+                    .column("cg.time_controlling_type").as("timeControl")
+                    .column("cg.game_Result_status").as("gameResult")
+                    .column("cg.player_for_white_rating").as("whitePlayerRating")
+                    .column("cg.player_for_black_rating").as("blackPlayerRating")
+                    .column("cg.creation_date").as("gameStart")
+                    .column("cg.last_updated_date").as("gameEnd")
+                    .from("ChessGameHistory cgh")
+                    .join("ChessGame cg", "cgh.chess_game_id = cg.id")
+                    .join("GamePlayers gp", "cg.id = gp.chess_game_id")
+                    .join("UserAccount wa", "gp.player_for_white_id = wa.id")
+                    .join("UserAccount ba", "gp.player_for_black_id = ba.id")
+                    .where("cgh.id = ?")
+                    .or("ba.username = ?")
+                    .orderBy("cg.creation_date", Order.DESC)
+                    .build())
+            .all()
+            .from("filtered_games")
+            .limitAndOffset();
 
     JdbcOutboundChessRepository(JDBC jdbc) {
         this.jdbc = jdbc;
@@ -110,13 +105,11 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
         );
 
         if (!result.success()) {
-
             if (result.throwable() instanceof DataNotFoundException) {
                 return false;
             } else {
                 Log.error(result.throwable());
             }
-
         }
 
         return result.value() != null && result.value() > 0;
@@ -133,7 +126,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                 LIST_OF_GAMES,
                 this::chessGameMapper,
                 Objects.requireNonNull(username).username(),
-                Objects.requireNonNull(username).username(),
+                username.username(),
                 pageNumber
         );
     }
@@ -144,8 +137,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                 GET_PARTNERS_USERNAMES,
                 rs -> rs.getString("username"),
                 Objects.requireNonNull(username),
-                Objects.requireNonNull(username),
-                pageNumber
+                username,
+                username
         );
     }
 

@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.dal.repository.inbound;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.infrastructure.dal.JDBC;
+import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 

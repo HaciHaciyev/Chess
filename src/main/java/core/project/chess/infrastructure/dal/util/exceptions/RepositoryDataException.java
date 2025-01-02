@@ -1,4 +1,4 @@
-package core.project.chess.infrastructure.exceptions;
+package core.project.chess.infrastructure.dal.util.exceptions;
 
 public class RepositoryDataException extends RuntimeException {
 
