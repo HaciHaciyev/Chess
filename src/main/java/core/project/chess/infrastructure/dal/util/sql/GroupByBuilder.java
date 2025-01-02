@@ -1,15 +1,20 @@
 package core.project.chess.infrastructure.dal.util.sql;
 
-public class FromBuilder {
+public class GroupByBuilder {
     private final StringBuilder query;
 
-    FromBuilder(StringBuilder query) {
-        this.query = query.append("FROM ");
+    public GroupByBuilder(StringBuilder query) {
+        this.query = query;
     }
 
-    public JoinBuilder from(String table) {
-        query.append(table).append(" ");
-        return new JoinBuilder(query);
+    public HavingBuilder having(String condition) {
+        query.append("HAVING ").append(condition).append(" ");
+        return new HavingBuilder(query);
+    }
+
+    public OrderByBuilder orderBy(String customOrder) {
+        query.append("ORDER BY ").append(customOrder).append(" ");
+        return new OrderByBuilder(query);
     }
 
     public String limitAndOffset() {
@@ -23,6 +28,6 @@ public class FromBuilder {
     }
 
     public String build() {
-        return this.query.toString();
+        return this.toString();
     }
 }

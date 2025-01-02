@@ -12,6 +12,16 @@ public class InitialWhereBuilder {
         return new ChainedWhereBuilder(query);
     }
 
+    public GroupByBuilder groupBy(String... columns) {
+        query.append("GROUP BY ").append(String.join(", ", columns)).append(" ");
+        return new GroupByBuilder(query);
+    }
+
+    public GroupByBuilder groupByf(String condition) {
+        query.append("GROUP BY ").append(condition).append(" ");
+        return new GroupByBuilder(query);
+    }
+
     public OrderByBuilder orderBy(String column, Order order) {
         query.append("ORDER BY ").append(column).append(" ").append(order).append(" ");
         return new OrderByBuilder(query);

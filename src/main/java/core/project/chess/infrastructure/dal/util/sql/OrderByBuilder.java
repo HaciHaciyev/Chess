@@ -13,7 +13,6 @@ public class OrderByBuilder {
     }
 
     public String build() {
-        query.append(";");
         return this.query.toString();
     }
 }

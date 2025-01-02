@@ -17,6 +17,16 @@ public class ChainedWhereBuilder {
         return this;
     }
 
+    public GroupByBuilder groupBy(String... columns) {
+        query.append("GROUP BY ").append(String.join(", ", columns)).append(" ");
+        return new GroupByBuilder(query);
+    }
+
+    public GroupByBuilder groupByf(String condition) {
+        query.append("GROUP BY ").append(condition).append(" ");
+        return new GroupByBuilder(query);
+    }
+
     public OrderByBuilder orderBy(String column, Order order) {
         query.append("ORDER BY ").append(column).append(" ").append(order).append(" ");
         return new OrderByBuilder(query);
@@ -38,7 +48,6 @@ public class ChainedWhereBuilder {
     }
 
     public String build() {
-        query.append(";");
         return this.query.toString();
     }
 }

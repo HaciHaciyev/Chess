@@ -124,7 +124,7 @@ public class SelectBuilder {
             return new FromBuilder(query);
         }
 
-        query.append(String.join(", ", columns));
+        query.append(String.join(", ", columns)).append(" ");
         return new FromBuilder(query);
     }
 
