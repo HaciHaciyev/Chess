@@ -12,6 +12,25 @@ public class InitialWhereBuilder {
         return new ChainedWhereBuilder(query);
     }
 
+    public ChainedWhereBuilder whereIn(String condition, int countOfValues) {
+        if (countOfValues == 0) {
+            return where(condition);
+        }
+
+        query.append("WHERE ").append(condition).append(" ");
+
+        query.append("IN(");
+        for (int i = 0; i < countOfValues - 1; i++) {
+            query.append("?");
+            if (i < countOfValues - 1) {
+                query.append(", ");
+            }
+        }
+        query.append(") ");
+
+        return new ChainedWhereBuilder(query);
+    }
+
     public GroupByBuilder groupBy(String... columns) {
         query.append("GROUP BY ").append(String.join(", ", columns)).append(" ");
         return new GroupByBuilder(query);

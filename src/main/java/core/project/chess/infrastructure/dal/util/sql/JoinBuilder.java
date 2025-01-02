@@ -62,6 +62,25 @@ public class JoinBuilder {
         return new ChainedWhereBuilder(query);
     }
 
+    public ChainedWhereBuilder whereIn(String condition, int countOfValues) {
+        if (countOfValues == 0) {
+            return where(condition);
+        }
+
+        query.append("WHERE ").append(condition).append(" ");
+
+        query.append("IN(");
+        for (int i = 0; i < countOfValues - 1; i++) {
+            query.append("?");
+            if (i < countOfValues - 1) {
+                query.append(", ");
+            }
+        }
+        query.append(") ");
+
+        return new ChainedWhereBuilder(query);
+    }
+
     public OrderByBuilder orderBy(String column, Order order) {
         query.append("ORDER BY ").append(column).append(" ").append(order).append(" ");
         return new OrderByBuilder(query);
