@@ -6,35 +6,53 @@ import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.insert;
+
 @Transactional
 @ApplicationScoped
 public class JdbcInboundChessRepository implements InboundChessRepository {
 
     private final JDBC jdbc;
 
-    public static final String SAVE_STARTED_CHESS_GAME = """
-            INSERT INTO ChessGame
-                (id, player_for_white_rating, player_for_black_rating,
-                 time_controlling_type, creation_date, last_updated_date,
-                 is_game_over, game_result_status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-            
-            INSERT INTO GamePlayers
-                (chess_game_id, player_for_white_id, player_for_black_id)
-                VALUES (?, ?, ?);
-            """;
+    static final String SAVE_STARTED_CHESS_GAME = String.format("%s; %s;",
+            insert()
+            .into("ChessGame")
+            .columns("id",
+                    "player_for_white_rating",
+                    "player_for_black_rating",
+                    "time_controlling_type",
+                    "creation_date",
+                    "last_updated_date",
+                    "is_game_over",
+                    "game_result_status"
+            )
+            .values(8)
+            .build(),
+            insert()
+            .into("GamePlayers")
+            .columns("chess_game_id",
+                    "player_for_white_id",
+                    "player_for_black_id"
+            )
+            .values(3)
+            .build()
+    );
+
+    static final String SAVE_CHESS_GAME_HISTORY = insert()
+            .into("ChessGameHistory")
+            .columns("id",
+                    "chess_game_id",
+                    "pgn_chess_representation",
+                    "fen_representations_of_board"
+            )
+            .values(4)
+            .build();
 
     public static final String UPDATE_FINISHED_CHESS_GAME = """
             UPDATE ChessGame SET
                 is_game_over = ?,
                 game_result_status = ?
                 Where id = ?;
-            """;
-
-    public static final String SAVE_CHESS_GAME_HISTORY = """
-            INSERT INTO ChessGameHistory
-                (id, chess_game_id, pgn_chess_representation, fen_representations_of_board)
-                VALUES (?, ?, ?, ?);
             """;
 
     JdbcInboundChessRepository(JDBC jdbc) {
