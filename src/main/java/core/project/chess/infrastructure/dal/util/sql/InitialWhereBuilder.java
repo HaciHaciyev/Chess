@@ -12,6 +12,11 @@ public class InitialWhereBuilder {
         return new ChainedWhereBuilder(query);
     }
 
+    public ChainedWhereBuilder whereNot(String condition) {
+        query.append("WHERE NOT ").append(condition).append(" ");
+        return new ChainedWhereBuilder(query);
+    }
+
     public ChainedWhereBuilder whereIn(String condition, int countOfValues) {
         if (countOfValues == 0) {
             return where(condition);

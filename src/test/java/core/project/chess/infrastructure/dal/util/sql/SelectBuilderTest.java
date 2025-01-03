@@ -140,6 +140,109 @@ class SelectBuilderTest {
         log();
     }
 
+    @Test
+    void test2() {
+        assertEquals("SELECT DISTINCT name FROM customers WHERE city = 'New York' ORDER BY name ", selectDistinct()
+                .column("name")
+                .from("customers")
+                .where("city = 'New York'")
+                .orderBy("name")
+                .build());
+
+        log();
+
+        assertEquals("SELECT COUNT(id) FROM orders WHERE status = 'shipped' AND total > 1000 ", select()
+                .count("id")
+                .from("orders")
+                .where("status = 'shipped'")
+                .and("total > 1000")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, name FROM employees WHERE department_id IN (1, 2, 3) AND salary > 50000 ", select()
+                .columns("id", "name")
+                .from("employees")
+                .where("department_id IN (1, 2, 3)")
+                .and("salary > 50000")
+                .build());
+
+        log();
+
+
+        assertEquals("SELECT * FROM orders WHERE status = 'pending' LIMIT 10 OFFSET 20 ", select()
+                .all()
+                .from("orders")
+                .where("status = 'pending'")
+                .limitAndOffset(10, 20));
+
+        log();
+
+        assertEquals("SELECT category, AVG(price) AS avg_price FROM products GROUP BY category ", select()
+                .columns("category")
+                .avg("price")
+                .as("avg_price")
+                .from("products")
+                .groupBy("category")
+                .build());
+
+        log();
+
+        assertEquals("SELECT category, COUNT(*) AS product_count FROM products GROUP BY category HAVING COUNT(*) > 10 ", select()
+                .columns("category")
+                .count("*")
+                .as("product_count")
+                .from("products")
+                .groupBy("category")
+                .having("COUNT(*) > 10")
+                .build());
+
+        log();
+
+        assertEquals("SELECT p.id, p.name FROM products p INNER JOIN categories c ON p.category_id = c.id WHERE c.name = 'Electronics' ", select()
+                .columns("p.id", "p.name")
+                .from("products p")
+                .innerJoin("categories c", "p.category_id = c.id")
+                .where("c.name = 'Electronics'")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, name FROM employees WHERE (status = 'active' AND age > 30) OR department = 'HR' ", select()
+                .columns("id", "name")
+                .from("employees")
+                .where("(status = 'active' AND age > 30)")
+                .or("department = 'HR'")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, name FROM users WHERE NOT (age < 18) ", select()
+                .columns("id", "name")
+                .from("users")
+                .whereNot("(age < 18)")
+                .build());
+
+        log();
+
+        assertEquals("WITH active_users AS (SELECT id FROM users WHERE status = 'active') SELECT * FROM active_users ",
+                withAndSelect("active_users", "SELECT id FROM users WHERE status = 'active'")
+                .columns("*")
+                .from("active_users")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name FROM products WHERE price BETWEEN 50 AND 100 ", select()
+                .column("name")
+                .from("products")
+                .where("price BETWEEN 50 AND 100")
+                .build());
+
+        log();
+
+    }
+
     private static void log() {
         Log.infof("Test %d passed.", ++passesTests);
     }
