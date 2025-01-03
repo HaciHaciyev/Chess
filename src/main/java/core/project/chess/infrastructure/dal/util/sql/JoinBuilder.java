@@ -112,6 +112,6 @@ public class JoinBuilder {
     }
 
     public String build() {
-        return this.toString();
+        return this.query.toString();
     }
 }

@@ -11,6 +11,10 @@ public class FromBuilder {
         this.query = query;
     }
 
+    public CaseBuilder caseStatement() {
+        return new CaseBuilder(query.append(", "));
+    }
+
     public JoinBuilder from(String table) {
         query.append("FROM ").append(table).append(" ");
         return new JoinBuilder(query);

@@ -11,6 +11,10 @@ public class ColumnBuilder {
         this.query = query;
     }
 
+    public CaseBuilder caseStatement() {
+        return new CaseBuilder(query.append(", "));
+    }
+
     public ColumnBuilder column(String column) {
         query.append(column).append(" ");
         return new ColumnBuilder(query);

@@ -3,8 +3,7 @@ package core.project.chess.infrastructure.dal.util.sql;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Test;
 
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.select;
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.selectDistinct;
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SelectBuilderTest {
@@ -78,6 +77,64 @@ class SelectBuilderTest {
                 .concat("first_name", "last_name")
                 .as("full_name")
                 .from("employees")
+                .build());
+
+        log();
+
+        assertEquals("SELECT * FROM products WHERE price > 100 ORDER BY price DESC LIMIT 5 OFFSET 0 ", select()
+                .all()
+                .from("products")
+                .where("price > 100")
+                .orderBy("price", Order.DESC)
+                .limitAndOffset(5, 0));
+
+        log();
+
+        assertEquals("SELECT name, age FROM users WHERE age BETWEEN 18 AND 30 ", select()
+                .columns("name", "age")
+                .from("users")
+                .where("age BETWEEN 18 AND 30")
+                .build());
+
+        log();
+
+        assertEquals("WITH recent_orders AS (SELECT id FROM orders WHERE created_at > '2024-01-01') SELECT * FROM recent_orders ",
+                withAndSelect("recent_orders", "SELECT id FROM orders WHERE created_at > '2024-01-01'")
+                .columns("*")
+                .from("recent_orders")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name , CASE WHEN status = 'active' THEN 'Yes' ELSE 'No' END AS is_active FROM users ", select()
+                .columns("name")
+                .caseStatement()
+                .when("status = 'active'")
+                .then("'Yes'")
+                .elseCase("'No'")
+                .endAs("is_active")
+                .from("users")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name , CASE WHEN status = 'active' THEN 'Yes' ELSE 'No' END AS is_active FROM users ", select()
+                .column("name")
+                .caseStatement()
+                .when("status = 'active'")
+                .then("'Yes'")
+                .elseCase("'No'")
+                .endAs("is_active")
+                .from("users")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name FROM customers WHERE age > 30 OR city = 'Los Angeles' ", select()
+                .column("name")
+                .from("customers")
+                .where("age > 30")
+                .or("city = 'Los Angeles'")
                 .build());
 
         log();

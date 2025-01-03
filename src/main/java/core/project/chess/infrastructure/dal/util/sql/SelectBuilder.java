@@ -12,7 +12,7 @@ public class SelectBuilder {
     }
 
     static SelectBuilder with(String table, String subQuery) {
-        return new SelectBuilder(new StringBuilder("WITH ").append(table).append(" ( ").append(subQuery).append(") ").append("SELECT "));
+        return new SelectBuilder(new StringBuilder("WITH ").append(table).append(" AS ").append("(").append(subQuery).append(") ").append("SELECT "));
     }
 
     static SelectBuilder select() {
