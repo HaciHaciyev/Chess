@@ -7,7 +7,7 @@ import static core.project.chess.infrastructure.dal.util.sql.Util.deleteSurplusC
 public class ChainedFromBuilder {
     private final StringBuilder query;
 
-    public ChainedFromBuilder(StringBuilder query) {
+    ChainedFromBuilder(StringBuilder query) {
         this.query = query;
     }
 

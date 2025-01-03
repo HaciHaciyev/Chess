@@ -24,8 +24,8 @@ public class SQLBuilder {
         return InsertBuilder.with(table, subQuery);
     }
 
-    public static UpdateBuilder update() {
-        return new UpdateBuilder();
+    public static UpdateBuilder update(String table) {
+        return UpdateBuilder.update(table);
     }
 
     public static DeleteBuilder delete() {

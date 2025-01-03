@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.dal.util.sql;
 public class HavingBuilder {
     private final StringBuilder query;
 
-    public HavingBuilder(StringBuilder query) {
+    HavingBuilder(StringBuilder query) {
         this.query = query;
     }
 

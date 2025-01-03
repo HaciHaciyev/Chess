@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.dal.util.sql;
 public class OnConflictBuilder {
     private final StringBuilder query;
 
-    public OnConflictBuilder(StringBuilder query) {
+    OnConflictBuilder(StringBuilder query) {
         this.query = query;
     }
 

@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.dal.util.sql;
 public class OrderByBuilder {
     private final StringBuilder query;
 
-    public OrderByBuilder(StringBuilder query) {
+    OrderByBuilder(StringBuilder query) {
         this.query = query;
     }
 

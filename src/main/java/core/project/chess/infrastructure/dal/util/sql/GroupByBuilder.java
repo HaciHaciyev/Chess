@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.dal.util.sql;
 public class GroupByBuilder {
     private final StringBuilder query;
 
-    public GroupByBuilder(StringBuilder query) {
+    GroupByBuilder(StringBuilder query) {
         this.query = query;
     }
 

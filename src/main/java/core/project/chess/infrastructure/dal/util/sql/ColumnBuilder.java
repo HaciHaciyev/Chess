@@ -7,7 +7,7 @@ import static core.project.chess.infrastructure.dal.util.sql.Util.deleteSurplusC
 public class ColumnBuilder {
     private final StringBuilder query;
 
-    public ColumnBuilder(StringBuilder query) {
+    ColumnBuilder(StringBuilder query) {
         this.query = query;
     }
 

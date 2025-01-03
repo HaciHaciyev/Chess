@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.dal.util.sql;
 public class TailInsertBuilder {
     private final StringBuilder query;
 
-    public TailInsertBuilder(StringBuilder query) {
+    TailInsertBuilder(StringBuilder query) {
         this.query = query;
     }
 

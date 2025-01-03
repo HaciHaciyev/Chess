@@ -3,7 +3,7 @@ package core.project.chess.infrastructure.dal.util.sql;
 public class ElseCaseBuilder {
     private final StringBuilder query;
 
-    public ElseCaseBuilder(StringBuilder query) {
+    ElseCaseBuilder(StringBuilder query) {
         this.query = query;
     }
 
