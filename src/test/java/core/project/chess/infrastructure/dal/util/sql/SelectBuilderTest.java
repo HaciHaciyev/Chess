@@ -414,7 +414,7 @@ class SelectBuilderTest {
         log();
     }
 
-    private static void log() {
+    static void log() {
         Log.infof("Test %d passed.", ++passesTests);
     }
 }

@@ -4,10 +4,6 @@ public class SQLBuilder {
 
     private SQLBuilder() {}
 
-    public static SelectBuilder withAndSelect(String table, String subQuery) {
-        return SelectBuilder.with(table, subQuery);
-    }
-
     public static SelectBuilder select() {
         return SelectBuilder.select();
     }
@@ -16,8 +12,16 @@ public class SQLBuilder {
         return SelectBuilder.selectDistinct();
     }
 
+    public static SelectBuilder withAndSelect(String table, String subQuery) {
+        return SelectBuilder.with(table, subQuery);
+    }
+
     public static InsertBuilder insert() {
         return new InsertBuilder();
+    }
+
+    public static InsertBuilder withAndInsert(String table, String subQuery) {
+        return InsertBuilder.with(table, subQuery);
     }
 
     public static UpdateBuilder update() {

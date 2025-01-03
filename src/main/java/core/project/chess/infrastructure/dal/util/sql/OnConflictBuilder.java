@@ -1,0 +1,17 @@
+package core.project.chess.infrastructure.dal.util.sql;
+
+public class OnConflictBuilder {
+    private final StringBuilder query;
+
+    public OnConflictBuilder(StringBuilder query) {
+        this.query = query;
+    }
+
+    public ReturningBuilder doUpdateSet(String doUpdateSet) {
+        return new ReturningBuilder(query.append("DO UPDATE SET ").append(doUpdateSet).append(" "));
+    }
+
+    public ReturningBuilder doNothing() {
+        return new ReturningBuilder(query.append("DO NOTHING "));
+    }
+}

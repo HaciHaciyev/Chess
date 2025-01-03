@@ -15,12 +15,24 @@ public class SelectBuilder {
         return new SelectBuilder(new StringBuilder("WITH ").append(table).append(" AS ").append("(").append(subQuery).append(") ").append("SELECT "));
     }
 
+    static SelectBuilder with(StringBuilder query, String table, String subQuery) {
+        return new SelectBuilder(query.append("WITH ").append(table).append(" AS ").append("(").append(subQuery).append(") ").append("SELECT "));
+    }
+
     static SelectBuilder select() {
         return new SelectBuilder(new StringBuilder("SELECT "));
     }
 
+    static SelectBuilder select(StringBuilder query) {
+        return new SelectBuilder(query.append("SELECT "));
+    }
+
     static SelectBuilder selectDistinct() {
         return new SelectBuilder(new StringBuilder("SELECT DISTINCT "));
+    }
+
+    static SelectBuilder selectDistinct(StringBuilder query) {
+        return new SelectBuilder(query.append("SELECT DISTINCT "));
     }
 
     public CaseBuilder caseStatement() {
