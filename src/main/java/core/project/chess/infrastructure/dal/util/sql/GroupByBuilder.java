@@ -12,6 +12,11 @@ public class GroupByBuilder {
         return new HavingBuilder(query);
     }
 
+    public OrderByBuilder orderBy(String column, Order order) {
+        query.append("ORDER BY ").append(column).append(" ").append(order).append(" ");
+        return new OrderByBuilder(query);
+    }
+
     public OrderByBuilder orderBy(String customOrder) {
         query.append("ORDER BY ").append(customOrder).append(" ");
         return new OrderByBuilder(query);

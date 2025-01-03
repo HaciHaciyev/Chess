@@ -243,6 +243,177 @@ class SelectBuilderTest {
 
     }
 
+    @Test
+    void test3() {
+        assertEquals("SELECT id, name FROM employees WHERE department_id = 3 ", select()
+                .columns("id", "name")
+                .from("employees")
+                .where("department_id = 3")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name, age FROM users WHERE age >= 25 AND age <= 40 ", select()
+                .columns("name", "age")
+                .from("users")
+                .where("age >= 25")
+                .and("age <= 40")
+                .build());
+
+        log();
+
+        assertEquals("SELECT DISTINCT city FROM customers ", selectDistinct()
+                .column("city")
+                .from("customers")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, email FROM users WHERE email LIKE '%@example.com' ", select()
+                .columns("id", "email")
+                .from("users")
+                .where("email LIKE '%@example.com'")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, name FROM products WHERE name IS NOT NULL ", select()
+                .columns("id", "name")
+                .from("products")
+                .where("name IS NOT NULL")
+                .build());
+
+        log();
+
+        assertEquals("SELECT category , SUM(price) AS total_price FROM products GROUP BY category ORDER BY total_price DESC ", select()
+                .columns("category")
+                .sum("price")
+                .as("total_price")
+                .from("products")
+                .groupBy("category")
+                .orderBy("total_price", Order.DESC)
+                .build());
+
+        log();
+
+        assertEquals("SELECT name FROM users WHERE registration_date >= '2025-01-01' AND status = 'active' ", select()
+                .column("name")
+                .from("users")
+                .where("registration_date >= '2025-01-01'")
+                .and("status = 'active'")
+                .build());
+
+        log();
+
+        assertEquals("SELECT department_id , COUNT(*) AS employee_count FROM employees GROUP BY department_id HAVING COUNT(*) > 5 ", select()
+                .columns("department_id")
+                .count("*")
+                .as("employee_count")
+                .from("employees")
+                .groupBy("department_id")
+                .having("COUNT(*) > 5")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, name , CASE WHEN salary > 50000 THEN 'high' ELSE 'low' END AS salary_level FROM employees ", select()
+                .columns("id", "name")
+                .caseStatement()
+                .when("salary > 50000")
+                .then("'high'")
+                .elseCase("'low'")
+                .endAs("salary_level")
+                .from("employees")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, name FROM users WHERE last_login IS NULL ", select()
+                .columns("id", "name")
+                .from("users")
+                .where("last_login IS NULL")
+                .build());
+
+        log();
+
+        assertEquals("SELECT country , AVG(age) AS avg_age FROM users GROUP BY country ", select()
+                .columns("country")
+                .avg("age")
+                .as("avg_age")
+                .from("users")
+                .groupBy("country")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name , COUNT(*) AS order_count FROM customers c INNER JOIN orders o ON c.id = o.customer_id GROUP BY c.name ", select()
+                .columns("name")
+                .count("*")
+                .as("order_count")
+                .from("customers c")
+                .innerJoin("orders o", "c.id = o.customer_id")
+                .groupBy("c.name")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name , MAX(salary) AS max_salary FROM employees GROUP BY department_id ", select()
+                .columns("name")
+                .max("salary")
+                .as("max_salary")
+                .from("employees")
+                .groupBy("department_id")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, name FROM employees WHERE department_id = 5 OR salary > 60000 ", select()
+                .columns("id", "name")
+                .from("employees")
+                .where("department_id = 5")
+                .or("salary > 60000")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, salary FROM employees WHERE NOT (department_id = 1 AND salary < 40000) ", select()
+                .columns("id", "salary")
+                .from("employees")
+                .whereNot("(department_id = 1 AND salary < 40000)")
+                .build());
+
+        log();
+
+        assertEquals("SELECT id, name FROM users WHERE age BETWEEN 20 AND 30 ", select()
+                .columns("id", "name")
+                .from("users")
+                .where("age BETWEEN 20 AND 30")
+                .build());
+
+        log();
+
+        assertEquals("SELECT * FROM orders WHERE created_at >= '2025-01-01' ORDER BY created_at ASC LIMIT 10 OFFSET 0 ", select()
+                .all()
+                .from("orders")
+                .where("created_at >= '2025-01-01'")
+                .orderBy("created_at", Order.ASC)
+                .limitAndOffset(10, 0));
+
+        log();
+
+        assertEquals("SELECT category , SUM(price) AS total_price FROM products WHERE category IS NOT NULL GROUP BY category HAVING SUM(price) > 1000 ", select()
+                .columns("category")
+                .sum("price")
+                .as("total_price")
+                .from("products")
+                .where("category IS NOT NULL")
+                .groupBy("category")
+                .having("SUM(price) > 1000")
+                .build());
+
+        log();
+    }
+
     private static void log() {
         Log.infof("Test %d passed.", ++passesTests);
     }

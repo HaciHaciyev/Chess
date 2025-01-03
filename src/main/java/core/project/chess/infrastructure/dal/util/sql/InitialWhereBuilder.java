@@ -7,6 +7,56 @@ public class InitialWhereBuilder {
         this.query = query;
     }
 
+    public JoinBuilder join(String table, String condition) {
+        query.append("JOIN ").append(table).append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder innerJoin(String table, String condition) {
+        query.append("INNER JOIN ").append(table).append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder leftJoin(String table, String condition) {
+        query.append("LEFT JOIN ").append(table).append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder rightJoin(String table, String condition) {
+        query.append("RIGHT JOIN ").append(table).append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder fullJoin(String table, String condition) {
+        query.append("FULL JOIN ").append(table).append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder joinAs(String table, String as, String condition) {
+        query.append("JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder innerJoinAs(String table, String as, String condition) {
+        query.append("INNER JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder leftJoinAs(String table, String as, String condition) {
+        query.append("LEFT JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder rightJoinAs(String table, String as, String condition) {
+        query.append("RIGHT JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
+    public JoinBuilder fullJoinAs(String table, String as, String condition) {
+        query.append("FULL JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        return new JoinBuilder(query);
+    }
+
     public ChainedWhereBuilder where(String condition) {
         query.append("WHERE ").append(condition).append(" ");
         return new ChainedWhereBuilder(query);
