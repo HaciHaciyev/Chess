@@ -178,7 +178,7 @@ class SelectBuilderTest {
 
         log();
 
-        assertEquals("SELECT category, AVG(price) AS avg_price FROM products GROUP BY category ", select()
+        assertEquals("SELECT category , AVG(price) AS avg_price FROM products GROUP BY category ", select()
                 .columns("category")
                 .avg("price")
                 .as("avg_price")
@@ -188,7 +188,7 @@ class SelectBuilderTest {
 
         log();
 
-        assertEquals("SELECT category, COUNT(*) AS product_count FROM products GROUP BY category HAVING COUNT(*) > 10 ", select()
+        assertEquals("SELECT category , COUNT(*) AS product_count FROM products GROUP BY category HAVING COUNT(*) > 10 ", select()
                 .columns("category")
                 .count("*")
                 .as("product_count")

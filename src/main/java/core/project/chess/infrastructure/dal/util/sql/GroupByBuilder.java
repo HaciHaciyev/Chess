@@ -28,6 +28,6 @@ public class GroupByBuilder {
     }
 
     public String build() {
-        return this.toString();
+        return this.query.toString();
     }
 }
