@@ -4,61 +4,51 @@ import java.util.Objects;
 
 import static core.project.chess.infrastructure.dal.util.sql.Util.deleteSurplusComa;
 
-public class FromBuilder {
+public class ChainedFromBuilder {
     private final StringBuilder query;
 
-    FromBuilder(StringBuilder query) {
+    public ChainedFromBuilder(StringBuilder query) {
         this.query = query;
     }
 
-    public JoinBuilder from(String table) {
-        query.append("FROM ").append(table).append(" ");
-        return new JoinBuilder(query);
-    }
-
-    public JoinBuilder fromAs(String table, String alias) {
-        query.append("FROM ").append(table).append(" AS ").append(alias).append(" ");
-        return new JoinBuilder(query);
-    }
-
     public FunctionBuilder count(String column) {
-        query.append(", COUNT");
+        query.append("COUNT");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
 
     public FunctionBuilder sum(String column) {
-        query.append(", SUM");
+        query.append("SUM");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
 
     public FunctionBuilder avg(String column) {
-        query.append(", AVG");
+        query.append("AVG");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
 
     public FunctionBuilder min(String column) {
-        query.append(", MIN");
+        query.append("MIN");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
 
     public FunctionBuilder max(String column) {
-        query.append(", MAX");
+        query.append("MAX");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
 
     public FunctionBuilder upper(String column) {
-        query.append(", UPPER");
+        query.append("UPPER");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
 
     public FunctionBuilder lower(String column) {
-        query.append(", LOWER");
+        query.append("LOWER");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
@@ -68,13 +58,14 @@ public class FromBuilder {
             throw new IllegalArgumentException("Columns, at least one, required.");
         }
 
-        query.append(", CONCAT(");
+        query.append("CONCAT(");
 
         if (columns.length == 1) {
             query.append(columns[0]);
         } else {
             query.append(String.join(", ", columns));
         }
+
         deleteSurplusComa(query);
 
         query.append(") ");
@@ -82,13 +73,13 @@ public class FromBuilder {
     }
 
     public FunctionBuilder length(String column) {
-        query.append(", LENGTH");
+        query.append("LENGTH");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
 
     public FunctionBuilder trim(String column) {
-        query.append(", TRIM");
+        query.append("TRIM");
         appendColumn(column);
         return new FunctionBuilder(query);
     }
@@ -100,5 +91,15 @@ public class FromBuilder {
         }
 
         query.append("(").append(column).append(") ");
+    }
+
+    public InitialWhereBuilder from(String table) {
+        query.append("FROM ").append(table).append(" ");
+        return new InitialWhereBuilder(query);
+    }
+
+    public JoinBuilder fromAs(String table, String alias) {
+        query.append(table).append(" AS ").append(alias).append(" ");
+        return new JoinBuilder(query);
     }
 }

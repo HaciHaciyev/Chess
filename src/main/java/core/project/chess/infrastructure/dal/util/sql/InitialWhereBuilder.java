@@ -62,6 +62,6 @@ public class InitialWhereBuilder {
     }
 
     public String build() {
-        return this.toString();
+        return this.query.toString();
     }
 }

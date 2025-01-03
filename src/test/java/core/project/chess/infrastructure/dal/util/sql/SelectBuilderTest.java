@@ -1,11 +1,15 @@
 package core.project.chess.infrastructure.dal.util.sql;
 
+import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Test;
 
 import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.select;
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.selectDistinct;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SelectBuilderTest {
+
+    private static int passesTests = 0;
 
     @Test
     void test() {
@@ -15,6 +19,8 @@ class SelectBuilderTest {
                 .where("age > 18")
                 .orderBy("age", Order.DESC)
                 .limitAndOffset(10, 5));
+
+        log();
 
         assertEquals("SELECT t.id AS token_id, t.token AS token, t.is_confirmed AS token_confirmation, t.creation_date AS token_creation_date, u.id AS id, u.username AS username, u.email AS email, u.password AS password, u.user_role AS user_role, u.rating AS rating, u.rating_deviation AS rating_deviation, u.rating_volatility AS rating_volatility, u.is_enable AS is_enable, u.creation_date AS creation_date, u.last_updated_date AS last_updated_date FROM UserToken t INNER JOIN UserAccount u ON t.user_id = u.id WHERE t.token = ? ",
                 select()
@@ -38,6 +44,46 @@ class SelectBuilderTest {
                 .where("t.token = ?")
                 .build());
 
+        log();
 
+        assertEquals("SELECT DISTINCT name FROM customers WHERE city = 'New York' ORDER BY name ", selectDistinct()
+                .column("name")
+                .from("customers")
+                .where("city = 'New York'")
+                .orderBy("name")
+                .build());
+
+        log();
+
+        assertEquals("SELECT COUNT(id) FROM orders WHERE status = 'shipped' AND total > 1000 ", select()
+                .count("id")
+                .from("orders")
+                .where("status = 'shipped'")
+                .and("total > 1000")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name , CONCAT(first_name, last_name) AS full_name FROM employees ", select()
+                .columns("name")
+                .concat("first_name", "last_name")
+                .as("full_name")
+                .from("employees")
+                .build());
+
+        log();
+
+        assertEquals("SELECT name , CONCAT(first_name, last_name) AS full_name FROM employees ", select()
+                .column("name")
+                .concat("first_name", "last_name")
+                .as("full_name")
+                .from("employees")
+                .build());
+
+        log();
+    }
+
+    private static void log() {
+        Log.infof("Test %d passed.", ++passesTests);
     }
 }
