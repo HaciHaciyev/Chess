@@ -8,5 +8,9 @@ public class Util {
         if (query.charAt(query.length() - 1) == ',') {
             query.deleteCharAt(query.length() - 1);
         }
+
+        if (query.charAt(query.length() - 2) == ',') {
+            query.deleteCharAt(query.length() - 2);
+        }
     }
 }

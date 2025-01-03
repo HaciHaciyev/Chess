@@ -15,14 +15,14 @@ public class ColumnBuilder {
     }
 
     public ColumnBuilder as(String column) {
-        query.append("AS ").append(column).append(" ,");
+        query.append("AS ").append(column).append(", ");
         return new ColumnBuilder(query);
     }
 
     public JoinBuilder from(String table) {
         deleteSurplusComa(query);
 
-        query.append(table).append(" ");
+        query.append("FROM ").append(table).append(" ");
         return new JoinBuilder(query);
     }
 }

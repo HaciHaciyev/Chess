@@ -12,6 +12,11 @@ public class FromBuilder {
         return new JoinBuilder(query);
     }
 
+    public JoinBuilder fromAs(String table, String alias) {
+        query.append(table).append(" AS ").append(alias).append(" ");
+        return new JoinBuilder(query);
+    }
+
     public String limitAndOffset() {
         query.append("LIMIT ").append("? ").append("OFFSET ").append("? ");
         return this.query.toString();

@@ -33,27 +33,27 @@ public class JoinBuilder {
     }
 
     public JoinBuilder joinAs(String table, String as, String condition) {
-        query.append("JOIN ").append(table).append("AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        query.append("JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
         return this;
     }
 
     public JoinBuilder innerJoinAs(String table, String as, String condition) {
-        query.append("INNER JOIN ").append(table).append("AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        query.append("INNER JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
         return this;
     }
 
     public JoinBuilder leftJoinAs(String table, String as, String condition) {
-        query.append("LEFT JOIN ").append(table).append("AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        query.append("LEFT JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
         return this;
     }
 
     public JoinBuilder rightJoinAs(String table, String as, String condition) {
-        query.append("RIGHT JOIN ").append(table).append("AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        query.append("RIGHT JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
         return this;
     }
 
     public JoinBuilder fullJoinAs(String table, String as, String condition) {
-        query.append("FULL JOIN ").append(table).append("AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
+        query.append("FULL JOIN ").append(table).append(" AS ").append(as).append(" ").append(" ON ").append(condition).append(" ");
         return this;
     }
 

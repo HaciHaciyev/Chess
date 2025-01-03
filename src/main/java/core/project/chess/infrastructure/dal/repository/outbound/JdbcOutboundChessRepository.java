@@ -39,7 +39,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .when("user_account.username = ?").then("partner.username")
             .elseCase("user_account.username")
             .endAs("username")
-            .from("UserPartnership")
+            .fromAs("UserPartnership", "up")
             .joinAs("UserAccount", "partner", "up.partner_id = partner.id")
             .joinAs("UserAccount", "user_account", "up.user_id = user_account.id")
             .where("user_account.username = ?")
