@@ -7,7 +7,7 @@ import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.insert;
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.*;
 
 @Transactional
 @ApplicationScoped
@@ -58,29 +58,37 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .doUpdateSet("token = ?")
             .build();
 
-    private static final String UPDATE_USER_RATING = """
-            UPDATE UserAccount SET
-                    rating = ?,
-                    rating_deviation = ?,
-                    rating_volatility = ?
-                WHERE id = ?
-            """;
+    static final String UPDATE_USER_RATING = update("UserAccount")
+            .set("""
+                rating = ?,
+                rating_deviation = ?,
+                rating_volatility = ?
+                """
+            )
+            .where("id = ?")
+            .build();
 
-    private static final String UPDATE_USER_TOKEN_AND_ACCOUNT = """
-            UPDATE UserToken SET
-                    is_confirmed = ?
-                WHERE id = ?;
+    static final String UPDATE_USER_TOKEN_AND_ACCOUNT = String.format("%s; %s;",
+            update("UserToken")
+            .set("is_confirmed = ?")
+            .where("id = ?")
+            .build(),
+            update("UserAccount")
+            .set("is_enable = ?, user_role = ?")
+            .where("id = ?")
+            .build()
+    );
 
-            UPDATE UserAccount SET
-                    is_enable = ?,
-                    user_role = ?
-                WHERE id = ?;
-            """;
-
-    private static final String DELETE_USER_TOKEN_AND_ACCOUNT = """
-            DELETE FROM UserToken WHERE id = ?;
-            DELETE FROM UserAccount WHERE id = ?;
-            """;
+    static final String DELETE_USER_TOKEN_AND_ACCOUNT = String.format("%s; %s;",
+            delete()
+            .from("UserToken")
+            .where("id = ?")
+            .build(),
+            delete()
+            .from("UserAccount")
+            .where("id = ?")
+            .build()
+    );
 
     JdbcInboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;

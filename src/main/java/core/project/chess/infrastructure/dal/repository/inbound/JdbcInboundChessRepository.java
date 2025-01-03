@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.insert;
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.update;
 
 @Transactional
 @ApplicationScoped
@@ -48,12 +49,10 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             .values(4)
             .build();
 
-    public static final String UPDATE_FINISHED_CHESS_GAME = """
-            UPDATE ChessGame SET
-                is_game_over = ?,
-                game_result_status = ?
-                Where id = ?;
-            """;
+    static final String UPDATE_FINISHED_CHESS_GAME = update("ChessGame")
+            .set("is_game_over = ?, game_result_status = ?")
+            .where("id = ?")
+            .build();
 
     JdbcInboundChessRepository(JDBC jdbc) {
         this.jdbc = jdbc;
