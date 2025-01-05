@@ -91,7 +91,7 @@ public class ChessGameService {
         }
 
         CompletableFuture.runAsync(
-                () -> handleWebSocketMessage(session, username.username(), message, gamePlusSessions)
+                () -> handleMessage(session, username.username(), message, gamePlusSessions)
         );
     }
 
@@ -117,23 +117,19 @@ public class ChessGameService {
         return gameID.describeConstable();
     }
 
-    private void handleWebSocketMessage(final Session session, final String username, final Message message,
-                                        final Pair<ChessGame, HashSet<Session>> gameSessions) {
+    private void handleMessage(final Session session, final String username, final Message message,
+                               final Pair<ChessGame, HashSet<Session>> gameSessions) {
 
         final Pair<MessageAddressee, Message> result = switch (message.type()) {
-            case MOVE -> this.gameFunctionalityService.move(message, Pair.of(username, session), gameSessions);
-            case MESSAGE -> this.gameFunctionalityService.chat(message, Pair.of(username, session), gameSessions);
-            case RETURN_MOVE -> this.gameFunctionalityService.returnOfMovement(Pair.of(username, session), gameSessions);
-            case RESIGNATION -> this.gameFunctionalityService.resignation(Pair.of(username, session), gameSessions);
-            case TREE_FOLD -> this.gameFunctionalityService.threeFold(Pair.of(username, session), gameSessions);
-            case AGREEMENT -> this.gameFunctionalityService.agreement(Pair.of(username, session), gameSessions);
+            case MOVE -> gameFunctionalityService.move(message, Pair.of(username, session), gameSessions);
+            case MESSAGE -> gameFunctionalityService.chat(message, Pair.of(username, session), gameSessions);
+            case RETURN_MOVE -> gameFunctionalityService.returnOfMovement(Pair.of(username, session), gameSessions);
+            case RESIGNATION -> gameFunctionalityService.resignation(Pair.of(username, session), gameSessions);
+            case TREE_FOLD -> gameFunctionalityService.threeFold(Pair.of(username, session), gameSessions);
+            case AGREEMENT -> gameFunctionalityService.agreement(Pair.of(username, session), gameSessions);
             default -> Pair.of(MessageAddressee.ONLY_ADDRESSER, Message.error("Invalid message type."));
         };
 
-        messages(session, gameSessions.getSecond(), result);
-    }
-
-    private static void messages(Session session, Set<Session> sessions, Pair<MessageAddressee, Message> result) {
         final MessageAddressee messageAddressee = result.getFirst();
         final Message resultMessage = result.getSecond();
 
@@ -142,7 +138,7 @@ public class ChessGameService {
             return;
         }
 
-        sessions.forEach(currentSession -> sendMessage(currentSession, resultMessage));
+        gameSessions.getSecond().forEach(currentSession -> sendMessage(currentSession, resultMessage));
     }
 
     private void initializeGameSession(Session session, Username username, Message message) {
@@ -282,23 +278,6 @@ public class ChessGameService {
         }
     }
 
-    private void notifyTheAddressee(Username addresserUsername, Username addresseeUsername, GameParameters gameParameters) {
-        Color color = null;
-        if (Objects.nonNull(gameParameters.color())) {
-            color = gameParameters.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
-        }
-
-        Message message = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
-                .time(gameParameters.time())
-                .FEN(gameParameters.FEN())
-                .PGN(gameParameters.PGN())
-                .color(color)
-                .build();
-
-        sendMessage(sessionStorage.getSessionByUsername(addresseeUsername).getFirst(), message);
-    }
-
     private StatusPair<GameParameters> checkPartnershipAgreement(UserAccount addressee,
                                                                  UserAccount addresser,
                                                                  GameParameters addresserGameParameters) {
@@ -322,6 +301,23 @@ public class ChessGameService {
         }
 
         return StatusPair.ofFalse();
+    }
+
+    private void notifyTheAddressee(Username addresserUsername, Username addresseeUsername, GameParameters gameParameters) {
+        Color color = null;
+        if (Objects.nonNull(gameParameters.color())) {
+            color = gameParameters.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
+        }
+
+        Message message = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
+                .time(gameParameters.time())
+                .FEN(gameParameters.FEN())
+                .PGN(gameParameters.PGN())
+                .color(color)
+                .build();
+
+        sendMessage(sessionStorage.getSessionByUsername(addresseeUsername).getFirst(), message);
     }
 
     private void cancelRequests(UserAccount firstPlayer, UserAccount secondPlayer) {
