@@ -47,3 +47,5 @@ nb-configuration.xml
 # TLS Certificates
 .certs/
 /src/main/java/core/project/chess/infrastructure/broker/
+/.mvn/wrapper/maven-wrapper.jar
+/src/main/resources/application.properties
