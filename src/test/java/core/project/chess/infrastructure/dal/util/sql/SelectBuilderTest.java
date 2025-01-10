@@ -12,6 +12,14 @@ class SelectBuilderTest {
 
     @Test
     void test() {
+        assertEquals("SELECT username , email , rating FROM UserAccount WHERE username = ? ", select()
+                .column("username")
+                .column("email")
+                .column("rating")
+                .from("UserAccount")
+                .where("username = ?")
+                .build());
+
         assertEquals("SELECT name, age FROM users WHERE age > 18 ORDER BY age DESC LIMIT 10 OFFSET 5 ", select()
                 .columns("name", "age")
                 .from("users")

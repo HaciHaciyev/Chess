@@ -6,9 +6,11 @@ import static core.project.chess.infrastructure.dal.util.sql.Util.deleteSurplusC
 
 public class ColumnBuilder {
     private final StringBuilder query;
+    private boolean isPreviousWasColumn;
 
-    ColumnBuilder(StringBuilder query) {
+    ColumnBuilder(StringBuilder query, boolean isPreviousWasColumn) {
         this.query = query;
+        this.isPreviousWasColumn = isPreviousWasColumn;
     }
 
     public CaseBuilder caseStatement() {
@@ -16,13 +18,19 @@ public class ColumnBuilder {
     }
 
     public ColumnBuilder column(String column) {
+        if (isPreviousWasColumn) {
+            query.append(", ");
+        }
+
         query.append(column).append(" ");
-        return new ColumnBuilder(query);
+        isPreviousWasColumn = true;
+        return this;
     }
 
     public ColumnBuilder as(String column) {
         query.append("AS ").append(column).append(", ");
-        return new ColumnBuilder(query);
+        isPreviousWasColumn = false;
+        return this;
     }
 
     public JoinBuilder from(String table) {

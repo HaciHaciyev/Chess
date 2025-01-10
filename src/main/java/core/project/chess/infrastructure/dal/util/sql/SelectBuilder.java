@@ -122,7 +122,7 @@ public class SelectBuilder {
 
     public ColumnBuilder column(String column) {
         query.append(column).append(" ");
-        return new ColumnBuilder(query);
+        return new ColumnBuilder(query, true);
     }
 
     public FromBuilder columns(String... columns) {
