@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.dal.repository.outbound;
 
+import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
@@ -59,6 +60,14 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     static final String FIND_USERNAME = select()
             .count("*")
+            .from("UserAccount")
+            .where("username = ?")
+            .build();
+
+    static final String FIND_USER_PROPERTIES = select()
+            .column("username")
+            .column("email")
+            .column("rating")
             .from("UserAccount")
             .where("username = ?")
             .build();
@@ -178,6 +187,11 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     @Override
     public Result<Pair<String, String>, Throwable> findRefreshToken(String refreshToken) {
         return jdbc.read(FIND_REFRESH_TOKEN, rs -> Pair.of(rs.getString("user_id"), rs.getString("token")), refreshToken);
+    }
+
+    @Override
+    public Result<UserProperties, Throwable> userProperties(String username) {
+        return jdbc.read(FIND_USER_PROPERTIES, rs -> new UserProperties(rs.getString("username"), rs.getString("email"), rs.getDouble("rating")), username);
     }
 
     private EmailConfirmationToken userTokenMapper(final ResultSet rs) throws SQLException {

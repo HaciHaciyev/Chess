@@ -1,5 +1,6 @@
 package core.project.chess.domain.user.repositories;
 
+import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Email;
@@ -26,4 +27,6 @@ public interface OutboundUserRepository {
     Result<EmailConfirmationToken, Throwable> findToken(UUID token);
 
     Result<Pair<String, String>, Throwable> findRefreshToken(String refreshToken);
+
+    Result<UserProperties, Throwable> userProperties(String username);
 }
