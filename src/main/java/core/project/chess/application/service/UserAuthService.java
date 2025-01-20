@@ -8,9 +8,7 @@ import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Email;
 import core.project.chess.domain.user.value_objects.Password;
-import core.project.chess.domain.user.value_objects.ProfilePicture;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.dal.files.ImageFileRepository;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
 import core.project.chess.infrastructure.utilities.containers.Pair;
@@ -34,15 +32,13 @@ import java.util.UUID;
 
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class UserAccountService {
+public class UserAuthService {
 
     private final JWTParser jwtParser;
 
     private final JwtUtility jwtUtility;
 
     private final PasswordEncoder passwordEncoder;
-
-    private final ImageFileRepository imageFileRepository;
 
     private final InboundUserRepository inboundUserRepository;
 
@@ -62,6 +58,9 @@ public class UserAccountService {
 
     public Map<String, String> login(LoginForm loginForm) {
         Log.infof("User %s is logging in", loginForm.username());
+        if (Password.validateMaxSize(loginForm.password())) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Password is to long: max size 64 characters.").build());
+        }
 
         final Username username = Result.ofThrowable(
                 () -> new Username(loginForm.username())
@@ -105,6 +104,10 @@ public class UserAccountService {
 
     public void registration(RegistrationForm registrationForm) {
         Log.infof("Starting registration process for user %s", registrationForm.username());
+        if (Password.validateMaxSize(registrationForm.password())) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Password is to long: max size 64 characters.").build());
+        }
+
         if (!Objects.equals(
                 registrationForm.password(), registrationForm.passwordConfirmation())
         ) {
@@ -191,51 +194,6 @@ public class UserAccountService {
         foundToken.getUserAccount().enable();
         inboundUserRepository.enable(foundToken);
         Log.infof("Verification successful");
-    }
-
-    public void putProfilePicture(byte[] picture, Username username) {
-        final UserAccount userAccount = outboundUserRepository
-                .findByUsername(username)
-                .orElseThrow(() -> {
-                    Log.error("User not found");
-                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build());
-                });
-
-        final ProfilePicture profilePicture = Result
-                .ofThrowable(() -> ProfilePicture.of(picture, userAccount))
-                .orElseThrow(() -> {
-                    String errorMessage = "Invalid image or image size is too big";
-                    Log.error(errorMessage);
-                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build());
-                });
-
-        Log.info("Successfully validate image.");
-        userAccount.setProfilePicture(profilePicture);
-
-        imageFileRepository.put(userAccount);
-    }
-
-    public ProfilePicture getProfilePicture(Username username) {
-        final UserAccount userAccount = outboundUserRepository
-                .findByUsername(username)
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build())
-                );
-
-        return imageFileRepository
-                .load(ProfilePicture.profilePicturePath(userAccount.getId().toString()))
-                .orElseGet(ProfilePicture::defaultProfilePicture);
-    }
-
-    public void deleteProfilePicture(Username username) {
-        final UserAccount userAccount = outboundUserRepository
-                .findByUsername(username)
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build())
-                );
-
-        userAccount.deleteProfilePicture();
-        imageFileRepository.delete(ProfilePicture.profilePicturePath(userAccount.getId().toString()));
     }
 
     public String refreshToken(String refreshToken) {

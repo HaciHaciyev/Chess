@@ -2,7 +2,7 @@ package core.project.chess.application.controller.http;
 
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
-import core.project.chess.application.service.UserAccountService;
+import core.project.chess.application.service.UserAuthService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
@@ -16,7 +16,7 @@ import java.util.Objects;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class AuthResource {
 
-    private final UserAccountService userAccountService;
+    private final UserAuthService userAuthService;
 
     @POST @Path("/login")
     public Response login(LoginForm loginForm) {
@@ -24,7 +24,7 @@ public class AuthResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Login form is null.").build());
         }
 
-        return Response.ok(userAccountService.login(loginForm)).build();
+        return Response.ok(userAuthService.login(loginForm)).build();
     }
 
     @POST @Path("/registration")
@@ -33,7 +33,7 @@ public class AuthResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Registration form is null.").build());
         }
 
-        userAccountService.registration(registrationForm);
+        userAuthService.registration(registrationForm);
         return Response.ok("Registration successful. Verify you email.").build();
     }
 
@@ -43,7 +43,7 @@ public class AuthResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Token can`t be null.").build());
         }
 
-        userAccountService.tokenVerification(token);
+        userAuthService.tokenVerification(token);
         return Response.ok("Now, account is enabled.").build();
     }
 
@@ -53,6 +53,6 @@ public class AuthResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid refresh token.").build());
         }
 
-        return Response.ok(userAccountService.refreshToken(refreshToken)).build();
+        return Response.ok(userAuthService.refreshToken(refreshToken)).build();
     }
 }

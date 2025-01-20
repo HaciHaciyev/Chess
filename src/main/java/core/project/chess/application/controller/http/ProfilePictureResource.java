@@ -1,6 +1,6 @@
 package core.project.chess.application.controller.http;
 
-import core.project.chess.application.service.UserAccountService;
+import core.project.chess.application.service.ProfileService;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
@@ -23,11 +23,11 @@ public class ProfilePictureResource {
 
     private final JsonWebToken jwt;
 
-    private final UserAccountService userAccountService;
+    private final ProfileService profileService;
 
-    ProfilePictureResource(JsonWebToken jwt, UserAccountService userAccountService) {
+    ProfilePictureResource(JsonWebToken jwt,  ProfileService profileService) {
         this.jwt = jwt;
-        this.userAccountService = userAccountService;
+        this.profileService = profileService;
     }
 
     @PUT
@@ -45,7 +45,7 @@ public class ProfilePictureResource {
                 );
 
         try {
-            userAccountService.putProfilePicture(IOUtils.toByteArray(inputStream), username);
+            profileService.putProfilePicture(IOUtils.toByteArray(inputStream), username);
             inputStream.close();
         } catch (IOException e) {
             Log.errorf("Can`t read input stream for profile inputStream as bytes: %s", e.getMessage());
@@ -63,7 +63,7 @@ public class ProfilePictureResource {
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
                 );
 
-        ProfilePicture profilePicture = userAccountService.getProfilePicture(username);
+        ProfilePicture profilePicture = profileService.getProfilePicture(username);
         return Response.ok(Map.of("profilePicture", profilePicture.profilePicture(), "imageType", profilePicture.imageType())).build();
     }
 
@@ -76,7 +76,7 @@ public class ProfilePictureResource {
                         () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
                 );
 
-        userAccountService.deleteProfilePicture(username);
+        profileService.deleteProfilePicture(username);
         return Response.accepted("Successfully delete a profile image.").build();
     }
 }
