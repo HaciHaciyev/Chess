@@ -14,8 +14,5 @@ public record Password(String password) {
         if (password.length() < 8) {
             throw new IllegalArgumentException("Password must be at least 8 characters");
         }
-        if (password.length() > 64) {
-            throw new IllegalArgumentException("Password must be at most 64 characters");
-        }
     }
 }
