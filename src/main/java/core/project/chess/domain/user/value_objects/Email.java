@@ -16,8 +16,23 @@ public record Email(String email) {
         if (Objects.isNull(email)) {
             throw new NullPointerException("Email can`t be null");
         }
+
         if (email.isBlank()) {
             throw new IllegalArgumentException("Email can`t be blank");
+        }
+
+        String[] splitEmail = email.split("@");
+
+        if (splitEmail.length != 2) {
+            throw new IllegalArgumentException("Email can`t be formatted correctly");
+        }
+
+        if (splitEmail[0].isEmpty() || splitEmail[0].length() > 64) {
+            throw new IllegalArgumentException("Email can`t be formatted correctly");
+        }
+
+        if (splitEmail[1].isEmpty() || (splitEmail[1].length() < 3 || splitEmail[1].length() > 252)) {
+            throw new IllegalArgumentException("Email can`t be formatted correctly");
         }
 
         Matcher matcher = pattern.matcher(email);
