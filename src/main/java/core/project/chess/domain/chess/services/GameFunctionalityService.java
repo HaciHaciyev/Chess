@@ -22,6 +22,11 @@ public class GameFunctionalityService {
     public boolean validateOpponentEligibility(final UserAccount player, final GameParameters gameParameters,
                                                final UserAccount opponent, final GameParameters opponentGameParameters,
                                                final boolean isPartnershipGame) {
+        final boolean sameUser = player.getId().equals(opponent.getId());
+        if (sameUser) {
+            return false;
+        }
+
         final boolean sameTimeControlling = gameParameters.time().equals(opponentGameParameters.time());
         if (!sameTimeControlling) {
             return false;

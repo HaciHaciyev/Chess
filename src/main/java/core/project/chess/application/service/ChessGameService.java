@@ -209,11 +209,6 @@ public class ChessGameService {
             final UserAccount potentialOpponent = entry.getValue().getSecond();
             final GameParameters gameParametersOfPotentialOpponent = entry.getValue().getThird();
 
-            final boolean sameUser = potentialOpponent.getId().equals(firstPlayer.getId());
-            if (sameUser) {
-                continue;
-            }
-
             final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer, 
                     gameParameters, 
                     potentialOpponent, 
@@ -372,6 +367,7 @@ public class ChessGameService {
         updateSessionGameIds(secondSession, gameId);
     }
 
+    @SuppressWarnings("User properties is always a list of strings.")
     private void updateSessionGameIds(Session session, String gameId) {
         final List<String> gameIds = (List<String>) session.getUserProperties().computeIfAbsent("game-id", key -> new ArrayList<>());
         if (!gameIds.contains(gameId)) {
@@ -411,14 +407,14 @@ public class ChessGameService {
             final boolean isGameSessionExists = sessionStorage.containsGame(gameUuid);
             if (!isGameSessionExists) {
                 sendMessage(session, Message.error("Game session with id {%s} does not exist".formatted(gameId)));
-                return;
+                continue;
             }
 
             final Pair<ChessGame, HashSet<Session>> pair = sessionStorage.getGameById(gameUuid);
 
             final ChessGame chessGame = pair.getFirst();
             if (chessGame.gameResult().isEmpty()) {
-                return;
+                continue;
             }
 
             final Set<Session> sessionHashSet = pair.getSecond();
