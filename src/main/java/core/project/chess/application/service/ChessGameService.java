@@ -16,6 +16,7 @@ import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
+import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
@@ -25,6 +26,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +38,8 @@ import static core.project.chess.application.util.WSUtilities.sendMessage;
 @ApplicationScoped
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameService {
+
+    private final JwtUtility jwtUtility;
 
     private final SessionStorage sessionStorage;
 
@@ -93,6 +97,15 @@ public class ChessGameService {
         CompletableFuture.runAsync(
                 () -> handleMessage(session, username.username(), message, gamePlusSessions)
         );
+    }
+
+    public Optional<JsonWebToken> validateToken(Session session) {
+        return jwtUtility.extractJWT(session)
+                .or(() -> {
+                    closeSession(session, Message.error("You are not authorized. Token is required."));
+                    sessionStorage.removeSession(session);
+                    return Optional.empty();
+                });
     }
 
     private static Optional<String> extractAndValidateGameID(Session session, Message message) {
@@ -426,6 +439,8 @@ public class ChessGameService {
                 sessionStorage.removeGame(gameUuid);
             }
         }
+
+        sessionStorage.removeSession(session);
     }
 
     private void gameOverOperationsExecutor(final ChessGame chessGame) {

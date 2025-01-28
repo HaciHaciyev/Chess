@@ -19,9 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SessionStorage {
 
     private static final ConcurrentHashMap<Username, Pair<Session, UserAccount>> sessions = new ConcurrentHashMap<>();
-
     private static final ConcurrentHashMap<UUID, Pair<ChessGame, HashSet<Session>>> gameSessions = new ConcurrentHashMap<>();
-
     private static final ConcurrentHashMap<Username, Triple<Session, UserAccount, GameParameters>> waitingForTheGame = new ConcurrentHashMap<>();
 
     public Pair<Session, UserAccount> getSessionByUsername(Username username) {
@@ -32,12 +30,29 @@ public class SessionStorage {
         sessions.put(account.getUsername(), Pair.of(session, account));
     }
 
+    public boolean containsSession(Username addresseeUsername) {
+        return sessions.containsKey(addresseeUsername);
+    }
+
+    public void removeSession(Session session) {
+        sessions.entrySet().removeIf(entry -> entry.getValue().getFirst().equals(session));
+    }
+
+
     public Pair<ChessGame, HashSet<Session>> getGameById(UUID gameId) {
         return gameSessions.get(gameId);
     }
 
     public void addGame(ChessGame game, HashSet<Session> sessions) {
         gameSessions.put(game.getChessGameId(), Pair.of(game, sessions));
+    }
+
+    public boolean containsGame(UUID gameUuid) {
+        return gameSessions.containsKey(gameUuid);
+    }
+
+    public Pair<ChessGame, HashSet<Session>> removeGame(UUID gameUuid) {
+        return gameSessions.remove(gameUuid);
     }
 
     public Triple<Session, UserAccount, GameParameters> getWaitingUser(Username username) {
@@ -54,17 +69,5 @@ public class SessionStorage {
 
     public Set<Map.Entry<Username, Triple<Session, UserAccount, GameParameters>>> waitingUsers() {
         return waitingForTheGame.entrySet();
-    }
-
-    public boolean containsGame(UUID gameUuid) {
-        return gameSessions.containsKey(gameUuid);
-    }
-
-    public Pair<ChessGame, HashSet<Session>> removeGame(UUID gameUuid) {
-        return gameSessions.remove(gameUuid);
-    }
-
-    public boolean containsSession(Username addresseeUsername) {
-        return sessions.containsKey(addresseeUsername);
     }
 }
