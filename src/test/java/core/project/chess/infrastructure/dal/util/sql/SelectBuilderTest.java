@@ -12,6 +12,24 @@ class SelectBuilderTest {
 
     @Test
     void test() {
+        assertEquals("SELECT * FROM UserPartnership WHERE (user_id = ? AND partner_id = ?) OR (user_id = ? AND partner_id = ?) ", select()
+                .all()
+                .from("UserPartnership")
+                .where("(user_id = ?")
+                .and("partner_id = ?)")
+                .or("(user_id = ?")
+                .and("partner_id = ?)")
+                .build());
+
+        Log.infof("Test -1 passed. Query: {%s}", select()
+                .all()
+                .from("UserPartnership")
+                .where("(user_id = ?")
+                .and("partner_id = ?)")
+                .or("(user_id = ?")
+                .and("partner_id = ?)")
+                .build());
+
         assertEquals("SELECT username , email , rating FROM UserAccount WHERE username = ? ", select()
                 .column("username")
                 .column("email")
@@ -19,6 +37,8 @@ class SelectBuilderTest {
                 .from("UserAccount")
                 .where("username = ?")
                 .build());
+
+        Log.info("Test 0 passed.");
 
         assertEquals("SELECT name, age FROM users WHERE age > 18 ORDER BY age DESC LIMIT 10 OFFSET 5 ", select()
                 .columns("name", "age")
