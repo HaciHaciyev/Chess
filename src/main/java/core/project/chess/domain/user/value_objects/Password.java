@@ -6,19 +6,16 @@ public record Password(String password) {
     public static final int MIN_SIZE = 8;
     public static final int MAX_SIZE = 64;
 
-    public Password {
+    public static boolean validate(String password) {
         if (Objects.isNull(password)) {
-            throw new IllegalArgumentException("Password cannot be null");
+            return false;
         }
         if (password.isBlank()) {
-            throw new IllegalArgumentException("Password cannot be blank");
+            return false;
         }
         if (password.length() < MIN_SIZE) {
-            throw new IllegalArgumentException("Password must be at least 8 characters");
+            return false;
         }
-    }
-
-    public static boolean validateMaxSize(String password) {
         return password.length() <= MAX_SIZE;
     }
 }
