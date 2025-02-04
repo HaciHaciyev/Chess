@@ -9,12 +9,14 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.infrastructure.ws.MessageDecoder;
 import core.project.chess.infrastructure.ws.MessageEncoder;
 import io.quarkus.logging.Log;
+import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.inject.Inject;
 import jakarta.websocket.*;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.*;
 import testUtils.LoginForm;
 import testUtils.RegistrationForm;
@@ -30,6 +32,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
+@WithTestResource(MessagingTestResource.class)
 class ChessWSTest {
 
     private final Messages USER_MESSAGES = Messages.newInstance();
@@ -45,7 +48,7 @@ class ChessWSTest {
     @TestHTTPResource("/chessland/chess-game")
     URI serverURI;
 
-    URI userSessionURI = URI.create("http://localhost:9091/user-session");
+    URI userSessionURI;
 
     @Inject
     ObjectMapper objectMapper;
@@ -72,6 +75,8 @@ class ChessWSTest {
 
     @BeforeEach
     void printLineBreak() {
+        String messagingURI = ConfigProvider.getConfig().getValue("messaging.api.url", String.class);
+        userSessionURI = URI.create(messagingURI);
         System.out.println();
         System.out.println("---------------------------------------BREAK---------------------------------------");
         System.out.println();

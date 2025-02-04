@@ -63,7 +63,7 @@ public class LoginTests {
                 .when().post(LOGIN)
                 .then()
                 .statusCode(200)
-                .body("token", notNullValue(), "refresh-token", notNullValue());
+                .body("token", notNullValue(), "refreshToken", notNullValue());
     }
 
     @RepeatedTest(5)

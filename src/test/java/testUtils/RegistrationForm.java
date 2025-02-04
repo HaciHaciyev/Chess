@@ -17,6 +17,15 @@ public record RegistrationForm(String username, String email, String password, S
 
     public static RegistrationForm randomForm() {
         String password = faker.internet().password();
+
+        if (password.length() >= 64) {
+            password = password.substring(0, 63);
+        }
+
+        if (password.length() < 8) {
+            password = password + password;
+        }
+
         return new RegistrationForm(
                 faker.name().firstName(),
                 faker.internet().emailAddress(),
