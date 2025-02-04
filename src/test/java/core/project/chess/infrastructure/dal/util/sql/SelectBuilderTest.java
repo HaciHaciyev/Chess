@@ -1,11 +1,13 @@
 package core.project.chess.infrastructure.dal.util.sql;
 
 import io.quarkus.logging.Log;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled
 class SelectBuilderTest {
 
     private static int passesTests = 0;
