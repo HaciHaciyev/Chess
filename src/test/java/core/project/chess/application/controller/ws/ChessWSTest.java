@@ -1,8 +1,7 @@
-package core.project.chess.application.controller.ws.chess;
+package core.project.chess.application.controller.ws;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.chess.application.controller.ws.messaging.MessagingTestResource;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;

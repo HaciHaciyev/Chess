@@ -1,4 +1,4 @@
-package core.project.chess.application.controller.http.RegistrationAndLogin;
+package core.project.chess.application.controller.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

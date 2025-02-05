@@ -1,4 +1,4 @@
-package core.project.chess.application.controller.ws.messaging;
+package core.project.chess.application.controller.ws;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.testcontainers.Testcontainers;

@@ -1,4 +1,4 @@
-package core.project.chess.application.controller.http.profile_picture;
+package core.project.chess.application.controller.http;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +14,7 @@ import testUtils.UserDBManagement;
 import java.io.File;
 import java.io.IOException;
 
-import static core.project.chess.application.controller.http.RegistrationAndLogin.LoginTests.TOKEN_VERIFICATION;
+import static core.project.chess.application.controller.http.LoginTests.TOKEN_VERIFICATION;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 
@@ -67,7 +67,7 @@ class ProfilePictureTest {
         deleteUserProfilePicture(token);
     }
 
-    private static String loginLoad() {
+    static String loginLoad() {
         final String token = given()
                 .contentType("application/json")
                 .body("""
@@ -87,7 +87,7 @@ class ProfilePictureTest {
         return token;
     }
 
-    private static void registrationLoad() {
+    static void registrationLoad() {
         given()
                 .contentType("application/json")
                 .body("""
