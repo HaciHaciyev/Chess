@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 import static core.project.chess.domain.chess.enumerations.Coordinate.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Disabled
+@Disabled("It is more of a performance test and was disabled due to the long execution time, but the test itself is completely passed.")
 public class ChessGameTest {
 
     @Test

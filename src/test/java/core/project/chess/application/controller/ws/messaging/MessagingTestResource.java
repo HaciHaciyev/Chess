@@ -1,4 +1,4 @@
-package core.project.chess.WS;
+package core.project.chess.application.controller.ws.messaging;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.testcontainers.Testcontainers;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class MessagingTestResource implements QuarkusTestResourceLifecycleManager {
 
-    private GenericContainer<?> messaging = new GenericContainer<>(DockerImageName.parse("chessland:messagingv3"))
+    private GenericContainer<?> messaging = new GenericContainer<>(DockerImageName.parse("aingrace/chessland:messaging"))
             .withExposedPorts(9091)
             .withAccessToHost(true)
             .withEnv("QUARKUS_PROFILE", "testcontainer")

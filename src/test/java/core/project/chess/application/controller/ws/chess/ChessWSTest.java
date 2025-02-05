@@ -1,7 +1,8 @@
-package core.project.chess.WS;
+package core.project.chess.application.controller.ws.chess;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.chess.application.controller.ws.messaging.MessagingTestResource;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
@@ -80,40 +81,6 @@ class ChessWSTest {
         System.out.println();
         System.out.println("---------------------------------------BREAK---------------------------------------");
         System.out.println();
-    }
-
-    @Disabled("Tested in other methods.")
-    @Test
-    @DisplayName("Successful connection")
-    void successfulConnection() throws Exception {
-        RegistrationForm account = registerRandom();
-        enableAccount(account);
-        String token = login(account);
-
-        try (Session session = ContainerProvider
-                .getWebSocketContainer()
-                .connectToServer(WSClient.class, serverURIWithToken(serverURI, token))
-        ) {
-            sendMessage(session, account.username(), Message.info("Hello, world"));
-            session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
-        }
-    }
-
-    @Disabled("Tested in other methods.")
-    @Test
-    @DisplayName("Initialize game")
-    void initializeGame() throws Exception {
-        RegistrationForm account = registerRandom();
-        enableAccount(account);
-        String token = login(account);
-
-        try (Session session = ContainerProvider
-                .getWebSocketContainer()
-                .connectToServer(WSClient.class, serverURIWithToken(serverURI, token))
-        ) {
-            sendMessage(session, account.username(), Message.gameInit("WHITE", ChessGame.Time.RAPID));
-            session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
-        }
     }
 
     @Disabled("Temporary shutdown due to technical reasons.")

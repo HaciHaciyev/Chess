@@ -7,7 +7,7 @@ import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.delete;
 import static core.project.chess.infrastructure.dal.util.sql.SelectBuilderTest.log;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Disabled
+@Disabled("Passed test. Needed to be included in case of code changes related to SQLBuilder")
 class DeleteBuilderTest {
 
     @Test

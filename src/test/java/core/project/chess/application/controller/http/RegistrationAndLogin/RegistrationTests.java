@@ -1,4 +1,4 @@
-package core.project.chess.RegistrationAndLogin;
+package core.project.chess.application.controller.http.RegistrationAndLogin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,9 +14,7 @@ import testUtils.UserDBManagement;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
-
 @QuarkusTest
-@Disabled
 class RegistrationTests {
 
     public static final String REGISTRATION = "/chessland/account/registration";
@@ -132,7 +130,7 @@ class RegistrationTests {
                 .then()
                 .statusCode(400)
                 .log().all()
-                .body(containsString("Invalid password"));
+                .body(containsString("Password is not valid"));
 
         account = account.withPasswordConfirmation("something");
         accountJSON = objectMapper.writer().writeValueAsString(account);
@@ -142,6 +140,6 @@ class RegistrationTests {
                 .when().post(REGISTRATION)
                 .then()
                 .statusCode(400)
-                .body(containsString("don`t match"));
+                .body(containsString("Password is not valid"));
     }
 }

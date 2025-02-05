@@ -1,11 +1,10 @@
-package core.project.chess.RegistrationAndLogin;
+package core.project.chess.application.controller.http.RegistrationAndLogin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import testUtils.LoginForm;
@@ -17,7 +16,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
-@Disabled
 public class LoginTests {
 
     public static final String LOGIN = "/chessland/account/login/";

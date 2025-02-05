@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @QuarkusTest
 @Transactional
-@Disabled("...")
+@Disabled("It is no longer relevant, since repositories are already tested via common endpoints, and is also disabled because it does not use test containers and pollutes the main database.")
 class JdbcInboundChessRepositoryTest {
 
     @Inject

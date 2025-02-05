@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Disabled
+@Disabled("Passed test. Needed to be included in case of code changes related to SQLBuilder")
 class SelectBuilderTest {
 
     private static int passesTests = 0;
