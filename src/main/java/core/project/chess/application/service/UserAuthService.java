@@ -58,8 +58,6 @@ public class UserAuthService {
 
     public Map<String, String> login(LoginForm loginForm) {
         Log.infof("User %s is logging in", loginForm.username());
-        // same with registration
-        // TODO revisit
         if (!Password.validate(loginForm.password())) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Password is not valid").build());
         }
@@ -106,7 +104,6 @@ public class UserAuthService {
 
     public void registration(RegistrationForm registrationForm) {
         Log.infof("Starting registration process for user %s", registrationForm.username());
-        // logic was inverted so that correct passwords were counted as invalid
         if (!Password.validate(registrationForm.password())) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Password is not valid").build());
         }
@@ -136,26 +133,14 @@ public class UserAuthService {
                 }
         );
 
-//        Password password = Result.ofThrowable(
-//                () -> new Password(passwordEncoder.encode(new Password(registrationForm.password())))
-//        ).orElseThrow(
-//                () -> {
-//                    Log.error("Registration failure, invalid password");
-//                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build());
-//                }
-//        );
-
-
-        var passwordResult = Result.ofThrowable(
-                () -> new Password(passwordEncoder.encode(new Password(registrationForm.passwordConfirmation())))
+        Password password = Result.ofThrowable(
+                () -> new Password(passwordEncoder.encode(new Password(registrationForm.password())))
+        ).orElseThrow(
+                () -> {
+                    Log.errorf("Registration failure. Invalid Password.");
+                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build());
+                }
         );
-
-        passwordResult.ifFailure(e -> {
-            Log.error("Registration failure, " + e.getLocalizedMessage());
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(e.getLocalizedMessage()).build());
-        });
-
-        Password password = passwordResult.value();
 
         if (outboundUserRepository.isUsernameExists(username)) {
             Log.errorf("Registration failure, user %s already exists", username.username());
