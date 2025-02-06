@@ -48,7 +48,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     static final String GET_CHESS_GAME = select()
             .column("cgh.id").as("chessHistoryId")
-            .column("cgh.pgn_chess").as("pgn")
+            .column("cgh.pgn_chess_representation").as("pgn")
             .column("cgh.fen_representations_of_board").as("fenRepresentations")
             .column("wa.username").as("playerForWhite")
             .column("ba.username").as("playerForBlack")
@@ -69,7 +69,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
     static final String LIST_OF_GAMES = withAndSelect(
             "filtered_games", select()
                     .column("cgh.id").as("chessHistoryId")
-                    .column("cgh.pgn_chess").as("pgn")
+                    .column("cgh.pgn_chess_representation").as("pgn")
                     .column("cgh.fen_representations_of_board").as("fenRepresentations")
                     .column("wa.username").as("playerForWhite")
                     .column("ba.username").as("playerForBlack")
@@ -127,7 +127,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                 this::chessGameMapper,
                 Objects.requireNonNull(username).username(),
                 username.username(),
-                pageNumber
+                pageNumber,
+                10
         );
     }
 
