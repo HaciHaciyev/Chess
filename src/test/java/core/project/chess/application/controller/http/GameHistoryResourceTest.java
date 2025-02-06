@@ -9,22 +9,22 @@ import testUtils.AuthUtils;
 import static io.restassured.RestAssured.given;
 
 @QuarkusTest
-class PartnersResourceTest {
+class GameHistoryResourceTest {
 
     @Inject
     AuthUtils authUtils;
 
     @Test
-    void partners() throws JsonProcessingException {
+    void gameHistory() throws JsonProcessingException {
         String token = authUtils.fullLoginProcess().get("token");
 
-        // TODO AinGrace write a function for fill db with user partners
+        // TODO AinGrace create a function that will fill db with completed games
 
         given().contentType("application/json")
                 .param("pageNumber", 0)
                 .header("Authorization", "Bearer " + token)
                 .when()
-                .get("chessland/account/partners")
+                .get("chessland/account/game-history")
                 .then()
                 .statusCode(200);
     }
