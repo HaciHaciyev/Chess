@@ -10,7 +10,7 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.websocket.*;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.*;
 import testUtils.AuthUtils;
 import testUtils.RegistrationForm;
@@ -34,12 +34,10 @@ class ChessWSTest {
     @TestHTTPResource("/chessland/chess-game")
     URI serverURI;
 
-    @ConfigProperty(name = "messaging.api.url")
     URI userSessionURI;
 
     @Inject
     AuthUtils authUtils;
-
 
     private record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
         public static Messages newInstance() {
@@ -60,6 +58,8 @@ class ChessWSTest {
 
     @BeforeEach
     void printLineBreak() {
+        userSessionURI = URI.create(ConfigProvider.getConfig().getValue("messaging.api.url", String.class) + "/chessland/user-session");
+
         System.out.println();
         System.out.println("---------------------------------------BREAK---------------------------------------");
         System.out.println();

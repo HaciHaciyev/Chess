@@ -19,7 +19,7 @@ public class MessagingTestResource implements QuarkusTestResourceLifecycleManage
     public Map<String, String> start() {
         Testcontainers.exposeHostPorts(30010, 31001);
         messaging.start();
-        return Map.of("messaging.api.url", "http://" + messaging.getHost() + ":" + messaging.getMappedPort(9091) + "/user-session");
+        return Map.of("messaging.api.url", "http://" + messaging.getHost() + ":" + messaging.getMappedPort(9091));
     }
 
     @Override
