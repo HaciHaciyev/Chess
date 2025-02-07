@@ -34,18 +34,6 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .where("id = ?")
             .build();
 
-    static final String GET_PARTNERS_USERNAMES = selectDistinct()
-            .caseStatement()
-            .when("user_account.username = ?").then("partner.username")
-            .elseCase("user_account.username")
-            .endAs("username")
-            .fromAs("UserPartnership", "up")
-            .joinAs("UserAccount", "partner", "up.partner_id = partner.id")
-            .joinAs("UserAccount", "user_account", "up.user_id = user_account.id")
-            .where("user_account.username = ?")
-            .or("partner.username = ?")
-            .limitAndOffset(10, 0);
-
     static final String GET_CHESS_GAME = select()
             .column("cgh.id").as("chessHistoryId")
             .column("cgh.pgn_chess_representation").as("pgn")
@@ -129,17 +117,6 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                 username.username(),
                 pageNumber,
                 10
-        );
-    }
-
-    @Override
-    public Result<List<String>, Throwable> listOfPartners(String username, int pageNumber) {
-        return jdbc.readListOf(
-                GET_PARTNERS_USERNAMES,
-                rs -> rs.getString("username"),
-                Objects.requireNonNull(username),
-                username,
-                username
         );
     }
 
