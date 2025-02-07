@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import testUtils.ByteArrayToImageConsole;
 import testUtils.UserDBManagement;
 
@@ -20,6 +21,7 @@ import static org.hamcrest.Matchers.containsString;
 
 @QuarkusTest
 @Transactional
+@DisabledIfEnvironmentVariable(named = "DESKTOP_SESSION", matches = "hyprland", disabledReason = "this test should not run on tiling wm")
 class ProfilePictureTest {
 
     static final String PUT_PROFILE_PICTURE = "/chessland/account/put-profile-picture";
