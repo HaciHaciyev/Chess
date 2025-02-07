@@ -79,11 +79,11 @@ class ChessWSTest {
 
         try (Session wSession = ContainerProvider
                 .getWebSocketContainer()
-                .connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
+                .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, whiteToken));
 
              Session bSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))
+                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, blackToken))
         ) {
 
             String wName = whiteForm.username();
@@ -113,19 +113,19 @@ class ChessWSTest {
 
         try (Session wMessagingSession = ContainerProvider
                       .getWebSocketContainer()
-                      .connectToServer(WSClient.class, serverURIWithToken(userSessionURI, whiteToken));
+                      .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, whiteToken));
 
              Session bMessagingSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, serverURIWithToken(userSessionURI, blackToken));
+                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, blackToken));
 
              Session wChessSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
+                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, whiteToken));
 
              Session bChessSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))
+                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, blackToken))
         ) {
 
             wMessagingSession.addMessageHandler(Message.class, message -> {
@@ -312,9 +312,5 @@ class ChessWSTest {
 
         System.out.println("##############################################################");
         throw new IllegalStateException("No gameID found");
-    }
-
-    private URI serverURIWithToken(URI uri, String token) {
-        return URI.create(uri + "?token=%s".formatted(token));
     }
 }

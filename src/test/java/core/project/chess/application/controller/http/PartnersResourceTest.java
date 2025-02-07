@@ -12,7 +12,6 @@ import jakarta.websocket.ContainerProvider;
 import jakarta.websocket.DeploymentException;
 import jakarta.websocket.Session;
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import testUtils.AuthInfo;
 import testUtils.AuthUtils;
