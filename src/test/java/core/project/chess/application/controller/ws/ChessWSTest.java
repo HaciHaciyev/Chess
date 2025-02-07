@@ -18,6 +18,7 @@ import jakarta.inject.Inject;
 import jakarta.websocket.*;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.*;
+import testUtils.AuthUtils;
 import testUtils.LoginForm;
 import testUtils.RegistrationForm;
 import testUtils.UserDBManagement;
@@ -28,6 +29,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -51,12 +53,15 @@ class ChessWSTest {
     URI userSessionURI;
 
     @Inject
+    AuthUtils authUtils;
+
+    @Inject
     ObjectMapper objectMapper;
 
     @Inject
     UserDBManagement userDBManagement;
 
-    private record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
+    record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
         public static Messages newInstance() {
             return new Messages(new LinkedBlockingQueue<>(), new LinkedBlockingQueue<>());
         }
@@ -96,11 +101,11 @@ class ChessWSTest {
 
         try (Session wSession = ContainerProvider
                 .getWebSocketContainer()
-                .connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
+                .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, whiteToken));
 
              Session bSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))
+                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, blackToken))
         ) {
 
             String wName = whiteForm.username();
@@ -130,19 +135,19 @@ class ChessWSTest {
 
         try (Session wMessagingSession = ContainerProvider
                       .getWebSocketContainer()
-                      .connectToServer(WSClient.class, serverURIWithToken(userSessionURI, whiteToken));
+                      .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, whiteToken));
 
              Session bMessagingSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, serverURIWithToken(userSessionURI, blackToken));
+                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, blackToken));
 
              Session wChessSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
+                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, whiteToken));
 
              Session bChessSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))
+                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, blackToken))
         ) {
 
             wMessagingSession.addMessageHandler(Message.class, message -> {
@@ -331,7 +336,7 @@ class ChessWSTest {
         throw new IllegalStateException("No gameID found");
     }
 
-    private void sendMessage(Session session, String username, Message message) {
+    static void sendMessage(Session session, String username, Message message) {
         Log.infof("%s sending -> %s", username, message);
         session.getAsyncRemote().sendObject(message);
         
@@ -342,11 +347,7 @@ class ChessWSTest {
         }
     }
 
-    private URI serverURIWithToken(URI uri, String token) {
-        return URI.create(uri + "?token=%s".formatted(token));
-    }
-
-    private String login(RegistrationForm account) throws JsonProcessingException {
+    String login(RegistrationForm account) throws JsonProcessingException {
         LoginForm loginForm = LoginForm.from(account);
         String loginJSON = objectMapper.writer().writeValueAsString(loginForm);
 
@@ -363,7 +364,7 @@ class ChessWSTest {
                 .toString();
     }
 
-    private void enableAccount(RegistrationForm account) {
+    void enableAccount(RegistrationForm account) {
         String emailConfirmationToken = userDBManagement.getToken(account.username());
 
         given().queryParam("token", emailConfirmationToken)
@@ -373,7 +374,7 @@ class ChessWSTest {
                 .body(containsString("account is enabled"));
     }
 
-    private RegistrationForm registerRandom() throws JsonProcessingException {
+    RegistrationForm registerRandom() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
         String accountJSON = objectMapper.writer().writeValueAsString(account);
 

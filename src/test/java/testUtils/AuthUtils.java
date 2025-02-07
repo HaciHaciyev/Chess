@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.net.URI;
 import java.util.Map;
 
 import static core.project.chess.application.controller.http.LoginTests.LOGIN;
@@ -56,5 +57,9 @@ public class AuthUtils {
                 .extract()
                 .body()
                 .as(new TypeRef<Map<String, String>>() {});
+    }
+
+    public URI serverURIWithToken(URI uri, String token) {
+        return URI.create(uri + "?token=%s".formatted(token));
     }
 }
