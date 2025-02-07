@@ -317,35 +317,4 @@ class ChessWSTest {
     private URI serverURIWithToken(URI uri, String token) {
         return URI.create(uri + "?token=%s".formatted(token));
     }
-    @ClientEndpoint(decoders = MessageDecoder.class, encoders = MessageEncoder.class)
-    static class WSClient {
-
-        @Inject
-        JWTParser jwtParser;
-
-        @OnOpen
-        public void onOpen(Session session) {
-            String username = extractToken(session);
-            Log.infof("User %s connected to the server -> %s", username, session.getRequestURI().getPath());
-        }
-
-        @OnClose
-        public void onClose(Session session, CloseReason closeReason) {
-            String username = extractToken(session);
-            Log.infof("%s's session closed. Reason -> %s", username, closeReason.getReasonPhrase());
-        }
-
-        private String extractToken(Session session) {
-            String query = session.getQueryString();
-            String token = query.substring(query.indexOf("=") + 1);
-
-            try {
-                return jwtParser.parse(token).getName();
-            } catch (ParseException e) {
-                Log.info(e);
-            }
-
-            return "";
-        }
-    }
 }
