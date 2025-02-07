@@ -115,8 +115,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                 this::chessGameMapper,
                 Objects.requireNonNull(username).username(),
                 username.username(),
-                pageNumber,
-                10
+                10,
+                pageNumber
         );
     }
 
