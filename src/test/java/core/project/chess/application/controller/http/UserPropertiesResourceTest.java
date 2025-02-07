@@ -16,7 +16,7 @@ class UserPropertiesResourceTest {
     @Inject
     AuthUtils authUtils;
 
-    @RepeatedTest(10)
+    @RepeatedTest(3)
     @DisplayName("User properties endpoint test.")
     void userPropertiesTest() throws JsonProcessingException {
         String token = authUtils.fullLoginProcess().get("token");

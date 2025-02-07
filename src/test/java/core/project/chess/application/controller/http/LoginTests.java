@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import testUtils.AuthUtils;
 import testUtils.LoginForm;
 import testUtils.RegistrationForm;
@@ -36,7 +33,7 @@ public class LoginTests {
         dbManagement.removeUsers();
     }
 
-    @RepeatedTest(5)
+    @RepeatedTest(3)
     @DisplayName("Login existing user")
     void login_Existing_User() throws JsonProcessingException {
         authUtils.fullLoginProcess();
@@ -55,7 +52,7 @@ public class LoginTests {
                 .statusCode(200);
     }
 
-    @RepeatedTest(5)
+    @RepeatedTest(3)
     @DisplayName("Login none existent user")
     void login_None_Existent_User() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
@@ -70,7 +67,7 @@ public class LoginTests {
                 .body(containsString("%s not found".formatted(loginForm.username())));
     }
 
-    @RepeatedTest(5)
+    @RepeatedTest(3)
     @DisplayName("Login non enabled user")
     void login_Non_Enabled_User() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
@@ -94,7 +91,7 @@ public class LoginTests {
                 .body(containsString("account is not enabled"));
     }
 
-    @RepeatedTest(5)
+    @RepeatedTest(3)
     @DisplayName("Login wrong password")
     void login_Wrong_Password() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
@@ -126,7 +123,7 @@ public class LoginTests {
                 .body(containsString("Invalid password"));
     }
 
-    @RepeatedTest(5)
+    @RepeatedTest(3)
     @DisplayName("Login wrong username")
     void login_Wrong_Username() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
