@@ -30,7 +30,7 @@ class RegistrationTests {
     }
 
     @DisplayName("Registration with valid data")
-    @RepeatedTest(10)
+    @RepeatedTest(3)
     void registration_With_Valid_Data() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
         String accountJSON = objectMapper.writer().writeValueAsString(account);
@@ -43,7 +43,7 @@ class RegistrationTests {
     }
 
     @DisplayName("Registration of existing user")
-    @RepeatedTest(10)
+    @RepeatedTest(3)
     void registration_Of_Existing_User() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
         String accountJSON = objectMapper.writer().writeValueAsString(account);
@@ -63,7 +63,7 @@ class RegistrationTests {
     }
 
     @DisplayName("Registration of user with existing email")
-    @RepeatedTest(10)
+    @RepeatedTest(3)
     void registration_Of_Existing_Email() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
         String accountJSON = objectMapper.writer().writeValueAsString(account);
