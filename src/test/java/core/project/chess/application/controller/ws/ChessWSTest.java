@@ -1,37 +1,27 @@
 package core.project.chess.application.controller.ws;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.ws.MessageDecoder;
-import core.project.chess.infrastructure.ws.MessageEncoder;
 import io.quarkus.logging.Log;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.jwt.auth.principal.JWTParser;
-import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.inject.Inject;
 import jakarta.websocket.*;
-import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.*;
 import testUtils.AuthUtils;
-import testUtils.LoginForm;
 import testUtils.RegistrationForm;
-import testUtils.UserDBManagement;
+import testUtils.WSClient;
 
 import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.notNullValue;
+import static testUtils.WSClient.sendMessage;
 
 @QuarkusTest
 @WithTestResource(MessagingTestResource.class)
@@ -41,27 +31,17 @@ class ChessWSTest {
 
     private final Messages CHESS_MESSAGES = Messages.newInstance();
 
-    public static final String LOGIN = "/chessland/account/login/";
-
-    public static final String REGISTRATION = "/chessland/account/registration";
-
-    public static final String TOKEN_VERIFICATION = "/chessland/account/token/verification";
-
     @TestHTTPResource("/chessland/chess-game")
     URI serverURI;
 
+    @ConfigProperty(name = "messaging.api.url")
     URI userSessionURI;
 
     @Inject
     AuthUtils authUtils;
 
-    @Inject
-    ObjectMapper objectMapper;
 
-    @Inject
-    UserDBManagement userDBManagement;
-
-    record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
+    private record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
         public static Messages newInstance() {
             return new Messages(new LinkedBlockingQueue<>(), new LinkedBlockingQueue<>());
         }
@@ -80,8 +60,6 @@ class ChessWSTest {
 
     @BeforeEach
     void printLineBreak() {
-        String messagingURI = ConfigProvider.getConfig().getValue("messaging.api.url", String.class);
-        userSessionURI = URI.create(messagingURI);
         System.out.println();
         System.out.println("---------------------------------------BREAK---------------------------------------");
         System.out.println();
@@ -91,21 +69,21 @@ class ChessWSTest {
     @Test
     @DisplayName("Custom game matchmaking")
     void customGameMatchmaking() throws Exception {
-        RegistrationForm whiteForm = registerRandom();
-        enableAccount(whiteForm);
-        String whiteToken = login(whiteForm);
+        RegistrationForm whiteForm = authUtils.registerRandom();
+        authUtils.enableAccount(whiteForm);
+        String whiteToken = authUtils.login(whiteForm);
 
-        RegistrationForm blackForm = registerRandom();
-        enableAccount(blackForm);
-        String blackToken = login(blackForm);
+        RegistrationForm blackForm = authUtils.registerRandom();
+        authUtils.enableAccount(blackForm);
+        String blackToken = authUtils.login(blackForm);
 
         try (Session wSession = ContainerProvider
                 .getWebSocketContainer()
-                .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, whiteToken));
+                .connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
 
              Session bSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, blackToken))
+                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))
         ) {
 
             String wName = whiteForm.username();
@@ -125,29 +103,29 @@ class ChessWSTest {
     @Test
     @DisplayName("Custom partnership game")
     void customPartnershipGame() throws Exception {
-        RegistrationForm whiteForm = registerRandom();
-        enableAccount(whiteForm);
-        String whiteToken = login(whiteForm);
+        RegistrationForm whiteForm = authUtils.registerRandom();
+        authUtils.enableAccount(whiteForm);
+        String whiteToken = authUtils.login(whiteForm);
 
-        RegistrationForm blackForm = registerRandom();
-        enableAccount(blackForm);
-        String blackToken = login(blackForm);
+        RegistrationForm blackForm = authUtils.registerRandom();
+        authUtils.enableAccount(blackForm);
+        String blackToken = authUtils.login(blackForm);
 
         try (Session wMessagingSession = ContainerProvider
                       .getWebSocketContainer()
-                      .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, whiteToken));
+                      .connectToServer(WSClient.class, serverURIWithToken(userSessionURI, whiteToken));
 
              Session bMessagingSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, blackToken));
+                     .connectToServer(WSClient.class, serverURIWithToken(userSessionURI, blackToken));
 
              Session wChessSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, whiteToken));
+                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, whiteToken));
 
              Session bChessSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, blackToken))
+                     .connectToServer(WSClient.class, serverURIWithToken(serverURI, blackToken))
         ) {
 
             wMessagingSession.addMessageHandler(Message.class, message -> {
@@ -336,58 +314,9 @@ class ChessWSTest {
         throw new IllegalStateException("No gameID found");
     }
 
-    static void sendMessage(Session session, String username, Message message) {
-        Log.infof("%s sending -> %s", username, message);
-        session.getAsyncRemote().sendObject(message);
-        
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            Log.errorf("Error: %s.", e);
-        }
+    private URI serverURIWithToken(URI uri, String token) {
+        return URI.create(uri + "?token=%s".formatted(token));
     }
-
-    String login(RegistrationForm account) throws JsonProcessingException {
-        LoginForm loginForm = LoginForm.from(account);
-        String loginJSON = objectMapper.writer().writeValueAsString(loginForm);
-
-        return given().contentType("application/json")
-                .body(loginJSON)
-                .when().post(LOGIN)
-                .then()
-                .statusCode(200)
-                .body("token", notNullValue(), "refreshToken", notNullValue())
-                .extract()
-                .body()
-                .jsonPath()
-                .get("token")
-                .toString();
-    }
-
-    void enableAccount(RegistrationForm account) {
-        String emailConfirmationToken = userDBManagement.getToken(account.username());
-
-        given().queryParam("token", emailConfirmationToken)
-                .when().patch(TOKEN_VERIFICATION)
-                .then()
-                .statusCode(200)
-                .body(containsString("account is enabled"));
-    }
-
-    RegistrationForm registerRandom() throws JsonProcessingException {
-        RegistrationForm account = RegistrationForm.randomForm();
-        String accountJSON = objectMapper.writer().writeValueAsString(account);
-
-        given().contentType("application/json")
-                .body(accountJSON)
-                .when().post(REGISTRATION)
-                .then()
-                .statusCode(200)
-                .body(containsString("successful"));
-
-        return account;
-    }
-
     @ClientEndpoint(decoders = MessageDecoder.class, encoders = MessageEncoder.class)
     static class WSClient {
 

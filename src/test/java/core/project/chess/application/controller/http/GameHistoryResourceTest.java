@@ -16,7 +16,7 @@ class GameHistoryResourceTest {
 
     @Test
     void gameHistory() throws JsonProcessingException {
-        String token = authUtils.fullLoginProcess().get("token");
+        String token = authUtils.fullLoginProcess().serverResponse().get("token");
 
         // TODO AinGrace create a function that will fill db with completed games
 

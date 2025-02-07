@@ -42,7 +42,7 @@ public class LoginTests {
     @Test
     @DisplayName("Refresh-Token test")
     void refreshToken() throws JsonProcessingException {
-        String refreshToken = authUtils.fullLoginProcess().get("refreshToken");
+        String refreshToken = authUtils.fullLoginProcess().serverResponse().get("refreshToken");
 
         given().contentType("application/json")
                 .header("Refresh-Token", refreshToken)
