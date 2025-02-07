@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import core.project.chess.application.controller.ws.MessagingTestResource;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
+import io.quarkus.logging.Log;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -33,6 +34,8 @@ class PartnersResourceTest {
 
     @Test
     void partners() throws JsonProcessingException {
+        String messagingURL = ConfigProvider.getConfig().getConfigValue("messaging.api.url").getValue() + "/chessland/account/partners";
+
         AuthInfo info = authUtils.fullLoginProcess();
         String hostToken = info.serverResponse().get("token");
         String[] generatedPartners = addPartnersFor(info.username(), hostToken, 5);
@@ -41,7 +44,7 @@ class PartnersResourceTest {
                 .param("pageNumber", 0)
                 .header("Authorization", "Bearer " + hostToken)
                 .when()
-                .get("chessland/account/partners")
+                .get(messagingURL)
                 .peek()
                 .then()
                 .statusCode(200)
@@ -51,7 +54,7 @@ class PartnersResourceTest {
     }
 
     private String[] addPartnersFor(String host, String userToken, int numOfPartners) throws JsonProcessingException {
-        String template = ConfigProvider.getConfig().getValue("messaging.api.url", String.class);
+        String template = ConfigProvider.getConfig().getValue("messaging.api.url", String.class) + "/chessland/user-session";
         URI hostURI = URI.create(template + "?token=%s".formatted(userToken));
 
         String[] partners = new String[numOfPartners];
@@ -90,7 +93,7 @@ class PartnersResourceTest {
 
                 partners[i] = partnerInfo.username();
             } catch (DeploymentException | IOException | InterruptedException e) {
-                throw new RuntimeException(e);
+                Log.error(e.getCause());
             }
         }
 
