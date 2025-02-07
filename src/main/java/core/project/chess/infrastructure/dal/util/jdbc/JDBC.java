@@ -7,6 +7,7 @@ import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -82,8 +83,8 @@ public class JDBC {
             Boolean.class, Character.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class
     );
 
-    JDBC(DataSource dataSource) {
-        this.dataSource = dataSource;
+    JDBC(Instance<DataSource> dataSource) {
+        this.dataSource = dataSource.get();
     }
 
     /**
