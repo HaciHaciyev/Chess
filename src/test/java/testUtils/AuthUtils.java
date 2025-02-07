@@ -26,7 +26,7 @@ public class AuthUtils {
     @Inject
     UserDBManagement dbManagement;
 
-    public Map<String, String> fullLoginProcess() throws JsonProcessingException {
+    public AuthInfo fullLoginProcess() throws JsonProcessingException {
         RegistrationForm account = RegistrationForm.randomForm();
         String accountJSON = objectMapper.writer().writeValueAsString(account);
 
@@ -48,6 +48,34 @@ public class AuthUtils {
         LoginForm loginForm = LoginForm.from(account);
         String loginJSON = objectMapper.writer().writeValueAsString(loginForm);
 
+        Map<String, String> response = given().contentType("application/json")
+                .body(loginJSON)
+                .when().post(LOGIN)
+                .then()
+                .statusCode(200)
+                .body("token", notNullValue(), "refreshToken", notNullValue())
+                .extract()
+                .body()
+                .as(new TypeRef<Map<String, String>>() {
+                });
+
+        return new AuthInfo(account.username(), response);
+    }
+
+    public void enableAccount(RegistrationForm account) {
+        String emailConfirmationToken = dbManagement.getToken(account.username());
+
+        given().queryParam("token", emailConfirmationToken)
+                .when().patch(TOKEN_VERIFICATION)
+                .then()
+                .statusCode(200)
+                .body(containsString("account is enabled"));
+    }
+
+    public String login(RegistrationForm account) throws JsonProcessingException {
+        LoginForm loginForm = LoginForm.from(account);
+        String loginJSON = objectMapper.writer().writeValueAsString(loginForm);
+
         return given().contentType("application/json")
                 .body(loginJSON)
                 .when().post(LOGIN)
@@ -56,7 +84,23 @@ public class AuthUtils {
                 .body("token", notNullValue(), "refreshToken", notNullValue())
                 .extract()
                 .body()
-                .as(new TypeRef<Map<String, String>>() {});
+                .jsonPath()
+                .get("token")
+                .toString();
+    }
+
+    public RegistrationForm registerRandom() throws JsonProcessingException {
+        RegistrationForm account = RegistrationForm.randomForm();
+        String accountJSON = objectMapper.writer().writeValueAsString(account);
+
+        given().contentType("application/json")
+                .body(accountJSON)
+                .when().post(REGISTRATION)
+                .then()
+                .statusCode(200)
+                .body(containsString("successful"));
+
+        return account;
     }
 
     public URI serverURIWithToken(URI uri, String token) {
