@@ -158,7 +158,7 @@ public class ChessGameService {
         CompletableFuture.runAsync(() -> {
             final boolean connectToExistedGame = Objects.nonNull(message.gameID());
             if (connectToExistedGame) {
-                joinExistingGameSession(session, message.gameID());
+                joinExistingGameSession(session, username, message.gameID());
                 return;
             }
 
@@ -185,9 +185,15 @@ public class ChessGameService {
         });
     }
 
-    private void joinExistingGameSession(Session session, String gameID) {
+    private void joinExistingGameSession(Session session, Username username, String gameID) {
         final Pair<ChessGame, HashSet<Session>> gameAndHisSessions = sessionStorage.getGameById(UUID.fromString(gameID));
         gameAndHisSessions.getSecond().add(session);
+
+        final ChessGame game = gameAndHisSessions.getFirst();
+        final boolean isAPlayer = game.getPlayerForWhite().getUsername().equals(username) || game.getPlayerForBlack().getUsername().equals(username);
+        if (isAPlayer) {
+            updateSessionGameIds(session, gameID);
+        }
 
         sendGameStartNotifications(session, gameAndHisSessions.getFirst());
     }
