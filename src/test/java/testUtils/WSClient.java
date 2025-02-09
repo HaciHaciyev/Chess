@@ -41,13 +41,21 @@ public class WSClient {
     }
 
     public static void sendMessage(Session session, String username, Message message) {
-        Log.infof("%s sending -> %s", username, message);
+        Log.infof("%s sending to %s -> %s", username, session.getRequestURI().toString(), message);
         session.getAsyncRemote().sendObject(message);
 
         try {
             Thread.sleep(10);
         } catch (InterruptedException e) {
             Log.errorf("Error: %s.", e);
+        }
+    }
+
+    public static void sendMessage(final Session session, final Message message) {
+        try {
+            session.getAsyncRemote().sendObject(message);
+        } catch (Exception e) {
+            Log.info(e.getMessage());
         }
     }
 }
