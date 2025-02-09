@@ -1,9 +1,12 @@
 package core.project.chess.application.controller.ws;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.infrastructure.security.JwtUtility;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.common.http.TestHTTPResource;
@@ -16,11 +19,14 @@ import testUtils.AuthUtils;
 import testUtils.RegistrationForm;
 import testUtils.WSClient;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static testUtils.WSClient.sendMessage;
 
 @QuarkusTest
@@ -38,6 +44,9 @@ class ChessWSTest {
 
     @Inject
     AuthUtils authUtils;
+
+    @Inject
+    JwtUtility jwtUtility;
 
     private record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
         public static Messages newInstance() {
@@ -85,7 +94,7 @@ class ChessWSTest {
                      .getWebSocketContainer()
                      .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, blackToken))
         ) {
-
+            // TODO ??? Where is message handlers
             String wName = whiteForm.username();
             sendMessage(wSession, wName, Message.gameInit("WHITE", ChessGame.Time.RAPID));
 
@@ -190,6 +199,314 @@ class ChessWSTest {
 
             wChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
             bChessSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
+        }
+    }
+
+    @Test
+    @DisplayName("Chess game WS initialization test.")
+    void chessGameInitializationWSTest() throws JsonProcessingException {
+        RegistrationForm firstPlayerForm = authUtils.registerRandom();
+        authUtils.enableAccount(firstPlayerForm);
+        String firstPlayerToken = authUtils.login(firstPlayerForm);
+
+        RegistrationForm secondPlayerForm = authUtils.registerRandom();
+        authUtils.enableAccount(secondPlayerForm);
+        String secondPlayerToken = authUtils.login(secondPlayerForm);
+
+        String firstPlayer = firstPlayerForm.username();
+        String secondPlayer = secondPlayerForm.username();
+
+        URI pathForFirstPlayerMessagingSession = authUtils.serverURIWithToken(userSessionURI, firstPlayerToken);
+        URI pathForSecondPlayerMessagingSession = authUtils.serverURIWithToken(userSessionURI, secondPlayerToken);
+        URI pathForFirstPlayerSession = authUtils.serverURIWithToken(serverURI, firstPlayerToken);
+        URI pathForSecondPlayerSession = authUtils.serverURIWithToken(serverURI, secondPlayerToken);
+        addLoggingForWSPaths(pathForFirstPlayerMessagingSession, pathForSecondPlayerMessagingSession,
+                pathForFirstPlayerSession, pathForSecondPlayerSession);
+
+        try (Session firstPlayerMessagingSession = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, pathForFirstPlayerMessagingSession);
+
+             Session secondPlayerMessagingSession = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, pathForSecondPlayerMessagingSession);
+
+             Session firstPlayerSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, pathForFirstPlayerSession);
+
+             Session secondPlayerSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, pathForSecondPlayerSession);
+        ) {
+            chessGameInitializationWSTestProcess(firstPlayerMessagingSession, secondPlayer, secondPlayerMessagingSession,
+                    firstPlayer, firstPlayerSession, secondPlayerSession, secondPlayerToken, firstPlayerToken);
+        } catch (DeploymentException | IOException | InterruptedException e) {
+            Log.errorf("Error in tests for chess game initialization through web socket sessions: %s", e.getLocalizedMessage());
+        }
+    }
+
+    private void chessGameInitializationWSTestProcess(Session firstPlayerMessagingSession, String secondPlayer, Session secondPlayerMessagingSession,
+                                                      String firstPlayer, Session firstPlayerSession, Session secondPlayerSession,
+                                                      String secondPlayerToken, String firstPlayerToken) throws InterruptedException, IOException {
+
+        addMessageHandlers(firstPlayerMessagingSession, secondPlayer, secondPlayerMessagingSession, firstPlayer, firstPlayerSession, secondPlayerSession);
+
+        testPartnershipWithReconnect(firstPlayerMessagingSession, firstPlayer, secondPlayer, secondPlayerMessagingSession, secondPlayerToken);
+
+        URI pathForSecondPlayerMessagingSession = authUtils.serverURIWithToken(userSessionURI, secondPlayerToken);
+        try (Session reconnectMessagingSPS = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, pathForSecondPlayerMessagingSession)) {
+
+            reconnectMessagingSPS.addMessageHandler(Message.class, message -> {
+                Log.infof("Received Message: %s, from user %s.", message, firstPlayer);
+                USER_MESSAGES.user2().offer(message);
+            });
+
+            testPartnershipDeletionAndReconnection2(firstPlayerMessagingSession, firstPlayer, secondPlayer, reconnectMessagingSPS, secondPlayerToken);
+        } catch (DeploymentException e) {
+            Log.errorf("Error in tests for chess game initialization process through web socket sessions: %s", e.getLocalizedMessage());
+        }
+
+        /*Pair<Session, String> sessionAndUsername = testRandomGameWithReconnection(
+                Objects.requireNonNull(firstPlayerSession, "First player session is null."),
+                firstPlayer,
+                Objects.requireNonNull(firstPlayerToken, "First player token is null."),
+                Objects.requireNonNull(secondPlayerSession, "Second player session is null."),
+                secondPlayer,
+                Objects.requireNonNull(secondPlayerToken, "Second player token is null.")
+        );*/
+    }
+
+    private Session testPartnershipWithReconnect(Session firstPlayerSession, String firstPlayer, String secondPlayer,
+                                                 Session secondPlayerSession, String secondPlayerToken) throws IOException, InterruptedException {
+        secondPlayerSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "Closed for tests."));
+
+        Thread.sleep(Duration.ofSeconds(2));
+
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(secondPlayer)
+                .message("Hello! I would be glad to establish contact with you.")
+                .build());
+
+        Thread.sleep(Duration.ofSeconds(2));
+
+        try (Session reconnectedSPS = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, secondPlayerToken))
+        ) {
+            reconnectedSPS.addMessageHandler(Message.class, message -> {
+                Log.infof("Received Message: %s, from user %s.", message, firstPlayer);
+                USER_MESSAGES.user2().offer(message);
+            });
+
+            await().atMost(Duration.ofSeconds(5)).until(() -> !USER_MESSAGES.user2().isEmpty());
+
+            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                    .partner(firstPlayer)
+                    .message("Hi")
+                    .build());
+
+            await().atMost(Duration.ofSeconds(5)).until(() -> !USER_MESSAGES.user1().isEmpty());
+
+            assertThat(USER_MESSAGES.user1()).anyMatch(message -> message.type().equals(MessageType.USER_INFO) &&
+                    message.message().contains("Partnership") &&
+                    message.message().contains(secondPlayer) &&
+                    message.message().contains("successfully added"));
+
+            assertThat(USER_MESSAGES.user2()).anyMatch(message -> message.type().equals(MessageType.USER_INFO) &&
+                    message.message().contains("Partnership") &&
+                    message.message().contains(firstPlayer) &&
+                    message.message().contains("successfully added"));
+
+            return reconnectedSPS;
+        } catch (DeploymentException e) {
+            String errorMessage = "Can`t reconnect second player in partnership reconnection test: %s".formatted(e.getLocalizedMessage());
+            Log.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+    }
+
+    private void testPartnershipDeletionAndReconnection2(Session firstPlayerSession, String firstPlayer, String secondPlayer,
+                                                         Session secondPlayerSession, String secondPlayerToken) throws InterruptedException, IOException {
+
+        Thread.sleep(Duration.ofSeconds(2));
+
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(secondPlayer)
+                .message("Hello! I would be glad to establish contact with you AGAIN.")
+                .build());
+
+        await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
+                .stream()
+                .anyMatch(message -> message.message() != null &&
+                        message.message().contains("You can`t invite someone who has partnership with you already.")));
+
+        String messagingURL = ConfigProvider.getConfig().getConfigValue("messaging.api.url").getValue() + "/chessland/account/remove-partner";
+
+        given().header("Authorization", "Bearer " + secondPlayerToken)
+                .param("partner", firstPlayer)
+                .when()
+                .delete(messagingURL)
+                .then()
+                .statusCode(204);
+
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(secondPlayer)
+                .message("Hello! I would be glad to establish contact with you AGAIN.")
+                .build());
+
+        await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user2()
+                .stream()
+                .anyMatch(message -> message.message() != null && message.message().contains("AGAIN")));
+
+        Thread.sleep(Duration.ofSeconds(2));
+
+        USER_MESSAGES.user2().clear();
+
+        Thread.sleep(Duration.ofSeconds(2));
+
+        secondPlayerSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "Closed for tests."));
+
+        Thread.sleep(Duration.ofSeconds(2));
+
+        try (Session reconnectedSPS = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, secondPlayerToken))
+        ) {
+            reconnectedSPS.addMessageHandler(Message.class, message -> {
+                Log.infof("Received Message: %s, from user %s.", message, firstPlayer);
+                USER_MESSAGES.user2().offer(message);
+            });
+
+            await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user2()
+                    .stream()
+                    .anyMatch(message -> message.message() != null && message.message().contains("AGAIN")));
+
+            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                    .partner(firstPlayer)
+                    .message("Hi AGAIN")
+                    .build());
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            assertThat(USER_MESSAGES.user1()).anyMatch(message -> message.type().equals(MessageType.USER_INFO) &&
+                    message.message().contains("Partnership") &&
+                    message.message().contains(secondPlayer) &&
+                    message.message().contains("successfully added"));
+
+            assertThat(USER_MESSAGES.user2()).anyMatch(message -> message.type().equals(MessageType.USER_INFO) &&
+                    message.message().contains("Partnership") &&
+                    message.message().contains(firstPlayer) &&
+                    message.message().contains("successfully added"));
+        } catch (DeploymentException | IOException e) {
+            String errorMessage = "Can`t reconnect second player in partnership reconnection test: %s".formatted(e.getLocalizedMessage());
+            Log.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+    }
+
+    private Pair<Session, String> testRandomGameWithReconnection(Session firstPlayerSession, String firstPlayer, String firstPlayerToken,
+                                                                 Session secondPlayerSession, String secondPlayer, String secondPlayerToken) throws IOException {
+
+        Log.info("Test random game with reconnection.");
+
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.GAME_INIT).build());
+        sendMessage(secondPlayerSession, secondPlayer, Message.builder(MessageType.GAME_INIT).build());
+
+        Log.info("Await for messages.");
+        await().atMost(Duration.ofSeconds(3)).until(() ->
+                USER_MESSAGES.user1.stream()
+                .anyMatch(message -> {
+                    final boolean isHaveGameStartInfoMessage = message.type().equals(MessageType.GAME_START_INFO);
+                    if (!isHaveGameStartInfoMessage) {
+                        return false;
+                    }
+
+                    return message.whitePlayerUsername().username().equals(firstPlayer) ||
+                            message.blackPlayerUsername().username().equals(firstPlayer);
+                }) &&
+
+                USER_MESSAGES.user2.stream()
+                .anyMatch(message -> {
+                    final boolean isHaveGameStartInfoMessage = message.type().equals(MessageType.GAME_START_INFO);
+                    if (!isHaveGameStartInfoMessage) {
+                        return false;
+                    }
+
+                    return message.whitePlayerUsername().username().equals(secondPlayer) ||
+                            message.blackPlayerUsername().username().equals(secondPlayer);
+                })
+        );
+
+        Message gameStartedMessage = USER_MESSAGES.user1.stream().filter(message -> message.whitePlayerUsername() != null).findFirst().orElseThrow();
+        String gameId = gameStartedMessage.gameID();
+
+        final boolean firstPlayerWhite = gameStartedMessage.whitePlayerUsername().username().equals(firstPlayer);
+        if (firstPlayerWhite) {
+            return Pair.of(processRandomGameWithReconnection(firstPlayerSession, firstPlayer,
+                    secondPlayerSession, secondPlayer, secondPlayerToken, gameId), secondPlayer);
+        }
+
+        return Pair.of(processRandomGameWithReconnection(secondPlayerSession, secondPlayer,
+                firstPlayerSession, firstPlayer, firstPlayerToken, gameId), firstPlayer);
+    }
+
+    private Session processRandomGameWithReconnection(Session whitePlayerSession, String whitePlayer, Session blackPlayerSession,
+                                                      String blackPlayer, String blackPlayerToken, String gameId) throws IOException {
+
+        sendMessage(whitePlayerSession, whitePlayer, Message.builder(MessageType.MOVE)
+                .gameID(gameId)
+                .from(Coordinate.e2)
+                .to(Coordinate.e4)
+                .build());
+
+        await().atMost(Duration.ofSeconds(3)).until(() -> USER_MESSAGES.user2.stream()
+                .anyMatch(message -> message.FEN() != null && message.FEN().equals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1")));
+
+        sendMessage(blackPlayerSession, blackPlayer, Message.builder(MessageType.MOVE)
+                .gameID(gameId)
+                .from(Coordinate.e7)
+                .to(Coordinate.e5)
+                .build());
+
+        await().atMost(Duration.ofSeconds(3)).until(() -> USER_MESSAGES.user1.stream()
+                .anyMatch(message -> {
+                    Log.infof("Message FEN: %s", message.FEN());
+                    return message.FEN() != null && message.FEN().equals("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+                }));
+
+        blackPlayerSession.close();
+
+        try (Session reconnectedSPS = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(
+                        WSClient.class, authUtils.serverURIWithToken(userSessionURI, blackPlayerToken)
+                )) {
+
+            reconnectedSPS.addMessageHandler(Message.class, message -> {
+                Log.infof("Received Message from Chess: %s.", message);
+                USER_MESSAGES.user2().offer(message);
+            });
+
+            sendMessage(reconnectedSPS, blackPlayer, Message.builder(MessageType.GAME_INIT)
+                    .gameID(gameId)
+                    .build());
+
+            await().atMost(Duration.ofSeconds(3)).until(() -> USER_MESSAGES.user2.stream()
+                    .anyMatch(message -> message.FEN() != null && message.FEN().equals("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2")));
+
+            sendMessage(reconnectedSPS, blackPlayer, Message.builder(MessageType.RESIGNATION).gameID(gameId).build());
+
+            await().atMost(Duration.ofSeconds(5)).until(() -> USER_MESSAGES.user1.stream()
+                    .anyMatch(message -> message.type().equals(MessageType.GAME_ENDED) && message.gameID().equals(gameId)));
+
+            return reconnectedSPS;
+        } catch (DeploymentException e) {
+            String errorMessage = "Can`t reconnect second player in random game reconnection test: %s".formatted(e.getLocalizedMessage());
+            Log.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
         }
     }
 
@@ -312,5 +629,40 @@ class ChessWSTest {
 
         System.out.println("##############################################################");
         throw new IllegalStateException("No gameID found");
+    }
+
+    private static void addLoggingForWSPaths(URI pathForFirstPlayerMessagingSession, URI pathForSecondPlayerMessagingSession,
+                                             URI pathForFirstPlayerSession, URI pathForSecondPlayerSession) {
+
+        Log.infof("First player session path for MessagingService: %s", pathForFirstPlayerMessagingSession);
+        Log.infof("Second player session path for MessagingService: %s", pathForSecondPlayerMessagingSession);
+        Log.infof("First player session path for Chess: %s", pathForFirstPlayerSession);
+        Log.infof("Second player session path for Chess: %s", pathForSecondPlayerSession);
+    }
+
+    private void addMessageHandlers(Session firstPlayerMessagingSession, String secondPlayer, Session secondPlayerMessagingSession,
+                                    String firstPlayer, Session firstPlayerSession, Session secondPlayerSession) throws InterruptedException {
+
+        firstPlayerMessagingSession.addMessageHandler(Message.class, message -> {
+            Log.infof("Received Message in Messaging Service: %s, from user %s.", message, secondPlayer);
+            USER_MESSAGES.user1().offer(message);
+        });
+
+        secondPlayerMessagingSession.addMessageHandler(Message.class, message -> {
+            Log.infof("Received Message in Messaging Service: %s, from user %s.", message, firstPlayer);
+            USER_MESSAGES.user2().offer(message);
+        });
+
+        firstPlayerSession.addMessageHandler(Message.class, message -> {
+            Log.infof("Received Message in Chess: %s.", message);
+            USER_MESSAGES.user1().offer(message);
+        });
+
+        secondPlayerSession.addMessageHandler(Message.class, message -> {
+            Log.infof("Received Message in Chess: %s.", message);
+            USER_MESSAGES.user2().offer(message);
+        });
+
+        Thread.sleep(Duration.ofSeconds(1).toMillis());
     }
 }
