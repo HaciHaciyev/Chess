@@ -6,7 +6,9 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
+import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.Objects;
@@ -20,14 +22,16 @@ public class ChessGameFactory {
         final ChessBoard chessBoard;
         boolean isCasualGame = gameParameters.isCasualGame();
         try {
-            if (Objects.isNull(gameParameters.FEN()) && Objects.isNull(gameParameters.PGN())) {
+            StatusPair<Pair<String, String>> chessNotations = isHaveChessNotations(gameParameters, secondGameParameters);
+            if (!chessNotations.status()) {
                 chessBoard = ChessBoard.starndardChessBoard();
             } else {
                 isCasualGame = true;
-                if (Objects.nonNull(gameParameters.PGN())) {
-                    chessBoard = ChessBoard.fromPGN(gameParameters.PGN());
+                final boolean isPGN = chessNotations.orElseThrow().getFirst().equals("PGN");
+                if (isPGN) {
+                    chessBoard = ChessBoard.fromPGN(chessNotations.orElseThrow().getSecond());
                 } else {
-                    chessBoard = ChessBoard.fromPosition(gameParameters.FEN());
+                    chessBoard = ChessBoard.fromPosition(chessNotations.orElseThrow().getSecond());
                 }
             }
         } catch (IllegalArgumentException e) {
@@ -62,5 +66,21 @@ public class ChessGameFactory {
         );
 
         return Result.success(chessGame);
+    }
+
+    private static StatusPair<Pair<String, String>> isHaveChessNotations(GameParameters gameParameters, GameParameters secondGameParameters) {
+        if (gameParameters.PGN() != null) {
+            return StatusPair.ofTrue(Pair.of("PGN", gameParameters.PGN()));
+        }
+        if (secondGameParameters.PGN() != null) {
+            return StatusPair.ofTrue(Pair.of("PGN", secondGameParameters.PGN()));
+        }
+        if (gameParameters.FEN() != null) {
+            return StatusPair.ofTrue(Pair.of("FEN", gameParameters.FEN()));
+        }
+        if (secondGameParameters.FEN() != null) {
+            return StatusPair.ofTrue(Pair.of("FEN", secondGameParameters.FEN()));
+        }
+        return StatusPair.ofFalse();
     }
 }
