@@ -168,7 +168,7 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(3));
 
-            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.USER_INFO && m.message().contains("invite you"));
+            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_REQUEST && m.message().contains("invite you"));
 
             Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(whiteForm.username())
@@ -279,8 +279,8 @@ class ChessWSTest {
         );*/
     }
 
-    private Session testPartnershipWithReconnect(Session firstPlayerSession, String firstPlayer, String secondPlayer,
-                                                 Session secondPlayerSession, String secondPlayerToken) throws IOException, InterruptedException {
+    private void testPartnershipWithReconnect(Session firstPlayerSession, String firstPlayer, String secondPlayer,
+                                              Session secondPlayerSession, String secondPlayerToken) throws IOException, InterruptedException {
         secondPlayerSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "Closed for tests."));
 
         Thread.sleep(Duration.ofSeconds(2));
@@ -320,7 +320,6 @@ class ChessWSTest {
                     message.message().contains(firstPlayer) &&
                     message.message().contains("successfully added"));
 
-            return reconnectedSPS;
         } catch (DeploymentException e) {
             String errorMessage = "Can`t reconnect second player in partnership reconnection test: %s".formatted(e.getLocalizedMessage());
             Log.error(errorMessage);
