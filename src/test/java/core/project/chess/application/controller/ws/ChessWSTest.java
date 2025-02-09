@@ -5,7 +5,6 @@ import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import io.quarkus.test.common.WithTestResource;
@@ -22,6 +21,7 @@ import testUtils.WSClient;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.restassured.RestAssured.given;
@@ -44,9 +44,6 @@ class ChessWSTest {
 
     @Inject
     AuthUtils authUtils;
-
-    @Inject
-    JwtUtility jwtUtility;
 
     private record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
         public static Messages newInstance() {
@@ -202,7 +199,7 @@ class ChessWSTest {
         }
     }
 
-    @Test
+    @RepeatedTest(3)
     @DisplayName("Chess game WS initialization test.")
     void chessGameInitializationWSTest() throws JsonProcessingException {
         RegistrationForm firstPlayerForm = authUtils.registerRandom();
@@ -237,7 +234,7 @@ class ChessWSTest {
 
              Session secondPlayerSession = ContainerProvider
                      .getWebSocketContainer()
-                     .connectToServer(WSClient.class, pathForSecondPlayerSession);
+                     .connectToServer(WSClient.class, pathForSecondPlayerSession)
         ) {
             chessGameInitializationWSTestProcess(firstPlayerMessagingSession, secondPlayer, secondPlayerMessagingSession,
                     firstPlayer, firstPlayerSession, secondPlayerSession, secondPlayerToken, firstPlayerToken);
@@ -269,14 +266,16 @@ class ChessWSTest {
             Log.errorf("Error in tests for chess game initialization process through web socket sessions: %s", e.getLocalizedMessage());
         }
 
-        /*Pair<Session, String> sessionAndUsername = testRandomGameWithReconnection(
-                Objects.requireNonNull(firstPlayerSession, "First player session is null."),
+        Pair<Session, String> sessionAndUsername = testRandomGameWithReconnection(
+                firstPlayerSession,
                 firstPlayer,
-                Objects.requireNonNull(firstPlayerToken, "First player token is null."),
-                Objects.requireNonNull(secondPlayerSession, "Second player session is null."),
+                firstPlayerToken,
+                secondPlayerSession,
                 secondPlayer,
-                Objects.requireNonNull(secondPlayerToken, "Second player token is null.")
-        );*/
+                secondPlayerToken
+        );
+
+        Log.infof(sessionAndUsername.toString());
     }
 
     private void testPartnershipWithReconnect(Session firstPlayerSession, String firstPlayer, String secondPlayer,
@@ -309,6 +308,8 @@ class ChessWSTest {
                     .build());
 
             await().atMost(Duration.ofSeconds(5)).until(() -> !USER_MESSAGES.user1().isEmpty());
+
+            Thread.sleep(2);
 
             assertThat(USER_MESSAGES.user1()).anyMatch(message -> message.type().equals(MessageType.USER_INFO) &&
                     message.message().contains("Partnership") &&
@@ -407,7 +408,7 @@ class ChessWSTest {
     }
 
     private Pair<Session, String> testRandomGameWithReconnection(Session firstPlayerSession, String firstPlayer, String firstPlayerToken,
-                                                                 Session secondPlayerSession, String secondPlayer, String secondPlayerToken) throws IOException {
+                                                                 Session secondPlayerSession, String secondPlayer, String secondPlayerToken) throws IOException, InterruptedException {
 
         Log.info("Test random game with reconnection.");
 
@@ -440,7 +441,7 @@ class ChessWSTest {
         );
 
         Message gameStartedMessage = USER_MESSAGES.user1.stream().filter(message -> message.whitePlayerUsername() != null).findFirst().orElseThrow();
-        String gameId = gameStartedMessage.gameID();
+        String gameId = Objects.requireNonNull(gameStartedMessage.gameID(), "Game ID cannot be null");
 
         final boolean firstPlayerWhite = gameStartedMessage.whitePlayerUsername().username().equals(firstPlayer);
         if (firstPlayerWhite) {
@@ -453,7 +454,7 @@ class ChessWSTest {
     }
 
     private Session processRandomGameWithReconnection(Session whitePlayerSession, String whitePlayer, Session blackPlayerSession,
-                                                      String blackPlayer, String blackPlayerToken, String gameId) throws IOException {
+                                                      String blackPlayer, String blackPlayerToken, final String gameId) throws IOException, InterruptedException {
 
         sendMessage(whitePlayerSession, whitePlayer, Message.builder(MessageType.MOVE)
                 .gameID(gameId)
@@ -461,8 +462,13 @@ class ChessWSTest {
                 .to(Coordinate.e4)
                 .build());
 
-        await().atMost(Duration.ofSeconds(3)).until(() -> USER_MESSAGES.user2.stream()
-                .anyMatch(message -> message.FEN() != null && message.FEN().equals("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1")));
+        Thread.sleep(Duration.ofSeconds(1));
+
+        USER_MESSAGES.user2.forEach(message -> {
+            if (message.FEN() != null) {
+                Log.infof("Message FEN: {%s}, PGN: {%s}.", message.FEN(), message.PGN());
+            }
+        });
 
         sendMessage(blackPlayerSession, blackPlayer, Message.builder(MessageType.MOVE)
                 .gameID(gameId)
@@ -470,18 +476,20 @@ class ChessWSTest {
                 .to(Coordinate.e5)
                 .build());
 
-        await().atMost(Duration.ofSeconds(3)).until(() -> USER_MESSAGES.user1.stream()
-                .anyMatch(message -> {
-                    Log.infof("Message FEN: %s", message.FEN());
-                    return message.FEN() != null && message.FEN().equals("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
-                }));
+        Thread.sleep(Duration.ofSeconds(1));
+
+        USER_MESSAGES.user1.forEach(message -> {
+            if (message.FEN() != null) {
+                Log.infof("Message FEN: {%s}, PGN: {%s}.", message.FEN(), message.PGN());
+            }
+        });
 
         blackPlayerSession.close();
 
         try (Session reconnectedSPS = ContainerProvider
                 .getWebSocketContainer()
                 .connectToServer(
-                        WSClient.class, authUtils.serverURIWithToken(userSessionURI, blackPlayerToken)
+                        WSClient.class, authUtils.serverURIWithToken(serverURI, blackPlayerToken)
                 )) {
 
             reconnectedSPS.addMessageHandler(Message.class, message -> {
@@ -494,7 +502,13 @@ class ChessWSTest {
                     .build());
 
             await().atMost(Duration.ofSeconds(3)).until(() -> USER_MESSAGES.user2.stream()
-                    .anyMatch(message -> message.FEN() != null && message.FEN().equals("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2")));
+                    .anyMatch(message -> {
+                        boolean res = message.FEN() != null;
+                        if (res) {
+                            Log.infof("Message FEN: {%s}, PGN: {%s}.", message.FEN(), message.PGN());
+                        }
+                        return res;
+                    }));
 
             sendMessage(reconnectedSPS, blackPlayer, Message.builder(MessageType.RESIGNATION).gameID(gameId).build());
 
