@@ -47,8 +47,8 @@ public class SessionStorage {
         return waitingForTheGame.entrySet();
     }
 
-    public Pair<Session, UserAccount> getSessionByUsername(Username username) {
-        return sessions.get(username);
+    public Optional<Pair<Session, UserAccount>> getSessionByUsername(Username username) {
+        return Optional.ofNullable(sessions.get(username));
     }
 
     public void addSession(Session session, UserAccount account) {
@@ -68,9 +68,9 @@ public class SessionStorage {
         }
     }
 
-    public Pair<ChessGame, HashSet<Session>> getGameById(UUID gameId) {
+    public Optional<ChessGame> getGameById(UUID gameId) {
         Pair<ChessGame, CopyOnWriteArraySet<Session>> pair = gameSessions.get(gameId);
-        return (pair == null) ? null : Pair.of(pair.getFirst(), new HashSet<>(pair.getSecond()));
+        return (pair == null) ? Optional.empty() : Optional.of(pair.getFirst());
     }
 
     public void addGame(ChessGame game, HashSet<Session> sessions) {
@@ -84,12 +84,17 @@ public class SessionStorage {
         });
     }
 
+    public Set<Session> getGameSessions(UUID gameId) {
+        Pair<ChessGame, CopyOnWriteArraySet<Session>> gameData = gameSessions.get(gameId);
+        return (gameData == null) ? Collections.emptySet() : gameData.getSecond();
+    }
+
     public boolean containsGame(UUID gameUuid) {
         return gameSessions.containsKey(gameUuid);
     }
 
-    public Pair<ChessGame, HashSet<Session>> removeGame(UUID gameUuid) {
-        Pair<ChessGame, CopyOnWriteArraySet<Session>> pair = gameSessions.remove(gameUuid);
-        return (pair == null) ? null : Pair.of(pair.getFirst(), new HashSet<>(pair.getSecond()));
+    public Optional<ChessGame> removeGame(UUID gameId) {
+        Pair<ChessGame, CopyOnWriteArraySet<Session>> pair = gameSessions.remove(gameId);
+        return (pair == null) ? Optional.empty() : Optional.of(pair.getFirst());
     }
 }
