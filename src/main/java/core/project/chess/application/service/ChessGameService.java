@@ -262,6 +262,12 @@ public class ChessGameService {
             return;
         }
 
+        final boolean isRepeatedGameInvitation = partnershipGameCacheService.get(addressee, addresserUsername.username()).status();
+        if (isRepeatedGameInvitation) {
+            sendMessage(session, Message.error("You can't invite a user until they respond or the request expires."));
+            return;
+        }
+
         partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
 
         final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername);
@@ -323,7 +329,7 @@ public class ChessGameService {
             color = gameParameters.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
         }
 
-        Message message = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+        Message message = Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                 .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
                 .time(gameParameters.time())
                 .FEN(gameParameters.FEN())

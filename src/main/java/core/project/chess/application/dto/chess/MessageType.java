@@ -18,5 +18,5 @@ public enum MessageType {
     GAME_START_INFO,
     GAME_ENDED,
 
-    PARTNERSHIP_REQUEST
+    PARTNERSHIP_GAME_REQUEST,
 }

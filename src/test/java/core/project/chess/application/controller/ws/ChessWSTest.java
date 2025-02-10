@@ -156,7 +156,7 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(3));
 
-            Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+            Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                     .partner(blackForm.username())
                     .message("br")
                     .build();
@@ -165,9 +165,9 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(3));
 
-            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_REQUEST && m.message().contains("invite you"));
+            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_GAME_REQUEST && m.message().contains("invite you"));
 
-            Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+            Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                     .partner(whiteForm.username())
                     .message("brrr")
                     .build();
@@ -257,7 +257,7 @@ class ChessWSTest {
                 .connectToServer(WSClient.class, pathForSecondPlayerMessagingSession)) {
 
             reconnectMessagingSPS.addMessageHandler(Message.class, message -> {
-                Log.infof("Received Message: %s, from user %s.", message, firstPlayer);
+                Log.infof("User %s Received Message: %s, from user %s.", secondPlayer, message);
                 USER_MESSAGES.user2().offer(message);
             });
 
@@ -266,7 +266,7 @@ class ChessWSTest {
             Log.errorf("Error in tests for chess game initialization process through web socket sessions: %s", e.getLocalizedMessage());
         }
 
-        Pair<Session, String> sessionAndUsername = testRandomGameWithReconnection(
+        testRandomGameWithReconnection(
                 firstPlayerSession,
                 firstPlayer,
                 firstPlayerToken,
@@ -275,7 +275,38 @@ class ChessWSTest {
                 secondPlayerToken
         );
 
-        Log.infof(sessionAndUsername.toString());
+        USER_MESSAGES.user1().clear();
+        USER_MESSAGES.user2().clear();
+
+        URI pathForSecondPlayerSession = authUtils.serverURIWithToken(serverURI, secondPlayerToken);
+        try (Session reconnectedSPS = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, pathForSecondPlayerSession)
+        ) {
+            sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.GAME_INIT)
+                    .partner(secondPlayer)
+                    .FEN("rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3")
+                    .build());
+            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.GAME_INIT)
+                    .partner(firstPlayer)
+                    .build());
+
+            awaitGameStartMessages(secondPlayer, firstPlayer);
+            USER_MESSAGES.user1().clear();
+            USER_MESSAGES.user2().clear();
+
+            sendMessage(reconnectedSPS, firstPlayer, Message.builder(MessageType.GAME_INIT)
+                    .PGN("1. d4 d5 2. Nf3 Nc6 3. Nc3 Nf6 4. e3 e6 5. Bb5")
+                    .partner(secondPlayer)
+                    .build());
+            sendMessage(firstPlayerSession, secondPlayer, Message.builder(MessageType.GAME_INIT)
+                    .partner(firstPlayer)
+                    .build());
+
+            awaitGameStartMessages(secondPlayer, firstPlayer);
+        } catch (DeploymentException e) {
+            Log.errorf("Error in tests for chess game initialization process through web socket sessions: %s", e.getLocalizedMessage());
+        }
     }
 
     private void testPartnershipWithReconnect(Session firstPlayerSession, String firstPlayer, String secondPlayer,
@@ -284,7 +315,7 @@ class ChessWSTest {
 
         Thread.sleep(Duration.ofSeconds(2));
 
-        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                 .partner(secondPlayer)
                 .message("Hello! I would be glad to establish contact with you.")
                 .build());
@@ -296,13 +327,13 @@ class ChessWSTest {
                 .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, secondPlayerToken))
         ) {
             reconnectedSPS.addMessageHandler(Message.class, message -> {
-                Log.infof("Received Message: %s, from user %s.", message, firstPlayer);
+                Log.infof("User %s Received Message: %s, from user %s.", secondPlayer, message);
                 USER_MESSAGES.user2().offer(message);
             });
 
             await().atMost(Duration.ofSeconds(5)).until(() -> !USER_MESSAGES.user2().isEmpty());
 
-            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                     .partner(firstPlayer)
                     .message("Hi")
                     .build());
@@ -333,7 +364,7 @@ class ChessWSTest {
 
         Thread.sleep(Duration.ofSeconds(2));
 
-        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                 .partner(secondPlayer)
                 .message("Hello! I would be glad to establish contact with you AGAIN.")
                 .build());
@@ -352,7 +383,7 @@ class ChessWSTest {
                 .then()
                 .statusCode(204);
 
-        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                 .partner(secondPlayer)
                 .message("Hello! I would be glad to establish contact with you AGAIN.")
                 .build());
@@ -376,7 +407,7 @@ class ChessWSTest {
                 .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, secondPlayerToken))
         ) {
             reconnectedSPS.addMessageHandler(Message.class, message -> {
-                Log.infof("Received Message: %s, from user %s.", message, firstPlayer);
+                Log.infof("User %s Received Message: %s, from user %s.", secondPlayer, message);
                 USER_MESSAGES.user2().offer(message);
             });
 
@@ -384,7 +415,7 @@ class ChessWSTest {
                     .stream()
                     .anyMatch(message -> message.message() != null && message.message().contains("AGAIN")));
 
-            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
+            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                     .partner(firstPlayer)
                     .message("Hi AGAIN")
                     .build());
@@ -416,7 +447,7 @@ class ChessWSTest {
         sendMessage(secondPlayerSession, secondPlayer, Message.builder(MessageType.GAME_INIT).build());
 
         Log.info("Await for messages.");
-        await().atMost(Duration.ofSeconds(3)).until(() ->
+        await().atMost(Duration.ofSeconds(6)).until(() ->
                 USER_MESSAGES.user1.stream()
                 .anyMatch(message -> {
                     final boolean isHaveGameStartInfoMessage = message.type().equals(MessageType.GAME_START_INFO);
@@ -462,11 +493,17 @@ class ChessWSTest {
                 .to(Coordinate.e4)
                 .build());
 
-        Thread.sleep(Duration.ofSeconds(1));
+        Thread.sleep(Duration.ofSeconds(2));
+
+        USER_MESSAGES.user1.forEach(message -> {
+            if (message.FEN() != null) {
+                Log.infof("User %s. Message FEN: {%s}, PGN: {%s}.", whitePlayer, message.FEN(), message.PGN());
+            }
+        });
 
         USER_MESSAGES.user2.forEach(message -> {
             if (message.FEN() != null) {
-                Log.infof("Message FEN: {%s}, PGN: {%s}.", message.FEN(), message.PGN());
+                Log.infof("User %s. Message FEN: {%s}, PGN: {%s}.", blackPlayer, message.FEN(), message.PGN());
             }
         });
 
@@ -476,11 +513,17 @@ class ChessWSTest {
                 .to(Coordinate.e5)
                 .build());
 
-        Thread.sleep(Duration.ofSeconds(1));
+        Thread.sleep(Duration.ofSeconds(2));
 
         USER_MESSAGES.user1.forEach(message -> {
             if (message.FEN() != null) {
-                Log.infof("Message FEN: {%s}, PGN: {%s}.", message.FEN(), message.PGN());
+                Log.infof("User %s. Message FEN: {%s}, PGN: {%s}.", whitePlayer, message.FEN(), message.PGN());
+            }
+        });
+
+        USER_MESSAGES.user2.forEach(message -> {
+            if (message.FEN() != null) {
+                Log.infof("User %s. Message FEN: {%s}, PGN: {%s}.", blackPlayer, message.FEN(), message.PGN());
             }
         });
 
@@ -493,7 +536,7 @@ class ChessWSTest {
                 )) {
 
             reconnectedSPS.addMessageHandler(Message.class, message -> {
-                Log.infof("Received Message from Chess: %s.", message);
+                Log.infof("User %s Received Message from Chess: %s.", blackPlayer, message);
                 USER_MESSAGES.user2().offer(message);
             });
 
@@ -657,25 +700,68 @@ class ChessWSTest {
                                     String firstPlayer, Session firstPlayerSession, Session secondPlayerSession) throws InterruptedException {
 
         firstPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("Received Message in Messaging Service: %s, from user %s.", message, secondPlayer);
+            Log.infof("User %s Received Message in Messaging Service: %s.", firstPlayer, message);
             USER_MESSAGES.user1().offer(message);
         });
 
         secondPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("Received Message in Messaging Service: %s, from user %s.", message, firstPlayer);
+            Log.infof("User %s Received Message in Messaging Service: %s, from user %s.", secondPlayer, message);
             USER_MESSAGES.user2().offer(message);
         });
 
         firstPlayerSession.addMessageHandler(Message.class, message -> {
-            Log.infof("Received Message in Chess: %s.", message);
+            Log.infof("User %s Received Message in Chess: %s.", firstPlayer, message);
             USER_MESSAGES.user1().offer(message);
         });
 
         secondPlayerSession.addMessageHandler(Message.class, message -> {
-            Log.infof("Received Message in Chess: %s.", message);
+            Log.infof("User %s Received Message in Chess: %s.", secondPlayer, message);
             USER_MESSAGES.user2().offer(message);
         });
 
         Thread.sleep(Duration.ofSeconds(1).toMillis());
+    }
+
+    private void awaitGameStartMessages(String secondPlayer, String firstPlayer) {
+        await().atMost(Duration.ofSeconds(5)).until(() ->
+                USER_MESSAGES.user1().stream()
+                        .anyMatch(message -> {
+                            final boolean isHaveGameStartInfoMessage = message.type().equals(MessageType.GAME_START_INFO);
+                            if (!isHaveGameStartInfoMessage) {
+                                return false;
+                            }
+
+                            return message.whitePlayerUsername().username().equals(firstPlayer) ||
+                                    message.blackPlayerUsername().username().equals(firstPlayer);
+                        }) &&
+                        USER_MESSAGES.user1().stream().anyMatch(message -> {
+                            final boolean isHaveChessNotations = message.type().equals(MessageType.FEN_PGN);
+                            if (!isHaveChessNotations) {
+                                return false;
+                            }
+
+                            Log.infof("Chess Notations found: FEN-{%s}, PGN-{%s}", message.FEN(), message.PGN());
+                            return true;
+                        }) &&
+                        USER_MESSAGES.user2().stream()
+                                .anyMatch(message -> {
+                                    final boolean isHaveGameStartInfoMessage = message.type().equals(MessageType.GAME_START_INFO);
+                                    if (!isHaveGameStartInfoMessage) {
+                                        return false;
+                                    }
+
+                                    return message.whitePlayerUsername().username().equals(secondPlayer) ||
+                                            message.blackPlayerUsername().username().equals(secondPlayer);
+                                }) &&
+                        USER_MESSAGES.user2().stream().anyMatch(message -> {
+                            final boolean isHaveChessNotations = message.type().equals(MessageType.FEN_PGN);
+                            if (!isHaveChessNotations) {
+                                return false;
+                            }
+
+                            Log.infof("Chess Notations found: FEN-{%s}, PGN-{%s}", message.FEN(), message.PGN());
+                            return true;
+                        })
+        );
     }
 }

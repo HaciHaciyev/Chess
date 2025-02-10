@@ -70,7 +70,7 @@ class PartnersResourceTest {
 
                 Thread.sleep(Duration.ofMillis(500));
 
-                Message hostRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                Message hostRequest = Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                         .partner(partnerInfo.username())
                         .message("")
                         .build();
@@ -79,7 +79,7 @@ class PartnersResourceTest {
 
                 Thread.sleep(Duration.ofMillis(100));
 
-                Message partnerRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                Message partnerRequest = Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
                         .partner(host)
                         .message("")
                         .build();
