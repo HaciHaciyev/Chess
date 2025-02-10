@@ -174,6 +174,12 @@ public class ChessGameService {
                 return;
             }
 
+            final boolean isGameSearchCanceling = Objects.nonNull(message.respond()) && message.respond().equals(Message.Respond.NO);
+            if (isGameSearchCanceling) {
+                cancelGameSearch(username);
+                return;
+            }
+
             startNewGame(session, username, gameParameters.orElseThrow());
         });
     }
@@ -215,21 +221,28 @@ public class ChessGameService {
         );
     }
 
+    private void cancelGameSearch(Username username) {
+        sessionStorage.removeWaitingUser(username);
+    }
+
     private StatusPair<Triple<Session, UserAccount, GameParameters>> locateOpponentForGame(final UserAccount firstPlayer,
                                                                                            final GameParameters gameParameters) {
         for (var entry : sessionStorage.waitingUsers()) {
-            final UserAccount potentialOpponent = entry.getValue().getSecond();
-            final GameParameters gameParametersOfPotentialOpponent = entry.getValue().getThird();
+            final Queue<Triple<Session, UserAccount, GameParameters>> queue = entry.getValue();
+            for (var opponentTriple : queue) {
+                final UserAccount potentialOpponent = opponentTriple.getSecond();
+                final GameParameters gameParametersOfPotentialOpponent = opponentTriple.getThird();
 
-            final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer, 
-                    gameParameters, 
-                    potentialOpponent, 
-                    gameParametersOfPotentialOpponent,
-                    false
-            );
-            
-            if (isOpponent) {
-                return StatusPair.ofTrue(entry.getValue());
+                final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer,
+                        gameParameters,
+                        potentialOpponent,
+                        gameParametersOfPotentialOpponent,
+                        false
+                );
+
+                if (isOpponent) {
+                    return StatusPair.ofTrue(opponentTriple);
+                }
             }
         }
 
