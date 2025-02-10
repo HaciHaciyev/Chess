@@ -279,6 +279,16 @@ public class ChessGameService {
             return;
         }
 
+        final boolean isDeclineRequest = message.respond() != null && message.respond().equals(Message.Respond.NO);
+        if (isDeclineRequest) {
+            cancelRequests(addresserAccount, addresseeAccount);
+            if (isAddresseeActive) {
+                Session addresseeSession = sessionStorage.getSessionByUsername(addresseeUsername).getFirst();
+                sendMessage(addresseeSession, Message.userInfo("User %s has declined the partnership game.".formatted(addresseeUsername.username())));
+            }
+            return;
+        }
+
         if (isAddresseeActive) {
             notifyTheAddressee(addresserUsername, addresseeUsername, gameParameters);
         }
