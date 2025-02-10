@@ -86,15 +86,6 @@ public record Message(MessageType type,
                 .build();
     }
 
-    public static Message partnershipGame(String color, String partner, Boolean isCasualGame, Time time) {
-        return builder(MessageType.GAME_INIT)
-                .color(Color.valueOf(color))
-                .partner(partner)
-                .time(time)
-                .isCasualGame(isCasualGame)
-                .build();
-    }
-
     public static Message returnMovement(String gameID) {
         return builder(MessageType.MOVE)
                 .gameID(gameID)

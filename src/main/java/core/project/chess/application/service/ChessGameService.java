@@ -269,15 +269,15 @@ public class ChessGameService {
             return;
         }
 
+        partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
+
         final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername);
 
-        final boolean isRespondRequest = message.respond().equals(Message.Respond.YES);
+        final boolean isRespondRequest = message.respond() != null && message.respond().equals(Message.Respond.YES);
         if (isRespondRequest) {
             handlePartnershipGameRespond(session, addresserAccount, addresseeAccount, gameParameters, isAddresseeActive);
             return;
         }
-
-        partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
 
         if (isAddresseeActive) {
             notifyTheAddressee(addresserUsername, addresseeUsername, gameParameters);
@@ -298,16 +298,16 @@ public class ChessGameService {
         Username addresserUsername = addresserAccount.getUsername();
         Username addresseeUsername = addresseeAccount.getUsername();
 
-        final StatusPair<GameParameters> addresseeGameParameters = partnershipGameCacheService.get(
-                addresserUsername.username(), addresseeUsername.username()
-        );
-        if (!addresseeGameParameters.status()) {
+        Map<String, GameParameters> partnershipGameRequests = partnershipGameCacheService.getAll(addresserUsername.username());
+        if (!partnershipGameRequests.containsKey(addresseeUsername.username())) {
             sendMessage(session, Message.error("You can`t respond to partnership request if it don`t exist."));
             return;
         }
 
+        GameParameters addresseeGameParameters = partnershipGameRequests.get(addresseeUsername.username());
+
         final boolean isOpponentEligible = gameFunctionalityService.validateOpponentEligibility(
-                addresserAccount, addresserGameParameters, addresseeAccount, addresseeGameParameters.orElseThrow(), true
+                addresserAccount, addresserGameParameters, addresseeAccount, addresseeGameParameters, true
         );
         if (!isOpponentEligible) {
             sendMessage(session, "Opponent is do not eligible. Check the game parameters.");
@@ -319,7 +319,7 @@ public class ChessGameService {
         Session addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.getUsername()).getFirst();
         startStandardChessGame(
                 Triple.of(session, addresserAccount, addresserGameParameters),
-                Triple.of(addresseeSession, addresseeAccount, addresseeGameParameters.orElseThrow()),
+                Triple.of(addresseeSession, addresseeAccount, addresseeGameParameters),
                 true
         );
     }

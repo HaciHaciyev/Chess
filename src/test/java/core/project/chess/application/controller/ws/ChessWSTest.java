@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
@@ -169,7 +170,6 @@ class ChessWSTest {
 
             Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(whiteForm.username())
-                    .respond(Message.Respond.YES)
                     .message("brrr")
                     .build();
 
@@ -183,8 +183,20 @@ class ChessWSTest {
             String wName = whiteForm.username();
             String bName = blackForm.username();
 
-            sendMessage(wChessSession, wName, Message.partnershipGame("WHITE", bName, null, ChessGame.Time.RAPID));
-            sendMessage(bChessSession, bName, Message.partnershipGame("BLACK", wName, null, ChessGame.Time.RAPID));
+            sendMessage(wChessSession, wName, Message.builder(MessageType.GAME_INIT)
+                    .color(Color.WHITE)
+                    .partner(bName)
+                    .time(ChessGame.Time.RAPID)
+                    .build());
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            sendMessage(bChessSession, bName, Message.builder(MessageType.GAME_INIT)
+                    .color(Color.BLACK)
+                    .partner(wName)
+                    .time(ChessGame.Time.RAPID)
+                    .respond(Message.Respond.YES)
+                    .build());
 
             Thread.sleep(Duration.ofSeconds(5));
 
