@@ -7,6 +7,7 @@ import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.hash.HashCommands;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,8 +20,8 @@ public class GameInvitationsRepository {
 
     private final HashCommands<String, String, String> hashCommands;
 
-    GameInvitationsRepository(RedisDataSource redisDataSource) {
-        this.hashCommands = redisDataSource.hash(new TypeReference<>(){});
+    GameInvitationsRepository(Instance<RedisDataSource> redisDataSource) {
+        this.hashCommands = redisDataSource.get().hash(new TypeReference<>(){});
     }
 
     public void put(String addressee, String addresser, GameParameters data) {
