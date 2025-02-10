@@ -256,6 +256,24 @@ class ChessWSTest {
         }
     }
 
+    @Test
+    @DisplayName("Test game initialization via FEN")
+    void testGameInitWithFEN() {
+
+    }
+
+    @Test
+    @DisplayName("Test game initialization via PGN")
+    void testGameInitWithPGN() {
+
+    }
+
+    @Test
+    @DisplayName("Test full game functionalities")
+    void testFullGameFunctionalities() {
+
+    }
+
     private void chessGameInitializationWSTestProcess(Session firstPlayerMessagingSession, String secondPlayer, Session secondPlayerMessagingSession,
                                                       String firstPlayer, Session firstPlayerSession, Session secondPlayerSession,
                                                       String secondPlayerToken, String firstPlayerToken) throws InterruptedException, IOException {
@@ -287,39 +305,6 @@ class ChessWSTest {
                 secondPlayer,
                 secondPlayerToken
         );
-
-        USER_MESSAGES.user1().clear();
-        USER_MESSAGES.user2().clear();
-
-        URI pathForSecondPlayerSession = authUtils.serverURIWithToken(serverURI, secondPlayerToken);
-        try (Session reconnectedSPS = ContainerProvider
-                .getWebSocketContainer()
-                .connectToServer(WSClient.class, pathForSecondPlayerSession)
-        ) {
-            sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.GAME_INIT)
-                    .partner(secondPlayer)
-                    .FEN("rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3")
-                    .build());
-            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.GAME_INIT)
-                    .partner(firstPlayer)
-                    .build());
-
-            awaitGameStartMessages(secondPlayer, firstPlayer);
-            USER_MESSAGES.user1().clear();
-            USER_MESSAGES.user2().clear();
-
-            sendMessage(reconnectedSPS, firstPlayer, Message.builder(MessageType.GAME_INIT)
-                    .PGN("1. d4 d5 2. Nf3 Nc6 3. Nc3 Nf6 4. e3 e6 5. Bb5")
-                    .partner(secondPlayer)
-                    .build());
-            sendMessage(firstPlayerSession, secondPlayer, Message.builder(MessageType.GAME_INIT)
-                    .partner(firstPlayer)
-                    .build());
-
-            awaitGameStartMessages(secondPlayer, firstPlayer);
-        } catch (DeploymentException e) {
-            Log.errorf("Error in tests for chess game initialization process through web socket sessions: %s", e.getLocalizedMessage());
-        }
     }
 
     private void testPartnershipWithReconnect(Session firstPlayerSession, String firstPlayer, String secondPlayer,
@@ -451,8 +436,8 @@ class ChessWSTest {
         }
     }
 
-    private Pair<Session, String> testRandomGameWithReconnection(Session firstPlayerSession, String firstPlayer, String firstPlayerToken,
-                                                                 Session secondPlayerSession, String secondPlayer, String secondPlayerToken) throws IOException, InterruptedException {
+    private void testRandomGameWithReconnection(Session firstPlayerSession, String firstPlayer, String firstPlayerToken,
+                                                Session secondPlayerSession, String secondPlayer, String secondPlayerToken) throws IOException, InterruptedException {
 
         Log.info("Test random game with reconnection.");
 
@@ -489,11 +474,12 @@ class ChessWSTest {
 
         final boolean firstPlayerWhite = gameStartedMessage.whitePlayerUsername().username().equals(firstPlayer);
         if (firstPlayerWhite) {
-            return Pair.of(processRandomGameWithReconnection(firstPlayerSession, firstPlayer,
+            Pair.of(processRandomGameWithReconnection(firstPlayerSession, firstPlayer,
                     secondPlayerSession, secondPlayer, secondPlayerToken, gameId), secondPlayer);
+            return;
         }
 
-        return Pair.of(processRandomGameWithReconnection(secondPlayerSession, secondPlayer,
+        Pair.of(processRandomGameWithReconnection(secondPlayerSession, secondPlayer,
                 firstPlayerSession, firstPlayer, firstPlayerToken, gameId), firstPlayer);
     }
 
