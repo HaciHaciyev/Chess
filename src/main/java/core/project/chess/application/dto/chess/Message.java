@@ -30,7 +30,8 @@ public record Message(MessageType type,
                       String inCaseOfPromotion,
                       String message,
                       Time time,
-                      Boolean isCasualGame) {
+                      Boolean isCasualGame,
+                      Respond respond) {
 
     private static final Pattern PROMOTION_PATTERN = Pattern.compile("^[QRNBqrnb]$");
     private static final String INVITATION_MESSAGE = """
@@ -196,6 +197,7 @@ public record Message(MessageType type,
         private String message;
         private Time time;
         private Boolean isCasualGame;
+        private Respond respond;
 
         public Builder(MessageType type) {
             this.type = Objects.requireNonNull(type, "Message type must not be null.");
@@ -281,10 +283,19 @@ public record Message(MessageType type,
             return this;
         }
 
+        public Builder setRespond(Respond respond) {
+            this.respond = respond;
+            return this;
+        }
+
         public Message build() {
             return new Message(type, gameID, FEN, PGN, whitePlayerUsername, blackPlayerUsername,
                     whitePlayerRating, blackPlayerRating, timeLeft, color, partner,
-                    from, to, inCaseOfPromotion, message, time, isCasualGame);
+                    from, to, inCaseOfPromotion, message, time, isCasualGame, respond);
         }
+    }
+
+    public enum Respond {
+        YES, NO
     }
 }

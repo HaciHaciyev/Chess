@@ -170,14 +170,7 @@ public class ChessGameService {
 
             final boolean partnershipGame = Objects.nonNull(message.partner());
             if (partnershipGame) {
-                final Result<Username, IllegalArgumentException> partnerUsername = message.partnerUsername();
-                if (!partnerUsername.success()) {
-                    String errorMessage = "Invalid username for partner.%s".formatted(partnerUsername.throwable().getMessage());
-                    sendMessage(session, Message.error(errorMessage));
-                    return;
-                }
-
-                handlePartnershipGameRequest(session, username, partnerUsername.orElseThrow(), gameParameters.orElseThrow());
+                handlePartnershipGameRequest(session, username, gameParameters.orElseThrow(), message);
                 return;
             }
 
@@ -243,7 +236,15 @@ public class ChessGameService {
         return StatusPair.ofFalse();
     }
 
-    private void handlePartnershipGameRequest(Session session, Username addresserUsername, Username addresseeUsername, GameParameters gameParameters) {
+    private void handlePartnershipGameRequest(Session session, Username addresserUsername, GameParameters gameParameters, Message message) {
+        final Result<Username, IllegalArgumentException> partnerUsername = message.partnerUsername();
+        if (!partnerUsername.success()) {
+            String errorMessage = "Invalid username for partner.%s".formatted(partnerUsername.throwable().getMessage());
+            sendMessage(session, Message.error(errorMessage));
+            return;
+        }
+
+        Username addresseeUsername = partnerUsername.orElseThrow();
         if (!outboundUserRepository.isUsernameExists(addresseeUsername)) {
             sendMessage(session, Message.error("User %s do not exists.".formatted(addresseeUsername)));
             return;
@@ -268,59 +269,59 @@ public class ChessGameService {
             return;
         }
 
-        partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
-
         final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername);
 
-        final StatusPair<GameParameters> isPartnershipGameAgreed = checkPartnershipAgreement(addresseeAccount, addresserAccount, gameParameters);
-        if (isPartnershipGameAgreed.status()) {
-            if (!isAddresseeActive) {
-                cancelRequests(addresserAccount, addresseeAccount);
-                sendMessage(session, Message.error("""
-                        The game cannot be created because the user is not online.
-                        You can try re-sending the partner game request when the user is online.
-                        """
-                ));
-            }
-
-            Session addresserSession = sessionStorage.getSessionByUsername(addresserUsername).getFirst();
-            Session addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.getUsername()).getFirst();
-
-            startStandardChessGame(
-                    Triple.of(addresserSession, addresserAccount, gameParameters),
-                    Triple.of(addresseeSession, addresseeAccount, gameParameters),
-                    true
-            );
+        final boolean isRespondRequest = message.respond().equals(Message.Respond.YES);
+        if (isRespondRequest) {
+            handlePartnershipGameRespond(session, addresserAccount, addresseeAccount, gameParameters, isAddresseeActive);
+            return;
         }
+
+        partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
 
         if (isAddresseeActive) {
             notifyTheAddressee(addresserUsername, addresseeUsername, gameParameters);
         }
     }
 
-    private StatusPair<GameParameters> checkPartnershipAgreement(UserAccount addressee,
-                                                                 UserAccount addresser,
-                                                                 GameParameters addresserGameParameters) {
-        final Map<String, GameParameters> requests = partnershipGameCacheService.getAll(addresser.getUsername().username());
-
-        if (requests.containsKey(addressee.getUsername().username())) {
-
-            GameParameters addresseeGameParameters = requests.get(addressee.getUsername().username());
-
-            final boolean isOpponentEligible = gameFunctionalityService.validateOpponentEligibility(
-                    addresser, addresserGameParameters,
-                    addressee, addresseeGameParameters,
-                    true
-            );
-
-            if (!isOpponentEligible) {
-                return StatusPair.ofFalse();
-            }
-
-            return StatusPair.ofTrue(addresseeGameParameters);
+    private void handlePartnershipGameRespond(Session session, UserAccount addresserAccount, UserAccount addresseeAccount,
+                                              GameParameters addresserGameParameters, boolean isAddresseeActive) {
+        if (!isAddresseeActive) {
+            cancelRequests(addresserAccount, addresseeAccount);
+            sendMessage(session, Message.error("""
+                    The game cannot be created because the user is not online.
+                    You can try re-sending the partner game request when the user is online.
+                    """
+            ));
         }
 
-        return StatusPair.ofFalse();
+        Username addresserUsername = addresserAccount.getUsername();
+        Username addresseeUsername = addresseeAccount.getUsername();
+
+        final StatusPair<GameParameters> addresseeGameParameters = partnershipGameCacheService.get(
+                addresserUsername.username(), addresseeUsername.username()
+        );
+        if (!addresseeGameParameters.status()) {
+            sendMessage(session, Message.error("You can`t respond to partnership request if it don`t exist."));
+            return;
+        }
+
+        final boolean isOpponentEligible = gameFunctionalityService.validateOpponentEligibility(
+                addresserAccount, addresserGameParameters, addresseeAccount, addresseeGameParameters.orElseThrow(), true
+        );
+        if (!isOpponentEligible) {
+            sendMessage(session, "Opponent is do not eligible. Check the game parameters.");
+            return;
+        }
+
+        cancelRequests(addresserAccount, addresseeAccount);
+
+        Session addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.getUsername()).getFirst();
+        startStandardChessGame(
+                Triple.of(session, addresserAccount, addresserGameParameters),
+                Triple.of(addresseeSession, addresseeAccount, addresseeGameParameters.orElseThrow()),
+                true
+        );
     }
 
     private void notifyTheAddressee(Username addresserUsername, Username addresseeUsername, GameParameters gameParameters) {
