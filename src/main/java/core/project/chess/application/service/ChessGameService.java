@@ -330,7 +330,7 @@ public class ChessGameService {
             color = gameParameters.color().equals(Color.WHITE) ? Color.BLACK : Color.WHITE;
         }
 
-        Message message = Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
+        Message message = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                 .message("User {%s} invite you for partnership game.".formatted(addresserUsername.username()))
                 .time(gameParameters.time())
                 .FEN(gameParameters.FEN())

@@ -156,7 +156,7 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(3));
 
-            Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
+            Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(blackForm.username())
                     .message("br")
                     .build();
@@ -165,10 +165,11 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(3));
 
-            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_GAME_REQUEST && m.message().contains("invite you"));
+            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_REQUEST && m.message().contains("invite you"));
 
-            Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
+            Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(whiteForm.username())
+                    .respond(Message.Respond.YES)
                     .message("brrr")
                     .build();
 
@@ -315,7 +316,7 @@ class ChessWSTest {
 
         Thread.sleep(Duration.ofSeconds(2));
 
-        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
                 .partner(secondPlayer)
                 .message("Hello! I would be glad to establish contact with you.")
                 .build());
@@ -333,7 +334,7 @@ class ChessWSTest {
 
             await().atMost(Duration.ofSeconds(5)).until(() -> !USER_MESSAGES.user2().isEmpty());
 
-            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
+            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(firstPlayer)
                     .message("Hi")
                     .build());
@@ -364,7 +365,7 @@ class ChessWSTest {
 
         Thread.sleep(Duration.ofSeconds(2));
 
-        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
                 .partner(secondPlayer)
                 .message("Hello! I would be glad to establish contact with you AGAIN.")
                 .build());
@@ -383,7 +384,7 @@ class ChessWSTest {
                 .then()
                 .statusCode(204);
 
-        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
+        sendMessage(firstPlayerSession, firstPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
                 .partner(secondPlayer)
                 .message("Hello! I would be glad to establish contact with you AGAIN.")
                 .build());
@@ -415,7 +416,7 @@ class ChessWSTest {
                     .stream()
                     .anyMatch(message -> message.message() != null && message.message().contains("AGAIN")));
 
-            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_GAME_REQUEST)
+            sendMessage(reconnectedSPS, secondPlayer, Message.builder(MessageType.PARTNERSHIP_REQUEST)
                     .partner(firstPlayer)
                     .message("Hi AGAIN")
                     .build());

@@ -283,7 +283,7 @@ public record Message(MessageType type,
             return this;
         }
 
-        public Builder setRespond(Respond respond) {
+        public Builder respond(Respond respond) {
             this.respond = respond;
             return this;
         }
