@@ -134,12 +134,12 @@ public class ChessGameService {
                                final Pair<ChessGame, HashSet<Session>> gameSessions) {
 
         final Pair<MessageAddressee, Message> result = switch (message.type()) {
-            case MOVE -> gameFunctionalityService.move(message, Pair.of(username, session), gameSessions);
-            case MESSAGE -> gameFunctionalityService.chat(message, Pair.of(username, session), gameSessions);
-            case RETURN_MOVE -> gameFunctionalityService.returnOfMovement(Pair.of(username, session), gameSessions);
-            case RESIGNATION -> gameFunctionalityService.resignation(Pair.of(username, session), gameSessions);
-            case TREE_FOLD -> gameFunctionalityService.threeFold(Pair.of(username, session), gameSessions);
-            case AGREEMENT -> gameFunctionalityService.agreement(Pair.of(username, session), gameSessions);
+            case MOVE -> gameFunctionalityService.move(message, Pair.of(username, session), gameSessions.getFirst());
+            case MESSAGE -> gameFunctionalityService.chat(message, Pair.of(username, session), gameSessions.getFirst());
+            case RETURN_MOVE -> gameFunctionalityService.returnOfMovement(Pair.of(username, session), gameSessions.getFirst());
+            case RESIGNATION -> gameFunctionalityService.resignation(Pair.of(username, session), gameSessions.getFirst());
+            case TREE_FOLD -> gameFunctionalityService.threeFold(Pair.of(username, session), gameSessions.getFirst());
+            case AGREEMENT -> gameFunctionalityService.agreement(Pair.of(username, session), gameSessions.getFirst());
             default -> Pair.of(MessageAddressee.ONLY_ADDRESSER, Message.error("Invalid message type."));
         };
 
@@ -228,7 +228,7 @@ public class ChessGameService {
     private StatusPair<Triple<Session, UserAccount, GameParameters>> locateOpponentForGame(final UserAccount firstPlayer,
                                                                                            final GameParameters gameParameters) {
         for (var entry : sessionStorage.waitingUsers()) {
-            final Queue<Triple<Session, UserAccount, GameParameters>> queue = entry.getValue();
+            final Deque<Triple<Session, UserAccount, GameParameters>> queue = entry.getValue();
             for (var opponentTriple : queue) {
                 final UserAccount potentialOpponent = opponentTriple.getSecond();
                 final GameParameters gameParametersOfPotentialOpponent = opponentTriple.getThird();

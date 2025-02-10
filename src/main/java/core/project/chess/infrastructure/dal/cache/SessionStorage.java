@@ -77,6 +77,13 @@ public class SessionStorage {
         gameSessions.put(game.getChessGameId(), Pair.of(game, new CopyOnWriteArraySet<>(sessions)));
     }
 
+    public void addSessionToGame(UUID gameId, Session session) {
+        gameSessions.computeIfPresent(gameId, (id, pair) -> {
+            pair.getSecond().add(session);
+            return pair;
+        });
+    }
+
     public boolean containsGame(UUID gameUuid) {
         return gameSessions.containsKey(gameUuid);
     }

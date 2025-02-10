@@ -13,7 +13,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.Objects;
 
 @ApplicationScoped
@@ -52,12 +51,11 @@ public class GameFunctionalityService {
         return !sameColor;
     }
 
-    public Pair<MessageAddressee, Message> move(Message move, Pair<String, Session> usernameSession, Pair<ChessGame, HashSet<Session>> gameSessions) {
+    public Pair<MessageAddressee, Message> move(Message move, Pair<String, Session> usernameSession, ChessGame chessGame) {
         final String username = usernameSession.getFirst();
-        final ChessGame cg = gameSessions.getFirst();
 
         try {
-            cg.makeMovement(
+            chessGame.makeMovement(
                     username,
                     move.from(),
                     move.to(),
@@ -67,18 +65,18 @@ public class GameFunctionalityService {
             return Pair.of(MessageAddressee.ONLY_ADDRESSER,
                     Message.builder(MessageType.ERROR)
                     .message("Invalid chess movement.")
-                    .gameID(cg.getChessGameId().toString())
+                    .gameID(chessGame.getChessGameId().toString())
                     .build()
             );
         }
 
-        String remainingTime = remainingTimeAsString(cg);
+        String remainingTime = remainingTimeAsString(chessGame);
 
         return Pair.of(MessageAddressee.FOR_ALL,
                 Message.builder(MessageType.FEN_PGN)
-                .gameID(cg.getChessGameId().toString())
-                .FEN(cg.getChessBoard().actualRepresentationOfChessBoard())
-                .PGN(cg.getChessBoard().pgn())
+                .gameID(chessGame.getChessGameId().toString())
+                .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                .PGN(chessGame.getChessBoard().pgn())
                 .timeLeft(remainingTime)
                 .build()
         );
@@ -104,12 +102,12 @@ public class GameFunctionalityService {
         return wTime + " | " + bTime;
     }
 
-    public Pair<MessageAddressee, Message> chat(Message message, Pair<String, Session> usernameSession, Pair<ChessGame, HashSet<Session>> gameAndSessions) {
+    public Pair<MessageAddressee, Message> chat(Message message, Pair<String, Session> usernameSession, ChessGame chessGame) {
         final String username = usernameSession.getFirst();
 
         try {
             ChatMessage chatMsg = new ChatMessage(message.message());
-            gameAndSessions.getFirst().addChatMessage(username, chatMsg);
+            chessGame.addChatMessage(username, chatMsg);
 
             final Message msg = Message.builder(MessageType.MESSAGE)
                     .message(chatMsg.message())
@@ -119,49 +117,47 @@ public class GameFunctionalityService {
         } catch (IllegalArgumentException | NullPointerException e) {
             Message errorMessage = Message.builder(MessageType.ERROR)
                     .message("Invalid message.")
-                    .gameID(gameAndSessions.getFirst().getChessGameId().toString())
+                    .gameID(chessGame.getChessGameId().toString())
                     .build();
 
             return Pair.of(MessageAddressee.ONLY_ADDRESSER, errorMessage);
         }
     }
 
-    public Pair<MessageAddressee, Message> returnOfMovement(Pair<String, Session> usernameAndSession, Pair<ChessGame, HashSet<Session>> gameAndSessions) {
+    public Pair<MessageAddressee, Message> returnOfMovement(Pair<String, Session> usernameAndSession, ChessGame chessGame) {
         final String username = usernameAndSession.getFirst();
-        final ChessGame cg = gameAndSessions.getFirst();
 
         try {
-            cg.returnMovement(username);
+            chessGame.returnMovement(username);
         } catch (IllegalArgumentException | IllegalStateException e) {
             Message message = Message.builder(MessageType.ERROR)
                     .message("Can`t return a move.")
-                    .gameID(cg.getChessGameId().toString())
+                    .gameID(chessGame.getChessGameId().toString())
                     .build();
 
             return Pair.of(MessageAddressee.ONLY_ADDRESSER, message);
         }
 
-        if (!cg.isLastMoveWasUndo()) {
+        if (!chessGame.isLastMoveWasUndo()) {
             Message message = Message.builder(MessageType.ERROR)
                     .message("Player {%s} requested for move returning.".formatted(username))
-                    .gameID(cg.getChessGameId().toString())
+                    .gameID(chessGame.getChessGameId().toString())
                     .build();
 
             return Pair.of(MessageAddressee.FOR_ALL, message);
         }
 
         final Message message = Message.builder(MessageType.FEN_PGN)
-                .gameID(cg.getChessGameId().toString())
-                .FEN(cg.getChessBoard().actualRepresentationOfChessBoard())
-                .PGN(cg.getChessBoard().pgn())
+                .gameID(chessGame.getChessGameId().toString())
+                .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                .PGN(chessGame.getChessBoard().pgn())
                 .build();
 
         return Pair.of(MessageAddressee.FOR_ALL, message);
     }
 
-    public Pair<MessageAddressee, Message> resignation(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, HashSet<Session>> gameAndSessions) {
+    public Pair<MessageAddressee, Message> resignation(final Pair<String, Session> usernameAndSession, final ChessGame chessGame) {
         final String username = usernameAndSession.getFirst();
-        final ChessGame chessGame = gameAndSessions.getFirst();
 
         try {
             chessGame.resignation(username);
@@ -182,9 +178,8 @@ public class GameFunctionalityService {
         }
     }
 
-    public Pair<MessageAddressee, Message> threeFold(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, HashSet<Session>> gameAndSessions) {
+    public Pair<MessageAddressee, Message> threeFold(final Pair<String, Session> usernameAndSession, final ChessGame chessGame) {
         final String username = usernameAndSession.getFirst();
-        final ChessGame chessGame = gameAndSessions.getFirst();
 
         try {
             chessGame.endGameByThreeFold(username);
@@ -205,9 +200,8 @@ public class GameFunctionalityService {
         return Pair.of(MessageAddressee.FOR_ALL, message);
     }
 
-    public Pair<MessageAddressee, Message> agreement(final Pair<String, Session> usernameAndSession, final Pair<ChessGame, HashSet<Session>> gameAndSessions) {
+    public Pair<MessageAddressee, Message> agreement(final Pair<String, Session> usernameAndSession, final ChessGame chessGame) {
         final String username = usernameAndSession.getFirst();
-        final ChessGame chessGame = gameAndSessions.getFirst();
 
         try {
             chessGame.agreement(username);
