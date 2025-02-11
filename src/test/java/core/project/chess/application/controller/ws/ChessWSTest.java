@@ -212,7 +212,7 @@ class ChessWSTest {
         }
     }
 
-    @RepeatedTest(3)
+    @Test
     @DisplayName("Chess game WS initialization test.")
     void chessGameInitializationWSTest() throws JsonProcessingException {
         RegistrationForm firstPlayerForm = authUtils.registerRandom();

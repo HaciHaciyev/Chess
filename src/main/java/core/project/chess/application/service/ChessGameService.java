@@ -534,10 +534,14 @@ public class ChessGameService {
         public void run() {
             while (isRunning.get()) {
                 game.gameResult().ifPresent(gameResult -> {
-                    Log.infof("Game is over by result {%s}", gameResult);
+                    String message = "Game is over by result {%s}".formatted(gameResult);
+                    Log.info(message);
                     Log.debugf("Removing game {%s}", game.getChessGameId());
                     for (Session session : sessionStorage.getGameSessions(game.getChessGameId())) {
-                        sendMessage(session, Message.info("Game is over by result {%s}".formatted(gameResult)));
+                        sendMessage(session, Message.builder(MessageType.GAME_ENDED)
+                                .message(message)
+                                .gameID(game.getChessGameId().toString())
+                                .build());
                     }
                     sessionStorage.removeGame(game.getChessGameId());
 
