@@ -18,7 +18,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class ChessGameFactory {
 
-    public Result<ChessGame, IllegalArgumentException> createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
+    public Result<ChessGame, Exception> createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
                                                                                final UserAccount secondPlayer, final GameParameters secondGameParameters) {
         final ChessBoard chessBoard;
         boolean isCasualGame = gameParameters.isCasualGame();
@@ -35,7 +35,7 @@ public class ChessGameFactory {
                     chessBoard = ChessBoard.fromPosition(chessNotations.orElseThrow().getSecond());
                 }
             }
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             Log.error("Can`t create chess game.", e.getMessage());
             return Result.failure(e);
         }

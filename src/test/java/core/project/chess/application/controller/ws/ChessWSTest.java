@@ -157,28 +157,7 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(3));
 
-            Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                    .partner(blackForm.username())
-                    .message("br")
-                    .build();
-
-            sendMessage(wMessagingSession, whiteForm.username(), wPartnershipRequest);
-
-            Thread.sleep(Duration.ofSeconds(3));
-
-            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_REQUEST && m.message().contains("invite you"));
-
-            Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                    .partner(whiteForm.username())
-                    .message("brrr")
-                    .build();
-
-            sendMessage(bMessagingSession, blackForm.username(), bPartnershipRequest);
-
-            Thread.sleep(Duration.ofSeconds(3));
-
-            assertThat(USER_MESSAGES.user1()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
-            assertThat(USER_MESSAGES.user2()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
+            addPartnership(blackForm, wMessagingSession, whiteForm, bMessagingSession);
 
             String wName = whiteForm.username();
             String bName = blackForm.username();
@@ -258,20 +237,210 @@ class ChessWSTest {
 
     @Test
     @DisplayName("Test game initialization via FEN")
-    void testGameInitWithFEN() {
+    void testGameInitWithFEN() throws JsonProcessingException {
+        RegistrationForm firstPlayerForm = authUtils.registerRandom();
+        authUtils.enableAccount(firstPlayerForm);
+        String firstPlayerToken = authUtils.login(firstPlayerForm);
 
+        RegistrationForm secondPlayerForm = authUtils.registerRandom();
+        authUtils.enableAccount(secondPlayerForm);
+        String secondPlayerToken = authUtils.login(secondPlayerForm);
+
+        String firstPlayer = firstPlayerForm.username();
+        String secondPlayer = secondPlayerForm.username();
+
+        URI pathForFirstPlayerMessagingSession = authUtils.serverURIWithToken(userSessionURI, firstPlayerToken);
+        URI pathForSecondPlayerMessagingSession = authUtils.serverURIWithToken(userSessionURI, secondPlayerToken);
+        URI pathForFirstPlayerSession = authUtils.serverURIWithToken(serverURI, firstPlayerToken);
+        URI pathForSecondPlayerSession = authUtils.serverURIWithToken(serverURI, secondPlayerToken);
+        addLoggingForWSPaths(pathForFirstPlayerMessagingSession, pathForSecondPlayerMessagingSession,
+                pathForFirstPlayerSession, pathForSecondPlayerSession);
+
+        try (Session firstPlayerMessagingSession = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, pathForFirstPlayerMessagingSession);
+
+             Session secondPlayerMessagingSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, pathForSecondPlayerMessagingSession);
+
+             Session firstPlayerSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, pathForFirstPlayerSession);
+
+             Session secondPlayerSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, pathForSecondPlayerSession)
+        ) {
+            addMessageHandlers(firstPlayerMessagingSession, secondPlayer, secondPlayerMessagingSession, firstPlayer, firstPlayerSession, secondPlayerSession);
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            addPartnership(secondPlayerForm, firstPlayerMessagingSession, firstPlayerForm, secondPlayerMessagingSession);
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            sendMessage(firstPlayerSession, Message.builder(MessageType.GAME_INIT)
+                    .FEN("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3")
+                    .partner(secondPlayer)
+                    .build()
+            );
+
+            await().atMost(Duration.ofSeconds(1)).until(() -> USER_MESSAGES.user2()
+                    .stream()
+                    .anyMatch(message -> {
+                        if (message.type().equals(MessageType.PARTNERSHIP_REQUEST)) {
+                            Log.infof("Message: %s", message);
+                        }
+                        return message.type().equals(MessageType.PARTNERSHIP_REQUEST) &&
+                                message.message().contains(firstPlayer) &&
+                                message.FEN().equals("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3");
+                    })
+            );
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            sendMessage(secondPlayerSession, Message.builder(MessageType.GAME_INIT)
+                    .partner(firstPlayer)
+                    .respond(Message.Respond.YES)
+                    .build()
+            );
+
+            Thread.sleep(Duration.ofSeconds(5));
+
+            await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
+                    .stream()
+                    .anyMatch(message -> {
+                        if (!message.type().equals(MessageType.GAME_START_INFO) && !message.type().equals(MessageType.FEN_PGN)) {
+                            return false;
+                        }
+
+                        Log.infof("Message: %s", message);
+                        if (message.type().equals(MessageType.FEN_PGN)) {
+                            return message.FEN().equals("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3");
+                        }
+                        return true;
+                    })
+            );
+
+            await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user2()
+                    .stream()
+                    .anyMatch(message -> {
+                        if (!message.type().equals(MessageType.GAME_START_INFO) && !message.type().equals(MessageType.FEN_PGN)) {
+                            return false;
+                        }
+
+                        Log.infof("Message: %s", message);
+                        if (message.type().equals(MessageType.FEN_PGN)) {
+                            return message.FEN().equals("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3");
+                        }
+                        return true;
+                    })
+            );
+        } catch (DeploymentException | IOException | InterruptedException e) {
+            Log.errorf("Error in tests for chess game initialization through web socket sessions: %s", e.getLocalizedMessage());
+        }
     }
 
     @Test
     @DisplayName("Test game initialization via PGN")
-    void testGameInitWithPGN() {
+    void testGameInitWithPGN() throws JsonProcessingException {
+        RegistrationForm firstPlayerForm = authUtils.registerRandom();
+        authUtils.enableAccount(firstPlayerForm);
+        String firstPlayerToken = authUtils.login(firstPlayerForm);
 
-    }
+        RegistrationForm secondPlayerForm = authUtils.registerRandom();
+        authUtils.enableAccount(secondPlayerForm);
+        String secondPlayerToken = authUtils.login(secondPlayerForm);
 
-    @Test
-    @DisplayName("Test full game functionalities")
-    void testFullGameFunctionalities() {
+        String firstPlayer = firstPlayerForm.username();
+        String secondPlayer = secondPlayerForm.username();
 
+        URI pathForFirstPlayerMessagingSession = authUtils.serverURIWithToken(userSessionURI, firstPlayerToken);
+        URI pathForSecondPlayerMessagingSession = authUtils.serverURIWithToken(userSessionURI, secondPlayerToken);
+        URI pathForFirstPlayerSession = authUtils.serverURIWithToken(serverURI, firstPlayerToken);
+        URI pathForSecondPlayerSession = authUtils.serverURIWithToken(serverURI, secondPlayerToken);
+        addLoggingForWSPaths(pathForFirstPlayerMessagingSession, pathForSecondPlayerMessagingSession,
+                pathForFirstPlayerSession, pathForSecondPlayerSession);
+
+        try (Session firstPlayerMessagingSession = ContainerProvider
+                .getWebSocketContainer()
+                .connectToServer(WSClient.class, pathForFirstPlayerMessagingSession);
+
+             Session secondPlayerMessagingSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, pathForSecondPlayerMessagingSession);
+
+             Session firstPlayerSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, pathForFirstPlayerSession);
+
+             Session secondPlayerSession = ContainerProvider
+                     .getWebSocketContainer()
+                     .connectToServer(WSClient.class, pathForSecondPlayerSession)
+        ) {
+            addMessageHandlers(firstPlayerMessagingSession, secondPlayer, secondPlayerMessagingSession, firstPlayer, firstPlayerSession, secondPlayerSession);
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            addPartnership(secondPlayerForm, firstPlayerMessagingSession, firstPlayerForm, secondPlayerMessagingSession);
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            sendMessage(firstPlayerSession, Message.builder(MessageType.GAME_INIT)
+                    .PGN("1. e2-e4 e7-e5 ")
+                    .partner(secondPlayer)
+                    .build()
+            );
+
+            await().atMost(Duration.ofSeconds(1)).until(() -> USER_MESSAGES.user2()
+                    .stream()
+                    .anyMatch(message -> {
+                        if (message.type().equals(MessageType.PARTNERSHIP_REQUEST)) {
+                            Log.infof("Message: %s", message);
+                        }
+                        return message.type().equals(MessageType.PARTNERSHIP_REQUEST) &&
+                                message.message().contains(firstPlayer) &&
+                                message.PGN().equals("1. e2-e4 e7-e5 ");
+                    })
+            );
+
+            Thread.sleep(Duration.ofSeconds(1));
+
+            sendMessage(secondPlayerSession, Message.builder(MessageType.GAME_INIT)
+                    .partner(firstPlayer)
+                    .respond(Message.Respond.YES)
+                    .build()
+            );
+
+            Thread.sleep(Duration.ofSeconds(5));
+
+            await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
+                    .stream()
+                    .anyMatch(message -> {
+                        if (!message.type().equals(MessageType.GAME_START_INFO) && !message.type().equals(MessageType.FEN_PGN)) {
+                            return false;
+                        }
+
+                        Log.infof("Message: %s", message);
+                        return true;
+                    })
+            );
+
+            await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user2()
+                    .stream()
+                    .anyMatch(message -> {
+                        if (!message.type().equals(MessageType.GAME_START_INFO) && !message.type().equals(MessageType.FEN_PGN)) {
+                            return false;
+                        }
+
+                        Log.infof("Message: %s", message);
+                        return true;
+                    })
+            );
+        } catch (DeploymentException | IOException | InterruptedException e) {
+            Log.errorf("Error in tests for chess game initialization through web socket sessions: %s", e.getLocalizedMessage());
+        }
     }
 
     private void chessGameInitializationWSTestProcess(Session firstPlayerMessagingSession, String secondPlayer, Session secondPlayerMessagingSession,
@@ -699,12 +868,12 @@ class ChessWSTest {
                                     String firstPlayer, Session firstPlayerSession, Session secondPlayerSession) throws InterruptedException {
 
         firstPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User %s Received Message in Messaging Service: %s.", firstPlayer, message);
+            Log.infof("User1 %s Received Message in Messaging Service: %s.", firstPlayer, message);
             USER_MESSAGES.user1().offer(message);
         });
 
         secondPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User %s Received Message in Messaging Service: %s, from user %s.", secondPlayer, message);
+            Log.infof("User2 %s Received Message in Messaging Service: %s, from user %s.", secondPlayer, message);
             USER_MESSAGES.user2().offer(message);
         });
 
@@ -762,5 +931,30 @@ class ChessWSTest {
                             return true;
                         })
         );
+    }
+
+    private void addPartnership(RegistrationForm blackForm, Session wMessagingSession, RegistrationForm whiteForm, Session bMessagingSession) throws InterruptedException {
+        Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(blackForm.username())
+                .message("br")
+                .build();
+
+        sendMessage(wMessagingSession, whiteForm.username(), wPartnershipRequest);
+
+        Thread.sleep(Duration.ofSeconds(3));
+
+        assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_REQUEST && m.message().contains("invite you"));
+
+        Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(whiteForm.username())
+                .message("brrr")
+                .build();
+
+        sendMessage(bMessagingSession, blackForm.username(), bPartnershipRequest);
+
+        Thread.sleep(Duration.ofSeconds(3));
+
+        assertThat(USER_MESSAGES.user1()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
+        assertThat(USER_MESSAGES.user2()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
     }
 }

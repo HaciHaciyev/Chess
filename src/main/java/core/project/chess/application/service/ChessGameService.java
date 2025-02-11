@@ -364,6 +364,7 @@ public class ChessGameService {
             ));
         }
 
+        Log.info("Starting a partnership game.");
         startStandardChessGame(
                 Triple.of(session, addresserAccount, addresserGameParameters),
                 Triple.of(addresseeSession.orElseThrow().getFirst(), addresseeAccount, addresseeGameParameters),
@@ -404,7 +405,7 @@ public class ChessGameService {
         UserAccount secondPlayer = secondPlayerData.getSecond();
         GameParameters secondGameParameters = secondPlayerData.getThird();
 
-        Result<ChessGame, IllegalArgumentException> chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
+        Result<ChessGame, Exception> chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
                 firstGameParameters,
                 secondPlayer,
                 secondGameParameters
