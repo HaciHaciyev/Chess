@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static core.project.chess.domain.subdomains.chess.entities.ChessGameTest.executeGameFromPGN;
+import static core.project.chess.domain.entities.ChessGameTest.executeGameFromPGN;
 
 /**
  * A utility class for executing chess games from PGN files using a fixed thread pool.

@@ -1,4 +1,4 @@
-package core.project.chess.domain.subdomains.chess.entities;
+package core.project.chess.domain.entities;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;

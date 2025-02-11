@@ -1,4 +1,4 @@
-package core.project.chess.domain.subdomains.user.rating.util;
+package core.project.chess.domain.user.util;
 
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
 import core.project.chess.domain.user.value_objects.Rating;

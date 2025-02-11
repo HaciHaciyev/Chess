@@ -7,6 +7,7 @@ import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.FromFEN;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import io.quarkus.logging.Log;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -618,8 +619,9 @@ public class ChessNotationsValidator {
     }
 
     public static List<AlgebraicNotation> algebraicNotationsOf(String pgn) {
+        Log.infof("PGN: %s", pgn);
         final List<AlgebraicNotation> algebraicNotations = new ArrayList<>();
-        if (Objects.nonNull(pgn) || pgn.isBlank()) {
+        if (Objects.isNull(pgn) || pgn.isBlank()) {
             return algebraicNotations;
         }
 
