@@ -9,6 +9,7 @@ import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.infrastructure.utilities.containers.Pair;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 
@@ -55,6 +56,7 @@ public class GameFunctionalityService {
         final String username = usernameSession.getFirst();
 
         try {
+            Log.infof("%s moving from %s to %s", username, move.from(), move.to());
             chessGame.makeMovement(
                     username,
                     move.from(),
@@ -62,16 +64,20 @@ public class GameFunctionalityService {
                     Objects.isNull(move.inCaseOfPromotion()) ? null : AlgebraicNotation.fromSymbol(move.inCaseOfPromotion())
             );
         } catch (IllegalArgumentException | IllegalStateException e) {
+            Log.infof("Movement failed: %s.", e.getMessage());
             return Pair.of(MessageAddressee.ONLY_ADDRESSER,
                     Message.builder(MessageType.ERROR)
-                    .message("Invalid chess movement.")
+                    .message("Invalid chess movement: %s".formatted(e.getMessage()))
                     .gameID(chessGame.getChessGameId().toString())
                     .build()
             );
         }
 
+        Log.info("Count remaining time.");
         String remainingTime = remainingTimeAsString(chessGame);
 
+        Log.infof("FEN: %s.", chessGame.getChessBoard().actualRepresentationOfChessBoard());
+        Log.infof("PGN: %s.", chessGame.getChessBoard().pgn());
         return Pair.of(MessageAddressee.FOR_ALL,
                 Message.builder(MessageType.FEN_PGN)
                 .gameID(chessGame.getChessGameId().toString())
@@ -83,6 +89,10 @@ public class GameFunctionalityService {
     }
 
     private String remainingTimeAsString(ChessGame cg) {
+        if (cg.getChessBoard().countOfMovement() == 0 || cg.getChessBoard().countOfMovement() == 1) {
+            return "W -> 02:59:59 | B -> 03:00:00";
+        }
+
         Duration whiteRemaining = cg.remainingTimeForWhite();
 
         long wHH = whiteRemaining.toHours();
