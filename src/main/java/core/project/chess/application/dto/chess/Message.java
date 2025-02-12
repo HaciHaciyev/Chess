@@ -31,7 +31,8 @@ public record Message(MessageType type,
                       String message,
                       Time time,
                       Boolean isCasualGame,
-                      Respond respond) {
+                      Respond respond,
+                      Boolean isThreeFoldActive) {
 
     private static final Pattern PROMOTION_PATTERN = Pattern.compile("^[QRNBqrnb]$");
     private static final String INVITATION_MESSAGE = """
@@ -190,6 +191,8 @@ public record Message(MessageType type,
         private Boolean isCasualGame;
         private Respond respond;
 
+        private Boolean isThreeFoldActive;
+
         public Builder(MessageType type) {
             this.type = Objects.requireNonNull(type, "Message type must not be null.");
         }
@@ -279,10 +282,15 @@ public record Message(MessageType type,
             return this;
         }
 
+        public Builder isThreeFoldActive(Boolean threeFoldActive) {
+            isThreeFoldActive = threeFoldActive;
+            return this;
+        }
+
         public Message build() {
             return new Message(type, gameID, FEN, PGN, whitePlayerUsername, blackPlayerUsername,
                     whitePlayerRating, blackPlayerRating, timeLeft, color, partner,
-                    from, to, inCaseOfPromotion, message, time, isCasualGame, respond);
+                    from, to, inCaseOfPromotion, message, time, isCasualGame, respond, isThreeFoldActive);
         }
     }
 

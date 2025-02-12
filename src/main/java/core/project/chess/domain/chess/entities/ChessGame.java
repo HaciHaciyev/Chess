@@ -205,6 +205,10 @@ public class ChessGame {
             }
 
             switchPlayersTurn();
+            if (chessBoard.isThreeFoldActive()) {
+                this.isThreeFoldActive = true;
+            }
+
             return UndoMoveResult.SUCCESSFUL_UNDO;
         }
 

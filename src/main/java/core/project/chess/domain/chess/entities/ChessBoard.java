@@ -377,6 +377,11 @@ public class ChessBoard {
                 .toString();
     }
 
+    public boolean isThreeFoldActive() {
+        final String currentPositionHash = this.toString();
+        return !isPureChess && hashCodeOfBoard.get(currentPositionHash) == 3;
+    }
+
     /**
      * Generates a Portable Game Notation (PGN) string representation of the chess game.
      *
