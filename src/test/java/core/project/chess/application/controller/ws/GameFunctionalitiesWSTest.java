@@ -164,6 +164,7 @@ class GameFunctionalitiesWSTest {
     private void functionalities(Session wChessSession, String wName, String gameID, Session bChessSession, String bName) throws InterruptedException {
         testGameChat(wChessSession, wName, gameID, bChessSession, bName);
         testMoveAndUndo(wChessSession, wName, gameID, bChessSession, bName);
+        testAgreement(wChessSession, wName, gameID, bChessSession, bName);
     }
 
     private void testGameChat(Session wChessSession, String wName, String gameID, Session bChessSession, String bName) {
@@ -266,6 +267,25 @@ class GameFunctionalitiesWSTest {
 
         Thread.sleep(Duration.ofSeconds(1));
         sendMessage(wSession, wName, Message.move(gameID, Coordinate.e1, Coordinate.g1));
+    }
+
+    private void testAgreement(Session wChessSession, String wName, String gameID, Session bChessSession, String bName) throws InterruptedException {
+        Thread.sleep(Duration.ofSeconds(1));
+
+        sendMessage(wChessSession, wName, Message.builder(MessageType.AGREEMENT).gameID(gameID).build());
+        await().atMost(Duration.ofSeconds(1)).until(() -> CHESS_MESSAGES.user2
+                .stream()
+                .anyMatch(message -> message.type().equals(MessageType.AGREEMENT))
+        );
+        sendMessage(bChessSession, bName, Message.builder(MessageType.AGREEMENT).gameID(gameID).build());
+
+        await().atMost(Duration.ofSeconds(1)).until(() -> CHESS_MESSAGES.user1
+                .stream()
+                .anyMatch(message -> message.type().equals(MessageType.GAME_ENDED) &&
+                        message.gameID().equals(gameID) &&
+                        message.message() != null &&
+                        message.message().contains("Game is ended by agreement"))
+        );
     }
 
     private void addPartnership(RegistrationForm blackForm, Session wMessagingSession,
