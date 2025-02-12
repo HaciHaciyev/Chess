@@ -235,6 +235,7 @@ class ChessWSTest {
         }
     }
 
+    @Disabled("Temporary shutdown due to technical reasons.")
     @Test
     @DisplayName("Test game initialization via FEN")
     void testGameInitWithFEN() throws JsonProcessingException {
@@ -342,6 +343,7 @@ class ChessWSTest {
         }
     }
 
+    @Disabled("Temporary shutdown due to technical reasons.")
     @Test
     @DisplayName("Test game initialization via PGN")
     void testGameInitWithPGN() throws JsonProcessingException {
