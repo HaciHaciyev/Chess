@@ -4,6 +4,7 @@ import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.MessageAddressee;
+import core.project.chess.domain.chess.enumerations.UndoMoveResult;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.chess.value_objects.GameParameters;
@@ -136,9 +137,10 @@ public class GameFunctionalityService {
 
     public Pair<MessageAddressee, Message> returnOfMovement(Pair<String, Session> usernameAndSession, ChessGame chessGame) {
         final String username = usernameAndSession.getFirst();
+        final UndoMoveResult undoMoveResult;
 
         try {
-            chessGame.returnMovement(username);
+            undoMoveResult = chessGame.returnMovement(username);
         } catch (IllegalArgumentException | IllegalStateException e) {
             Message message = Message.builder(MessageType.ERROR)
                     .message("Can`t return a move.")
@@ -148,22 +150,33 @@ public class GameFunctionalityService {
             return Pair.of(MessageAddressee.ONLY_ADDRESSER, message);
         }
 
-        if (!chessGame.isLastMoveWasUndo()) {
-            Message message = Message.builder(MessageType.ERROR)
-                    .message("Player {%s} requested for move returning.".formatted(username))
-                    .gameID(chessGame.getChessGameId().toString())
-                    .build();
+        return switch (undoMoveResult) {
+            case SUCCESSFUL_UNDO -> {
+                final Message message = Message.builder(MessageType.FEN_PGN)
+                        .gameID(chessGame.getChessGameId().toString())
+                        .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                        .PGN(chessGame.getChessBoard().pgn())
+                        .build();
 
-            return Pair.of(MessageAddressee.FOR_ALL, message);
-        }
+                yield Pair.of(MessageAddressee.FOR_ALL, message);
+            }
+            case FAILED_UNDO -> {
+                Message message = Message.builder(MessageType.ERROR)
+                        .message("Can`t return a move.")
+                        .gameID(chessGame.getChessGameId().toString())
+                        .build();
 
-        final Message message = Message.builder(MessageType.FEN_PGN)
-                .gameID(chessGame.getChessGameId().toString())
-                .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
-                .PGN(chessGame.getChessBoard().pgn())
-                .build();
+                yield Pair.of(MessageAddressee.ONLY_ADDRESSER, message);
+            }
+            case UNDO_REQUESTED -> {
+                Message message = Message.builder(MessageType.RETURN_MOVE)
+                        .message("Player {%s} requested for move returning.".formatted(username))
+                        .gameID(chessGame.getChessGameId().toString())
+                        .build();
 
-        return Pair.of(MessageAddressee.FOR_ALL, message);
+                yield Pair.of(MessageAddressee.FOR_ALL, message);
+            }
+        };
     }
 
     public Pair<MessageAddressee, Message> resignation(final Pair<String, Session> usernameAndSession, final ChessGame chessGame) {

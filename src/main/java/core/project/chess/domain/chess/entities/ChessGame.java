@@ -1,10 +1,7 @@
 package core.project.chess.domain.chess.entities;
 
 import core.project.chess.domain.chess.entities.ChessBoard.Operations;
-import core.project.chess.domain.chess.enumerations.Color;
-import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.domain.chess.enumerations.GameResult;
-import core.project.chess.domain.chess.enumerations.GameResultMessage;
+import core.project.chess.domain.chess.enumerations.*;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.util.ChessCountdownTimer;
@@ -38,7 +35,6 @@ public class ChessGame {
     private final ChessCountdownTimer blackTimer;
 
     private Color playersTurn;
-    private boolean lastMoveWasUndo;
     private boolean isThreeFoldActive;
     private AgreementPair agreementPair;
     private AgreementPair returnOfMovement;
@@ -72,7 +68,6 @@ public class ChessGame {
         this.chessGameId = chessGameId;
         this.agreementPair = new AgreementPair(null, null);
         this.returnOfMovement = new AgreementPair(null, null);
-        this.lastMoveWasUndo = false;
         this.chessBoard = chessBoard;
         this.playersTurn = WHITE;
         this.isThreeFoldActive = false;
@@ -171,7 +166,6 @@ public class ChessGame {
 
         final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
 
-        this.lastMoveWasUndo = false;
         this.isThreeFoldActive = message.equals(GameResultMessage.RuleOf3EqualsPositions);
 
         resetAgreements();
@@ -195,7 +189,7 @@ public class ChessGame {
         return message;
     }
 
-    public void returnMovement(final String username) {
+    public UndoMoveResult returnMovement(final String username) {
         Objects.requireNonNull(username);
         Color color = validateUsername(username);
 
@@ -204,18 +198,18 @@ public class ChessGame {
         }
 
         if (attemptToUndoMovement(color)) {
-            this.lastMoveWasUndo = true;
             this.returnOfMovement = new AgreementPair(null, null);
 
             if (!chessBoard.returnOfTheMovement()) {
-                throw new IllegalArgumentException("Can`t return the move.");
+                return UndoMoveResult.FAILED_UNDO;
             }
 
             switchPlayersTurn();
-            return;
+            return UndoMoveResult.SUCCESSFUL_UNDO;
         }
 
         setReturnOfMovementAgreement(color, username);
+        return UndoMoveResult.UNDO_REQUESTED;
     }
 
     private boolean attemptToUndoMovement(Color color) {
