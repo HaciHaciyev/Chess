@@ -822,25 +822,25 @@ public class ChessBoard {
     }
 
     /**
-     * Retrieves the pair of coordinates representing a castling move.
+     * Retrieves the pair of coordinates representing a castling move for ONLY Undo move.
      *
      * @param castle The type of castling move (short or long).
      * @return A Pair of Coordinates representing the castling move.
      */
-    private Pair<Coordinate, Coordinate> castlingCoordinates(final AlgebraicNotation.Castle castle) {
+    private Pair<Coordinate, Coordinate> castlingCoordinatesForUndoMove(final AlgebraicNotation.Castle castle) {
         final boolean shortCastling = castle.equals(AlgebraicNotation.Castle.SHORT_CASTLING);
         if (shortCastling) {
             if (figuresTurn.equals(WHITE)) {
-                return Pair.of(Coordinate.e1, Coordinate.h1);
+                return Pair.of(Coordinate.e8, Coordinate.g8);
             } else {
-                return Pair.of(Coordinate.e8, Coordinate.h8);
+                return Pair.of(Coordinate.e1, Coordinate.g1);
             }
         }
 
         if (figuresTurn.equals(WHITE)) {
-            return Pair.of(Coordinate.e1, Coordinate.a1);
+            return Pair.of(Coordinate.e8, Coordinate.c8);
         } else {
-            return Pair.of(Coordinate.e1, Coordinate.a8);
+            return Pair.of(Coordinate.e1, Coordinate.c1);
         }
     }
 
@@ -1306,7 +1306,7 @@ public class ChessBoard {
      * @param currentPositionHash represent current position of
      */
     private void revertCastling(final AlgebraicNotation.Castle castle, final String currentPositionHash) {
-        final var movementPair = castlingCoordinates(castle);
+        final var movementPair = castlingCoordinatesForUndoMove(castle);
         final Coordinate from = movementPair.getFirst();
         final Coordinate to = movementPair.getSecond();
 
