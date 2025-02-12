@@ -165,6 +165,7 @@ class GameFunctionalitiesWSTest {
         testGameChat(wChessSession, wName, gameID, bChessSession, bName);
         testMoveAndUndo(wChessSession, wName, gameID, bChessSession, bName);
         testAgreement(wChessSession, wName, gameID, bChessSession, bName);
+        testThreeFold(wChessSession, wName, bChessSession, bName);
     }
 
     private void testGameChat(Session wChessSession, String wName, String gameID, Session bChessSession, String bName) {
@@ -284,7 +285,88 @@ class GameFunctionalitiesWSTest {
                 .anyMatch(message -> message.type().equals(MessageType.GAME_ENDED) &&
                         message.gameID().equals(gameID) &&
                         message.message() != null &&
-                        message.message().contains("Game is ended by agreement"))
+                        (message.message().contains("Game is ended by agreement") || message.message().contains("Game is over by result {DRAW}")))
+        );
+    }
+
+    private void testThreeFold(Session wSession, String wName, Session bSession, String bName) throws InterruptedException {
+        Thread.sleep(Duration.ofSeconds(1));
+
+        CHESS_MESSAGES.user1.clear();
+        Thread.sleep(Duration.ofSeconds(1));
+        CHESS_MESSAGES.user2.clear();
+        Thread.sleep(Duration.ofSeconds(1));
+
+        sendMessage(wSession, wName, Message.builder(MessageType.GAME_INIT)
+                .color(Color.WHITE)
+                .partner(bName)
+                .time(ChessGame.Time.RAPID)
+                .build());
+
+        Thread.sleep(Duration.ofSeconds(1));
+
+        sendMessage(bSession, bName, Message.builder(MessageType.GAME_INIT)
+                .color(Color.BLACK)
+                .partner(wName)
+                .time(ChessGame.Time.RAPID)
+                .respond(Message.Respond.YES)
+                .build());
+
+        Thread.sleep(Duration.ofSeconds(5));
+
+        String gameID = extractGameID();
+
+        Thread.sleep(Duration.ofSeconds(1));
+
+        //1
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(wSession, wName, Message.move(gameID, Coordinate.e2, Coordinate.e4));
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(bSession, bName, Message.move(gameID, Coordinate.e7, Coordinate.e5));
+
+        //2
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(wSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f3));
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(bSession, bName, Message.move(gameID, Coordinate.b8, Coordinate.c6));
+
+        //3
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(wSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.g1));
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(bSession, bName, Message.move(gameID, Coordinate.c6, Coordinate.b8));
+
+        //4
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(wSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f3));
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(bSession, bName, Message.move(gameID, Coordinate.b8, Coordinate.c6));
+
+        //5
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(wSession, wName, Message.move(gameID, Coordinate.f3, Coordinate.g1));
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(bSession, bName, Message.move(gameID, Coordinate.c6, Coordinate.b8));
+
+        //6
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(wSession, wName, Message.move(gameID, Coordinate.g1, Coordinate.f3));
+        Thread.sleep(Duration.ofSeconds(1));
+        sendMessage(bSession, bName, Message.move(gameID, Coordinate.b8, Coordinate.c6));
+
+        await().atMost(Duration.ofSeconds(1)).until(() -> CHESS_MESSAGES.user1
+                .stream()
+                .anyMatch(message -> message.isThreeFoldActive() != null && message.isThreeFoldActive())
+        );
+
+        sendMessage(bSession, bName, Message.threefold(gameID));
+
+        await().atMost(Duration.ofSeconds(1)).until(() -> CHESS_MESSAGES.user1
+                .stream()
+                .anyMatch(message -> message.type().equals(MessageType.GAME_ENDED) &&
+                        message.gameID().equals(gameID) &&
+                        message.message() != null &&
+                        (message.message().contains("Game is ended by ThreeFold rule") || message.message().contains("Game is over by result {DRAW}")))
         );
     }
 
