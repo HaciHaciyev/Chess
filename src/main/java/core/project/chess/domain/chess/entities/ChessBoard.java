@@ -1325,6 +1325,7 @@ public class ChessBoard {
         }
 
         listOfAlgebraicNotations.removeLast();
+        fenRepresentationsOfBoard.removeLast();
 
         final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
         if (newValue == 0) {
