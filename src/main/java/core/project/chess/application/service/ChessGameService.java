@@ -408,7 +408,8 @@ public class ChessGameService {
         Result<ChessGame, Exception> chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
                 firstGameParameters,
                 secondPlayer,
-                secondGameParameters
+                secondGameParameters,
+                isPartnershipGame
         );
 
         if (!chessGame.success()) {
