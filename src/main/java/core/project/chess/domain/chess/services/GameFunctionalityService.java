@@ -102,7 +102,7 @@ public class GameFunctionalityService {
     }
 
     private String remainingTimeAsString(ChessGame cg) {
-        if (cg.getChessBoard().countOfMovement() == 0 || cg.getChessBoard().countOfMovement() == 1) {
+        if (cg.getChessBoard().countOfHalfMoves() == 0 || cg.getChessBoard().countOfHalfMoves() == 1) {
             return "W -> 02:59:59 | B -> 03:00:00";
         }
 

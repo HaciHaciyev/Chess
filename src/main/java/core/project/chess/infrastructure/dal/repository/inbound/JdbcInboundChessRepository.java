@@ -96,7 +96,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         final String arrayDefinition = "TEXT";
         jdbc.writeArrayOf(SAVE_CHESS_GAME_HISTORY,
             arrayDefinition, arrayIndex, chessGame.getChessBoard().arrayOfFEN(),
-            chessGame.getChessBoard().getChessBoardId().toString(),
+            chessGame.getChessBoard().ID().toString(),
             chessGame.getChessGameId().toString(),
             chessGame.getChessBoard().pgn()
         )

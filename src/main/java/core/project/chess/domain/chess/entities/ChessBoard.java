@@ -10,7 +10,6 @@ import core.project.chess.domain.chess.value_objects.FromFEN;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
-import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.util.*;
@@ -52,19 +51,34 @@ import static core.project.chess.domain.chess.enumerations.Color.WHITE;
  * 6. **Piece Validation**: The `ChessBoard` class delegates the validation of piece movements to the individual `Piece` implementations,
  *    ensuring that each piece type can enforce its own unique movement rules.
  * <p>
- * 7. **Chess Board Initialization**: The `standardInitializer()` method sets up the initial state of the chess board according to the standard chess rules,
- *    ensuring a consistent starting point for each game.
- *
+ * 7. **Chess Board Initialization**: The `standardInitializer()` method sets up the initial state of the chess board
+ *    according to the standard chess rules, ensuring a consistent starting point for each game.
+ *    The `ChessBoard` can also be initialized using FEN or PGN notation, allowing for custom board setups
+ *    and game continuation from specific positions. Additionally, it can be configured as `pureChess`,
+ *    which disables the following chess rules:
+ *      - insufficient mating material;
+ *      - threefold repetition rule;
+ *      - fifty-move rule.
  *
  * @author Hadzhyiev Hadzhy
- * @version 2.2
+ * @version 3.0
  */
 public class ChessBoard {
-    private final @Getter UUID chessBoardId;
+    private final UUID chessBoardId;
+
     private Color figuresTurn;
+
     private byte ruleOf50Moves;
     private byte countOfFullMoves;
+
+    /**
+     * Flag indicating whether the game is in "pure chess" mode, disabling certain chess rules:
+     * - insufficient mating material;
+     * - threefold repetition rule;
+     * - fifty-move rule.
+     */
     private final boolean isPureChess;
+
     private byte materialAdvantageOfWhite;
     private byte materialAdvantageOfBlack;
     private boolean validWhiteShortCasting;
@@ -73,19 +87,41 @@ public class ChessBoard {
     private boolean validBlackLongCasting;
     private Coordinate currentWhiteKingPosition;
     private Coordinate currentBlackKingPosition;
+
+    /**
+     * Map representing the current state of the board, where each coordinate is linked to a field.
+     * Field is a nested class of ChessBoard and contains fields such as coordinates and, if available, a chess piece.
+     */
     private final Map<Coordinate, Field> fieldMap;
+
+    /**
+     * Hash codes representing unique board positions for repetition detection.
+     * Similar to FEN representations, but eliminates move counting and the 50-move rule at the end of FEN.
+     * Necessary for counting identical positions on the board.
+     * It is MANDATORY to take into account that toString() returns exactly this so-called hashCodeОfBoard, and not FEN.
+     */
     private final Map<String, Byte> hashCodeOfBoard;
+
+    /**
+     * List of FEN representations of previous board states, used for game history tracking.
+     */
     private final ArrayList<String> fenRepresentationsOfBoard;
+
+    /**
+     * List of moves recorded in algebraic notation for game replay and analysis.
+     */
     private final List<AlgebraicNotation> listOfAlgebraicNotations;
+
     private final List<Piece> capturedWhitePieces = new ArrayList<>();
     private final List<Piece> capturedBlackPieces = new ArrayList<>();
-    private final @Getter(AccessLevel.PROTECTED) InitializationTYPE initializationTYPE;
+
+    private final InitializationType initializationType;
 
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
      *
      * @param chessBoardId        The unique identifier of the chess board.
-     * @param initializationTYPE  The type of initialization for the chess board.
+     * @param initializationType  The type of initialization for the chess board.
      * @param inCaseOfInitFromFEN The data for initialization of chess board from FEN.
      * @param isPureChess         The data which disables the following chess rules:
      *      - insufficient mating material;
@@ -94,17 +130,17 @@ public class ChessBoard {
      */
     private ChessBoard(
             final UUID chessBoardId,
-            final InitializationTYPE initializationTYPE,
+            final InitializationType initializationType,
             @Nullable final FromFEN inCaseOfInitFromFEN,
             final boolean isPureChess,
             @Nullable final List<AlgebraicNotation> listOfAlgebraicNotations
     ) {
         Objects.requireNonNull(chessBoardId);
-        Objects.requireNonNull(initializationTYPE);
+        Objects.requireNonNull(initializationType);
 
         this.chessBoardId = chessBoardId;
         this.isPureChess = isPureChess;
-        this.initializationTYPE = initializationTYPE;
+        this.initializationType = initializationType;
 
         this.ruleOf50Moves = 0;
         this.countOfFullMoves = 1;
@@ -113,7 +149,7 @@ public class ChessBoard {
         this.fenRepresentationsOfBoard = new ArrayList<>(10);
         this.hashCodeOfBoard = new HashMap<>(10, 0.75f);
 
-        if (InitializationTYPE.STANDARD.equals(initializationTYPE)) {
+        if (InitializationType.STANDARD.equals(initializationType)) {
             this.figuresTurn = WHITE;
             this.currentWhiteKingPosition = Coordinate.e1;
             this.currentBlackKingPosition = Coordinate.e8;
@@ -169,7 +205,7 @@ public class ChessBoard {
      * @return A new `ChessBoard` instance with the standard chess board initialization.
      */
     public static ChessBoard starndardChessBoard() {
-        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.STANDARD, null, false, null);
+        return new ChessBoard(UUID.randomUUID(), InitializationType.STANDARD, null, false, null);
     }
 
     /**
@@ -182,7 +218,25 @@ public class ChessBoard {
      *  @return A new `ChessBoard` instance with the standard chess board initialization.
      */
     public static ChessBoard pureChess() {
-        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.STANDARD, null, true, null);
+        return new ChessBoard(UUID.randomUUID(), InitializationType.STANDARD, null, true, null);
+    }
+
+    /**
+     * Factory method.
+     * Creates a new ChessBoard instance from a specific position defined by FEN notation.
+     *
+     * @param fen The FEN notation representing the current position of the board.
+     * @return A new ChessBoard instance initialized from the provided FEN notation.
+     *
+     * @throws IllegalArgumentException If the provided FEN notation are invalid.
+     */
+    public static ChessBoard fromPosition(final String fen) {
+        StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
+        if (!isValidFEN.status()) {
+            throw new IllegalArgumentException("Invalid FEN.");
+        }
+
+        return new ChessBoard(UUID.randomUUID(), InitializationType.DURING_THE_GAME, isValidFEN.orElseThrow(), false, null);
     }
 
     /**
@@ -196,31 +250,13 @@ public class ChessBoard {
      * @return A new ChessBoard instance initialized from the provided FEN notation.
      * @throws IllegalArgumentException If the provided FEN notation are invalid.
      */
-    public static ChessBoard fromPosition(final String fen) {
-        StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
-        if (!isValidFEN.status()) {
-            throw new IllegalArgumentException("Invalid FEN.");
-        }
-
-        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, isValidFEN.orElseThrow(), false, null);
-    }
-
-    /**
-     * Factory method.
-     * Creates a new ChessBoard instance from a specific position defined by FEN notation.
-     *
-     * @param fen The FEN notation representing the current position of the board.
-     * @return A new ChessBoard instance initialized from the provided FEN notation.
-     *
-     * @throws IllegalArgumentException If the provided FEN notation are invalid.
-     */
     public static ChessBoard pureChessFromPosition(final String fen) {
         StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
         if (!isValidFEN.status()) {
             throw new IllegalArgumentException("Invalid FEN.");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, isValidFEN.orElseThrow(), true, null);
+        return new ChessBoard(UUID.randomUUID(), InitializationType.DURING_THE_GAME, isValidFEN.orElseThrow(), true, null);
     }
 
     /**
@@ -239,7 +275,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid PGN");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, null, false, listOfAlgebraicNotations);
+        return new ChessBoard(UUID.randomUUID(), InitializationType.DURING_THE_GAME, null, false, listOfAlgebraicNotations);
     }
 
     /**
@@ -262,7 +298,11 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid PGN");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationTYPE.DURING_THE_GAME, null, true, listOfAlgebraicNotations);
+        return new ChessBoard(UUID.randomUUID(), InitializationType.DURING_THE_GAME, null, true, listOfAlgebraicNotations);
+    }
+
+    public UUID ID() {
+        return chessBoardId;
     }
 
     /**
@@ -328,7 +368,6 @@ public class ChessBoard {
         return listOfAlgebraicNotations.stream().map(AlgebraicNotation::algebraicNotation).toList();
     }
 
-
     public AlgebraicNotation[] arrayOfAlgebraicNotations() {
         return this.listOfAlgebraicNotations.toArray(new AlgebraicNotation[0]);
     }
@@ -377,6 +416,18 @@ public class ChessBoard {
                 .toString();
     }
 
+    /**
+     * Checks whether the threefold repetition rule is active.
+     * <p>
+     * In chess, the threefold repetition rule states that if the same position
+     * appears three times with the same possible moves for both players, the game
+     * can be declared a draw. However, if all three repetitions occur while the
+     * king is in check, the rule does not apply. This method analyzes the current
+     * board position and determines whether it has occurred three times under
+     * valid conditions.
+     *
+     * @return {@code true} if the position has been repeated three times under valid conditions, {@code false} otherwise.
+     */
     public boolean isThreeFoldActive() {
         final String currentPositionHash = this.toString();
         return !isPureChess && hashCodeOfBoard.get(currentPositionHash) == 3;
@@ -470,13 +521,17 @@ public class ChessBoard {
     }
 
     /**
-     * Returns the number of movements based on the size of the
-     * {@code listOfAlgebraicNotations}, assuming each movement
-     * is represented by a pair of notations.
+     * Counts the number of half-moves (plies) made in the game.
+     * <p>
+     * A half-move, or plies, refers to a single move made by either player. In
+     * chess terminology, a full move consists of two half-moves, one made by
+     * White and one made by Black. This method calculates the total number of
+     * half-moves by dividing the size of the list of algebraic notations by 2,
+     * as each algebraic notation represents one half-move.
      *
-     * @return the number of movements (size / 2).
+     * @return the total number of half-moves (plies) made in the game.
      */
-    public int countOfMovement() {
+    public int countOfHalfMoves() {
         return listOfAlgebraicNotations.size() / 2;
     }
 
@@ -1007,7 +1062,7 @@ public class ChessBoard {
                 opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
         );
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color(), Pair.of(from, to));
+        final boolean isStalemate = countOfHalfMoves() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color(), Pair.of(from, to));
         if (isStalemate) {
             operations.add(STALEMATE);
         }
@@ -1148,7 +1203,7 @@ public class ChessBoard {
                 opponentKing.kingStatus(this, opponentKing.color(), Pair.of(from, to))
         );
 
-        final boolean isStalemate = countOfMovement() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color(), Pair.of(from, to));
+        final boolean isStalemate = countOfHalfMoves() + 1 >= 10 && opponentKing.stalemate(this, opponentKing.color(), Pair.of(from, to));
         if (isStalemate) {
             operations.add(STALEMATE);
         }
@@ -1463,7 +1518,7 @@ public class ChessBoard {
     /**
      * Represents the different types of initialization for a chess board.
      */
-    private enum InitializationTYPE {
+    private enum InitializationType {
         STANDARD, DURING_THE_GAME
     }
 
@@ -1544,7 +1599,7 @@ public class ChessBoard {
                 currentBlackKingPosition == that.currentBlackKingPosition &&
                 Objects.equals(fieldMap, that.fieldMap) &&
                 Objects.equals(listOfAlgebraicNotations, that.listOfAlgebraicNotations) &&
-                initializationTYPE == that.initializationTYPE;
+                initializationType == that.initializationType;
     }
 
     @Override
@@ -1560,20 +1615,13 @@ public class ChessBoard {
                 currentBlackKingPosition,
                 fieldMap,
                 listOfAlgebraicNotations,
-                initializationTYPE
+                initializationType
         );
     }
 
     /**
-     * Generates a string representation of the current position on the chessboard.
-     * <p>
-     * This method iterates over all the fields of the board, represented as coordinates,
-     * and creates a string where each field is associated with its coordinate
-     * and the corresponding piece (if present). If the field is empty,
-     * no piece information is added for that field.
-     *
-     * @return A string representing the current position on the board by FEN concepts, where each
-     *         coordinate is mapped to a piece representation or an empty string.
+     * Returns a FEN (Forsyth-Edwards Notation) chessboard presentation in a truncated format,
+     * meaning that the FEN excludes the 50-move rule, the number of full moves found at the end of the FEN standard.
      */
     @Override
     public final String toString() {

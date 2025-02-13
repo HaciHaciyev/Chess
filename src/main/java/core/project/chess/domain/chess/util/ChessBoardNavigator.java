@@ -21,7 +21,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         int space = fen.indexOf(" ");
 
         String boardRepresentation = fen.substring(0, space);
-        int turn = board.countOfMovement() + 1;
+        int turn = board.countOfHalfMoves() + 1;
         String nextMove = fen.charAt(space + 1) == 'w' ? "White's turn" : "Black's turn";
 
         String whiteKingStatus = "NOT           ";

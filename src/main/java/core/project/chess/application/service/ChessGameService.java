@@ -506,7 +506,7 @@ public class ChessGameService {
     }
 
     private void gameOverOperationsExecutor(final ChessGame chessGame) {
-        if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().getChessBoardId())) {
+        if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().ID())) {
             Log.infof("History of game %s is already present", chessGame.getChessGameId());
             return;
         }
