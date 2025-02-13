@@ -1,250 +1,542 @@
-# Chess Game Backend
-
-This is a backend application for a chess game, built using Java and the Quarkus framework.
-
-## Table of Contents
-- [Introduction](#introduction)
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Pre-requirements](#pre-requirements)
-- [API Documentation](#api-documentation)
-    - [Authentication](#authentication)
-        - [Login](#login)
-        - [Registration](#registration)
-        - [Email Verification](#email-verification)
-    - [Game Management](#game-management)
-        - [Start Game](#start-game)
-        - [Join Game](#join-game)
-        - [Make Move](#make-move)
-        - [Resign](#resign)
-        - [Agree to Draw](#agree-to-draw)
-        - [Threefold Repetition](#threefold-repetition)
-        - [Return Move](#return-move)
-    - [Chat](#chat)
-        - [Send Message](#send-message)
-- [Contributing](#contributing)
-
-## Introduction
-The Chess Game Backend is an application that provides the core functionality for a chess game. It handles user authentication, game management, and real-time chat between players.
+# Chessland
+Chessland - A platform for Chess lovers.
+The server side consists of two applications:
+- https://github.com/HaciHaciyev/Chess
+- https://github.com/HaciHaciyev/MessagingService
 
 ## Features
-- User registration and login
-- Email verification for new users
-- Creating and joining chess games
-- Real-time updates on game state and chat messages
-- Handling game actions (moves, resignations, agreements, etc.)
+- User registration, authentication, and email verification
+- Chess game creation and participation (player & observer modes)
+- Real-time game updates and chat functionality
+- Handling various game actions (moves, undo requests, resignations, draws, threefold repetition, etc.)
+- Rating system based on Glicko2
+- Partnership management, including partner games
 - Storing game history and results
 
 ## Technologies Used
-- Java 21
-- Quarkus framework
-- WebSocket (JSR-356)
-- JSON Web Tokens (JWT)
-- Jackson for JSON processing
-- PostgreSQL database
-- Maven for build management
+- **Programming Language:** Java 21
+- **Framework:** Quarkus (3.18.2)
+- **Database:** PostgreSQL (JDBC, Agroal, Flyway)
+- **Authentication & Security:** SmallRye JWT, Argon2
+- **Caching & Distributed Processing:** Redis, Redisson
+- **Real-Time Communication:** WebSockets
+- **Email Services:** Quarkus Mailer, Mailpit
+- **File Parsing:** Apache Tika
+- **Logging:** JBoss LogManager
+- **Testing:** JUnit 5, Rest-Assured, AssertJ, Awaitility, Testcontainers, DataFaker
+- **Build & Dependency Management:** Maven
 
-# Pre-requirements
-
-To run the application as JAR file, the following prerequisites are required:
-
-> at the end project structure should look like this
+## Base URL
+All API endpoints are prefixed with:
 ```
-application-directory/
-├── Chessland.jar
-├── ...
-├── config/
-│   ├── application.properties
-│   ├── publicKey.pem
-│   ├── privateKey.pem
-│   ├── pgAdmin.env <- optional
-│   └── infrastructure.env
+/chessland
 ```
 
-1. **Ensure that Java 21 and Docker are installed in your system**
-2. Download latest Chessland.zip from releases, extract it and then cd into it
-     ```
-    unzip Chessland.zip
-    cd Chessland
-    ```
-3. Create `config` folder
-    ```
-    mkdir config
-    ```
-
-4. Create the RSA keys in PEM format by running the following commands in the terminal:
-
-   ```bash
-   openssl genrsa -out rsaPrivateKey.pem 2048
-   openssl rsa -pubout -in rsaPrivateKey.pem -out publicKey.pem
-   openssl pkcs8 -topk8 -nocrypt -inform pem -in rsaPrivateKey.pem -outform pem -out privateKey.pem
-   ```
-5. Create an `infrastructure.env` file with following content:
-
-   ```
-   POSTGRES_USER=
-   POSTGRES_URL=
-   POSTGRES_PASSWORD=
-   POSTGRES_DB=
-   PGDATA=/data/postgres
-   ```
-
-   Optionally, if you want to use pgAdmin you can also create a `pgadmin.env` file alongside `infrastructure.env` with following content:
-
-   ```
-   PGADMIN_DEFAULT_EMAIL=
-   PGADMIN_DEFAULT_PASSWORD=
-   ```
-
-6. Create an `application.properties` file with the following content:
-
-   ```properties
-   quarkus.http.port=8080
-   quarkus.smallrye-jwt.enabled=true
-   quarkus.native.resources.includes[0]=privateKey.pem
-   quarkus.native.resources.includes[1]=publicKey.pem
-
-   quarkus.datasource.db-kind=postgresql
-   quarkus.flyway.enabled=true
-   quarkus.flyway.migrate-at-start=true
-   quarkus.datasource.username={POSTGRES_USER} <- replace these with actual values
-   quarkus.datasource.password={POSTGRES_PASSWORD}
-   quarkus.datasource.jdbc.url={POSTGRES_URL}
-   quarkus.datasource.jdbc.max-size=16
-   quarkus.datasource.jdbc.min-size=2
-
-   smallrye.jwt.sign.key.location=privateKey.pem
-   mp.jwt.verify.publickey.location=publicKey.pem
-   mp.jwt.verify.issuer=
-
-   quarkus.mailer.from={EMAIL_FROM}
-   quarkus.mailer.host={EMAIL_HOST}
-   quarkus.mailer.port={EMAIL_PORT}
-   quarkus.mailer.username={EMAIL_USERNAME}
-   quarkus.mailer.password={EMAIL_PASSWORD}
-   quarkus.mailer.start-tls=REQUIRED
-   quarkus.mailer.auth-methods=DIGEST-MD5 CRAM-SHA256 CRAM-SHA1 CRAM-MD5 PLAIN LOGIN
-   ```
-7. execute `sudo docker-compose up datasource` to initialize PostgreSQL
-8. optionally `sudo docker-compose up datasource-administration` to run pgAdmin in browser
-9. then finally run `java -jar Chessland.jar`
-
----
-If you want to use Docker image:
-
-🚧WIP
+## Authentication & Authorization
+Most endpoints require authentication using JWT. Except login, registration endpoints.
 
 ---
 
-After completing these steps, you should have all the necessary prerequisites to run the Chess Game Backend application.
+## Authentication
 
-## API Documentation
+### Login
+**Endpoint:**
+```
+POST /account/login
+```
+**Request Body:** (JSON)
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+**Responses:**
+- `200 OK` – Returns JWT token and refreshToken upon successful authentication. Body:
+```json
+{
+  "token": "string",
+  "refreshToken": "string"
+}
+```
+- `400 BAD REQUEST` – If the login form is null.
 
-### Authentication
+---
 
-#### Login
-- **Endpoint**: `POST /chessland/account/login`
-- **Request Body**:
-  ```json
+### Registration
+**Endpoint:**
+```
+POST /account/registration
+```
+**Request Body:** (JSON)
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "passwordConfirmation": "string"
+}
+```
+**Responses:**
+- `200 OK` – Registration successful. Email verification is required.
+- `400 BAD REQUEST` – If the registration form is null.
+
+---
+
+### Email Verification
+**Endpoint:**
+```
+PATCH /account/token/verification?token={token}
+```
+**Responses:**
+- `200 OK` – Account is now enabled.
+- `400 BAD REQUEST` – If the token is null or invalid.
+
+---
+
+### Refresh Token
+**Endpoint:**
+```
+PATCH /account/refresh-token
+```
+**Headers:**
+```
+Refresh-Token: string
+```
+**Responses:**
+- `200 OK` – Returns a new access token.
+- `400 BAD REQUEST` – If the refresh token is invalid or blank.
+
+---
+
+## User Data
+
+### Get User Properties
+**Endpoint:**
+```
+GET /account/user-properties
+```
+**Responses:**
+- `200 OK` – Returns user properties. Body:
+```json
+{
+  "username": "string",
+  "email": "string",
+  "rating": "number"
+}
+```
+- `400 BAD REQUEST` – If user properties are not found.
+
+---
+
+## Game History
+
+### Get Game History
+**Endpoint:**
+```
+GET /account/game-history?pageNumber={pageNumber}
+```
+**Responses:**
+- `200 OK` – Returns a list of game history. Fixed size of page is 10. Body
+```json
+{
+  "gameHistory": [
+    {
+      "chessHistoryId": "string (UUID)",
+      "pgn": "string",
+      "fenRepresentations": "string[]",
+      "playerForWhite": {
+        "username": "string"
+      },
+      "playerForBlack": {
+        "username": "string"
+      },
+      "timeControl": "\"BULLET\" | \"BLITZ\" | \"RAPID\" | \"CLASSIC\" | \"DEFAULT\"",
+      "gameResult": "\"DRAW\" | \"WHITE_WIN\" | \"BLACK_WIN\"",
+      "whitePlayerRating": "number",
+      "blackPlayerRating": "number",
+      "gameStart": "string (ISO 8601 datetime)",
+      "gameEnd": "string (ISO 8601 datetime)"
+    }
+  ]
+}
+```
+- `400 BAD REQUEST` – If the user does not exist.
+
+---
+
+## Profile Pictures
+
+### Upload Profile Picture
+**Endpoint:**
+```
+PUT /account/put-profile-picture
+```
+**Consumes:**
+```
+application/octet-stream
+```
+**Request Body:**
+Binary image file.
+
+**Responses:**
+- `202 ACCEPTED` – Successfully uploaded.
+- `400 BAD REQUEST` – If the picture is null or the username is invalid.
+
+---
+
+### Get Profile Picture
+**Endpoint:**
+```
+GET /account/profile-picture
+```
+**Responses:**
+- `200 OK` – Returns the profile picture and its type.
+- `400 BAD REQUEST` – If the username is invalid.
+
+---
+
+### Delete Profile Picture
+**Endpoint:**
+```
+DELETE /account/delete-profile-picture
+```
+**Responses:**
+- `202 ACCEPTED` – Successfully deleted.
+- `400 BAD REQUEST` – If the username is invalid.
+
+---
+
+## Partners
+
+### Get List of Partners
+**Endpoint:**
+```
+GET /account/partners?pageNumber={pageNumber}
+```
+**Responses:**
+- `200 OK` – Returns a list of partners usernames. Fixed size 10.
+
+---
+
+### Remove Partner
+**Endpoint:**
+```
+DELETE /account/remove-partner?partner={partner}
+```
+**Responses:**
+- `204 NO CONTENT` – Partner removed successfully.
+
+---
+
+## Root Endpoint
+
+### Base API Path
+All requests are under:
+```
+/chessland
+```
+
+### WebSocket API
+
+### Overview
+The WebSocket API includes two endpoints for different services:
+1. **User Session Service** - Handles partnerships management.
+2. **Chess Game Service** - Allows players to initialize, play and observe chess games.
+
+### 1. User Session WebSocket
+
+**Endpoint:** `/chessland/user-session?token={token}`
+
+When a user connects to the `/chessland/user-session` endpoint, the server:
+1. **Token Validation**: The server checks the validity of the user's token.
+2. **Session Initialization**: If the token is valid, the server processes the user's session and checks for pending partnership requests.
+
+The server can return a list of **pending partnership requests** as soon as the connection is established,
+if there are any requests for partnership or other types of messages while the user was not online:
+
+```json
+[
+   {
+      "type": "PARTNERSHIP_REQUEST",
+      "message": "You have a pending partnership request from User123.",
+      "partner": "User123"
+   }
+]
+```
+
+The message format for a **partnership request** is as follows:
+
+```json
+{
+  "type": "PARTNERSHIP_REQUEST",
+  "message": "You have a pending partnership request from User123.",
+  "partner": "User123"
+}
+```
+
+In order to respond to a partnership request you must send:
+To agree to a partnership:
+```json
+{
+  "type": "PARTNERSHIP_REQUEST",
+  "message": "Hi",
+  "partner": "UserThatSendYouPartnershipRequest"
+}
+```
+To decline to a partnership:
+```json
+{
+  "type": "PARTNERSHIP_DECLINE",
+  "partner": "UserThatSendYouPartnershipRequest"
+}
+```
+
+---
+
+#### 1. Chess Game WebSocket
+
+**Endpoint:** `/chessland/chess-game?token={token}`
+
+When a user connects to the `/chessland/chess-game` endpoint, the server performs the following actions:
+1. **Token Validation**: The server checks if the user's token is valid.
+2. **Session Initialization**: If the token is valid, the server initiates a chess game session.
+3. **Sending Pending Partnership Invitations**: If there are any pending partnership invitations
+   or requests for the user (messages that were sent while the user was offline), these invitations are sent as a list of messages.
+
+The message format for a **partnership invitation** is structured as follows:
+
+```json
+{
+  "type": "INVITATION",
+  "message": "User123 has invited you to a game.",
+  "partner": "User123",
+  "color": "white",
+  "time": "\"BULLET\" | \"BLITZ\" | \"RAPID\" | \"CLASSIC\" | \"DEFAULT\"",
+  "isCasualGame": true
+}
+```
+
+This response will be returned as a **list of messages** when the user connects:
+
+```json
+[
   {
-    "username": "example_user",
-    "password": "password123"
+    "type": "INVITATION",
+    "message": "User123 has invited you to a game.",
+    "partner": "User123",
+    "color": "white",
+    "time": "\"BULLET\" | \"BLITZ\" | \"RAPID\" | \"CLASSIC\" | \"DEFAULT\"",
+    "isCasualGame": true
   }
-  ```
-- **Response**: JWT token
+]
+```
 
-#### Registration
-- **Endpoint**: `POST /chessland/account/registration`
-- **Request Body**:
-  ```json
-  {
-    "username": "new_user",
-    "email": "new_user@example.com",
-    "password": "password123",
-    "passwordConfirmation": "password123"
-  }
-  ```
-- **Response**: JWT token
+### Chess Game initialization, reconnection and observing
 
-#### Email Verification
-- **Endpoint**: `PATCH /chessland/account/token/verification?token={token}`
-- **Response**: 200 OK
+Random game. Always will be with rating changes. For playing chess-game with random opponent you must send:
 
-### Game Management
+```json
+{
+   "type": "GAME_INIT"
+}
+```
 
-#### Start Game
-- **Endpoint**: `POST /chess-game/start-game?color={color}&type={type}`
-- **Response**: Game ID
+Also, you can define parameters for a game:
 
-#### Join Game
-- **Endpoint**: `GET /chess-game/{gameId}`
-- **WebSocket Endpoint**: `/chess-game/{gameId}`
+```json
+{
+   "type": "GAME_INIT",
+   "color": "\"WHITE\" | \"BLACK\"",
+   "time": "\"BULLET\" | \"BLITZ\" | \"RAPID\" | \"CLASSIC\" | \"DEFAULT\""
+}
+```
 
-#### Make Move
-- **Endpoint**: `POST /chess-game/{gameId}`
-- **Request Body**:
-  ```json
-  {
-    "type": "MOVE",
-    "from": "e2",
-    "to": "e4",
-    "inCaseOfPromotion": "QUEEN"
-  }
-  ```
-- **Response**: Updated chess board state
+To cancel the game search:
 
-#### Resign
-- **Endpoint**: `POST /chess-game/{gameId}`
-- **Request Body**:
-  ```json
-  {
-    "type": "RESIGNATION"
-  }
-  ```
-- **Response**: Game result
+```json
+{
+   "type": "GAME_INIT",
+   "respond": "NO"
+}
+```
 
-#### Agree to Draw
-- **Endpoint**: `POST /chess-game/{gameId}`
-- **Request Body**:
-  ```json
-  {
-    "type": "AGREEMENT"
-  }
-  ```
-- **Response**: Game result
+To connect to an existing game you must send a message below. 
+If you were a player in this chess game you will be reconnected as a player, otherwise you will be connected as an observer.
 
-#### Threefold Repetition
-- **Endpoint**: `POST /chess-game/{gameId}`
-- **Request Body**:
-  ```json
-  {
-    "type": "TREE_FOLD"
-  }
-  ```
-- **Response**: Game result
+```json
+{
+   "type": "GAME_INIT",
+   "gameID": "string (UUID)"
+}
+```
 
-#### Return Move
-- **Endpoint**: `POST /chess-game/{gameId}`
-- **Request Body**:
-  ```json
-  {
-    "type": "RETURN_MOVE"
-  }
-  ```
-- **Response**: Updated chess board state
+For partnership games you must send a message below. 
+Please note that you must have a partnership with the player you are inviting.
+You also cannot invite a player again if the previous invitation was not accepted or declined, or has expired.
 
-### CHAT
+```json
+{
+   "type": "GAME_INIT",
+   "partner": "User123"
+}
+```
 
-#### Send Message
-- **Endpoint**: `POST /chess-game/{gameId}`
-- **Request Body**:
-  ```json
-  {
-    "type": "MESSAGE",
-    "message": "Hello, opponent!"
-  }
-  ```
-- **Response**: Updated chat messages
+You can also define game parameters:
+```json
+{
+   "type": "GAME_INIT",
+   "partner": "User123",
+   "color": "white",
+   "time": "\"BULLET\" | \"BLITZ\" | \"RAPID\" | \"CLASSIC\" | \"DEFAULT\"",
+   "isCasualGame": "boolean",
+   "FEN": "string (Forsyth-Edwards Notation)",
+   "PGN": "string (Portable Game Notation)"
+}
+```
+
+To respond to an invitation to a partner chess game:
+```json
+{
+   "type": "GAME_INIT",
+   "partner": "UserThatInviteYouToPartnershipGame",
+   "respond": "\"YES\" | \"NO\""
+}
+```
+
+When a player successfully starts a game, the server sends two WebSocket messages containing game-related information.
+
+Message: GAME_START_INFO
+
+Sent when the game starts, providing details about the players and game settings.
+
+Payload Example:
+```json
+{
+  "type": "GAME_START_INFO",
+  "gameID": "string (UUID)",
+  "whitePlayerUsername": "Player1",
+  "blackPlayerUsername": "Player2",
+  "whitePlayerRating": 1500,
+  "blackPlayerRating": 1450,
+  "time": "\"BULLET\" | \"BLITZ\" | \"RAPID\" | \"CLASSIC\" | \"DEFAULT\""
+}
+```
+
+Message: FEN_PGN
+
+Sent after the game starts, providing the initial FEN position and PGN history.
+
+Payload Example:
+```json
+{
+  "type": "FEN_PGN",
+  "gameID": "string (UUID)",
+  "FEN": "string (Forsyth-Edwards Notation)",
+  "PGN": "string (Portable Game Notation)"
+}
+```
+
+Notes
+
+These messages are only sent when the game has successfully started.
+
+Clients should handle these messages to update the game UI accordingly.
+
+### Game features
+
+Chess Board Coordinates format:
+```json
+{
+   "coordinate": "\"a8\" | \"b8\" | \"c8\" | \"d8\" | \"e8\" | \"f8\" | \"g8\" | \"h8\" | \"a7\" | \"b7\" | \"c7\" | \"d7\" | \"e7\" | \"f7\" | \"g7\" | \"h7\" | \"a6\" | \"b6\" | \"c6\" | \"d6\" | \"e6\" | \"f6\" | \"g6\" | \"h6\" | \"a5\" | \"b5\" | \"c5\" | \"d5\" | \"e5\" | \"f5\" | \"g5\" | \"h5\" | \"a4\" | \"b4\" | \"c4\" | \"d4\" | \"e4\" | \"f4\" | \"g4\" | \"h4\" | \"a3\" | \"b3\" | \"c3\" | \"d3\" | \"e3\" | \"f3\" | \"g3\" | \"h3\" | \"a2\" | \"b2\" | \"c2\" | \"d2\" | \"e2\" | \"f2\" | \"g2\" | \"h2\" | \"a1\" | \"b1\" | \"c1\" | \"d1\" | \"e1\" | \"f1\" | \"g1\" | \"h1\""
+}
+```
+
+For move:
+```json
+{
+   "type": "MOVE",
+   "gameID": "string (UUID)",
+   "from": "coordinate",
+   "to": "coordinate",
+   "inCaseOfPromotion": "null | \"QUEEN\" | \"BISHOP\" | \"KNIGHT\" | \"ROOK\""
+}
+```
+
+For undo move you must send message below.
+The opponent will have to send a similar request to agree if he wants, otherwise, he can make a move and the request will be cancelled.
+```json
+{
+   "type": "RETURN_MOVE",
+   "gameID": "string (UUID)"
+}
+```
+
+For write a message for game chat:
+```json
+{
+   "type": "MESSAGE",
+   "gameID": "string (UUID)",
+   "message": "string"
+}
+```
+
+For agreement request you must send message below.
+The opponent will have to send a similar request to agree if he wants, otherwise, he can make a move and the request will be cancelled.
+```json
+{
+   "type": "AGREEMENT",
+   "gameID": "string (UUID)"
+}
+```
+
+For resignation:
+```json
+{
+   "type": "RESIGNATION",
+   "gameID": "string (UUID)"
+}
+```
+
+If a ThreeFold occurs on the board, either player may request that the game end in a draw:
+```json
+{
+   "type": "TREE_FOLD",
+   "gameID": "string (UUID)"
+}
+```
+
+After a successful move or return of a move, the client will receive:
+```json
+{
+   "type": "FEN_PGN",
+   "gameID": "string (UUID)",
+   "FEN": "string (Forsyth-Edwards Notation)",
+   "PGN": "string (Portable Game Notation)",
+   "timeLeft": "\"BULLET\" | \"BLITZ\" | \"RAPID\" | \"CLASSIC\" | \"DEFAULT\"",
+   "isThreeFoldActive": "boolean"
+}
+```
+
+In case of any error, the client will receive:
+
+```json
+{
+   "type": "ERROR",
+   "message": "string"
+}
+```
+
+or
+
+```json
+{
+   "type": "ERROR",
+   "gameID": "gameID",
+   "message": "string"
+}
+```
 
 ## Contributing
-We welcome contributions to the Chess Game Backend project. If you find any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request.
+We welcome contributions to the Chess Game Backend project. We also welcome front-end developers and designers for the client side.
+If you find any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request.
