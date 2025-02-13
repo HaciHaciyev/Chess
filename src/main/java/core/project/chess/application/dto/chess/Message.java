@@ -76,7 +76,13 @@ public record Message(MessageType type,
 
     public static Message invitation(String username, GameParameters gameParams) {
         String message = String.format(INVITATION_MESSAGE, username, gameParams.color(), gameParams.time(), gameParams.isCasualGame());
-        return builder(MessageType.INVITATION).message(message).build();
+        return builder(MessageType.INVITATION)
+                .message(message)
+                .partner(username)
+                .color(gameParams.color())
+                .time(gameParams.time())
+                .isCasualGame(gameParams.isCasualGame())
+                .build();
     }
 
     public static Message connectToExistingGame(String gameID, Color color, Time time) {
