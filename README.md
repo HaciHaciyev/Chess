@@ -540,3 +540,11 @@ or
 ## Contributing
 We welcome contributions to the Chess Game Backend project. We also welcome front-end developers and designers for the client side.
 If you find any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the **Prosperity Public License 3.0.0**.  
+You are free to use, modify, and distribute this software **for non-commercial purposes**.
+
+For commercial use, please contact the author for a separate license agreement.  
+The full text of the license is available in the [LICENSE](./LICENSE) file or at [prosperitylicense.com](https://prosperitylicense.com/).

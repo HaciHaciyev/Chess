@@ -29,6 +29,14 @@
         </dependencies>
     </dependencyManagement>
 
+    <licenses>
+        <license>
+            <name>Prosperity Public License 3.0.0</name>
+            <url>https://prosperitylicense.com/</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
