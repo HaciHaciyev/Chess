@@ -74,29 +74,12 @@ public class GameFunctionalityService {
             );
         }
 
-        Log.info("Count remaining time.");
-        String remainingTime = remainingTimeAsString(chessGame);
-
-        Log.infof("FEN: %s.", chessGame.getChessBoard().actualRepresentationOfChessBoard());
-        Log.infof("PGN: %s.", chessGame.getChessBoard().pgn());
-
-        if (chessGame.isThreeFoldActive()) {
-            Log.info("Active Three fold.");
-            return Pair.of(MessageAddressee.FOR_ALL, Message.builder(MessageType.FEN_PGN)
-                    .gameID(chessGame.getChessGameId().toString())
-                    .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
-                    .PGN(chessGame.getChessBoard().pgn())
-                    .timeLeft(remainingTime)
-                    .isThreeFoldActive(true)
-                    .build()
-            );
-        }
-
         return Pair.of(MessageAddressee.FOR_ALL, Message.builder(MessageType.FEN_PGN)
                 .gameID(chessGame.getChessGameId().toString())
                 .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
                 .PGN(chessGame.getChessBoard().pgn())
-                .timeLeft(remainingTime)
+                .timeLeft(remainingTimeAsString(chessGame))
+                .isThreeFoldActive(chessGame.isThreeFoldActive())
                 .build()
         );
     }
@@ -133,6 +116,7 @@ public class GameFunctionalityService {
             chessGame.addChatMessage(username, chatMsg);
 
             final Message msg = Message.builder(MessageType.MESSAGE)
+                    .gameID(chessGame.getChessGameId().toString())
                     .message(chatMsg.message())
                     .build();
 
@@ -164,23 +148,12 @@ public class GameFunctionalityService {
 
         return switch (undoMoveResult) {
             case SUCCESSFUL_UNDO -> {
-                if (chessGame.isThreeFoldActive()) {
-                    final Message message = Message.builder(MessageType.FEN_PGN)
-                            .gameID(chessGame.getChessGameId().toString())
-                            .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
-                            .PGN(chessGame.getChessBoard().pgn())
-                            .isThreeFoldActive(true)
-                            .timeLeft(remainingTimeAsString(chessGame))
-                            .build();
-
-                    yield Pair.of(MessageAddressee.FOR_ALL, message);
-                }
-
                 final Message message = Message.builder(MessageType.FEN_PGN)
                         .gameID(chessGame.getChessGameId().toString())
                         .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
                         .PGN(chessGame.getChessBoard().pgn())
                         .timeLeft(remainingTimeAsString(chessGame))
+                        .isThreeFoldActive(chessGame.isThreeFoldActive())
                         .build();
 
                 yield Pair.of(MessageAddressee.FOR_ALL, message);
