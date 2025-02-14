@@ -6,7 +6,6 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
-import core.project.chess.infrastructure.dal.util.exceptions.DataNotFoundException;
 import core.project.chess.infrastructure.dal.util.sql.Order;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
@@ -86,21 +85,12 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     @Override
     public boolean isChessHistoryPresent(final UUID chessHistoryId) {
-        Result<Integer, Throwable> result = jdbc.readObjectOf(
-                IS_PRESENT,
-                Integer.class,
-                chessHistoryId.toString()
-        );
-
-        if (!result.success()) {
-            if (result.throwable() instanceof DataNotFoundException) {
-                return false;
-            } else {
-                Log.error(result.throwable());
-            }
-        }
-
-        return result.value() != null && result.value() > 0;
+        return jdbc.readObjectOf(IS_PRESENT, Integer.class, chessHistoryId.toString())
+                .mapSuccess(count -> count != null && count > 0)
+                .orElseGet(() -> {
+                    Log.error("Unexpected error in repository. Can`t get chess history data.");
+                    return false;
+                });
     }
 
     @Override
