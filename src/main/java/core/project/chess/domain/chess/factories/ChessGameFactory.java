@@ -8,7 +8,6 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.infrastructure.utilities.containers.Pair;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -18,18 +17,19 @@ import java.util.UUID;
 @ApplicationScoped
 public class ChessGameFactory {
 
-    public Result<ChessGame, Exception> createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
-                                                                final UserAccount secondPlayer, final GameParameters secondGameParameters,
-                                                                final boolean isPartnershipGame) {
-        final ChessBoard chessBoard;
-        final boolean isCasualGame;
+    public ChessGame createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
+                                              final UserAccount secondPlayer, final GameParameters secondGameParameters,
+                                              final boolean isPartnershipGame) {
+        ChessBoard chessBoard;
+        boolean isCasualGame;
         try {
             Pair<ChessBoard, Boolean> chessBoardInstance = createChessBoardInstance(gameParameters, secondGameParameters, isPartnershipGame);
             chessBoard = chessBoardInstance.getFirst();
             isCasualGame = chessBoardInstance.getSecond();
         } catch (Exception e) {
             Log.error("Can`t create chess game.", e.getMessage());
-            return Result.failure(e);
+            chessBoard = ChessBoard.starndardChessBoard();
+            isCasualGame = gameParameters.isCasualGame();
         }
 
         final ChessGame.Time timeControlling = gameParameters.time();
@@ -37,7 +37,7 @@ public class ChessGameFactory {
         final boolean secondPlayerIsBlack = Objects.nonNull(secondGameParameters.color()) && secondGameParameters.color().equals(Color.BLACK);
 
         if (firstPlayerIsWhite && secondPlayerIsBlack) {
-            return Result.success(ChessGame.of(
+            return ChessGame.of(
                     UUID.randomUUID(),
                     chessBoard,
                     firstPlayer,
@@ -45,10 +45,10 @@ public class ChessGameFactory {
                     SessionEvents.defaultEvents(),
                     timeControlling,
                     isCasualGame
-            ));
+            );
         }
 
-        return Result.success(ChessGame.of(
+        return ChessGame.of(
                 UUID.randomUUID(),
                 chessBoard,
                 secondPlayer,
@@ -56,7 +56,7 @@ public class ChessGameFactory {
                 SessionEvents.defaultEvents(),
                 timeControlling,
                 isCasualGame
-        ));
+        );
     }
 
     private static Pair<ChessBoard, Boolean> createChessBoardInstance(GameParameters gameParameters, GameParameters secondGameParameters,

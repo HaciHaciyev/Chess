@@ -405,29 +405,22 @@ public class ChessGameService {
         UserAccount secondPlayer = secondPlayerData.getSecond();
         GameParameters secondGameParameters = secondPlayerData.getThird();
 
-        Result<ChessGame, Exception> chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
+        ChessGame chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
                 firstGameParameters,
                 secondPlayer,
                 secondGameParameters,
                 isPartnershipGame
         );
 
-        if (!chessGame.success()) {
-            Message errorMessage = Message.error("Can`t create a chess game.%s".formatted(chessGame.throwable().getMessage()));
-            sendMessage(firstSession, errorMessage);
-            sendMessage(secondSession, errorMessage);
-            return;
-        }
-
-        registerGameAndNotifyPlayers(chessGame.orElseThrow(), firstSession, secondSession);
+        registerGameAndNotifyPlayers(chessGame, firstSession, secondSession);
 
         if (isPartnershipGame) {
             cancelRequests(firstPlayer, secondPlayer);
         }
 
-        inboundChessRepository.completelySaveStartedChessGame(chessGame.orElseThrow());
+        inboundChessRepository.completelySaveStartedChessGame(chessGame);
 
-        ChessGameSpectator spectator = new ChessGameSpectator(chessGame.orElseThrow());
+        ChessGameSpectator spectator = new ChessGameSpectator(chessGame);
         spectator.start();
     }
 
