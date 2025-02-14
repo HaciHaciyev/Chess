@@ -399,18 +399,25 @@ public class ChessBoard {
     }
 
     private String FEN() {
-        return new StringBuilder(this.toString())
-                .append(" ")
-                .append(this.ruleOf50Moves)
+        String stringOfBoard = this.toString();
+        var sb = new StringBuilder(stringOfBoard);
+        if (stringOfBoard.charAt(stringOfBoard.length() - 1) != ' ') {
+            sb.append(' ');
+        }
+
+        return sb.append(this.ruleOf50Moves)
                 .append(" ")
                 .append(this.countOfFullMoves)
                 .toString();
     }
 
     private String FEN(final String hashCodeOfBoard) {
-        return new StringBuilder(hashCodeOfBoard)
-                .append(" ")
-                .append(this.ruleOf50Moves)
+        var sb = new StringBuilder(hashCodeOfBoard);
+        if (hashCodeOfBoard.charAt(hashCodeOfBoard.length() - 1) != ' ') {
+            sb.append(' ');
+        }
+
+        return sb.append(this.ruleOf50Moves)
                 .append(" ")
                 .append(this.countOfFullMoves)
                 .toString();
