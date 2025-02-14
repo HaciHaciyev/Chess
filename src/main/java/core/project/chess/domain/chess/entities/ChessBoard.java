@@ -69,7 +69,7 @@ public class ChessBoard {
     private Color figuresTurn;
 
     private byte ruleOf50Moves;
-    private byte countOfFullMoves;
+    private byte countOfHalfMoves;
 
     /**
      * Flag indicating whether the game is in "pure chess" mode, disabling certain chess rules:
@@ -143,7 +143,7 @@ public class ChessBoard {
         this.initializationType = initializationType;
 
         this.ruleOf50Moves = 0;
-        this.countOfFullMoves = 1;
+        this.countOfHalfMoves = 0;
         this.fieldMap = new EnumMap<>(Coordinate.class);
         this.listOfAlgebraicNotations = new ArrayList<>();
         this.fenRepresentationsOfBoard = new ArrayList<>(10);
@@ -305,6 +305,10 @@ public class ChessBoard {
         return chessBoardId;
     }
 
+    public int countOfFullMoves() {
+        return countOfHalfMoves == 1 || countOfHalfMoves == 0 ? 1 :countOfHalfMoves / 2;
+    }
+
     /**
      * Retrieves the `Field` object at the specified coordinate on the chess board.
      *
@@ -407,7 +411,7 @@ public class ChessBoard {
 
         return sb.append(this.ruleOf50Moves)
                 .append(" ")
-                .append(this.countOfFullMoves)
+                .append(this.countOfFullMoves())
                 .toString();
     }
 
@@ -419,7 +423,7 @@ public class ChessBoard {
 
         return sb.append(this.ruleOf50Moves)
                 .append(" ")
-                .append(this.countOfFullMoves)
+                .append(this.countOfFullMoves())
                 .toString();
     }
 
@@ -539,7 +543,7 @@ public class ChessBoard {
      * @return the total number of half-moves (plies) made in the game.
      */
     public int countOfHalfMoves() {
-        return listOfAlgebraicNotations.size() / 2;
+        return this.countOfHalfMoves;
     }
 
     /**
@@ -879,7 +883,7 @@ public class ChessBoard {
      * </p>
      */
     private void ruleOf50MovesAbility(final Piece piece, final Set<Operations> operations) {
-        if (!operations.contains(CAPTURE) && piece instanceof Pawn) {
+        if (!operations.contains(CAPTURE) && !(piece instanceof Pawn)) {
             this.ruleOf50Moves++;
         }
 
@@ -1042,7 +1046,7 @@ public class ChessBoard {
         }
 
         /** Process operations from StatusPair. All validation need to be processed before that.*/
-        this.countOfFullMoves++;
+        this.countOfHalfMoves++;
         final Set<Operations> operations = statusPair.orElseThrow();
 
         startField.removeFigure();
@@ -1192,7 +1196,7 @@ public class ChessBoard {
         final Set<Operations> operations = statusPair.orElseThrow();
 
         /**Process operations from StatusPair. All validation need to be processed before that.*/
-        this.countOfFullMoves++;
+        this.countOfHalfMoves++;
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
 
@@ -1313,7 +1317,7 @@ public class ChessBoard {
             return false;
         }
 
-        this.countOfFullMoves--;
+        this.countOfHalfMoves--;
 
         final String currentPositionHash = fenToHashCodeOfBoard(fenRepresentationsOfBoard.getLast());
         final AlgebraicNotation lastMovement = listOfAlgebraicNotations.getLast();
@@ -1390,6 +1394,8 @@ public class ChessBoard {
         } else {
             revertRookInLongCastling(to);
         }
+
+        this.ruleOf50Moves--;
 
         listOfAlgebraicNotations.removeLast();
         fenRepresentationsOfBoard.removeLast();
