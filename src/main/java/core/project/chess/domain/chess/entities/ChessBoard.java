@@ -1827,16 +1827,16 @@ public class ChessBoard {
             Coordinate coordinate = coordinates[pos];
 
             if (Character.isLetter(c)) {
-                pos++;
                 Piece piece = AlgebraicNotation.fromSymbol(String.valueOf(c));
                 fieldMap.put(coordinate, new Field(coordinate, piece));
+                pos++;
                 continue;
             }
 
             fieldMap.put(coordinate, new Field(coordinate, null));
             pos++;
 
-            for (int i = 1; i < c; i++) {
+            for (int i = 1; i < Character.getNumericValue(c); i++) {
                 Coordinate nextCoordinate = coordinates[pos++];
                 fieldMap.put(nextCoordinate, new Field(nextCoordinate, null));
             }
