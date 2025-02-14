@@ -1088,12 +1088,12 @@ public class ChessBoard {
         ruleOf50MovesAbility(piece, operations);
 
         /** Recording the move made in algebraic notation and Fen.*/
+        final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType));
+
         final String currentPositionHash = this.toString();
         fenRepresentationsOfBoard.add(FEN(currentPositionHash));
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
-
-        final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, inCaseOfPromotionPieceType));
 
         /** Retrieve message about game result.*/
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
@@ -1223,11 +1223,11 @@ public class ChessBoard {
         ruleOf50MovesAbility(piece, operations);
 
         /** Recording the move made in algebraic notation.*/
+        listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
+
         final String currentPositionHash = toString();
         fenRepresentationsOfBoard.add(FEN(currentPositionHash));
         hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
-
-        listOfAlgebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
 
         /** Retrieve message about game result.*/
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
