@@ -235,7 +235,6 @@ class ChessWSTest {
         }
     }
 
-    @Disabled("Temporary shutdown due to technical reasons.")
     @Test
     @DisplayName("Test game initialization via FEN")
     void testGameInitWithFEN() throws JsonProcessingException {
@@ -281,8 +280,9 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(1));
 
+            final String fen = "rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3";
             sendMessage(firstPlayerSession, Message.builder(MessageType.GAME_INIT)
-                    .FEN("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3")
+                    .FEN(fen)
                     .partner(secondPlayer)
                     .build()
             );
@@ -295,7 +295,7 @@ class ChessWSTest {
                         }
                         return message.type().equals(MessageType.PARTNERSHIP_REQUEST) &&
                                 message.message().contains(firstPlayer) &&
-                                message.FEN().equals("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3");
+                                message.FEN().equals(fen);
                     })
             );
 
@@ -307,8 +307,6 @@ class ChessWSTest {
                     .build()
             );
 
-            Thread.sleep(Duration.ofSeconds(5));
-
             await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
                     .stream()
                     .anyMatch(message -> {
@@ -318,12 +316,11 @@ class ChessWSTest {
 
                         Log.infof("Message: %s", message);
                         if (message.type().equals(MessageType.FEN_PGN)) {
-                            return message.FEN().equals("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3");
+                            return message.FEN().equals(fen);
                         }
                         return true;
                     })
             );
-
             await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user2()
                     .stream()
                     .anyMatch(message -> {
@@ -333,9 +330,38 @@ class ChessWSTest {
 
                         Log.infof("Message: %s", message);
                         if (message.type().equals(MessageType.FEN_PGN)) {
-                            return message.FEN().equals("rnbqkbnr/ppp2ppp/4p3/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 3");
+                            return message.FEN().equals(fen);
                         }
                         return true;
+                    })
+            );
+
+            Message gameStartedMessage = USER_MESSAGES.user1.stream()
+                    .filter(message -> message.whitePlayerUsername() != null)
+                    .findFirst()
+                    .orElseThrow();
+            String gameID = Objects.requireNonNull(gameStartedMessage.gameID(), "Game ID cannot be null");
+
+            sendMessage(firstPlayerSession, firstPlayer, Message.move(gameID, Coordinate.e2, Coordinate.e3));
+            await().atMost(Duration.ofSeconds(1)).until(() -> USER_MESSAGES.user1
+                    .stream()
+                    .anyMatch(message -> {
+                        if (message.type().equals(MessageType.FEN_PGN) && !message.PGN().isBlank() && message.PGN().contains("e2-e3")) {
+                            Log.infof("Message after move: %s", message);
+                            return true;
+                        }
+                        return false;
+                    })
+            );
+            sendMessage(secondPlayerSession, secondPlayer, Message.move(gameID, Coordinate.b8, Coordinate.c6));
+            await().atMost(Duration.ofSeconds(1)).until(() -> USER_MESSAGES.user2
+                    .stream()
+                    .anyMatch(message -> {
+                        if (message.type().equals(MessageType.FEN_PGN) && message.PGN() != null && message.PGN().contains("b8-c6")) {
+                            Log.infof("Message after move: %s", message);
+                            return true;
+                        }
+                        return false;
                     })
             );
         } catch (DeploymentException | IOException | InterruptedException e) {
@@ -870,22 +896,22 @@ class ChessWSTest {
                                     String firstPlayer, Session firstPlayerSession, Session secondPlayerSession) throws InterruptedException {
 
         firstPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User1 %s Received Message in Messaging Service: %s.", firstPlayer, message);
+            Log.infof("User1 %s Received Message in Messaging Service: %s.", firstPlayer, message.toString());
             USER_MESSAGES.user1().offer(message);
         });
 
         secondPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User2 %s Received Message in Messaging Service: %s, from user %s.", secondPlayer, message);
+            Log.infof("User2 %s Received Message in Messaging Service: %s, from user %s.", secondPlayer, message.toString());
             USER_MESSAGES.user2().offer(message);
         });
 
         firstPlayerSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User %s Received Message in Chess: %s.", firstPlayer, message);
+            Log.infof("User %s Received Message in Chess: %s.", firstPlayer, message.toString());
             USER_MESSAGES.user1().offer(message);
         });
 
         secondPlayerSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User %s Received Message in Chess: %s.", secondPlayer, message);
+            Log.infof("User %s Received Message in Chess: %s.", secondPlayer, message.toString());
             USER_MESSAGES.user2().offer(message);
         });
 
