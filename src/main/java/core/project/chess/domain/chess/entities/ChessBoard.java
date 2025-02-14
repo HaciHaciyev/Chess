@@ -1725,8 +1725,9 @@ public class ChessBoard {
                         .of(to.getRow() == 4 ? to.getRow() - 1 : to.getRow() + 1, to.columnToInt())
                         .orElseThrow();
 
-                final String result = " " + intermediateFieldOfPassage.getColumn() + intermediateFieldOfPassage.getRow();
-                fen.append(result);
+                final String result = "" + intermediateFieldOfPassage.getColumn() + intermediateFieldOfPassage.getRow();
+                final String whiteSpace = fen.charAt(fen.length() - 1) == ' ' ? "" : " ";
+                fen.append(whiteSpace).append(result);
             } else {
                 if (fen.charAt(fen.length() - 1) == ' ') {
                     fen.append("- ");
