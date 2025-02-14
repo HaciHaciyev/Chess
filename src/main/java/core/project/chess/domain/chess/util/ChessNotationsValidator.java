@@ -287,6 +287,9 @@ public class ChessNotationsValidator {
     }
 
     private static StatusPair<FromFEN> validateForsythEdwardsNotation(String fen) {
+        if (Objects.isNull(fen)) {
+            return StatusPair.ofFalse();
+        }
         if (!Pattern.matches(FEN_FORMAT, fen)) {
             return StatusPair.ofFalse();
         }
@@ -331,7 +334,13 @@ public class ChessNotationsValidator {
         int column = 0;
         for (char c : board.toCharArray()) {
             if (c == '/') {
-                row++;
+                row--;
+                if (row < 1) {
+                    return StatusPair.ofFalse();
+                }
+                if (column != 8) {
+                    return StatusPair.ofFalse();
+                }
                 column = 0;
                 continue;
             }
@@ -521,6 +530,18 @@ public class ChessNotationsValidator {
         }
 
         if (!isValidPassage) {
+            return StatusPair.ofFalse();
+        }
+
+        if (Objects.isNull(whiteKingCoordinate) || Objects.isNull(blackKingCoordinate)) {
+            return StatusPair.ofFalse();
+        }
+
+        final boolean isInsufficientMatingMaterial = (materialAdvantageOfWhite <= 3 && materialAdvantageOfBlack == 0 ||
+                materialAdvantageOfWhite == 0 && materialAdvantageOfBlack <= 3) &&
+                countOfBlackPawns == 0 && countOfWhitePawns == 0;
+
+        if (isInsufficientMatingMaterial) {
             return StatusPair.ofFalse();
         }
 
