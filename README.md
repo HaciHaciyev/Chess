@@ -459,7 +459,7 @@ For move:
    "gameID": "string (UUID)",
    "from": "coordinate",
    "to": "coordinate",
-   "inCaseOfPromotion": "null | \"QUEEN\" | \"BISHOP\" | \"KNIGHT\" | \"ROOK\""
+   "inCaseOfPromotion": "null | \"Q\" | \"B\" | \"N\" | \"R\" | \"q\" | \"b\" | \"n\" | \"r\""
 }
 ```
 
