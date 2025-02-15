@@ -115,32 +115,22 @@ public class ChessBoard {
     private final List<Piece> capturedWhitePieces = new ArrayList<>();
     private final List<Piece> capturedBlackPieces = new ArrayList<>();
 
-    private final InitializationType initializationType;
-
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
      *
      * @param chessBoardId        The unique identifier of the chess board.
-     * @param initializationType  The type of initialization for the chess board.
      * @param inCaseOfInitFromFEN The data for initialization of chess board from FEN.
      * @param isPureChess         The data which disables the following chess rules:
      *      - insufficient mating material;
      *      - three-fold rule;
      *      - fifty moves rule.
      */
-    private ChessBoard(
-            final UUID chessBoardId,
-            final InitializationType initializationType,
-            @Nullable final FromFEN inCaseOfInitFromFEN,
-            final boolean isPureChess,
-            @Nullable final List<AlgebraicNotation> listOfAlgebraicNotations
-    ) {
+    private ChessBoard(final UUID chessBoardId, @Nullable final FromFEN inCaseOfInitFromFEN,
+                       final boolean isPureChess, @Nullable final List<AlgebraicNotation> listOfAlgebraicNotations) {
         Objects.requireNonNull(chessBoardId);
-        Objects.requireNonNull(initializationType);
 
         this.chessBoardId = chessBoardId;
         this.isPureChess = isPureChess;
-        this.initializationType = initializationType;
 
         this.ruleOf50Moves = 0;
         this.countOfHalfMoves = 0;
@@ -149,7 +139,7 @@ public class ChessBoard {
         this.fenRepresentationsOfBoard = new ArrayList<>(10);
         this.hashCodeOfBoard = new HashMap<>(10, 0.75f);
 
-        if (InitializationType.STANDARD.equals(initializationType)) {
+        if (Objects.isNull(inCaseOfInitFromFEN)) {
             this.figuresTurn = WHITE;
             this.currentWhiteKingPosition = Coordinate.e1;
             this.currentBlackKingPosition = Coordinate.e8;
@@ -167,11 +157,11 @@ public class ChessBoard {
             final String currentBoard = this.toString();
             this.hashCodeOfBoard.put(currentBoard, (byte) 0);
             this.fenRepresentationsOfBoard.add(FEN(currentBoard));
-            return;
-        }
 
-        if (Objects.nonNull(listOfAlgebraicNotations)) {
-            validateAndForward(listOfAlgebraicNotations);
+            if (Objects.nonNull(listOfAlgebraicNotations)) {
+                validateAndForward(listOfAlgebraicNotations);
+            }
+
             return;
         }
 
@@ -205,7 +195,7 @@ public class ChessBoard {
      * @return A new `ChessBoard` instance with the standard chess board initialization.
      */
     public static ChessBoard starndardChessBoard() {
-        return new ChessBoard(UUID.randomUUID(), InitializationType.STANDARD, null, false, null);
+        return new ChessBoard(UUID.randomUUID(), null, false, null);
     }
 
     /**
@@ -218,7 +208,7 @@ public class ChessBoard {
      *  @return A new `ChessBoard` instance with the standard chess board initialization.
      */
     public static ChessBoard pureChess() {
-        return new ChessBoard(UUID.randomUUID(), InitializationType.STANDARD, null, true, null);
+        return new ChessBoard(UUID.randomUUID(), null, true, null);
     }
 
     /**
@@ -236,7 +226,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid FEN.");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationType.DURING_THE_GAME, isValidFEN.orElseThrow(), false, null);
+        return new ChessBoard(UUID.randomUUID(), isValidFEN.orElseThrow(), false, null);
     }
 
     /**
@@ -256,7 +246,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid FEN.");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationType.DURING_THE_GAME, isValidFEN.orElseThrow(), true, null);
+        return new ChessBoard(UUID.randomUUID(), isValidFEN.orElseThrow(), true, null);
     }
 
     /**
@@ -275,7 +265,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid PGN");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationType.DURING_THE_GAME, null, false, listOfAlgebraicNotations);
+        return new ChessBoard(UUID.randomUUID(), null, false, listOfAlgebraicNotations);
     }
 
     /**
@@ -298,7 +288,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid PGN");
         }
 
-        return new ChessBoard(UUID.randomUUID(), InitializationType.DURING_THE_GAME, null, true, listOfAlgebraicNotations);
+        return new ChessBoard(UUID.randomUUID(), null, true, listOfAlgebraicNotations);
     }
 
     public UUID ID() {
@@ -1529,13 +1519,6 @@ public class ChessBoard {
     }
 
     /**
-     * Represents the different types of initialization for a chess board.
-     */
-    private enum InitializationType {
-        STANDARD, DURING_THE_GAME
-    }
-
-    /**
      * Represents the different operations that can be performed during a chess move,
      * such as capture, promotion, check, checkmate, and stalemate or empty if operation not exists.
      */
@@ -1611,8 +1594,7 @@ public class ChessBoard {
                 currentWhiteKingPosition == that.currentWhiteKingPosition &&
                 currentBlackKingPosition == that.currentBlackKingPosition &&
                 Objects.equals(fieldMap, that.fieldMap) &&
-                Objects.equals(listOfAlgebraicNotations, that.listOfAlgebraicNotations) &&
-                initializationType == that.initializationType;
+                Objects.equals(listOfAlgebraicNotations, that.listOfAlgebraicNotations);
     }
 
     @Override
@@ -1627,8 +1609,7 @@ public class ChessBoard {
                 currentWhiteKingPosition,
                 currentBlackKingPosition,
                 fieldMap,
-                listOfAlgebraicNotations,
-                initializationType
+                listOfAlgebraicNotations
         );
     }
 
