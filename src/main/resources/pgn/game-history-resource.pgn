@@ -1,0 +1,333 @@
+[Event "Rated Classical game"]
+[Site "https://lichess.org/j1dkb5dw"]
+[Date "????.??.??"]
+[Round "?"]
+[White "BFG9k"]
+[Black "mamalak"]
+[Result "1-0"]
+[WhiteElo "1639"]
+[BlackElo "1403"]
+[ECO "C00"]
+[Opening "French Defense: Normal Variation"]
+[TimeControl "600+8"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:01:03"]
+[Termination "Normal"]
+[WhiteRatingDiff "+5"]
+[BlackRatingDiff "-8"]
+
+1. e2e4 e7e6 2. d2d4 b7b6 3. a2a3 c8b7 4. b1c3 g8h6 5. c1h6 g7h6 6. f1e2
+d8g5 7. e2g4 h6h5 8. g1f3 g5g6 9. f3h4 g6g5 10. g4h5 g5h4 11. d1f3 e8d8 12.
+f3f7 b8c6 13. f7e8# 1-0
+
+[Event "Rated Classical game"]
+[Site "https://lichess.org/1hi3aveq"]
+[Date "????.??.??"]
+[Round "?"]
+[White "BFG9k"]
+[Black "Sagaz"]
+[Result "0-1"]
+[WhiteElo "1644"]
+[BlackElo "1544"]
+[ECO "B06"]
+[Opening "Modern Defense"]
+[TimeControl "600+8"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:07:33"]
+[Termination "Normal"]
+[WhiteRatingDiff "-16"]
+[BlackRatingDiff "+14"]
+
+1. e2e4 g7g6 2. d2d4 d7d6 3. g1f3 c7c6 4. h2h3 g8f6 5. c1g5 f6e4 6. d1e2
+c8f5 7. b1d2 d8a5 8. c2c3 e4d2 9. g5d2 b8d7 10. b2b4 a5a3 11. f3g5 h7h5 12.
+e2c4 d6d5 13. c4e2 a3b2 14. e2d1 f5c2 15. d1c1 b2c1+ 16. a1c1 c2a4 17. f1d3
+d7b6 18. e1g1 b6c4 19. d3c4 d5c4 20. d2f4 f8h6 21. f1e1 e8g8 22. e1e7 a8e8
+23. e7b7 f7f6 24. g5e6 e8e6 25. f4h6 f8f7 26. b7b8+ g8h7 27. h6f4 g6g5 28.
+f4d2 e6e2 29. d2e1 f7e7 30. g1f1 a4c2 31. b8c8 c2d3 32. c8c6 e2c2+ 33. f1g1
+c2c1 34. c6f6 h5h4 35. g2g4 e7e1+ 36. g1g2 d3e4+ 37. f2f3 c1c2# 0-1
+
+[Event "Rated Blitz game"]
+[Site "https://lichess.org/z2ncoii6"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Abd0"]
+[Black "Killi"]
+[Result "1-0"]
+[WhiteElo "1436"]
+[BlackElo "1506"]
+[ECO "C60"]
+[Opening "Ruy Lopez: Cozio Defense"]
+[TimeControl "420+0"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:08:21"]
+[Termination "Normal"]
+[WhiteRatingDiff "+15"]
+[BlackRatingDiff "-14"]
+
+1. e2e4 e7e5 2. g1f3 b8c6 3. f1b5 g8e7 4. b1c3 h7h6 5. c3d5 a7a6 6. b5a4
+b7b5 7. a4b3 e7g6 8. c2c4 b5b4 9. b3a4 c6d4 10. e1g1 c7c6 11. d5e3 a6a5 12.
+f3d4 e5d4 13. e3f5 c8a6 14. f5d4 a6c4 15. d4c6 c4f1 16. c6d8 f1g2 17. d8f7
+g2e4 18. d1e2 e8f7 19. e2e4 f7g8 20. e4a8 g8h7 21. a8e4 d7d5 22. e4d5 f8e7
+23. d2d3 h8f8 24. a4b3 g6f4 25. d5e4+ f4g6 26. c1e3 e7h4 27. a1f1 h4f6 28.
+e3d4 f6h4 29. f2f4 h4d8 30. f4f5 g6e7 31. f5f6+ e7g6 32. f6g7 f8f1+ 33.
+g1f1 h6h5 34. g7g8Q+ h7h6 35. e4g6# 1-0
+
+[Event "Rated Classical game"]
+[Site "https://lichess.org/q7s1nprp"]
+[Date "????.??.??"]
+[Round "?"]
+[White "troepianiz"]
+[Black "hostking"]
+[Result "0-1"]
+[WhiteElo "1742"]
+[BlackElo "1775"]
+[ECO "A01"]
+[Opening "Nimzo-Larsen Attack: Modern Variation #2"]
+[TimeControl "540+0"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:15:00"]
+[Termination "Normal"]
+[WhiteRatingDiff "-10"]
+[BlackRatingDiff "+10"]
+
+1. b2b3 e7e5 2. c1b2 e5e4 3. d2d3 g8f6 4. g1h3 d7d5 5. d3e4 f6e4 6. h3f4
+d8h4 7. g2g3 f8c5 8. f2f3 c5f2# 0-1
+
+[Event "Rated Blitz game"]
+[Site "https://lichess.org/mntamgdj"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Killi"]
+[Black "Abd0"]
+[Result "1-0"]
+[WhiteElo "1492"]
+[BlackElo "1451"]
+[ECO "C24"]
+[Opening "Bishop's Opening: Berlin Defense"]
+[TimeControl "420+0"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:16:04"]
+[Termination "Normal"]
+[WhiteRatingDiff "+10"]
+[BlackRatingDiff "-11"]
+
+1. e2e4 e7e5 2. f1c4 g8f6 3. d2d3 f8c5 4. c1g5 c5f2+ 5. e1f2 f6e4+ 6. d3e4
+d8g5 7. g1f3 g5f6 8. d1d5 b8c6 9. h1f1 e8g8 10. f2g1 c6b4 11. d5e5 f6e5 12.
+f3e5 b4c2 13. c4f7+ g8h8 14. f7c4 f8f1+ 15. c4f1 c2a1 16. b1c3 a1c2 17.
+c3d5 c7c6 18. d5e7 d7d6 19. e5f7# 1-0
+
+[Event "Rated Blitz game"]
+[Site "https://lichess.org/55a83jiu"]
+[Date "????.??.??"]
+[Round "?"]
+[White "ghosty"]
+[Black "jorespi"]
+[Result "1-0"]
+[WhiteElo "1500"]
+[BlackElo "1585"]
+[ECO "C30"]
+[Opening "King's Gambit"]
+[TimeControl "300+0"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:09:39"]
+[Termination "Normal"]
+[WhiteRatingDiff "+222"]
+[BlackRatingDiff "-9"]
+
+1. e2e4 e7e5 2. f2f4 d7d6 3. g1f3 b8c6 4. d2d4 e5d4 5. f3d4 f8e7 6. d4c6
+b7c6 7. f1c4 c8e6 8. c4e6 f7e6 9. c2c4 g8h6 10. b1c3 e8g8 11. e1g1 e6e5 12.
+f4f5 h6f7 13. b2b4 e7g5 14. b4b5 g5c1 15. a1c1 f7g5 16. b5c6 a7a6 17. f1e1
+g7g6 18. f5g6 h7g6 19. c3d5 g5e6 20. d1g4 d8e8 21. e1f1 e6f4 22. d5f4 f8f4
+23. f1f4 e5f4 24. g4f4 e8c6 25. f4f6 c6d7 26. c4c5 a8f8 27. f6g6+ g8h8 28.
+c5d6 c7d6 29. c1d1 f8g8 30. g6f6+ h8h7 31. d1d6 d7a7+ 32. g1f1 g8g7 33.
+f6h6+ h7g8 34. d6d8+ g8f7 35. e4e5 a7c7 36. h6f6# 1-0
+
+[Event "Rated Classical game"]
+[Site "https://lichess.org/ufcqmfxx"]
+[Date "????.??.??"]
+[Round "?"]
+[White "6WX"]
+[Black "adamsrj"]
+[Result "1-0"]
+[WhiteElo "1463"]
+[BlackElo "1504"]
+[ECO "C44"]
+[Opening "Scotch Game: Benima Defense"]
+[TimeControl "1560+30"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:16:04"]
+[Termination "Normal"]
+[WhiteRatingDiff "+62"]
+[BlackRatingDiff "-12"]
+
+1. e2e4 e7e5 2. g1f3 b8c6 3. f1c4 f8e7 4. d2d4 e5d4 5. f3d4 d7d6 6. b1c3
+g8f6 7. c1g5 c6d4 8. d1d4 h7h6 9. g5h4 e8g8 10. e1c1 c8d7 11. h1e1 f8e8 12.
+c3d5 f6d5 13. d4d5 e7h4 14. d5f7+ g8h8 15. e4e5 e8f8 16. f7g6 h4f2 17. c4d3
+h8g8 18. e5e6 f2e1 19. g6h7# 1-0
+
+[Event "Rated Classical game"]
+[Site "https://lichess.org/15lzmn9d"]
+[Date "????.??.??"]
+[Round "?"]
+[White "omarojo"]
+[Black "josefo"]
+[Result "1-0"]
+[WhiteElo "1421"]
+[BlackElo "1491"]
+[ECO "B07"]
+[Opening "Pirc Defense #5"]
+[TimeControl "300+8"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:18:49"]
+[Termination "Normal"]
+[WhiteRatingDiff "+43"]
+[BlackRatingDiff "-71"]
+
+1. e2e4 d7d6 2. d2d4 c7c6 3. c2c4 b7b5 4. d4d5 c6d5 5. c4d5 c8d7 6. d1b3
+d8a5+ 7. c1d2 a5b6 8. b1a3 a7a6 9. a3c4 b6d4 10. g1f3 d4e4+ 11. c4e3 e7e6
+12. f1d3 e4e5 13. f3e5 d6e5 14. e1g1 e6d5 15. e3d5 b8c6 16. d3b5 c6d4 17.
+d5c7+ e8d8 18. b3d5 d8c7 19. d5d7+ c7b6 20. f1e1 a6b5 21. e1e5 d4c6 22.
+e5e8 a8a7 23. d2e3+ b6a6 24. d7c6+ a6a5 25. e3a7 g8e7 26. c6b6+ a5a4 27.
+b2b3+ a4a3 28. b6b5 e7g6 29. a7d4 g6f4 30. b5a4# 1-0
+
+[Event "Rated Classical game"]
+[Site "https://lichess.org/descpsmi"]
+[Date "????.??.??"]
+[Round "?"]
+[White "j-jorjik"]
+[Black "jesuss"]
+[Result "1-0"]
+[WhiteElo "1548"]
+[BlackElo "1415"]
+[ECO "C21"]
+[Opening "Center Game #2"]
+[TimeControl "480+8"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:19:27"]
+[Termination "Normal"]
+[WhiteRatingDiff "+8"]
+[BlackRatingDiff "-8"]
+
+1. e2e4 e7e5 2. d2d4 d8f6 3. d4e5 f6e5 4. d1e2 g8f6 5. g1f3 e5e4 6. e2e4+
+f6e4 7. b1d2 e4d2 8. c1d2 g7g6 9. d2c3 h8g8 10. f3g5 f8g7 11. c3g7 g8g7 12.
+e1c1 b7b6 13. d1e1+ e8f8 14. f1e2 c8b7 15. e2f3 b7f3 16. g5f3 f7f6 17. f3d4
+b8c6 18. d4c6 d7c6 19. e1e6 a8e8 20. e6f6+ f8g8 21. f6c6 e8e2 22. h1f1 g7d7
+23. b2b3 d7d2 24. f1d1 d2d1+ 25. c1d1 e2f2 26. c6c7 f2g2 27. c7a7 g2h2 28.
+a7b7 g6g5 29. b7b6 g5g4 30. b6b4 g4g3 31. b4g4+ g8h8 32. g4g3 h2h1+ 33.
+d1d2 h7h5 34. c2c4 h5h4 35. g3e3 h4h3 36. c4c5 h8g7 37. c5c6 g7g6 38. c6c7
+g6g5 39. c7c8Q h3h2 40. c8h3 g5f6 41. h3f3+ f6g6 42. f3h1 g6f5 43. h1h2
+f5f6 44. h2f2+ f6g5 45. e3g3+ g5h4 46. f2h2# 1-0
+
+[Event "Rated Classical game"]
+[Site "https://lichess.org/61wsdfp4"]
+[Date "????.??.??"]
+[Round "?"]
+[White "adamsrj"]
+[Black "6WX"]
+[Result "1-0"]
+[WhiteElo "1492"]
+[BlackElo "1525"]
+[ECO "B50"]
+[Opening "Sicilian Defense"]
+[TimeControl "1560+30"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:21:14"]
+[Termination "Normal"]
+[WhiteRatingDiff "+12"]
+[BlackRatingDiff "-53"]
+
+1. e2e4 c7c5 2. g1f3 d7d6 3. h2h3 b8c6 4. d2d4 c5d4 5. f3d4 e7e5 6. d4c6
+b7c6 7. b1c3 g8f6 8. f1c4 a8b8 9. a1b1 f6e4 10. c3e4 d6d5 11. c4d5 c6d5 12.
+e4c3 c8b7 13. e1g1 d8d7 14. f2f4 d5d4 15. c3e2 d7d5 16. g1f2 f7f6 17. f4e5
+f6e5 18. f2e1 f8b4+ 19. c2c3 d4d3 20. c3b4 d5g2 21. d1d3 b7e4 22. d3d6 b8d8
+23. d6e5+ e8d7 24. f1f7+ d7c8 25. e5c7# 1-0
+
+[Event "Rated Blitz game"]
+[Site "https://lichess.org/7hvhc1t7"]
+[Date "????.??.??"]
+[Round "?"]
+[White "migsan"]
+[Black "MARC0"]
+[Result "1-0"]
+[WhiteElo "1162"]
+[BlackElo "1244"]
+[ECO "A00"]
+[Opening "Van't Kruijs Opening"]
+[TimeControl "420+0"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:23:14"]
+[Termination "Normal"]
+[WhiteRatingDiff "+17"]
+[BlackRatingDiff "-21"]
+
+1. e2e3 d7d5 2. b2b3 e7e5 3. c1b2 d8g5 4. g2g3 g8f6 5. f1h3 b8c6 6. d1f3
+f8b4 7. c2c3 e8g8 8. g1e2 c8g4 9. f3g2 g4e2 10. e1e2 b4c3 11. b2c3 d5d4 12.
+c3a5 a8e8 13. a5c7 d4e3 14. d2e3 g5e3+ 15. e2e3 c6d4 16. g2b7 d4c2+ 17.
+e3f3 c2a1 18. c7d6 e5e4+ 19. f3g2 a1c2 20. d6f8 g8f8 21. h1c1 c2e3+ 22.
+g2g1 f8g8 23. b7a7 h7h6 24. a7e3 f6g4 25. h3g4 g7g6 26. c1c7 f7f5 27. e3a7
+h6h5 28. c7g7+ g8f8 29. g7f7+ f8g8 30. f7g7+ g8f8 31. g4e2 f5f4 32. e2c4
+e4e3 33. g7f7+ f8g8 34. a7c5 e3f2+ 35. g1f2 g8h8 36. c5c7 f4g3+ 37. f2g3
+h8g8 38. f7g7+ g8f8 39. g7g8# 1-0
+
+[Event "Rated Classical game"]
+[Site "https://lichess.org/md14boea"]
+[Date "????.??.??"]
+[Round "?"]
+[White "metrolog"]
+[Black "b777"]
+[Result "1-0"]
+[WhiteElo "1627"]
+[BlackElo "1633"]
+[ECO "A40"]
+[Opening "English Defense"]
+[TimeControl "180+15"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:22:12"]
+[Termination "Normal"]
+[WhiteRatingDiff "+11"]
+[BlackRatingDiff "-11"]
+
+1. d2d4 b7b6 2. c2c4 e7e6 3. b1c3 c8b7 4. a2a3 g7g6 5. h2h3 f8g7 6. g1f3
+b7f3 7. e2f3 d8f6 8. f1e2 f6d4 9. d1d4 g7d4 10. e1g1 d4c3 11. b2c3 g8e7 12.
+e2d3 f7f5 13. c1e3 c7c5 14. a1b1 b8c6 15. e3h6 c6a5 16. a3a4 e7c6 17. g2g4
+c6e5 18. d3e2 e8c8 19. h6g7 h8g8 20. g7e5 d7d6 21. e5f6 d8f8 22. g4g5 e6e5
+23. b1d1 c8c7 24. d1d3 f5f4 25. f1d1 a5b7 26. d3d2 f8f7 27. e2d3 b7a5 28.
+g1f1 a5b3 29. d2e2 b3a5 30. d3e4 a5c4 31. e4d5 f7f6 32. d5g8 f6f5 33. g8c4
+f5g5 34. e2d2 g5f5 35. d2d6 e5e4 36. d6d7+ c7b8 37. d7d8+ b8c7 38. d1d7+
+c7c6 39. c4b5# 1-0
+
+[Event "Rated Blitz game"]
+[Site "https://lichess.org/2cj9hphe"]
+[Date "????.??.??"]
+[Round "?"]
+[White "tiggran"]
+[Black "barriosgb2"]
+[Result "1-0"]
+[WhiteElo "1533"]
+[BlackElo "1712"]
+[ECO "B10"]
+[Opening "Caro-Kann Defense"]
+[TimeControl "300+0"]
+[UTCDate "2012.12.31"]
+[UTCTime "23:08:52"]
+[Termination "Normal"]
+[WhiteRatingDiff "+16"]
+[BlackRatingDiff "-17"]
+
+1. e2e4 c7c6 2. g1f3 d7d5 3. e4d5 c6d5 4. d2d4 b8c6 5. b1c3 e7e6 6. f1e2
+f8d6 7. e1g1 g8f6 8. c1g5 e8g8 9. d1d2 d6e7 10. f1e1 d8c7 11. g5f4 c7d7 12.
+e2b5 a7a6 13. b5a4 b7b5 14. a4b3 d7a7 15. f3h4 a7d7 16. f4h6 g7h6 17. d2h6
+f6e4 18. c3e4 d5e4 19. e1e4 f7f5 20. e4e6 g8h8 21. h4f5 f8f5 22. a1e1 e7f8
+23. h6h3 f5g5 24. e1e4 d7g7 25. g2g3 c8e6 26. b3e6 a8e8 27. d4d5 c6e5 28.
+f2f4 e5f3+ 29. g1h1 g5g6 30. f4f5 g6g5 31. h1g2 f3d4 32. c2c3 d4e6 33. d5e6
+f8d6 34. g3g4 g7f6 35. h3d3 d6b8 36. d3d7 f6h6 37. e6e7 h6h2+ 38. g2f3
+h2g3+ 39. f3e2 g3g2+ 40. e2d1 g2e4 41. d7e8+ g5g8 42. e8f7 e4g4+ 43. d1c2
+g4g2+ 44. c2b3 a6a5 45. e7e8Q a5a4+ 46. b3a3 b8d6+ 47. b2b4 a4b3+ 48. a3b3
+g8e8 49. f7e8+ h8g7 50. e8d7+ g7h6 51. d7d6+ h6g5 52. f5f6 g2f3 53. d6e5+
+g5g6 54. e5b5 f3f6 55. a2a4 f6e6+ 56. b3a3 e6d6+ 57. b5b4 d6d3 58. a4a5
+h7h5 59. b4b6+ g6g5 60. b6c5+ g5g4 61. a3b4 d3b1+ 62. b4c4 b1a2+ 63. c4d3
+a2b1+ 64. d3c4 b1a2+ 65. c4d4 a2d2+ 66. d4c4 d2a2+ 67. c4b5 a2b3+ 68. c5b4+
+b3b4+ 69. b5b4 h5h4 70. a5a6 h4h3 71. a6a7 h3h2 72. a7a8Q h2h1B 73. a8h1
+g4f4 74. c3c4 f4g3 75. h1e1+ g3f3 76. e1d2 f3e4 77. d2c3 e4f4 78. c3d3 f4e5
+79. c4c5 e5e6 80. c5c6 e6e5 81. c6c7 e5e6 82. d3d4 e6e7 83. c7c8Q e7f7 84.
+d4d6 f7g7 85. c8c7+ g7g8 86. d6d8# 1-0
