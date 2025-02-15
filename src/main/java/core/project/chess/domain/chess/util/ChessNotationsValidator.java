@@ -652,9 +652,7 @@ public class ChessNotationsValidator {
                 .substring(3)
                 .split("\\d\\.");
 
-        if (fullMoves.length == 1) {
-            return algebraicNotations;
-        }
+        Log.infof("Full moves: %s.", Arrays.toString(fullMoves));
 
         for (String s : fullMoves) {
             String fullMove = s.strip();
@@ -662,9 +660,10 @@ public class ChessNotationsValidator {
 
             if (halfMoves.length == 1) {
                 algebraicNotations.add(AlgebraicNotation.of(halfMoves[0]));
-                return algebraicNotations;
+                continue;
             }
 
+            algebraicNotations.add(AlgebraicNotation.of(halfMoves[0]));
             algebraicNotations.add(AlgebraicNotation.of(halfMoves[1]));
         }
 
