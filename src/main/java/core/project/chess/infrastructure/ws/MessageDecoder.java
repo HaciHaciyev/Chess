@@ -8,7 +8,7 @@ import jakarta.websocket.Decoder;
 
 public class MessageDecoder implements Decoder.Text<Message> {
 
-    private static final int MAX_LENGTH = 1024;
+    private static final int MAX_LENGTH = 1542;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
