@@ -8,14 +8,18 @@ import jakarta.websocket.Decoder;
 
 public class MessageDecoder implements Decoder.Text<Message> {
 
-    private static final int MAX_LENGTH = 1542;
+    private static final int MAX_LENGTH = 2048;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public Message decode(String json) throws DecodeException {
-        if (json == null || json.length() > MAX_LENGTH) {
-            throw new DecodeException(json, "Invalid message: null or exceeds 512 characters");
+        if (json == null) {
+            throw new DecodeException(json, "Invalid message: null.");
+        }
+
+        if (json.length() > MAX_LENGTH) {
+            throw new DecodeException(json, "Invalid message: max size %s.".formatted(MAX_LENGTH));
         }
 
         try {
@@ -28,6 +32,6 @@ public class MessageDecoder implements Decoder.Text<Message> {
 
     @Override
     public boolean willDecode(String json) {
-        return json != null && (json.length() <= MAX_LENGTH || !json.isBlank());
+        return json != null && !json.isBlank() && json.length() <= MAX_LENGTH;
     }
 }
