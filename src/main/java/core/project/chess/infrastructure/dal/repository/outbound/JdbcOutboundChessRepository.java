@@ -71,7 +71,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                     .join("GamePlayers gp", "cg.id = gp.chess_game_id")
                     .join("UserAccount wa", "gp.player_for_white_id = wa.id")
                     .join("UserAccount ba", "gp.player_for_black_id = ba.id")
-                    .where("cgh.id = ?")
+                    .where("wa.username = ?")
                     .or("ba.username = ?")
                     .orderBy("cg.creation_date", Order.DESC)
                     .build())
