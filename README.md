@@ -134,7 +134,7 @@ GET /account/user-properties
 ### Get Game History
 **Endpoint:**
 ```
-GET /account/game-history?pageNumber={pageNumber}
+GET /account/game-history?pageNumber={pageNumber}&pageSize={pageSize}
 ```
 **Responses:**
 - `200 OK` – Returns a list of game history. Fixed size of page is 10. Body
@@ -212,7 +212,7 @@ DELETE /account/delete-profile-picture
 ### Get List of Partners
 **Endpoint:**
 ```
-GET /account/partners?pageNumber={pageNumber}
+GET /account/partners?pageNumber={pageNumber}&pageSize={pageSize}
 ```
 **Responses:**
 - `200 OK` – Returns a list of partners usernames. Fixed size 10.
