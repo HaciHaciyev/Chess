@@ -104,22 +104,22 @@ class GameFunctionalitiesWSTest {
         ) {
 
             wMessagingSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", whiteForm.username(), message);
+                Log.infof("%s received -> %s", whiteForm.username(), message.toString());
                 USER_MESSAGES.user1().offer(message);
             });
 
             bMessagingSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", blackForm.username(), message);
+                Log.infof("%s received -> %s", blackForm.username(), message.toString());
                 USER_MESSAGES.user2().offer(message);
             });
 
             wChessSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", whiteForm.username(), message);
+                Log.infof("%s received -> %s", whiteForm.username(), message.toString());
                 CHESS_MESSAGES.user1().offer(message);
             });
 
             bChessSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", blackForm.username(), message);
+                Log.infof("%s received -> %s", blackForm.username(), message.toString());
                 CHESS_MESSAGES.user2().offer(message);
             });
 

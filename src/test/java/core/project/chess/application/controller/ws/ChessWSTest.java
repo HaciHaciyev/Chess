@@ -136,22 +136,22 @@ class ChessWSTest {
         ) {
 
             wMessagingSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", whiteForm.username(), message);
+                Log.infof("%s received -> %s", whiteForm.username(), message.toString());
                 USER_MESSAGES.user1().offer(message);
             });
 
             bMessagingSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", blackForm.username(), message);
+                Log.infof("%s received -> %s", blackForm.username(), message.toString());
                 USER_MESSAGES.user2().offer(message);
             });
 
             wChessSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", whiteForm.username(), message);
+                Log.infof("%s received -> %s", whiteForm.username(), message.toString());
                 CHESS_MESSAGES.user1().offer(message);
             });
 
             bChessSession.addMessageHandler(Message.class, message -> {
-                Log.infof("%s received -> %s", blackForm.username(), message);
+                Log.infof("%s received -> %s", blackForm.username(), message.toString());
                 CHESS_MESSAGES.user2().offer(message);
             });
 
@@ -484,7 +484,7 @@ class ChessWSTest {
                 .connectToServer(WSClient.class, pathForSecondPlayerMessagingSession)) {
 
             reconnectMessagingSPS.addMessageHandler(Message.class, message -> {
-                Log.infof("User %s Received Message: %s, from user %s.", secondPlayer, message);
+                Log.infof("User %s Received Message: %s.", secondPlayer, message.toString());
                 USER_MESSAGES.user2().offer(message);
             });
 
@@ -521,7 +521,7 @@ class ChessWSTest {
                 .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, secondPlayerToken))
         ) {
             reconnectedSPS.addMessageHandler(Message.class, message -> {
-                Log.infof("User %s Received Message: %s, from user %s.", secondPlayer, message);
+                Log.infof("User %s Received Message: %s.", secondPlayer, message.toString());
                 USER_MESSAGES.user2().offer(message);
             });
 
@@ -601,7 +601,7 @@ class ChessWSTest {
                 .connectToServer(WSClient.class, authUtils.serverURIWithToken(userSessionURI, secondPlayerToken))
         ) {
             reconnectedSPS.addMessageHandler(Message.class, message -> {
-                Log.infof("User %s Received Message: %s, from user %s.", secondPlayer, message);
+                Log.infof("User %s Received Message: %s.", secondPlayer, message.toString());
                 USER_MESSAGES.user2().offer(message);
             });
 
@@ -731,7 +731,7 @@ class ChessWSTest {
                 )) {
 
             reconnectedSPS.addMessageHandler(Message.class, message -> {
-                Log.infof("User %s Received Message from Chess: %s.", blackPlayer, message);
+                Log.infof("User %s Received Message from Chess: %s.", blackPlayer, message.toString());
                 USER_MESSAGES.user2().offer(message);
             });
 
