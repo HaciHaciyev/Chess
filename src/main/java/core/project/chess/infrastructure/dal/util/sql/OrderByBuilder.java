@@ -12,6 +12,11 @@ public class OrderByBuilder {
         return this.query.toString();
     }
 
+    public String limitAndOffset() {
+        query.append("LIMIT ").append("? ").append("OFFSET ").append("? ");
+        return this.query.toString();
+    }
+
     public String build() {
         return this.query.toString();
     }

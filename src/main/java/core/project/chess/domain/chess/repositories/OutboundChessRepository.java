@@ -13,5 +13,5 @@ public interface OutboundChessRepository {
 
     Result<ChessGameHistory, Throwable> findById(UUID chessGameId);
 
-    Result<List<ChessGameHistory>, Throwable> listOfGames(Username username, int pageNumber);
+    Result<List<ChessGameHistory>, Throwable> listOfGames(Username username, int limit, int offSet);
 }

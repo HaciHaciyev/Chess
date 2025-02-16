@@ -1,7 +1,10 @@
 package core.project.chess.application.controller.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.controller.ws.MessagingTestResource;
+import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.enumerations.Color;
@@ -60,6 +63,9 @@ class GameHistoryResourceTest {
     @Inject
     JWTParser jwtParser;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     private record Messages(LinkedBlockingQueue<Message> user1, LinkedBlockingQueue<Message> user2) {
         public static Messages newInstance() {
             return new Messages(new LinkedBlockingQueue<>(), new LinkedBlockingQueue<>());
@@ -92,6 +98,7 @@ class GameHistoryResourceTest {
 
         String result = given().contentType("application/json")
                 .param("pageNumber", 0)
+                .param("pageSize", 10)
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .get("chessland/account/game-history")
@@ -103,10 +110,12 @@ class GameHistoryResourceTest {
                 .body()
                 .asString();
 
-        Log.infof("Game history resource, page 1: %s", result);
+        List<ChessGameHistory> historyList = objectMapper.readValue(result, new TypeReference<List<ChessGameHistory>>() {});
+        Log.infof("Game history resource, page - 1, size: %s, content: %s", historyList.size(), historyList);
 
         String result2 = given().contentType("application/json")
                 .param("pageNumber", 2)
+                .param("pageSize", 10)
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .get("chessland/account/game-history")
@@ -118,7 +127,8 @@ class GameHistoryResourceTest {
                 .body()
                 .asString();
 
-        Log.infof("Game history resource, page 2: %s", result2);
+        List<ChessGameHistory> historyList2 = objectMapper.readValue(result2, new TypeReference<List<ChessGameHistory>>() {});
+        Log.infof("Game history resource, page - 2, size: %s, content: %s", historyList2.size(), historyList2);
     }
 
     private void fillTheDatabase(String token) throws ParseException, JsonProcessingException {

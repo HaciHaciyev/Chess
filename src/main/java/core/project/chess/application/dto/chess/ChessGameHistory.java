@@ -52,12 +52,30 @@ public record ChessGameHistory(
     public String toString() {
         return String.format("""
                 ChessGameHistory {
-                Id : %s,
-                PGN : %s,
-                FEN : %s.
+                    Id : %s,
+                    Username of white player: %s,
+                    Username of black player: %s,
+                    Time: %s,
+                    Game Result: %s,
+                    Rating of white player: %f,
+                    Rating of black player: %f,
+                    PGN : %s,
+                    FEN : %s,
+                    Game start: %s,
+                    Game end: %s.
                 }
                 """,
-                this.chessHistoryId.toString(), this.pgn, Arrays.toString(this.fenRepresentations)
+                this.chessHistoryId.toString(),
+                this.playerForWhite.username(),
+                this.playerForBlack.username(),
+                this.timeControl.toString(),
+                this.gameResult.toString(),
+                this.whitePlayerRating,
+                this.blackPlayerRating,
+                this.pgn,
+                Arrays.toString(this.fenRepresentations),
+                this.gameStart.toString(),
+                this.gameEnd.toString()
         );
     }
 }

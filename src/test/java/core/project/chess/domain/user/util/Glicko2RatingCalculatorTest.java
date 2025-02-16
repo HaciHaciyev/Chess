@@ -1,8 +1,6 @@
 package core.project.chess.domain.user.util;
 
-import core.project.chess.domain.user.util.Glicko2RatingCalculator;
 import core.project.chess.domain.user.value_objects.Rating;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
