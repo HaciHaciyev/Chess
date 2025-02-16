@@ -63,7 +63,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         jdbc.write(SAVE_STARTED_CHESS_GAME,
 
             chessGame.getChessGameId().toString(),
-            chessGame.getPlayerForBlackRating().rating(),
+            chessGame.getPlayerForWhiteRating().rating(),
             chessGame.getPlayerForBlackRating().rating(),
             chessGame.getTime().toString(),
             chessGame.getSessionEvents().creationDate(),
