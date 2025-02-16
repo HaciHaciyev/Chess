@@ -129,6 +129,22 @@ class GameHistoryResourceTest {
 
         List<ChessGameHistory> historyList2 = objectMapper.readValue(result2, new TypeReference<List<ChessGameHistory>>() {});
         Log.infof("Game history resource, page - 2, size: %s, content: %s", historyList2.size(), historyList2);
+
+        String lastGame = given()
+                .contentType("application/json")
+                .param("gameID", historyList.getFirst().chessHistoryId().toString())
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .get("chessland/account/game")
+                .then()
+                .statusCode(200)
+                .assertThat()
+                .body(notNullValue())
+                .extract()
+                .body()
+                .asString();
+
+        Log.infof("Last game: %s.", objectMapper.readValue(lastGame, new TypeReference<ChessGameHistory>(){}));
     }
 
     private void fillTheDatabase(String token) throws ParseException, JsonProcessingException {
