@@ -900,7 +900,7 @@ class ChessWSTest {
         });
 
         secondPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User2 %s Received Message in Messaging Service: %s, from user %s.", secondPlayer, message.toString());
+            Log.infof("User2 %s Received Message in Messaging Service: %s.", secondPlayer, message.toString());
             USER_MESSAGES.user2().offer(message);
         });
 

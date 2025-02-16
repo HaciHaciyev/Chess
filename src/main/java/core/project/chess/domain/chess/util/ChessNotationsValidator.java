@@ -664,6 +664,9 @@ public class ChessNotationsValidator {
             }
 
             algebraicNotations.add(AlgebraicNotation.of(halfMoves[0]));
+            if (halfMoves[1].equals("...")) {
+                continue;
+            }
             algebraicNotations.add(AlgebraicNotation.of(halfMoves[1]));
         }
 
