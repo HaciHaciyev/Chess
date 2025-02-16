@@ -81,11 +81,15 @@ public class ChessGame {
         this.chatMessages = new ArrayList<>();
         this.isCasualGame = isCasualGame;
 
-        this.whiteTimer = new ChessCountdownTimer(this, "White timer", Duration.ofMinutes(time.getMinutes()),
-                () -> this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN));
+        this.whiteTimer = new ChessCountdownTimer(this, "White timer", Duration.ofMinutes(time.getMinutes()), () -> {
+            this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN);
+            calculatePlayersRating();
+        });
 
-        this.blackTimer = new ChessCountdownTimer(this, "Black timer", Duration.ofMinutes(time.getMinutes()),
-                () -> this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN));
+        this.blackTimer = new ChessCountdownTimer(this, "Black timer", Duration.ofMinutes(time.getMinutes()), () -> {
+            this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
+            calculatePlayersRating();
+        });
 
         playerForWhite.addGame(this);
         playerForBlack.addGame(this);
@@ -419,17 +423,17 @@ public class ChessGame {
     public String toString() {
         return String.format("""
                 ChessGame {
-                Id : %s,
-                Players turn : %s,
-                Player for white figures : %s,
-                Player for black figures : %s,
-                Rating of player for white : %f,
-                Rating of player for black : %f,
-                Creation date : %s,
-                Last Updated Date : %s.
-                TimeControllingType : %s,
-                Is Game Casual: %s.
-                Is game over : %s, reason : %s
+                    Id : %s,
+                    Players turn : %s,
+                    Player for white figures : %s,
+                    Player for black figures : %s,
+                    Rating of player for white : %f,
+                    Rating of player for black : %f,
+                    Creation date : %s,
+                    Last Updated Date : %s.
+                    TimeControllingType : %s,
+                    Is Game Casual: %s.
+                    Is game over : %s, reason : %s
                 }
                 """,
                 this.chessGameId.toString(), this.playersTurn.toString(), this.playerForWhite.getUsername(), this.playerForBlack.getUsername(),
@@ -454,5 +458,5 @@ public class ChessGame {
         }
     }
 
-    public record AgreementPair(String whitePlayerUsername, String blackPlayerUsername) {}
+    private record AgreementPair(String whitePlayerUsername, String blackPlayerUsername) {}
 }
