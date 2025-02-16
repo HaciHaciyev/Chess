@@ -9,6 +9,8 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @ApplicationScoped
 public class GameHistoryService {
@@ -17,6 +19,17 @@ public class GameHistoryService {
 
     GameHistoryService(OutboundChessRepository outboundChessRepository) {
         this.outboundChessRepository = outboundChessRepository;
+    }
+
+    public ChessGameHistory getGameByID(String gameID) {
+        UUID chessGameId = Result.ofThrowable(() -> UUID.fromString(gameID))
+                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid gameID").build()));
+
+        return outboundChessRepository
+                .findById(chessGameId)
+                .orElseThrow(
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Can`t find a game history.").build())
+                );
     }
 
     public List<ChessGameHistory> listOfGames(String name, int pageNumber, int pageSize) {

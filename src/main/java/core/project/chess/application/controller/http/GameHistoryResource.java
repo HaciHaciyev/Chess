@@ -26,4 +26,10 @@ public class GameHistoryResource {
     public Response gameHistory(@QueryParam("pageNumber") int pageNumber, @QueryParam("pageSize") int pageSize) {
         return Response.ok(gameHistoryService.listOfGames(jwt.getName(), pageNumber, pageSize)).build();
     }
+
+    @GET
+    @Path("/game")
+    public Response getGameByID(@QueryParam("gameID") String gameID) {
+        return Response.ok(gameHistoryService.getGameByID(gameID)).build();
+    }
 }

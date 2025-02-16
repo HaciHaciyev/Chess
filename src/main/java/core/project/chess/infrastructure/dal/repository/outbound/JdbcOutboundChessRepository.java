@@ -95,7 +95,7 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     @Override
     public Result<ChessGameHistory, Throwable> findById(final UUID chessGameId) {
-        return jdbc.read(GET_CHESS_GAME, this::chessGameMapper, Objects.requireNonNull(chessGameId));
+        return jdbc.read(GET_CHESS_GAME, this::chessGameMapper, Objects.requireNonNull(chessGameId.toString()));
     }
 
     @Override
