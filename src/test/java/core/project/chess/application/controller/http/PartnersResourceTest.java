@@ -42,6 +42,7 @@ class PartnersResourceTest {
 
         String[] response = given().contentType("application/json")
                 .param("pageNumber", 0)
+                .param("pageSize", 15)
                 .header("Authorization", "Bearer " + hostToken)
                 .when()
                 .get(messagingURL)
