@@ -7,6 +7,7 @@ import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.FromFEN;
+import core.project.chess.domain.chess.value_objects.PlayerMove;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
@@ -984,6 +985,20 @@ public class ChessBoard {
         }
 
         return validBlackLongCasting;
+    }
+
+    /**
+     * Generates a list of all valid moves for the current board state.
+     * <p>
+     * This method analyzes the positions of pieces and chess rules to return only legal moves,
+     * excluding illegal ones such as moves that leave the king in check.
+     *
+     * @return a list of {@code PlayerMove} objects representing all valid moves;
+     *         returns an empty list if no moves are available.
+     */
+    public List<PlayerMove> generateValidMoves() {
+        // TODO
+        return null;
     }
 
     /**
