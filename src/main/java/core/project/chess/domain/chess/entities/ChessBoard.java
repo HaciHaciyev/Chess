@@ -1,9 +1,12 @@
 package core.project.chess.domain.chess.entities;
 
+import core.project.chess.domain.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.enumerations.Direction;
 import core.project.chess.domain.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.chess.pieces.*;
+import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.FromFEN;
@@ -12,6 +15,7 @@ import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
@@ -997,8 +1001,106 @@ public class ChessBoard {
      *         returns an empty list if no moves are available.
      */
     public List<PlayerMove> generateValidMoves() {
-        // TODO
-        return null;
+        ChessBoardNavigator navigator = new ChessBoardNavigator(this);
+        List<Field> fields = navigator.allFriendlyFields(figuresTurn);
+        List<PlayerMove> validMoves = new ArrayList<>();
+
+        for (Field field : fields) {
+            Coordinate from = field.coordinate;
+            Piece piece = field.piece;
+
+            switch (piece) {
+                case Pawn p -> {
+                    // TODO: consider En passaunt and movement 2 fields forward in the beginning of the game
+                    List<Field> coords = navigator.coordinatesThreatenedByPawn(field.coordinate, p.color());
+
+                    for (Field f : coords) {
+                       Coordinate c = f.coordinate;
+
+                        if (p.isValidMove(this, from, c).status()) {
+                            PlayerMove move = new PlayerMove(from, c, null);
+
+                            if (validMoves.contains(move)) {
+                                continue;
+                            }
+
+							validMoves.add(move);
+                        }
+                    }
+                }
+                case Bishop b -> {
+                    List<Field> coords = navigator.fieldsInDirections(Direction.diagonalDirections(), from);
+
+                    for (Field f : coords) {
+                        Coordinate c = f.coordinate;
+
+                        if (b.isValidMove(this, from, c).status()) {
+                            PlayerMove move = new PlayerMove(from, c, null);
+
+                            if (validMoves.contains(move)) {
+                                continue;
+                            }
+
+							validMoves.add(move);
+                        }
+                    }
+                }
+                case Knight n -> {
+                    List<Field> coords = navigator.knightAttackPositions(from, x -> true);
+
+                    for (Field f : coords) {
+                        Coordinate c = f.coordinate;
+
+                        if (n.isValidMove(this, from, c).status()) {
+                            PlayerMove move = new PlayerMove(from, c, null);
+
+                            if (validMoves.contains(move)) {
+                                continue;
+                            }
+
+							validMoves.add(move);
+                        }
+                    }
+                }
+                case Rook r -> {
+                    List<Field> coords = navigator.fieldsInDirections(Direction.horizontalVerticalDirections(), from);
+
+                    for (Field f : coords) {
+                        Coordinate c = f.coordinate;
+
+                        if (r.isValidMove(this, from, c).status()) {
+                            PlayerMove move = new PlayerMove(from, c, null);
+
+                            if (validMoves.contains(move)) {
+                                continue;
+                            }
+
+							validMoves.add(move);
+                        }
+                    }
+                }
+                case Queen q -> {
+                    List<Field> coords = navigator.fieldsInDirections(Direction.allDirections(), from);
+
+                    for (Field f : coords) {
+                        Coordinate c = f.coordinate;
+
+                        if (q.isValidMove(this, from, c).status()) {
+                            PlayerMove move = new PlayerMove(from, c, null);
+
+                            if (validMoves.contains(move)) {
+                                continue;
+                            }
+
+							validMoves.add(move);
+                        }
+                    }
+                }
+                case King k -> {}
+            }
+        }
+
+        return validMoves;
     }
 
     /**
