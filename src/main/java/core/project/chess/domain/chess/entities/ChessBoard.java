@@ -1020,16 +1020,12 @@ public class ChessBoard {
         return validMoves;
     }
 
-    private List<PlayerMove> validMovesOfPawn(Field field, Pawn pawn, ChessBoardNavigator navigator,
+    private List<PlayerMove> validMovesOfPawn(Field startField, Pawn pawn, ChessBoardNavigator navigator,
                                               Coordinate from, List<PlayerMove> validMoves) {
-        final List<Field> coords = navigator.coordinatesThreatenedByPawn(field.coordinate, pawn.color());
-
-        for (Field f : coords) {
-           Coordinate c = f.coordinate;
-
-            if (pawn.isValidMove(this, from, c).status()) {
-                PlayerMove move = new PlayerMove(from, c, null);
-
+        final List<Coordinate> potentialPawnMovement = navigator.fieldsForPawnMovement(from, pawn.color());
+        for (Coordinate to : potentialPawnMovement) {
+            if (pawn.isValidMove(this, from, to).status()) {
+                PlayerMove move = new PlayerMove(from, to, null);
                 if (validMoves.contains(move)) {
                     continue;
                 }
@@ -1041,15 +1037,14 @@ public class ChessBoard {
         return validMoves;
     }
 
-    private List<PlayerMove> validMovesOfBishop(Bishop b, ChessBoardNavigator navigator, Coordinate from,
-                                                List<PlayerMove> validMoves) {
+    private List<PlayerMove> validMovesOfBishop(Bishop bishop, ChessBoardNavigator navigator, Coordinate from, List<PlayerMove> validMoves) {
         final List<Field> coords = navigator.fieldsInDirections(Direction.diagonalDirections(), from);
 
-        for (Field f : coords) {
-            Coordinate c = f.coordinate;
+        for (Field endField : coords) {
+            Coordinate to = endField.coordinate;
 
-            if (b.isValidMove(this, from, c).status()) {
-                PlayerMove move = new PlayerMove(from, c, null);
+            if (bishop.isValidMove(this, from, to).status()) {
+                PlayerMove move = new PlayerMove(from, to, null);
 
                 if (validMoves.contains(move)) {
                     continue;
