@@ -995,20 +995,20 @@ public class ChessBoard {
      * This method analyzes the positions of pieces and chess rules to return only legal moves,
      * excluding illegal ones such as moves that leave the king in check.
      *
-     * @return a list of {@code PlayerMove} objects representing all valid moves;
+     * @return a set of {@code PlayerMove} objects representing all valid moves;
      *         returns an empty list if no moves are available.
      */
-    public List<PlayerMove> generateValidMoves() {
+    public Set<PlayerMove> generateValidMoves() {
         final ChessBoardNavigator navigator = new ChessBoardNavigator(this);
         final List<Field> fields = navigator.allFriendlyFields(figuresTurn);
-        final List<PlayerMove> validMoves = new ArrayList<>();
+        final Set<PlayerMove> validMoves = new HashSet<>();
 
         for (final Field field : fields) {
             final Coordinate from = field.coordinate;
             final Piece piece = field.piece;
 
             switch (piece) {
-                case Pawn p -> validMovesOfPawn(field, p, navigator, from, validMoves);
+                case Pawn p -> validMovesOfPawn(p, navigator, from, validMoves);
                 case Bishop b -> validMovesOfBishop(b, navigator, from, validMoves);
                 case Knight n -> validMovesOfKnight(n, navigator, from, validMoves);
                 case Rook r -> validMovesOfRook(r, navigator, from, validMoves);
@@ -1020,16 +1020,20 @@ public class ChessBoard {
         return validMoves;
     }
 
-    private List<PlayerMove> validMovesOfPawn(Field startField, Pawn pawn, ChessBoardNavigator navigator,
-                                              Coordinate from, List<PlayerMove> validMoves) {
-        final List<Coordinate> potentialPawnMovement = navigator.fieldsForPawnMovement(from, pawn.color());
+    private Set<PlayerMove> validMovesOfPawn(Pawn pawn, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
+        List<Coordinate> potentialPawnMovement = navigator.fieldsForPawnMovement(from, pawn.color());
         for (Coordinate to : potentialPawnMovement) {
-            if (pawn.isValidMove(this, from, to).status()) {
-                PlayerMove move = new PlayerMove(from, to, null);
-                if (validMoves.contains(move)) {
+            StatusPair<Set<Operations>> isValidMove = pawn.isValidMove(this, from, to);
+            if (isValidMove.status()) {
+                if (isValidMove.orElseThrow().contains(PROMOTION)) {
+                    validMoves.add(new PlayerMove(from, to, new Bishop(pawn.color())));
+                    validMoves.add(new PlayerMove(from, to, new Knight(pawn.color())));
+                    validMoves.add(new PlayerMove(from, to, new Rook(pawn.color())));
+                    validMoves.add(new PlayerMove(from, to, new Queen(pawn.color())));
                     continue;
                 }
 
+                PlayerMove move = new PlayerMove(from, to, null);
                 validMoves.add(move);
             }
         }
@@ -1037,9 +1041,8 @@ public class ChessBoard {
         return validMoves;
     }
 
-    private List<PlayerMove> validMovesOfBishop(Bishop bishop, ChessBoardNavigator navigator, Coordinate from, List<PlayerMove> validMoves) {
-        final List<Field> coords = navigator.fieldsInDirections(Direction.diagonalDirections(), from);
-
+    private Set<PlayerMove> validMovesOfBishop(Bishop bishop, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
+        List<Field> coords = navigator.fieldsInDirections(Direction.diagonalDirections(), from);
         for (Field endField : coords) {
             Coordinate to = endField.coordinate;
 
@@ -1057,14 +1060,12 @@ public class ChessBoard {
         return validMoves;
     }
 
-    private List<PlayerMove> validMovesOfKnight(Knight n, ChessBoardNavigator navigator, Coordinate from,
-                                                List<PlayerMove> validMoves) {
+    private Set<PlayerMove> validMovesOfKnight(Knight knight, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
         List<Field> coords = navigator.knightAttackPositions(from, x -> true);
-
         for (Field f : coords) {
             Coordinate c = f.coordinate;
 
-            if (n.isValidMove(this, from, c).status()) {
+            if (knight.isValidMove(this, from, c).status()) {
                 PlayerMove move = new PlayerMove(from, c, null);
 
                 if (validMoves.contains(move)) {
@@ -1078,14 +1079,12 @@ public class ChessBoard {
         return  validMoves;
     }
 
-    private List<PlayerMove> validMovesOfRook(Rook r, ChessBoardNavigator navigator, Coordinate from,
-                                              List<PlayerMove> validMoves) {
+    private Set<PlayerMove> validMovesOfRook(Rook rook, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
         List<Field> coords = navigator.fieldsInDirections(Direction.horizontalVerticalDirections(), from);
-
         for (Field f : coords) {
             Coordinate c = f.coordinate;
 
-            if (r.isValidMove(this, from, c).status()) {
+            if (rook.isValidMove(this, from, c).status()) {
                 PlayerMove move = new PlayerMove(from, c, null);
 
                 if (validMoves.contains(move)) {
@@ -1099,14 +1098,12 @@ public class ChessBoard {
         return validMoves;
     }
 
-    private List<PlayerMove> validMovesOfQueen(Queen q, ChessBoardNavigator navigator, Coordinate from,
-                                               List<PlayerMove> validMoves) {
+    private Set<PlayerMove> validMovesOfQueen(Queen queen, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
         List<Field> coords = navigator.fieldsInDirections(Direction.allDirections(), from);
-
         for (Field f : coords) {
             Coordinate c = f.coordinate;
 
-            if (q.isValidMove(this, from, c).status()) {
+            if (queen.isValidMove(this, from, c).status()) {
                 PlayerMove move = new PlayerMove(from, c, null);
 
                 if (validMoves.contains(move)) {
@@ -1120,8 +1117,8 @@ public class ChessBoard {
         return validMoves;
     }
 
-    private List<PlayerMove> validMovesOfKing(King k, ChessBoardNavigator navigator, Coordinate from,
-                                              List<PlayerMove> validMoves) {
+    private Set<PlayerMove> validMovesOfKing(King king, ChessBoardNavigator navigator, Coordinate from,
+                                             Set<PlayerMove> validMoves) {
         // TODO
         return validMoves;
     }

@@ -13,7 +13,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -56,7 +56,7 @@ class ChessPerft {
             return;
         }
 
-        List<PlayerMove> validMoves = chessGame.getChessBoard().generateValidMoves();
+        Set<PlayerMove> validMoves = chessGame.getChessBoard().generateValidMoves();
         Log.infof("Generated -> %s moves", validMoves.size());
     }
 
