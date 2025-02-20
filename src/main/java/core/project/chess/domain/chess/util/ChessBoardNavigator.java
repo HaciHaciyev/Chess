@@ -847,6 +847,10 @@ public record ChessBoardNavigator(ChessBoard board) {
      * pivot coordinate. The directions are defined using the {@link Direction} enum, and the fields
      * are collected in the order they are encountered along each direction.</p>
      *
+     * <p>The search in each direction continues until either the edge of the chessboard is reached
+     * or a field occupied by a piece is encountered. If an occupied field is found, it is included
+     * in the result, but the search in that direction stops at that point.</p>
+     *
      * <p>If a field lies outside the chessboard's boundaries, that direction's search stops, and no
      * more fields are collected from that direction.</p>
      *
@@ -862,12 +866,10 @@ public record ChessBoardNavigator(ChessBoard board) {
      */
     public List<ChessBoard.Field> fieldsInDirections(List<Direction> directions, Coordinate pivot) {
         return directions.stream()
-                .map(direction -> fieldInDirection(direction, pivot))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .map(direction -> fieldsInDirection(direction, pivot))
+                .flatMap(List::stream)
                 .toList();
     }
-
 
     /**
      * Retrieves a list of fields on the chessboard along the straight path between two coordinates.
@@ -998,6 +1000,22 @@ public record ChessBoardNavigator(ChessBoard board) {
         }
 
         return Optional.empty();
+    }
+
+    public List<ChessBoard.Field> fieldsInDirection(Direction direction, Coordinate pivot) {
+        List<ChessBoard.Field> listOfFields = new ArrayList<>();
+
+        for (Coordinate coordinate : new CoordinateIterable(direction, pivot)) {
+            ChessBoard.Field field = board.field(coordinate);
+            if (field.isPresent()) {
+                listOfFields.add(field);
+                return listOfFields;
+            }
+
+            listOfFields.add(field);
+        }
+
+        return listOfFields;
     }
 
     public List<Coordinate> fieldsForPawnMovement(Coordinate pivot, Color color) {
