@@ -1020,9 +1020,13 @@ public class ChessBoard {
         return validMoves;
     }
 
+    /**
+     * Calculates valid moves for a pawn.
+     */
     private Set<PlayerMove> validMovesOfPawn(Pawn pawn, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
-        List<Coordinate> potentialPawnMovement = navigator.fieldsForPawnMovement(from, pawn.color());
-        for (Coordinate to : potentialPawnMovement) {
+        List<Coordinate> potentialMoves = navigator.fieldsForPawnMovement(from, pawn.color());
+
+        for (Coordinate to : potentialMoves) {
             StatusPair<Set<Operations>> isValidMove = pawn.isValidMove(this, from, to);
             if (isValidMove.status()) {
                 if (isValidMove.orElseThrow().contains(PROMOTION)) {
@@ -1032,94 +1036,90 @@ public class ChessBoard {
                     validMoves.add(new PlayerMove(from, to, new Queen(pawn.color())));
                     continue;
                 }
-
-                PlayerMove move = new PlayerMove(from, to, null);
-                validMoves.add(move);
+                validMoves.add(new PlayerMove(from, to, null));
             }
         }
-
         return validMoves;
     }
 
+    /**
+     * Calculates valid moves for a bishop.
+     */
     private Set<PlayerMove> validMovesOfBishop(Bishop bishop, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
-        List<Field> coords = navigator.fieldsInDirections(Direction.diagonalDirections(), from);
-        for (Field endField : coords) {
-            Coordinate to = endField.coordinate;
+        List<Field> potentialMoves = navigator.fieldsInDirections(Direction.diagonalDirections(), from);
 
+        for (Field field : potentialMoves) {
+            Coordinate to = field.coordinate;
             if (bishop.isValidMove(this, from, to).status()) {
-                PlayerMove move = new PlayerMove(from, to, null);
-
-                if (validMoves.contains(move)) {
-                    continue;
-                }
-
-                validMoves.add(move);
+                validMoves.add(new PlayerMove(from, to, null));
             }
         }
-
         return validMoves;
     }
 
+    /**
+     * Calculates valid moves for a knight.
+     */
     private Set<PlayerMove> validMovesOfKnight(Knight knight, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
-        List<Field> coords = navigator.knightAttackPositions(from, x -> true);
-        for (Field f : coords) {
-            Coordinate c = f.coordinate;
+        List<Field> potentialMoves = navigator.knightAttackPositions(from, x -> true);
 
-            if (knight.isValidMove(this, from, c).status()) {
-                PlayerMove move = new PlayerMove(from, c, null);
-
-                if (validMoves.contains(move)) {
-                    continue;
-                }
-
-                validMoves.add(move);
+        for (Field field : potentialMoves) {
+            Coordinate to = field.coordinate;
+            if (knight.isValidMove(this, from, to).status()) {
+                validMoves.add(new PlayerMove(from, to, null));
             }
         }
-
-        return  validMoves;
+        return validMoves;
     }
 
+    /**
+     * Calculates valid moves for a rook.
+     */
     private Set<PlayerMove> validMovesOfRook(Rook rook, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
-        List<Field> coords = navigator.fieldsInDirections(Direction.horizontalVerticalDirections(), from);
-        for (Field f : coords) {
-            Coordinate c = f.coordinate;
+        List<Field> potentialMoves = navigator.fieldsInDirections(Direction.horizontalVerticalDirections(), from);
 
-            if (rook.isValidMove(this, from, c).status()) {
-                PlayerMove move = new PlayerMove(from, c, null);
-
-                if (validMoves.contains(move)) {
-                    continue;
-                }
-
-                validMoves.add(move);
+        for (Field field : potentialMoves) {
+            Coordinate to = field.coordinate;
+            if (rook.isValidMove(this, from, to).status()) {
+                validMoves.add(new PlayerMove(from, to, null));
             }
         }
-
         return validMoves;
     }
 
+    /**
+     * Calculates valid moves for a queen.
+     */
     private Set<PlayerMove> validMovesOfQueen(Queen queen, ChessBoardNavigator navigator, Coordinate from, Set<PlayerMove> validMoves) {
-        List<Field> coords = navigator.fieldsInDirections(Direction.allDirections(), from);
-        for (Field f : coords) {
-            Coordinate c = f.coordinate;
+        List<Field> potentialMoves = navigator.fieldsInDirections(Direction.allDirections(), from);
 
-            if (queen.isValidMove(this, from, c).status()) {
-                PlayerMove move = new PlayerMove(from, c, null);
-
-                if (validMoves.contains(move)) {
-                    continue;
-                }
-
-                validMoves.add(move);
+        for (Field field : potentialMoves) {
+            Coordinate to = field.coordinate;
+            if (queen.isValidMove(this, from, to).status()) {
+                validMoves.add(new PlayerMove(from, to, null));
             }
         }
-
         return validMoves;
     }
 
+    /**
+     * Calculates valid moves for a king.
+     */
     private Set<PlayerMove> validMovesOfKing(King king, ChessBoardNavigator navigator, Coordinate from,
                                              Set<PlayerMove> validMoves) {
-        // TODO
+        List<Field> potentialMoves = navigator.fieldsForKingMovement(from, king.color());
+
+        for (Field field : potentialMoves) {
+            Coordinate to = field.coordinate;
+            final boolean isAbleToCastle = isCastling(king, from, to) && ableToCastling(king.color(), AlgebraicNotation.castle(to));
+            if (!isAbleToCastle) {
+                continue;
+            }
+
+            if (king.isValidMove(this, from, to).status()) {
+                validMoves.add(new PlayerMove(from, to, null));
+            }
+        }
         return validMoves;
     }
 

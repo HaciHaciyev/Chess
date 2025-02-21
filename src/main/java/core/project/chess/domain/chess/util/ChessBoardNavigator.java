@@ -1049,6 +1049,36 @@ public record ChessBoardNavigator(ChessBoard board) {
     }
 
     /**
+     * Returns a list of potential destination fields for the King moving from the given coordinate.
+     * This method does not validate move legality (e.g., check conditions, occupied fields, or attack zones)
+     * and simply provides all theoretically reachable fields for the King from the specified position.
+     * <p>
+     * The method considers standard King movement to surrounding squares and also includes castling moves,
+     * adding g1 and c1 for White if the King is on e1, and g8 and c8 for Black if the King is on e8.
+     *
+     * @param from  The starting coordinate of the King.
+     * @param color The color of the King (WHITE or BLACK).
+     * @return A list of ChessBoard.Field objects representing the possible destination fields.
+     */
+    public List<ChessBoard.Field> fieldsForKingMovement(Coordinate from, Color color) {
+        List<ChessBoard.Field> listOfFields = new ArrayList<>(surroundingFields(from));
+
+        if (color.equals(Color.WHITE) && from.equals(Coordinate.e1)) {
+            listOfFields.add(board.field(Coordinate.g1));
+            listOfFields.add(board.field(Coordinate.c1));
+            return listOfFields;
+        }
+
+        if (color.equals(Color.BLACK) && from.equals(Coordinate.e8)) {
+            listOfFields.add(board.field(Coordinate.g8));
+            listOfFields.add(board.field(Coordinate.c8));
+            return listOfFields;
+        }
+
+        return listOfFields;
+    }
+
+    /**
      * An iterable collection of {@link Coordinate} objects that can be traversed
      * in a specific {@link Direction} starting from a given {@link Coordinate}.
      *
