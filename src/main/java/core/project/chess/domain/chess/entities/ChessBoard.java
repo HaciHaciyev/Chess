@@ -103,7 +103,7 @@ public class ChessBoard {
      * Necessary for counting identical positions on the board.
      * It is MANDATORY to take into account that toString() returns exactly this so-called hashCodeОfBoard, and not FEN.
      */
-    private final Map<String, Byte> hashCodeOfBoard;
+    private final Map<String, Integer> hashCodeOfBoard;
 
     /**
      * List of FEN representations of previous board states, used for game history tracking.
@@ -158,7 +158,7 @@ public class ChessBoard {
             standardInitializer();
 
             final String currentBoard = this.toString();
-            this.hashCodeOfBoard.put(currentBoard, (byte) 0);
+            this.hashCodeOfBoard.put(currentBoard, 1);
             this.fenRepresentationsOfBoard.add(FEN(currentBoard));
 
             if (Objects.nonNull(listOfAlgebraicNotations)) {
@@ -172,7 +172,7 @@ public class ChessBoard {
         String FEN = inCaseOfInitFromFEN.fen();
 
         String currentPositionHash = fenToHashCodeOfBoard(FEN);
-        hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
+        hashCodeOfBoard.put(currentPositionHash, hashCodeOfBoard.getOrDefault(currentPositionHash, 0) + 1);
         fenRepresentationsOfBoard.add(FEN);
 
         this.figuresTurn = inCaseOfInitFromFEN.figuresTurn();
@@ -1224,7 +1224,7 @@ public class ChessBoard {
 
         final String currentPositionHash = this.toString();
         fenRepresentationsOfBoard.add(FEN(currentPositionHash));
-        hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
+        hashCodeOfBoard.put(currentPositionHash, hashCodeOfBoard.getOrDefault(currentPositionHash, 0) + 1);
 
         /** Retrieve message about game result.*/
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
@@ -1358,7 +1358,7 @@ public class ChessBoard {
 
         final String currentPositionHash = toString();
         fenRepresentationsOfBoard.add(FEN(currentPositionHash));
-        hashCodeOfBoard.put(currentPositionHash, (byte) (hashCodeOfBoard.getOrDefault(currentPositionHash, (byte) 0) + 1));
+        hashCodeOfBoard.put(currentPositionHash, hashCodeOfBoard.getOrDefault(currentPositionHash, 0) + 1);
 
         /** Retrieve message about game result.*/
         final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
@@ -1477,7 +1477,8 @@ public class ChessBoard {
 
         fenRepresentationsOfBoard.removeLast();
         listOfAlgebraicNotations.removeLast();
-        final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
+
+        final int newValue = hashCodeOfBoard.get(currentPositionHash) - 1;
         if (newValue == 0) {
             hashCodeOfBoard.remove(currentPositionHash);
         } else {
@@ -1527,7 +1528,7 @@ public class ChessBoard {
         listOfAlgebraicNotations.removeLast();
         fenRepresentationsOfBoard.removeLast();
 
-        final byte newValue = (byte) (hashCodeOfBoard.get(currentPositionHash) - 1);
+        final int newValue = hashCodeOfBoard.get(currentPositionHash) - 1;
         if (newValue == 0) {
             hashCodeOfBoard.remove(currentPositionHash);
         } else {
@@ -1883,7 +1884,8 @@ public class ChessBoard {
                     }
                 }
             }
-            return s.substring(0, i);
+            String result = s.substring(0, i);
+            return !Character.isDigit(result.charAt(result.length() - 2)) ? result : result.substring(0, result.length() - 1);
         });
     }
 
