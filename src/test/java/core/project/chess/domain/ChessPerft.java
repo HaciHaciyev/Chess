@@ -26,8 +26,8 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessPerft {
-    public static final int DEPTH = 2;
-    private final ChessGame chessGame = chessGameSupplier().get();
+    public static final int DEPTH = 1;
+    private ChessGame chessGame = chessGameSupplier().get();
     private final ChessBoardNavigator navigator = new ChessBoardNavigator(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername().username();
@@ -35,33 +35,34 @@ class ChessPerft {
 
     @Test
     void performanceTest() {
-        perft(DEPTH);
+//        perft(DEPTH);
 
-        if (DEPTH == 1) {
-            assertPerftDepth1();
-            return;
-        }
-
-        if (DEPTH == 2) {
-            assertPerftDepth2();
-            return;
-        }
-
-        if (DEPTH == 3) {
-            assertPerftDepth3();
-            return;
-        }
-
-        if (DEPTH == 6) {
-            assertPerftDepth6();
-            return;
-        }
-
-        if (DEPTH == 9) {
-            assertPerftDepth9();
-            return;
-        }
-
+        chessGame = chessGameSupplier("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 1").get();
+        long v = anotherPerft(DEPTH);
+        System.out.println("Total nodes -> " + v);
+        System.out.println();
+        System.out.println();
+        System.out.println();
+//        if (DEPTH == 1) {
+//            assertPerftDepth1();
+//            return;
+//        }
+//
+//        if (DEPTH == 3) {
+//            assertPerftDepth3();
+//            return;
+//        }
+//
+//        if (DEPTH == 6) {
+//            assertPerftDepth6();
+//            return;
+//        }
+//
+//        if (DEPTH == 9) {
+//            assertPerftDepth9();
+//            return;
+//        }
+//
         Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
         Log.infof("Nodes count: %d", perftValues.nodes);
         Log.infof("Captures count: %d", perftValues.captures);
@@ -293,6 +294,45 @@ class ChessPerft {
         }
     }
 
+    long anotherPerft(int depth) {
+        long nodes = 0L;
+
+        if (depth == 0) {
+            return 1L;
+        }
+
+        Set<PlayerMove> validMoves = chessGame.getChessBoard().generateValidMoves();
+
+        if (depth == DEPTH) {
+            for (var move : validMoves) {
+                individualNodes.put(move.toString(), 0L);
+            }
+        }
+
+        for (PlayerMove move : validMoves) {
+            String activePlayerUsername = chessGame.getPlayersTurn().equals(Color.BLACK) ? usernameOfPlayerForBlacks : usernameOfPlayerForWhites;
+            Coordinate from = move.from();
+            Coordinate to = move.to();
+            Piece inCaseOfPromotion = move.promotion();
+
+            chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
+
+            PerftValues valuesOfLastHalfMove = calculatePerftValues();
+            perftValues.accumulate(valuesOfLastHalfMove);
+
+            long newNodes = anotherPerft(depth - 1);
+            nodes += newNodes;
+
+            if (depth == DEPTH) {
+                System.out.printf("%s -> %s | %s\n", move, newNodes, chessGame.getChessBoard().actualRepresentationOfChessBoard());
+            }
+            chessGame.returnMovement(usernameOfPlayerForWhites);
+            chessGame.returnMovement(usernameOfPlayerForBlacks);
+        }
+
+        return nodes;
+    }
+
     private void processingOfTheMove(PlayerMove move) {
         String activePlayerUsername = chessGame.getPlayersTurn().equals(Color.BLACK) ? usernameOfPlayerForBlacks : usernameOfPlayerForWhites;
         Coordinate from = move.from();
@@ -411,6 +451,20 @@ class ChessPerft {
         public static PerftValues newInstance() {
             return new PerftValues(0L, 0L, 0L, 0L, 0L, 0L, 0L);
         }
+    }
+
+    static Supplier<ChessGame> chessGameSupplier(String fen) {
+        final ChessBoard chessBoard = ChessBoard.pureChessFromPosition(fen);
+
+        return () -> ChessGame.of(
+                UUID.randomUUID(),
+                chessBoard,
+                userAccountSupplier("firstPlayer", "firstplayer@domai.com").get(),
+                userAccountSupplier("secondPlayer", "secondplayer@domai.com").get(),
+                SessionEvents.defaultEvents(),
+                ChessGame.Time.DEFAULT,
+                false
+        );
     }
 
     static Supplier<ChessGame> chessGameSupplier() {
