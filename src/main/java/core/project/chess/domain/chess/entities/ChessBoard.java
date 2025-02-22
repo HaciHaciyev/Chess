@@ -302,6 +302,10 @@ public class ChessBoard {
         return countOfHalfMoves == 1 || countOfHalfMoves == 0 ? 1 :countOfHalfMoves / 2;
     }
 
+    public boolean isPureChess() {
+        return isPureChess;
+    }
+
     /**
      * Retrieves the `Field` object at the specified coordinate on the chess board.
      *

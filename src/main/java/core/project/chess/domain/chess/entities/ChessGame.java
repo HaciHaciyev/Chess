@@ -161,7 +161,7 @@ public class ChessGame {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        if (isGameOver.status()) {
+        if (!chessBoard.isPureChess() && isGameOver.status()) {
             throw new IllegalStateException("Game is over by %s".formatted(isGameOver.orElseThrow()));
         }
 
@@ -197,7 +197,7 @@ public class ChessGame {
         Objects.requireNonNull(username);
         Color color = validateUsername(username);
 
-        if (isGameOver.status()) {
+        if (!chessBoard.isPureChess() && isGameOver.status()) {
             throw new IllegalArgumentException("Game is over.");
         }
 

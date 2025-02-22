@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessPerft {
-    public static final int DEPTH = 1;
+    public static final int DEPTH = 2;
     private final ChessGame chessGame = chessGameSupplier().get();
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername().username();
@@ -59,6 +59,13 @@ class ChessPerft {
         }
 
         Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
+        Log.infof("Nodes count: %d", perftValues.nodes);
+        Log.infof("Captures count: %d", perftValues.captures);
+        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+        Log.infof("Castles count: %d", perftValues.castles);
+        Log.infof("Promotions count: %d", perftValues.promotions);
+        Log.infof("Checks count: %d", perftValues.checks);
+        Log.infof("Checkmates count: %d", perftValues.checkMates);
     }
 
     private void assertPerftDepth1() {
@@ -155,13 +162,15 @@ class ChessPerft {
 
     void perft(int depth) {
         if (depth == 0) {
-            perftValues.nodes++;
             return;
         }
 
         Set<PlayerMove> validMoves = chessGame.getChessBoard().generateValidMoves();
         for (PlayerMove move : validMoves) {
             processingOfTheMove(move);
+            perft(depth - 1);
+            chessGame.returnMovement(usernameOfPlayerForWhites);
+            chessGame.returnMovement(usernameOfPlayerForBlacks);
         }
     }
 
@@ -172,16 +181,13 @@ class ChessPerft {
         Piece inCaseOfPromotion = move.promotion();
 
         chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
-        PerftValues tempValues = calculatePerftValues();
-        perftValues.accumulate(tempValues);
-
-        chessGame.returnMovement(usernameOfPlayerForWhites);
-        chessGame.returnMovement(usernameOfPlayerForBlacks);
+        PerftValues valuesOfLastHalfMove = calculatePerftValues();
+        perftValues.accumulate(valuesOfLastHalfMove);
     }
 
     private PerftValues calculatePerftValues() {
-        PerftValues tempValues = PerftValues.newInstance();
-        tempValues.nodes++;
+        PerftValues valuesOfLastHalfMove = PerftValues.newInstance();
+        valuesOfLastHalfMove.nodes++;
 
         List<String> listOfAlgebraicNotations = chessGame.getChessBoard().listOfAlgebraicNotations();
         String lastMove = listOfAlgebraicNotations.getLast();
@@ -190,29 +196,31 @@ class ChessPerft {
         }
 
         if (lastMove.contains("x")) {
-            tempValues.captures++;
+            valuesOfLastHalfMove.captures++;
         }
 
-        String preLastMove = listOfAlgebraicNotations.get(listOfAlgebraicNotations.size() - 2);
-        calculateCapturesOnPassage(preLastMove, lastMove, tempValues);
+        if (listOfAlgebraicNotations.size() >= 2) {
+            String preLastMove = listOfAlgebraicNotations.get(listOfAlgebraicNotations.size() - 2);
+            calculateCapturesOnPassage(preLastMove, lastMove, valuesOfLastHalfMove);
+        }
 
         if (lastMove.contains("O-O")) {
-            tempValues.castles++;
+            valuesOfLastHalfMove.castles++;
         }
 
         if (lastMove.contains("=")) {
-            tempValues.promotions++;
+            valuesOfLastHalfMove.promotions++;
         }
 
         if (lastMove.contains("+")) {
-            tempValues.checks++;
+            valuesOfLastHalfMove.checks++;
         }
 
         if (lastMove.contains("#")) {
-            tempValues.checkMates++;
+            valuesOfLastHalfMove.checkMates++;
         }
 
-        return tempValues;
+        return valuesOfLastHalfMove;
     }
 
     private static void calculateCapturesOnPassage(String preLastMove, String lastMove, PerftValues tempValues) {
