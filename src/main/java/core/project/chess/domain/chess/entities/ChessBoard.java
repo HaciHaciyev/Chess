@@ -1005,7 +1005,7 @@ public class ChessBoard {
     public Set<PlayerMove> generateValidMoves() {
         final ChessBoardNavigator navigator = new ChessBoardNavigator(this);
         final List<Field> fields = navigator.allFriendlyFields(figuresTurn);
-        final Set<PlayerMove> validMoves = new HashSet<>();
+        final Set<PlayerMove> validMoves = new TreeSet<>();
 
         for (final Field field : fields) {
             final Coordinate from = field.coordinate;
