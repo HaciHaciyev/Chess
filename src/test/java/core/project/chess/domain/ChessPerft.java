@@ -19,50 +19,67 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessPerft {
-    public static final int DEPTH = 1;
+    public static final int DEPTH = 4;
     private ChessGame chessGame = chessGameSupplier().get();
     private final ChessBoardNavigator navigator = new ChessBoardNavigator(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername().username();
     private final PerftValues perftValues = PerftValues.newInstance();
 
+
     @Test
     void performanceTest() {
-//        perft(DEPTH);
+        perft(DEPTH);
 
-        chessGame = chessGameSupplier("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 1").get();
+        if (DEPTH == 1) {
+            assertPerftDepth1();
+            return;
+        }
+
+        if (DEPTH == 3) {
+            assertPerftDepth3();
+            return;
+        }
+
+        if (DEPTH == 6) {
+            assertPerftDepth6();
+            return;
+        }
+
+        if (DEPTH == 9) {
+            assertPerftDepth9();
+            return;
+        }
+
+        Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
+        Log.infof("Nodes count: %d", perftValues.nodes);
+        Log.infof("Captures count: %d", perftValues.captures);
+        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+        Log.infof("Castles count: %d", perftValues.castles);
+        Log.infof("Promotions count: %d", perftValues.promotions);
+        Log.infof("Checks count: %d", perftValues.checks);
+        Log.infof("Checkmates count: %d", perftValues.checkMates);
+    }
+
+    @Test
+    void anotherPerformanceTest() {
+//        chessGame = chessGameSupplier("rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR b KQkq - 0 1").get();
         long v = anotherPerft(DEPTH);
         System.out.println("Total nodes -> " + v);
         System.out.println();
         System.out.println();
         System.out.println();
-//        if (DEPTH == 1) {
-//            assertPerftDepth1();
-//            return;
-//        }
-//
-//        if (DEPTH == 3) {
-//            assertPerftDepth3();
-//            return;
-//        }
-//
-//        if (DEPTH == 6) {
-//            assertPerftDepth6();
-//            return;
-//        }
-//
-//        if (DEPTH == 9) {
-//            assertPerftDepth9();
-//            return;
-//        }
-//
+
         Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
         Log.infof("Nodes count: %d", perftValues.nodes);
         Log.infof("Captures count: %d", perftValues.captures);
@@ -303,12 +320,6 @@ class ChessPerft {
 
         Set<PlayerMove> validMoves = chessGame.getChessBoard().generateValidMoves();
 
-        if (depth == DEPTH) {
-            for (var move : validMoves) {
-                individualNodes.put(move.toString(), 0L);
-            }
-        }
-
         for (PlayerMove move : validMoves) {
             String activePlayerUsername = chessGame.getPlayersTurn().equals(Color.BLACK) ? usernameOfPlayerForBlacks : usernameOfPlayerForWhites;
             Coordinate from = move.from();
@@ -316,9 +327,6 @@ class ChessPerft {
             Piece inCaseOfPromotion = move.promotion();
 
             chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
-
-            PerftValues valuesOfLastHalfMove = calculatePerftValues();
-            perftValues.accumulate(valuesOfLastHalfMove);
 
             long newNodes = anotherPerft(depth - 1);
             nodes += newNodes;
