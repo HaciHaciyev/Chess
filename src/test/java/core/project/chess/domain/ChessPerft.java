@@ -8,7 +8,6 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
-import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.PlayerMove;
 import core.project.chess.domain.user.entities.UserAccount;
@@ -21,19 +20,15 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessPerft {
-    public static final int DEPTH = 3;
+    public static final int DEPTH = 4;
     private ChessGame chessGame = chessGameSupplier().get();
-    private final ChessBoardNavigator navigator = new ChessBoardNavigator(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername().username();
     private final PerftValues perftValues = PerftValues.newInstance();
@@ -75,10 +70,18 @@ class ChessPerft {
 
     @Test
     void anotherPerformanceTest() {
-//        chessGame = chessGameSupplier("rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - -1 1").get();
+//        chessGame = chessGameSupplier("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ").get();
         System.out.printf("Current FEN -> %s \n", chessGame.getChessBoard().actualRepresentationOfChessBoard());
         long v = anotherPerft(DEPTH);
         System.out.println("Total nodes -> " + v);
+        System.out.println();
+        Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
+        Log.infof("Captures count: %d", perftValues.captures);
+        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+        Log.infof("Castles count: %d", perftValues.castles);
+        Log.infof("Promotions count: %d", perftValues.promotions);
+        Log.infof("Checks count: %d", perftValues.checks);
+        Log.infof("Checkmates count: %d", perftValues.checkMates);
     }
 
     @Test
@@ -344,11 +347,11 @@ class ChessPerft {
             Piece inCaseOfPromotion = move.promotion();
 
             chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
-
+            calculatePerftValues();
             long newNodes = anotherPerft(depth - 1);
             nodes += newNodes;
             if (depth == DEPTH) {
-                System.out.printf("%s -> %s | %s\n", move, newNodes, chessGame.getChessBoard().actualRepresentationOfChessBoard());
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.getChessBoard().actualRepresentationOfChessBoard());
             }
             chessGame.returnMovement(usernameOfPlayerForWhites);
             chessGame.returnMovement(usernameOfPlayerForBlacks);
@@ -368,13 +371,14 @@ class ChessPerft {
     }
 
     private void calculatePerftValues() {
-        perftValues.nodes++;
+//        perftValues.nodes++;
 
         List<String> listOfAlgebraicNotations = chessGame.getChessBoard().listOfAlgebraicNotations();
-        String lastMove = listOfAlgebraicNotations.getLast();
-        if (Objects.isNull(lastMove)) {
-            return;
-        }
+        Optional<AlgebraicNotation> notation = chessGame.getChessBoard().lastAlgebraicNotation();
+
+        if (notation.isEmpty()) return;
+
+        var lastMove = notation.get().algebraicNotation();
 
         if (lastMove.contains("x")) {
             perftValues.captures++;
