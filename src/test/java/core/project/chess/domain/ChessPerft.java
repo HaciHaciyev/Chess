@@ -37,6 +37,18 @@ class ChessPerft {
     void performanceTest() {
         System.out.printf("Current FEN -> %s \n", chessGame.getChessBoard().actualRepresentationOfChessBoard());
         long v = perft(DEPTH);
+        switch (DEPTH) {
+            case 1 -> assertPerftDepth1();
+            case 2 -> assertPerftDepth2();
+            case 3 -> assertPerftDepth3();
+            case 4 -> assertPerftDepth4();
+            case 5 -> assertPerftDepth5();
+            case 6 -> assertPerftDepth6();
+            case 7 -> assertPerftDepth7();
+            case 8 -> assertPerftDepth8();
+            case 9 -> assertPerftDepth9();
+        }
+
         System.out.println("Total nodes -> " + v);
         System.out.println();
         Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
