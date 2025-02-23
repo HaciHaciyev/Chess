@@ -6,6 +6,7 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
+import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.PlayerMove;
 import core.project.chess.domain.user.entities.UserAccount;
@@ -18,10 +19,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -30,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ChessPerft {
     public static final int DEPTH = 2;
     private final ChessGame chessGame = chessGameSupplier().get();
+    private final ChessBoardNavigator navigator = new ChessBoardNavigator(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername().username();
     private final PerftValues perftValues = PerftValues.newInstance();
@@ -40,6 +39,11 @@ class ChessPerft {
 
         if (DEPTH == 1) {
             assertPerftDepth1();
+            return;
+        }
+
+        if (DEPTH == 2) {
+            assertPerftDepth2();
             return;
         }
 
@@ -91,6 +95,29 @@ class ChessPerft {
         Log.infof("Checkmates count: %d", perftValues.checkMates);
     }
 
+    private void assertPerftDepth2() {
+        assertEquals(400L, perftValues.nodes, "Nodes count mismatch");
+        Log.infof("Nodes count: %d", perftValues.nodes);
+
+        assertEquals(0L, perftValues.captures, "Captures count mismatch");
+        Log.infof("Captures count: %d", perftValues.captures);
+
+        assertEquals(0L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
+        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+
+        assertEquals(0L, perftValues.castles, "Castles count mismatch");
+        Log.infof("Castles count: %d", perftValues.castles);
+
+        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
+        Log.infof("Promotions count: %d", perftValues.promotions);
+
+        assertEquals(0L, perftValues.checks, "Checks count mismatch");
+        Log.infof("Checks count: %d", perftValues.checks);
+
+        assertEquals(0L, perftValues.checkMates, "Checkmates count mismatch");
+        Log.infof("Checkmates count: %d", perftValues.checkMates);
+    }
+
     private void assertPerftDepth3() {
         assertEquals(8_902L, perftValues.nodes, "Nodes count mismatch");
         Log.infof("Nodes count: %d", perftValues.nodes);
@@ -111,6 +138,52 @@ class ChessPerft {
         Log.infof("Checks count: %d", perftValues.checks);
 
         assertEquals(0L, perftValues.checkMates, "Checkmates count mismatch");
+        Log.infof("Checkmates count: %d", perftValues.checkMates);
+    }
+
+    private void assertPerftDepth4() {
+        assertEquals(197_281L, perftValues.nodes, "Nodes count mismatch");
+        Log.infof("Nodes count: %d", perftValues.nodes);
+
+        assertEquals(1_576L, perftValues.captures, "Captures count mismatch");
+        Log.infof("Captures count: %d", perftValues.captures);
+
+        assertEquals(0L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
+        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+
+        assertEquals(0L, perftValues.castles, "Castles count mismatch");
+        Log.infof("Castles count: %d", perftValues.castles);
+
+        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
+        Log.infof("Promotions count: %d", perftValues.promotions);
+
+        assertEquals(469L, perftValues.checks, "Checks count mismatch");
+        Log.infof("Checks count: %d", perftValues.checks);
+
+        assertEquals(8L, perftValues.checkMates, "Checkmates count mismatch");
+        Log.infof("Checkmates count: %d", perftValues.checkMates);
+    }
+
+    private void assertPerftDepth5() {
+        assertEquals(4_865_609L, perftValues.nodes, "Nodes count mismatch");
+        Log.infof("Nodes count: %d", perftValues.nodes);
+
+        assertEquals(82_719L, perftValues.captures, "Captures count mismatch");
+        Log.infof("Captures count: %d", perftValues.captures);
+
+        assertEquals(258L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
+        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+
+        assertEquals(0L, perftValues.castles, "Castles count mismatch");
+        Log.infof("Castles count: %d", perftValues.castles);
+
+        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
+        Log.infof("Promotions count: %d", perftValues.promotions);
+
+        assertEquals(27_351L, perftValues.checks, "Checks count mismatch");
+        Log.infof("Checks count: %d", perftValues.checks);
+
+        assertEquals(347L, perftValues.checkMates, "Checkmates count mismatch");
         Log.infof("Checkmates count: %d", perftValues.checkMates);
     }
 
@@ -181,46 +254,42 @@ class ChessPerft {
         Piece inCaseOfPromotion = move.promotion();
 
         chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
-        PerftValues valuesOfLastHalfMove = calculatePerftValues();
-        perftValues.accumulate(valuesOfLastHalfMove);
+        calculatePerftValues();
     }
 
-    private PerftValues calculatePerftValues() {
-        PerftValues valuesOfLastHalfMove = PerftValues.newInstance();
-        valuesOfLastHalfMove.nodes++;
+    private void calculatePerftValues() {
+        perftValues.nodes++;
 
         List<String> listOfAlgebraicNotations = chessGame.getChessBoard().listOfAlgebraicNotations();
         String lastMove = listOfAlgebraicNotations.getLast();
         if (Objects.isNull(lastMove)) {
-            return null;
+            return;
         }
 
         if (lastMove.contains("x")) {
-            valuesOfLastHalfMove.captures++;
+            perftValues.captures++;
         }
 
         if (listOfAlgebraicNotations.size() >= 2) {
             String preLastMove = listOfAlgebraicNotations.get(listOfAlgebraicNotations.size() - 2);
-            calculateCapturesOnPassage(preLastMove, lastMove, valuesOfLastHalfMove);
+            calculateCapturesOnPassage(preLastMove, lastMove, perftValues);
         }
 
         if (lastMove.contains("O-O")) {
-            valuesOfLastHalfMove.castles++;
+            perftValues.castles++;
         }
 
         if (lastMove.contains("=")) {
-            valuesOfLastHalfMove.promotions++;
+            perftValues.promotions++;
         }
 
         if (lastMove.contains("+")) {
-            valuesOfLastHalfMove.checks++;
+            perftValues.checks++;
         }
 
         if (lastMove.contains("#")) {
-            valuesOfLastHalfMove.checkMates++;
+            perftValues.checkMates++;
         }
-
-        return valuesOfLastHalfMove;
     }
 
     private static void calculateCapturesOnPassage(String preLastMove, String lastMove, PerftValues tempValues) {
@@ -295,16 +364,6 @@ class ChessPerft {
 
         public static PerftValues newInstance() {
             return new PerftValues(0L, 0L, 0L, 0L, 0L, 0L, 0L);
-        }
-
-        public void accumulate(PerftValues other) {
-            this.nodes += other.nodes;
-            this.captures += other.captures;
-            this.capturesOnPassage += other.capturesOnPassage;
-            this.castles += other.castles;
-            this.promotions += other.promotions;
-            this.checks += other.checks;
-            this.checkMates += other.checkMates;
         }
     }
 
