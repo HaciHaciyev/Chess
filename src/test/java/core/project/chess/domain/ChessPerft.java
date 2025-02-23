@@ -1,5 +1,7 @@
 package core.project.chess.domain;
 
+import com.github.bhlangonijr.chesslib.Board;
+import com.github.bhlangonijr.chesslib.move.Move;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
@@ -29,7 +31,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessPerft {
-    public static final int DEPTH = 4;
+    public static final int DEPTH = 3;
     private ChessGame chessGame = chessGameSupplier().get();
     private final ChessBoardNavigator navigator = new ChessBoardNavigator(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
@@ -73,21 +75,36 @@ class ChessPerft {
 
     @Test
     void anotherPerformanceTest() {
-//        chessGame = chessGameSupplier("rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR b KQkq - 0 1").get();
+//        chessGame = chessGameSupplier("rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - -1 1").get();
+        System.out.printf("Current FEN -> %s \n", chessGame.getChessBoard().actualRepresentationOfChessBoard());
         long v = anotherPerft(DEPTH);
         System.out.println("Total nodes -> " + v);
-        System.out.println();
-        System.out.println();
-        System.out.println();
+    }
 
-        Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
+    @Test
+    void thirdPartyPerformanceTest() {
+        Board b = new Board();
+        long v = thirdPartyPerft(b, DEPTH);
+        System.out.println("Total nodes -> " + v);
+    }
+
+    private long thirdPartyPerft(Board board, int depth) {
+        if (depth == 0) {
+            return 1;
+        }
+        long nodes = 0;
+        List<Move> moves = board.legalMoves();
+        for (Move move : moves) {
+            board.doMove(move);
+            long newNodes = thirdPartyPerft(board, depth - 1);
+            nodes += newNodes;
+
+            if (depth == DEPTH) {
+                System.out.printf("%s -> %s | %s\n", move, newNodes, board.getFen());
+            }
+            board.undoMove();
+        }
+        return nodes;
     }
 
     private void assertPerftDepth1() {
@@ -330,7 +347,6 @@ class ChessPerft {
 
             long newNodes = anotherPerft(depth - 1);
             nodes += newNodes;
-
             if (depth == DEPTH) {
                 System.out.printf("%s -> %s | %s\n", move, newNodes, chessGame.getChessBoard().actualRepresentationOfChessBoard());
             }
