@@ -73,6 +73,10 @@ public record Pawn(Color color)
             throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
+        if (!pawnColor.equals(color)) {
+            throw new IllegalStateException("Invalid method usage, check documentation.");
+        }
+
         final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().orElseThrow().color().equals(pawnColor);
         if (endFieldOccupiedBySameColorPiece) {
             return StatusPair.ofFalse();
@@ -101,7 +105,7 @@ public record Pawn(Color color)
             return false;
         }
 
-        return pawnForPromotion.color().equals(inCaseOfPromotion.color());
+        return pawnForPromotion.color().equals(this.color) && pawnForPromotion.color().equals(inCaseOfPromotion.color());
     }
 
     /**
