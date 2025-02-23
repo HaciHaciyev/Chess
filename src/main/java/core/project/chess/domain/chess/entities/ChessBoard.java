@@ -1115,8 +1115,12 @@ public class ChessBoard {
 
         for (Field field : potentialMoves) {
             Coordinate to = field.coordinate;
-            final boolean isAbleToCastle = isCastling(king, from, to) && ableToCastling(king.color(), AlgebraicNotation.castle(to));
-            if (!isAbleToCastle) {
+            if (isCastling(king, from, to)) {
+                final boolean isValidCastling = ableToCastling(king.color(), AlgebraicNotation.castle(to)) && king.isValidMove(this, from, to).status();
+                if (isValidCastling) {
+                    validMoves.add(new PlayerMove(from, to, null));
+                }
+
                 continue;
             }
 
