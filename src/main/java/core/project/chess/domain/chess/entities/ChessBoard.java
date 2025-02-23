@@ -1479,7 +1479,7 @@ public class ChessBoard {
              revertCapture(startedField, endedField, piece);
         }
 
-        if (!isCapture && !(piece instanceof Pawn)){
+        if (!isCapture && !(piece instanceof Pawn) && ruleOf50Moves != 0){
             this.ruleOf50Moves--;
         }
 
