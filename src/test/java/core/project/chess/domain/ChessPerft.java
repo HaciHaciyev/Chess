@@ -28,51 +28,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessPerft {
     public static final int DEPTH = 4;
-    private ChessGame chessGame = chessGameSupplier().get();
+    private final ChessGame chessGame = chessGameSupplier().get();
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername().username();
     private final PerftValues perftValues = PerftValues.newInstance();
 
-
     @Test
     void performanceTest() {
-        perft(DEPTH);
-
-        if (DEPTH == 1) {
-            assertPerftDepth1();
-            return;
-        }
-
-        if (DEPTH == 3) {
-            assertPerftDepth3();
-            return;
-        }
-
-        if (DEPTH == 6) {
-            assertPerftDepth6();
-            return;
-        }
-
-        if (DEPTH == 9) {
-            assertPerftDepth9();
-            return;
-        }
-
-        Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
-    }
-
-    @Test
-    void anotherPerformanceTest() {
-//        chessGame = chessGameSupplier("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ").get();
         System.out.printf("Current FEN -> %s \n", chessGame.getChessBoard().actualRepresentationOfChessBoard());
-        long v = anotherPerft(DEPTH);
+        long v = perft(DEPTH);
         System.out.println("Total nodes -> " + v);
         System.out.println();
         Log.warnf("Performance test executed at depth {%s} but no assertion was performed.", DEPTH);
@@ -317,21 +281,7 @@ class ChessPerft {
         Log.infof("Checkmates count: %d", perftValues.checkMates);
     }
 
-    void perft(int depth) {
-        if (depth == 0) {
-            return;
-        }
-
-        Set<PlayerMove> validMoves = chessGame.getChessBoard().generateValidMoves();
-        for (PlayerMove move : validMoves) {
-            processingOfTheMove(move);
-            perft(depth - 1);
-            chessGame.returnMovement(usernameOfPlayerForWhites);
-            chessGame.returnMovement(usernameOfPlayerForBlacks);
-        }
-    }
-
-    long anotherPerft(int depth) {
+    long perft(int depth) {
         long nodes = 0L;
 
         if (depth == 0) {
@@ -348,7 +298,7 @@ class ChessPerft {
 
             chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
             calculatePerftValues();
-            long newNodes = anotherPerft(depth - 1);
+            long newNodes = perft(depth - 1);
             nodes += newNodes;
             if (depth == DEPTH) {
                 System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.getChessBoard().actualRepresentationOfChessBoard());
@@ -371,8 +321,6 @@ class ChessPerft {
     }
 
     private void calculatePerftValues() {
-//        perftValues.nodes++;
-
         List<String> listOfAlgebraicNotations = chessGame.getChessBoard().listOfAlgebraicNotations();
         Optional<AlgebraicNotation> notation = chessGame.getChessBoard().lastAlgebraicNotation();
 
