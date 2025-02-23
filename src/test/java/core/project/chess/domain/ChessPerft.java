@@ -305,7 +305,7 @@ class ChessPerft {
 
         if (listOfAlgebraicNotations.size() >= 2) {
             String preLastMove = listOfAlgebraicNotations.get(listOfAlgebraicNotations.size() - 2);
-            calculateCapturesOnPassage(preLastMove, lastMove, perftValues);
+            calculateCapturesOnPassage(preLastMove, lastMove);
         }
 
         if (lastMove.contains("O-O")) {
@@ -325,7 +325,7 @@ class ChessPerft {
         }
     }
 
-    private static void calculateCapturesOnPassage(String preLastMove, String lastMove, PerftValues tempValues) {
+    private void calculateCapturesOnPassage(String preLastMove, String lastMove) {
         if (Objects.isNull(preLastMove)) {
             return;
         }
@@ -336,9 +336,9 @@ class ChessPerft {
             return;
         }
 
-        final boolean isNotPawnMove = Stream.of("K", "Q", "B", "N", "R").noneMatch(lastMove::startsWith) ||
+        final boolean isPawnMove = Stream.of("K", "Q", "B", "N", "R").noneMatch(lastMove::startsWith) ||
                 Stream.of("K", "Q", "B", "N", "R").noneMatch(preLastMove::startsWith);
-        if (isNotPawnMove) {
+        if (!isPawnMove) {
             return;
         }
 
@@ -370,7 +370,7 @@ class ChessPerft {
                 return;
             }
 
-            tempValues.capturesOnPassage++;
+            perftValues.capturesOnPassage++;
             return;
         }
 
@@ -382,7 +382,7 @@ class ChessPerft {
             return;
         }
 
-        tempValues.capturesOnPassage++;
+        perftValues.capturesOnPassage++;
     }
 
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
