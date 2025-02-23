@@ -1,11 +1,11 @@
 package core.project.chess.domain.chess.util;
 
-import core.project.chess.domain.chess.pieces.*;
-import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.Direction;
+import core.project.chess.domain.chess.pieces.*;
+import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import lombok.NonNull;
 
@@ -500,11 +500,11 @@ public record ChessBoardNavigator(ChessBoard board) {
         final List<StatusPair<Coordinate>> possibleCoordinates = new ArrayList<>(2);
 
         if (Color.WHITE.equals(color)) {
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() + 1));
-        } else {
             possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() - 1));
             possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() + 1));
+        } else {
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() + 1));
         }
 
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -521,7 +521,7 @@ public record ChessBoardNavigator(ChessBoard board) {
             }
 
             Piece piece = field.pieceOptional().orElseThrow();
-            if (piece instanceof Pawn && piece.color().equals(color)) {
+            if (piece instanceof Pawn && !piece.color().equals(color)) {
                 fields.add(field);
             }
         }
