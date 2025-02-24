@@ -90,6 +90,18 @@ public record ChessBoardNavigator(ChessBoard board) {
                 continue;
             }
 
+            if (rowIndex == 7) {
+                view.append("] ")
+                        .append(rowIndex)
+                        .append("   | ")
+                        .append('\t')
+                        .append("PGN: ")
+                        .append(board.pgn())
+                        .append('\n');
+
+                continue;
+            }
+
             if (rowIndex == 6) {
                 view.append("] ")
                         .append(rowIndex)
