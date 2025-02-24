@@ -65,13 +65,7 @@ class ChessPerft {
     }
 
     private void assertPerftDepth1() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
+        logValues();
 
         assertEquals(20L, perftValues.nodes, "Nodes count mismatch");
         assertEquals(0L, perftValues.captures, "Captures count mismatch");
@@ -83,13 +77,7 @@ class ChessPerft {
     }
 
     private void assertPerftDepth2() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
+        logValues();
 
         assertEquals(400L, perftValues.nodes, "Nodes count mismatch");
         assertEquals(0L, perftValues.captures, "Captures count mismatch");
@@ -101,13 +89,7 @@ class ChessPerft {
     }
 
     private void assertPerftDepth3() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
+        logValues();
 
         assertEquals(8_902L, perftValues.nodes, "Nodes count mismatch");
         assertEquals(34L, perftValues.captures, "Captures count mismatch");
@@ -119,20 +101,7 @@ class ChessPerft {
     }
 
     private void assertPerftDepth4() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Second nodes count: %d", secondPerftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("Second captures count: %d", secondPerftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Second en passaunt count: %d", secondPerftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Second castles count: %d", secondPerftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Second promotions count: %d", secondPerftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Second checks count: %d", secondPerftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
-        Log.infof("Second checkmates count: %d", secondPerftValues.checkMates);
+        logValues();
 
         assertEquals(197_281L, perftValues.nodes, "Nodes count mismatch");
         assertEquals(1_576L, perftValues.captures, "Captures count mismatch");
@@ -144,6 +113,66 @@ class ChessPerft {
     }
 
     private void assertPerftDepth5() {
+        logValues();
+
+        assertEquals(4_865_609L, perftValues.nodes, "Nodes count mismatch");
+        assertEquals(82_719L, perftValues.captures, "Captures count mismatch");
+        assertEquals(258L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
+        assertEquals(0L, perftValues.castles, "Castles count mismatch");
+        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
+        assertEquals(27_351L, perftValues.checks, "Checks count mismatch");
+        assertEquals(347L, perftValues.checkMates, "Checkmates count mismatch");
+    }
+
+    private void assertPerftDepth6() {
+        logValues();
+
+        assertEquals(119_060_324L, perftValues.nodes, "Nodes count mismatch");
+        assertEquals(2_812_008L, perftValues.captures, "Captures count mismatch");
+        assertEquals(5_248L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
+        assertEquals(0L, perftValues.castles, "Castles count mismatch");
+        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
+        assertEquals(809_099L, perftValues.checks, "Checks count mismatch");
+        assertEquals(10_828L, perftValues.checkMates, "Checkmates count mismatch");
+    }
+
+    private void assertPerftDepth7() {
+        logValues();
+
+        assertEquals(3_195_901_860L, perftValues.nodes, "Nodes count mismatch");
+        assertEquals(108_329_926L, perftValues.captures, "Captures count mismatch");
+        assertEquals(319_617L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
+        assertEquals(883_453L, perftValues.castles, "Castles count mismatch");
+        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
+        assertEquals(33_103_848L, perftValues.checks, "Checks count mismatch");
+        assertEquals(435_767L, perftValues.checkMates, "Checkmates count mismatch");
+    }
+
+    private void assertPerftDepth8() {
+        logValues();
+
+        assertEquals(84_998_978_956L, perftValues.nodes, "Nodes count mismatch");
+        assertEquals(3_523_740_106L, perftValues.captures, "Captures count mismatch");
+        assertEquals(7_187_977L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
+        assertEquals(23_605_205L, perftValues.castles, "Castles count mismatch");
+        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
+        assertEquals(968_981_593L, perftValues.checks, "Checks count mismatch");
+        assertEquals(9_852_036L, perftValues.checkMates, "Checkmates count mismatch");
+    }
+
+    private void assertPerftDepth9() {
+        logValues();
+
+        assertEquals(2_439_530_234_167L, perftValues.nodes, "Nodes count mismatch");
+        assertEquals(125_208_536_153L, perftValues.captures, "Captures count mismatch");
+        assertEquals(319_496_827L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
+        assertEquals(1_784_356_000L, perftValues.castles, "Castles count mismatch");
+        assertEquals(17_334_376L, perftValues.promotions, "Promotions count mismatch");
+        assertEquals(36_095_901_903L, perftValues.checks, "Checks count mismatch");
+        assertEquals(400_191_963L, perftValues.checkMates, "Checkmates count mismatch");
+    }
+
+    private void logValues() {
         Log.infof("Nodes count: %d", perftValues.nodes);
         Log.infof("Second nodes count: %d", secondPerftValues.nodes);
         Log.infof("Captures count: %d", perftValues.captures);
@@ -158,86 +187,6 @@ class ChessPerft {
         Log.infof("Second checks count: %d", secondPerftValues.checks);
         Log.infof("Checkmates count: %d", perftValues.checkMates);
         Log.infof("Second checkmates count: %d", secondPerftValues.checkMates);
-
-        assertEquals(4_865_609L, perftValues.nodes, "Nodes count mismatch");
-        assertEquals(82_719L, perftValues.captures, "Captures count mismatch");
-        assertEquals(258L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
-        assertEquals(0L, perftValues.castles, "Castles count mismatch");
-        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
-        assertEquals(27_351L, perftValues.checks, "Checks count mismatch");
-        assertEquals(347L, perftValues.checkMates, "Checkmates count mismatch");
-    }
-
-    private void assertPerftDepth6() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
-
-        assertEquals(119_060_324L, perftValues.nodes, "Nodes count mismatch");
-        assertEquals(2_812_008L, perftValues.captures, "Captures count mismatch");
-        assertEquals(5_248L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
-        assertEquals(0L, perftValues.castles, "Castles count mismatch");
-        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
-        assertEquals(809_099L, perftValues.checks, "Checks count mismatch");
-        assertEquals(10_828L, perftValues.checkMates, "Checkmates count mismatch");
-    }
-
-    private void assertPerftDepth7() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
-
-        assertEquals(3_195_901_860L, perftValues.nodes, "Nodes count mismatch");
-        assertEquals(108_329_926L, perftValues.captures, "Captures count mismatch");
-        assertEquals(319_617L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
-        assertEquals(883_453L, perftValues.castles, "Castles count mismatch");
-        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
-        assertEquals(33_103_848L, perftValues.checks, "Checks count mismatch");
-        assertEquals(435_767L, perftValues.checkMates, "Checkmates count mismatch");
-    }
-
-    private void assertPerftDepth8() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
-
-        assertEquals(84_998_978_956L, perftValues.nodes, "Nodes count mismatch");
-        assertEquals(3_523_740_106L, perftValues.captures, "Captures count mismatch");
-        assertEquals(7_187_977L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
-        assertEquals(23_605_205L, perftValues.castles, "Castles count mismatch");
-        assertEquals(0L, perftValues.promotions, "Promotions count mismatch");
-        assertEquals(968_981_593L, perftValues.checks, "Checks count mismatch");
-        assertEquals(9_852_036L, perftValues.checkMates, "Checkmates count mismatch");
-    }
-
-    private void assertPerftDepth9() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.promotions);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
-
-        assertEquals(2_439_530_234_167L, perftValues.nodes, "Nodes count mismatch");
-        assertEquals(125_208_536_153L, perftValues.captures, "Captures count mismatch");
-        assertEquals(319_496_827L, perftValues.capturesOnPassage, "En Passant captures count mismatch");
-        assertEquals(1_784_356_000L, perftValues.castles, "Castles count mismatch");
-        assertEquals(17_334_376L, perftValues.promotions, "Promotions count mismatch");
-        assertEquals(36_095_901_903L, perftValues.checks, "Checks count mismatch");
-        assertEquals(400_191_963L, perftValues.checkMates, "Checkmates count mismatch");
     }
 
     long perft(int depth) {
