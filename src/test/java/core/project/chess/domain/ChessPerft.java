@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessPerft {
-    public static final int DEPTH = 3;
+    public static final int DEPTH = 5;
     private final Board board = new Board();
     private final ChessGame chessGame = chessGameSupplier().get();
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
@@ -120,12 +120,19 @@ class ChessPerft {
 
     private void assertPerftDepth4() {
         Log.infof("Nodes count: %d", perftValues.nodes);
+        Log.infof("Second nodes count: %d", secondPerftValues.nodes);
         Log.infof("Captures count: %d", perftValues.captures);
+        Log.infof("Second captures count: %d", secondPerftValues.captures);
         Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+        Log.infof("Second en passaunt count: %d", secondPerftValues.capturesOnPassage);
         Log.infof("Castles count: %d", perftValues.castles);
+        Log.infof("Second castles count: %d", secondPerftValues.castles);
         Log.infof("Promotions count: %d", perftValues.promotions);
+        Log.infof("Second promotions count: %d", secondPerftValues.promotions);
         Log.infof("Checks count: %d", perftValues.checks);
+        Log.infof("Second checks count: %d", secondPerftValues.checks);
         Log.infof("Checkmates count: %d", perftValues.checkMates);
+        Log.infof("Second checkmates count: %d", secondPerftValues.checkMates);
 
         assertEquals(197_281L, perftValues.nodes, "Nodes count mismatch");
         assertEquals(1_576L, perftValues.captures, "Captures count mismatch");
@@ -138,12 +145,19 @@ class ChessPerft {
 
     private void assertPerftDepth5() {
         Log.infof("Nodes count: %d", perftValues.nodes);
+        Log.infof("Second nodes count: %d", secondPerftValues.nodes);
         Log.infof("Captures count: %d", perftValues.captures);
+        Log.infof("Second captures count: %d", secondPerftValues.captures);
         Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+        Log.infof("Second en passaunt count: %d", secondPerftValues.capturesOnPassage);
         Log.infof("Castles count: %d", perftValues.castles);
+        Log.infof("Second castles count: %d", secondPerftValues.castles);
         Log.infof("Promotions count: %d", perftValues.promotions);
+        Log.infof("Second promotions count: %d", secondPerftValues.promotions);
         Log.infof("Checks count: %d", perftValues.checks);
+        Log.infof("Second checks count: %d", secondPerftValues.checks);
         Log.infof("Checkmates count: %d", perftValues.checkMates);
+        Log.infof("Second checkmates count: %d", secondPerftValues.checkMates);
 
         assertEquals(4_865_609L, perftValues.nodes, "Nodes count mismatch");
         assertEquals(82_719L, perftValues.captures, "Captures count mismatch");
@@ -233,7 +247,6 @@ class ChessPerft {
             return 1L;
         }
 
-        String fen = this.board.getFen();
         List<Move> validMoves = this.board.legalMoves();
 
         for (Move move : validMoves) {
@@ -249,7 +262,7 @@ class ChessPerft {
             nodes += newNodes;
             calculatePerftValues(nodes);
             calculateSecondPerftValues(nodes, move);
-            verifyPerft(from, to, inCaseOfPromotion);
+            verifyPerft(move, from, to, inCaseOfPromotion);
 
             if (depth == DEPTH) {
                 System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.getChessBoard().actualRepresentationOfChessBoard());
@@ -263,15 +276,21 @@ class ChessPerft {
         return nodes;
     }
 
-    private void verifyPerft(Coordinate from, Coordinate to, Piece inCaseOfPromotion) {
-        if (perftValues.equals(secondPerftValues)) {
+    private void verifyPerft(Move move, Coordinate from, Coordinate to, Piece inCaseOfPromotion) {
+        if (perftValues.verify(secondPerftValues)) {
             return;
         }
 
         Log.errorf("Perft failed. On move: from - %s, to - %s, inCaseOfPromotion - %s", from, to, inCaseOfPromotion);
         Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", Arrays.toString(chessGame.getChessBoard().arrayOfFEN()), chessGame.getChessBoard().pgn());
         System.out.println();
-        Log.errorf("External Board: %s FEN: %s", board.getFen());
+        board.undoMove();
+        String[] fen = new String[2];
+        fen[0] = board.getFen();
+        board.doMove(move);
+        fen[1] = board.getFen();
+        Log.errorf("External Board: FEN: %s", Arrays.toString(fen));
+        System.out.println();
 
         Log.infof("First nodes: %d", perftValues.nodes);
         Log.infof("Second nodes: %d,", secondPerftValues.nodes);
@@ -300,6 +319,8 @@ class ChessPerft {
         Log.infof("First checkMates: %d", perftValues.checkMates);
         Log.infof("Second checkMates: %d", secondPerftValues.checkMates);
         System.out.println();
+
+        throw new IllegalStateException("Invalid perft values.");
     }
 
     private static @Nullable Piece getInCaseOfPromotion(Move move) {
@@ -334,6 +355,7 @@ class ChessPerft {
         Square enPassant = board.getEnPassant();
         if (!enPassant.equals(Square.NONE) && isCaptureOnPassage(from, to, enPassant)) {
             secondPerftValues.capturesOnPassage++;
+            secondPerftValues.captures++;
         }
 
         com.github.bhlangonijr.chesslib.Piece piece = board.getPiece(Square.valueOf(from.toString().toUpperCase()));
@@ -509,6 +531,18 @@ class ChessPerft {
             result = 31 * result + Long.hashCode(checks);
             result = 31 * result + Long.hashCode(checkMates);
             return result;
+        }
+
+        public boolean verify(PerftValues secondPerftValues) {
+            if (secondPerftValues == null) return false;
+
+            if (nodes != secondPerftValues.nodes) return false;
+            if (captures != secondPerftValues.captures) return false;
+            if (capturesOnPassage != secondPerftValues.capturesOnPassage) return false;
+            if (castles != secondPerftValues.castles) return false;
+            if (promotions != secondPerftValues.promotions) return false;
+            if (checks != secondPerftValues.checks) return false;
+            return checkMates == secondPerftValues.checkMates;
         }
     }
 

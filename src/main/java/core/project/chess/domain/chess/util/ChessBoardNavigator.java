@@ -482,7 +482,7 @@ public record ChessBoardNavigator(ChessBoard board) {
     /**
      * Determines the fields containing pawns that are threatening a given coordinate on the chess board.
      *
-     * <p>This method calculates the positions from which pawns of the specified color could
+     * <p>This method calculates the positions from which pawns of the specified colorOfRequiredPawns could
      * potentially attack the given pivot coordinate. For white pawns, it checks the two
      * diagonal squares behind the pivot. For black pawns, it checks the two diagonal
      * squares in front of the pivot.</p>
@@ -491,32 +491,32 @@ public record ChessBoardNavigator(ChessBoard board) {
      * <ol>
      *   <li>Exist on the board</li>
      *   <li>Contain a piece (are not empty)</li>
-     *   <li>Contain a pawn of the specified color</li>
+     *   <li>Contain a pawn of the specified colorOfRequiredPawns</li>
      * </ol>
      * </p>
      *
      * @param pivot The list of{@link Coordinate} object representing the position being threatened.
-     * @param color The list of{@link Color} enum value (WHITE or BLACK) indicating the color of the threatening pawns.
+     * @param colorOfRequiredPawns The list of{@link Color} enum value (WHITE or BLACK) indicating the colorOfRequiredPawns of the threatening pawns.
      * @return A list of{@link ChessBoard.Field} objects representing the fields containing pawns that threaten the pivot coordinate.
-     * @throws NullPointerException if any of {@code chessBoard}, {@code pivot}, or {@code color} is {@code null}.
+     * @throws NullPointerException if any of {@code chessBoard}, {@code pivot}, or {@code colorOfRequiredPawns} is {@code null}.
      * @see ChessBoard
      * @see Coordinate
      * @see Color
      * @see ChessBoard.Field
      * @see Pawn
      */
-    public List<ChessBoard.Field> pawnsThreateningCoordinate(Coordinate pivot, Color color) {
+    public List<ChessBoard.Field> pawnsThreateningCoordinate(Coordinate pivot, Color colorOfRequiredPawns) {
         Objects.requireNonNull(pivot);
-        Objects.requireNonNull(color);
+        Objects.requireNonNull(colorOfRequiredPawns);
 
         final List<StatusPair<Coordinate>> possibleCoordinates = new ArrayList<>(2);
 
-        if (Color.WHITE.equals(color)) {
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() + 1));
-        } else {
+        if (Color.WHITE.equals(colorOfRequiredPawns)) {
             possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() - 1));
             possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() + 1));
+        } else {
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() + 1));
         }
 
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -533,7 +533,7 @@ public record ChessBoardNavigator(ChessBoard board) {
             }
 
             Piece piece = field.pieceOptional().orElseThrow();
-            if (piece instanceof Pawn && !piece.color().equals(color)) {
+            if (piece instanceof Pawn && piece.color().equals(colorOfRequiredPawns)) {
                 fields.add(field);
             }
         }

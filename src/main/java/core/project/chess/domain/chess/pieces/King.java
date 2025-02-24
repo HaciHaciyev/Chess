@@ -473,7 +473,9 @@ public record King(Color color)
     }
 
     private boolean validateKingMovementForSafety(final ChessBoardNavigator boardNavigator, final Coordinate previousKing, final Coordinate futureKing) {
-        final List<Field> pawns = boardNavigator.pawnsThreateningCoordinate(futureKing, color);
+        final Color oppositeColor = color.equals(WHITE) ? BLACK : WHITE;
+
+        final List<Field> pawns = boardNavigator.pawnsThreateningCoordinate(futureKing, oppositeColor);
         for (final Field possiblePawn : pawns) {
             final Piece pawn = possiblePawn.pieceOptional().orElseThrow();
 
@@ -544,8 +546,9 @@ public record King(Color color)
 
     private boolean validatePieceMovementForKingSafety(final ChessBoardNavigator boardNavigator, final Coordinate kingPosition,
                                                        final Coordinate from, final Coordinate to) {
+        final Color oppositeColor = color.equals(WHITE) ? BLACK : WHITE;
 
-        final List<Field> pawnsThreateningCoordinates = boardNavigator.pawnsThreateningCoordinate(kingPosition, color);
+        final List<Field> pawnsThreateningCoordinates = boardNavigator.pawnsThreateningCoordinate(kingPosition, oppositeColor);
         for (final Field possiblePawn : pawnsThreateningCoordinates) {
             final Pawn pawn = (Pawn) possiblePawn.pieceOptional().orElseThrow();
 
