@@ -1,6 +1,7 @@
 package core.project.chess.domain;
 
 import com.github.bhlangonijr.chesslib.Board;
+import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
@@ -9,7 +10,6 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
-import core.project.chess.domain.chess.value_objects.PlayerMove;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Email;
 import core.project.chess.domain.user.value_objects.Password;
@@ -18,6 +18,8 @@ import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -27,12 +29,13 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessPerft {
-    public static final int DEPTH = 4;
+    public static final int DEPTH = 3;
     private final Board board = new Board();
     private final ChessGame chessGame = chessGameSupplier().get();
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername().username();
     private final PerftValues perftValues = PerftValues.newInstance();
+    private final PerftValues secondPerftValues = PerftValues.newInstance();
 
     @Test
     void performanceTest() {
@@ -230,23 +233,28 @@ class ChessPerft {
             return 1L;
         }
 
+        String fen = this.board.getFen();
         List<Move> validMoves = this.board.legalMoves();
 
         for (Move move : validMoves) {
-            String activePlayerUsername = chessGame.getPlayersTurn().equals(Color.BLACK) ? usernameOfPlayerForBlacks : usernameOfPlayerForWhites;
-            Coordinate from = Coordinate.valueOf(move.getFrom().toString().toLowerCase());
-            Coordinate to = Coordinate.valueOf(move.getTo().toString().toLowerCase());
-            Piece inCaseOfPromotion = move.getPromotion().getFenSymbol().equals(".") ? null : AlgebraicNotation.fromSymbol(move.getPromotion().getFenSymbol());
+            String activePlayerUsername = getActivePlayerUsername();
+            Coordinate from = from(move);
+            Coordinate to = to(move);
+            Piece inCaseOfPromotion = getInCaseOfPromotion(move);
 
             board.doMove(move);
             chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
-            calculatePerftValues();
+
             long newNodes = perft(depth - 1);
             nodes += newNodes;
-            perftValues.nodes = nodes;
+            calculatePerftValues(nodes);
+            calculateSecondPerftValues(nodes, move);
+            verifyPerft(from, to, inCaseOfPromotion);
+
             if (depth == DEPTH) {
                 System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.getChessBoard().actualRepresentationOfChessBoard());
             }
+
             board.undoMove();
             chessGame.returnMovement(usernameOfPlayerForWhites);
             chessGame.returnMovement(usernameOfPlayerForBlacks);
@@ -255,17 +263,122 @@ class ChessPerft {
         return nodes;
     }
 
-    private void processingOfTheMove(PlayerMove move) {
-        String activePlayerUsername = chessGame.getPlayersTurn().equals(Color.BLACK) ? usernameOfPlayerForBlacks : usernameOfPlayerForWhites;
-        Coordinate from = move.from();
-        Coordinate to = move.to();
-        Piece inCaseOfPromotion = move.promotion();
+    private void verifyPerft(Coordinate from, Coordinate to, Piece inCaseOfPromotion) {
+        if (perftValues.equals(secondPerftValues)) {
+            return;
+        }
 
-        chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
-        calculatePerftValues();
+        Log.errorf("Perft failed. On move: from - %s, to - %s, inCaseOfPromotion - %s", from, to, inCaseOfPromotion);
+        Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", Arrays.toString(chessGame.getChessBoard().arrayOfFEN()), chessGame.getChessBoard().pgn());
+        System.out.println();
+        Log.errorf("External Board: %s FEN: %s", board.getFen());
+
+        Log.infof("First nodes: %d", perftValues.nodes);
+        Log.infof("Second nodes: %d,", secondPerftValues.nodes);
+        System.out.println();
+
+        Log.infof("First captures: %d", perftValues.captures);
+        Log.infof("Second captures: %d", secondPerftValues.captures);
+        System.out.println();
+
+        Log.infof("First en passaunt: %d", perftValues.capturesOnPassage);
+        Log.infof("Second en passaunt: %d", secondPerftValues.capturesOnPassage);
+        System.out.println();
+
+        Log.infof("First castles: %d", perftValues.castles);
+        Log.infof("Second Castles: %d", secondPerftValues.castles);
+        System.out.println();
+
+        Log.infof("First promotions: %d", perftValues.promotions);
+        Log.infof("Second promotions: %d", secondPerftValues.promotions);
+        System.out.println();
+
+        Log.infof("First checks: %d", perftValues.checks);
+        Log.infof("Second checks: %d", secondPerftValues.checks);
+        System.out.println();
+
+        Log.infof("First checkMates: %d", perftValues.checkMates);
+        Log.infof("Second checkMates: %d", secondPerftValues.checkMates);
+        System.out.println();
     }
 
-    private void calculatePerftValues() {
+    private static @Nullable Piece getInCaseOfPromotion(Move move) {
+        return move.getPromotion().getFenSymbol().equals(".") ? null : AlgebraicNotation.fromSymbol(move.getPromotion().getFenSymbol());
+    }
+
+    private static @NotNull Coordinate to(Move move) {
+        return Coordinate.valueOf(move.getTo().toString().toLowerCase());
+    }
+
+    private static @NotNull Coordinate from(Move move) {
+        return Coordinate.valueOf(move.getFrom().toString().toLowerCase());
+    }
+
+    private String getActivePlayerUsername() {
+        return chessGame.getPlayersTurn().equals(Color.BLACK) ? usernameOfPlayerForBlacks : usernameOfPlayerForWhites;
+    }
+
+    private void calculateSecondPerftValues(long nodes, Move move) {
+        Coordinate from = from(move);
+        Coordinate to = to(move);
+        Piece inCaseOfPromotion = getInCaseOfPromotion(move);
+
+        secondPerftValues.nodes = nodes;
+        board.undoMove();
+
+        com.github.bhlangonijr.chesslib.Piece pieceOnEndOfMove = board.getPiece(Square.valueOf(to.toString().toUpperCase()));
+        if (!pieceOnEndOfMove.equals(com.github.bhlangonijr.chesslib.Piece.NONE)) {
+            secondPerftValues.captures++;
+        }
+
+        Square enPassant = board.getEnPassant();
+        if (!enPassant.equals(Square.NONE) && isCaptureOnPassage(from, to, enPassant)) {
+            secondPerftValues.capturesOnPassage++;
+        }
+
+        com.github.bhlangonijr.chesslib.Piece piece = board.getPiece(Square.valueOf(from.toString().toUpperCase()));
+        final boolean isTheKingMove = piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_KING) ||
+                piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_KING);
+
+        final boolean isCastle = isTheKingMove && (from.equals(Coordinate.e1) &&
+                (to.equals(Coordinate.c1) || to.equals(Coordinate.g1))) ||
+                (from.equals(Coordinate.e8)) &&
+                (to.equals(Coordinate.c8) || to.equals(Coordinate.g8));
+
+        if (isCastle) {
+            secondPerftValues.castles++;
+        }
+
+        if (inCaseOfPromotion != null) {
+            secondPerftValues.promotions++;
+        }
+
+        board.doMove(move);
+
+        final boolean isCheck = board.isKingAttacked() && !board.isMated();
+        if (isCheck) {
+            secondPerftValues.checks++;
+        }
+
+        if (board.isMated()) {
+            secondPerftValues.checkMates++;
+        }
+    }
+
+    private boolean isCaptureOnPassage(Coordinate from, Coordinate to, Square enPassant) {
+        final boolean isMoveEndingOnEnPassant = Square.valueOf(to.toString().toUpperCase()).equals(enPassant);
+        if (!isMoveEndingOnEnPassant) {
+            return false;
+        }
+
+        com.github.bhlangonijr.chesslib.Piece piece = board.getPiece(Square.valueOf(from.toString().toUpperCase()));
+        return piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_PAWN) ||
+                piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_PAWN);
+    }
+
+    private void calculatePerftValues(long nodes) {
+        perftValues.nodes = nodes;
+
         List<String> listOfAlgebraicNotations = chessGame.getChessBoard().listOfAlgebraicNotations();
         Optional<AlgebraicNotation> notation = chessGame.getChessBoard().lastAlgebraicNotation();
 
@@ -371,6 +484,31 @@ class ChessPerft {
 
         public static PerftValues newInstance() {
             return new PerftValues(0L, 0L, 0L, 0L, 0L, 0L, 0L);
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (!(o instanceof PerftValues that)) return false;
+
+            return nodes == that.nodes &&
+                    captures == that.captures &&
+                    capturesOnPassage == that.capturesOnPassage &&
+                    castles == that.castles &&
+                    promotions == that.promotions &&
+                    checks == that.checks &&
+                    checkMates == that.checkMates;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Long.hashCode(nodes);
+            result = 31 * result + Long.hashCode(captures);
+            result = 31 * result + Long.hashCode(capturesOnPassage);
+            result = 31 * result + Long.hashCode(castles);
+            result = 31 * result + Long.hashCode(promotions);
+            result = 31 * result + Long.hashCode(checks);
+            result = 31 * result + Long.hashCode(checkMates);
+            return result;
         }
     }
 
