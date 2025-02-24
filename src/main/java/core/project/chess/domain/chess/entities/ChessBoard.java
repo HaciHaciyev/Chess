@@ -12,6 +12,7 @@ import core.project.chess.domain.chess.value_objects.FromFEN;
 import core.project.chess.domain.chess.value_objects.PlayerMove;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
 
@@ -1165,7 +1166,8 @@ public class ChessBoard {
         /** Validation.*/
         final StatusPair<Set<Operations>> statusPair = piece.isValidMove(this, from, to);
         if (!statusPair.status()) {
-            throw new IllegalArgumentException("Invalid move. Failed validation for %s movement.".formatted(piece.toString()));
+            logErrorMove(from, to);
+            throw new IllegalArgumentException("Invalid move. From:%s. To:%s. Failed validation for %s movement.".formatted(from, to, piece.toString()));
         }
 
         final boolean promotionOperation = statusPair.orElseThrow().contains(PROMOTION);
@@ -1269,16 +1271,28 @@ public class ChessBoard {
         return GameResultMessage.Continue;
     }
 
+    private void logErrorMove(Coordinate from, Coordinate to) {
+        Log.infof("""
+        Error move validation.
+        From: %s,
+        To: %s,
+        PGN: %s,
+        FEN: %s.
+        """, from, to, pgn(), fenRepresentationsOfBoard.toString());
+    }
+
     private void inCaseOfCapture(Coordinate to, Piece piece, Field endField) {
         final boolean captureOnPassage = isCaptureOnPassage(piece, to);
         if (captureOnPassage) {
             Field field = fieldMap.get(latestMovement().orElseThrow().getSecond());
 
-            if (piece.color().equals(WHITE)) {
+            final boolean isCapturedPieceWhite = field.piece.color().equals(WHITE);
+            if (isCapturedPieceWhite) {
                 capturedWhitePieces.add(field.piece);
             }
 
-            if (piece.color().equals(BLACK)) {
+            final boolean isCapturedPieceBlack = field.piece.color().equals(BLACK);
+            if (isCapturedPieceBlack) {
                 capturedBlackPieces.add(field.piece);
             }
 
@@ -1287,11 +1301,13 @@ public class ChessBoard {
             return;
         }
 
-        if (piece.color().equals(WHITE)) {
+        final boolean isCapturedPieceWhite = endField.piece.color().equals(WHITE);
+        if (isCapturedPieceWhite) {
             capturedWhitePieces.add(endField.piece);
         }
 
-        if (piece.color().equals(BLACK)) {
+        final boolean isCapturedPieceBlack = endField.piece.color().equals(BLACK);
+        if (isCapturedPieceBlack) {
             capturedBlackPieces.add(endField.piece);
         }
 
@@ -1606,15 +1622,16 @@ public class ChessBoard {
             return;
         }
 
-        final Piece previouslyCapturedPiece;
-        if (figuresTurn.equals(WHITE)) {
-            previouslyCapturedPiece = capturedBlackPieces.removeLast();
-            endedField.addFigure(previouslyCapturedPiece);
+        if (figuresTurn.equals(BLACK)) {
+            Piece capturedPiece = capturedBlackPieces.removeLast();
+            endedField.addFigure(capturedPiece);
+            materialAdvantageOfBlack += materialAdvantageOfFigure(piece);
             return;
         }
 
-        previouslyCapturedPiece = capturedWhitePieces.removeLast();
-        endedField.addFigure(previouslyCapturedPiece);
+        Piece capturedPiece = capturedWhitePieces.removeLast();
+        endedField.addFigure(capturedPiece);
+        materialAdvantageOfWhite += materialAdvantageOfFigure(piece);
     }
 
     private boolean revertPotentialCaptureOnPassage(final Field startedField, final Field endedField, final Piece piece) {
@@ -1651,7 +1668,9 @@ public class ChessBoard {
                 return false;
             }
 
-            fieldMap.get(passageEnd).addFigure(new Pawn(BLACK));
+            Piece capturedPawn = capturedBlackPieces.removeLast();
+            fieldMap.get(passageEnd).addFigure(capturedPawn);
+            materialAdvantageOfBlack++;
             return true;
         }
 
@@ -1660,7 +1679,9 @@ public class ChessBoard {
             return false;
         }
 
-        fieldMap.get(passageEnd).addFigure(new Pawn(WHITE));
+        Piece capturedPawn = capturedWhitePieces.removeLast();
+        fieldMap.get(passageEnd).addFigure(capturedPawn);
+        materialAdvantageOfWhite++;
         return true;
     }
 

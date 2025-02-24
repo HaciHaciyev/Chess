@@ -61,32 +61,6 @@ class ChessPerft {
         Log.infof("Checkmates count: %d", perftValues.checkMates);
     }
 
-    @Test
-    void thirdPartyPerformanceTest() {
-        Board b = new Board();
-        long v = thirdPartyPerft(b, DEPTH);
-        System.out.println("Total nodes -> " + v);
-    }
-
-    private long thirdPartyPerft(Board board, int depth) {
-        if (depth == 0) {
-            return 1;
-        }
-        long nodes = 0;
-        List<Move> moves = board.legalMoves();
-        for (Move move : moves) {
-            board.doMove(move);
-            long newNodes = thirdPartyPerft(board, depth - 1);
-            nodes += newNodes;
-
-            if (depth == DEPTH) {
-                System.out.printf("%s -> %s | %s\n", move, newNodes, board.getFen());
-            }
-            board.undoMove();
-        }
-        return nodes;
-    }
-
     private void assertPerftDepth1() {
         Log.infof("Nodes count: %d", perftValues.nodes);
         Log.infof("Captures count: %d", perftValues.captures);
