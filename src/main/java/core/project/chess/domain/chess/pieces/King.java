@@ -552,7 +552,9 @@ public record King(Color color)
         for (final Field possiblePawn : pawnsThreateningCoordinates) {
             final Pawn pawn = (Pawn) possiblePawn.pieceOptional().orElseThrow();
 
-            if (!pawn.color().equals(color)) {
+            final boolean isEaten = possiblePawn.getCoordinate().equals(to);
+
+            if (!isEaten && !pawn.color().equals(color)) {
                 return false;
             }
         }
@@ -561,7 +563,7 @@ public record King(Color color)
         for (final Field potentialKnightAttackPosition : potentialKnightAttackPositions) {
             final Piece piece = potentialKnightAttackPosition.pieceOptional().orElseThrow();
 
-            boolean isEaten = potentialKnightAttackPosition.getCoordinate().equals(to);
+            final boolean isEaten = potentialKnightAttackPosition.getCoordinate().equals(to);
 
             final boolean isEnemyKnight = piece instanceof Knight && !piece.color().equals(color);
             if (isEnemyKnight && !isEaten) {
@@ -580,8 +582,10 @@ public record King(Color color)
         for (final Field field : diagonalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
+            final boolean isEaten = field.getCoordinate().equals(to);
+
             final boolean isEnemyBishopOrQueen = (piece instanceof Bishop || piece instanceof Queen) && !piece.color().equals(color);
-            if (isEnemyBishopOrQueen) {
+            if (!isEaten && isEnemyBishopOrQueen) {
                 return false;
             }
         }
@@ -597,8 +601,10 @@ public record King(Color color)
         for (final Field field : horizontalVertical) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
+            final boolean isEaten = field.getCoordinate().equals(to);
+
             final boolean isEnemyRookOrQueen = (piece instanceof Rook || piece instanceof Queen) && !piece.color().equals(color);
-            if (isEnemyRookOrQueen) {
+            if (!isEaten && isEnemyRookOrQueen) {
                 return false;
             }
         }
