@@ -1625,13 +1625,13 @@ public class ChessBoard {
         if (figuresTurn.equals(BLACK)) {
             Piece capturedPiece = capturedBlackPieces.removeLast();
             endedField.addFigure(capturedPiece);
-            materialAdvantageOfBlack += materialAdvantageOfFigure(piece);
+            materialAdvantageOfBlack += materialAdvantageOfFigure(capturedPiece);
             return;
         }
 
         Piece capturedPiece = capturedWhitePieces.removeLast();
         endedField.addFigure(capturedPiece);
-        materialAdvantageOfWhite += materialAdvantageOfFigure(piece);
+        materialAdvantageOfWhite += materialAdvantageOfFigure(capturedPiece);
     }
 
     private boolean revertPotentialCaptureOnPassage(final Field startedField, final Field endedField, final Piece piece) {
