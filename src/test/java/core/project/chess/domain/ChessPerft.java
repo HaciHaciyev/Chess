@@ -311,12 +311,12 @@ class ChessPerft {
         final boolean isTheKingMove = piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_KING) ||
                 piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_KING);
 
-        final boolean isCastle = isTheKingMove && (from.equals(Coordinate.e1) &&
+        final boolean isCastle = (from.equals(Coordinate.e1) &&
                 (to.equals(Coordinate.c1) || to.equals(Coordinate.g1))) ||
-                (from.equals(Coordinate.e8)) &&
-                (to.equals(Coordinate.c8) || to.equals(Coordinate.g8));
+                ((from.equals(Coordinate.e8)) &&
+                (to.equals(Coordinate.c8) || to.equals(Coordinate.g8)));
 
-        if (isCastle) {
+        if (isTheKingMove && isCastle) {
             secondPerftValues.castles++;
         }
 
