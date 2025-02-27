@@ -4,6 +4,8 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.util.Glicko2RatingCalculator;
+import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import jakarta.annotation.Nullable;
 
@@ -13,18 +15,19 @@ import java.util.UUID;
 
 public class Puzzle {
     private final UUID puzzleId;
+    private Rating rating;
     private final ChessBoard chessBoard;
     private final AlgebraicNotation[] algebraicNotations;
     private final UserAccount player;
     private final String startPositionFEN;
-
     private int currentPosition;
     private boolean isHadMistake;
     private boolean isSolved;
     private boolean isEnded;
 
-    public Puzzle(UUID puzzleId, ChessBoard chessBoard, AlgebraicNotation[] algebraicNotations, UserAccount player) {
+    public Puzzle(UUID puzzleId, Rating rating, ChessBoard chessBoard, AlgebraicNotation[] algebraicNotations, UserAccount player) {
         this.puzzleId = puzzleId;
+        this.rating = rating;
         this.chessBoard = chessBoard;
         this.algebraicNotations = algebraicNotations;
         this.startPositionFEN = chessBoard.actualRepresentationOfChessBoard();
@@ -32,8 +35,10 @@ public class Puzzle {
         this.player.addPuzzle(this);
     }
 
-    public static Puzzle of(UserAccount userAccount, String pgn, int startPositionOfPuzzle) {
+    public static Puzzle of(UserAccount userAccount, String pgn, int startPositionOfPuzzle, Rating rating) {
         Objects.requireNonNull(pgn);
+        Objects.requireNonNull(userAccount);
+        Objects.requireNonNull(rating);
         if (pgn.isBlank()) {
             throw new IllegalArgumentException("PGN can`t be blank.");
         }
@@ -54,7 +59,7 @@ public class Puzzle {
             requiredMoveReturns--;
         }
 
-        return new Puzzle(UUID.randomUUID(), chessBoard, algebraicNotations, userAccount);
+        return new Puzzle(UUID.randomUUID(), rating, chessBoard, algebraicNotations, userAccount);
     }
 
     public UUID ID() {
@@ -63,6 +68,10 @@ public class Puzzle {
 
     public ChessBoard chessBoard() {
         return chessBoard;
+    }
+
+    public Rating rating() {
+        return rating;
     }
 
     public UserAccount player() {
@@ -133,8 +142,7 @@ public class Puzzle {
 
             final boolean isLastMove = currentPosition == algebraicNotations.length - 1;
             if (isLastMove) {
-                this.isEnded = true;
-                this.isSolved = !this.isHadMistake;
+                puzzleOver();
                 return Pair.of(representationAfterPlayerMove, Optional.empty());
             }
 
@@ -148,6 +156,14 @@ public class Puzzle {
         }
 
         return Pair.of(representationAfterPlayerMove, Optional.of(chessBoard.actualRepresentationOfChessBoard()));
+    }
+
+    private void puzzleOver() {
+        this.isEnded = true;
+        this.isSolved = !this.isHadMistake;
+
+        final double result = this.isSolved ? -1 : 1;
+        this.rating = Glicko2RatingCalculator.calculate(this.rating, player.getRating(), result);
     }
 
     private boolean isProperMove(Coordinate from, Coordinate to, Piece inCaseOfPromotion) {

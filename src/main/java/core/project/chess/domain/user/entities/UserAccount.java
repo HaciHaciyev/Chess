@@ -30,6 +30,7 @@ public class UserAccount {
     private UserRole userRole;
     private boolean isEnable;
     private Rating rating;
+    private Rating puzzlesRating;
     private final AccountEvents accountEvents;
     private final Set<UserAccount> partners;
     private final Set<ChessGame> games;
@@ -43,8 +44,8 @@ public class UserAccount {
 
         return new UserAccount(
                 UUID.randomUUID(), username, email, password, UserRole.NONE, false,
-                Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(),
-                ProfilePicture.defaultProfilePicture()
+                Rating.defaultRating(), Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(),
+                new HashSet<>(), ProfilePicture.defaultProfilePicture()
         );
     }
 
@@ -52,7 +53,7 @@ public class UserAccount {
      * this method is used to call only from repository
      */
     public static UserAccount fromRepository(UUID id, Username username, Email email, Password password, UserRole userRole,
-                                             boolean enabled, Rating rating, AccountEvents events, ProfilePicture profilePicture) {
+                                             boolean enabled, Rating rating, Rating puzzlesRating, AccountEvents events, ProfilePicture profilePicture) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(username);
         Objects.requireNonNull(email);
@@ -62,8 +63,8 @@ public class UserAccount {
         Objects.requireNonNull(events);
 
         return new UserAccount(
-                id, username, email, password, userRole, enabled, rating, events,
-                new HashSet<>(), new HashSet<>(), new HashSet<>(),
+                id, username, email, password, userRole, enabled, rating, puzzlesRating,
+                events, new HashSet<>(), new HashSet<>(), new HashSet<>(),
                 Objects.requireNonNullElseGet(profilePicture, ProfilePicture::defaultProfilePicture)
         );
     }
@@ -122,6 +123,21 @@ public class UserAccount {
         final Rating opponentRating = color.equals(WHITE) ? chessGame.getPlayerForBlack().getRating() : chessGame.getPlayerForWhite().getRating();
 
         this.rating = Glicko2RatingCalculator.calculate(this.rating, opponentRating, result);
+    }
+
+    public void changeRating(final Puzzle puzzle) {
+        Objects.requireNonNull(puzzle);
+        if (!puzzle.isEnded()) {
+            throw new IllegalArgumentException("Puzzle is not ended.");
+        }
+
+        final boolean doNotMatch = !puzzle.player().getId().equals(this.id);
+        if (doNotMatch) {
+            throw new IllegalArgumentException("This user and puzzle is do not match.");
+        }
+
+        final double result = puzzle.isSolved() ? 1 : -1;
+        this.puzzlesRating = Glicko2RatingCalculator.calculate(this.rating, puzzle.rating(), result);
     }
 
     private double getResult(final GameResult gameResult, final Color color) {
