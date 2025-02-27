@@ -188,6 +188,12 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 rs.getDouble("rating_volatility")
         );
 
+        var puzzlesRating = Rating.fromRepository(
+                rs.getDouble("puzzles_rating"),
+                rs.getDouble("puzzles_rating_deviation"),
+                rs.getDouble("puzzles_rating_volatility")
+        );
+
         return UserAccount.fromRepository(
                 UUID.fromString(rs.getString("id")),
                 new Username(rs.getString("username")),
@@ -196,6 +202,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 UserRole.valueOf(rs.getString("user_role")),
                 rs.getBoolean("is_enable"),
                 rating,
+                puzzlesRating,
                 events,
                 null
         );
