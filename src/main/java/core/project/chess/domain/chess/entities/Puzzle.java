@@ -3,6 +3,7 @@ package core.project.chess.domain.chess.entities;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
+import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
@@ -17,13 +18,14 @@ public class Puzzle {
     private final UUID puzzleId;
     private final ChessBoard chessBoard;
     private final AlgebraicNotation[] algebraicNotations;
+    private final UserAccount player;
 
     private int currentPosition;
     private boolean isHadMistake;
     private boolean isSolved;
     private boolean isEnded;
 
-    public static Puzzle of(String pgn, int startPositionOfPuzzle) {
+    public static Puzzle of(UserAccount userAccount, String pgn, int startPositionOfPuzzle) {
         Objects.requireNonNull(pgn);
         if (pgn.isBlank()) {
             throw new IllegalArgumentException("PGN can`t be blank.");
@@ -45,7 +47,7 @@ public class Puzzle {
             requiredMoveReturns--;
         }
 
-        return new Puzzle(UUID.randomUUID(), chessBoard, algebraicNotations);
+        return new Puzzle(UUID.randomUUID(), chessBoard, algebraicNotations, userAccount);
     }
 
     public UUID ID() {
@@ -54,6 +56,10 @@ public class Puzzle {
 
     public ChessBoard chessBoard() {
         return chessBoard;
+    }
+
+    public UserAccount player() {
+        return player;
     }
 
     public int currentPosition() {
