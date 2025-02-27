@@ -1,6 +1,7 @@
 package core.project.chess.domain.user.entities;
 
 import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.user.events.AccountEvents;
@@ -32,6 +33,7 @@ public class UserAccount {
     private final AccountEvents accountEvents;
     private final Set<UserAccount> partners;
     private final Set<ChessGame> games;
+    private final Set<Puzzle> puzzles;
     private ProfilePicture profilePicture;
 
     public static UserAccount of(Username username, Email email, Password password) {
@@ -41,7 +43,7 @@ public class UserAccount {
 
         return new UserAccount(
                 UUID.randomUUID(), username, email, password, UserRole.NONE, false,
-                Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(),
+                Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(),
                 ProfilePicture.defaultProfilePicture()
         );
     }
@@ -61,7 +63,8 @@ public class UserAccount {
 
         return new UserAccount(
                 id, username, email, password, userRole, enabled, rating, events,
-                new HashSet<>(), new HashSet<>(), Objects.requireNonNullElseGet(profilePicture, ProfilePicture::defaultProfilePicture)
+                new HashSet<>(), new HashSet<>(), new HashSet<>(),
+                Objects.requireNonNullElseGet(profilePicture, ProfilePicture::defaultProfilePicture)
         );
     }
 
@@ -80,6 +83,15 @@ public class UserAccount {
     public void addGame(final ChessGame game) {
         Objects.requireNonNull(game);
         games.add(game);
+    }
+
+    public void addPuzzle(final Puzzle puzzle) {
+        final boolean doNotMatch = !puzzle.player().getId().equals(this.id);
+        if (doNotMatch) {
+            throw new IllegalArgumentException("This user and puzzle is do not match.");
+        }
+
+        puzzles.add(puzzle);
     }
 
     public void enable() {

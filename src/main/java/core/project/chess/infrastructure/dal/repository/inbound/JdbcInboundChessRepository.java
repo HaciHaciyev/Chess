@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.dal.repository.inbound;
 
+import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
@@ -54,6 +55,21 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             .where("id = ?")
             .build();
 
+    static final String SAVE_PUZZLE = String.format("%s; %s;",
+            insert()
+            .into("Puzzle")
+            .columns("id", "startPositionFEN", "pgn")
+            .values(3)
+            .onConflict("id")
+            .doNothing()
+            .build(),
+            insert()
+            .into("UserPuzzles")
+            .columns("puzzle_id", "user_id", "is_solved")
+            .values(3)
+            .build()
+    );
+
     JdbcInboundChessRepository(JDBC jdbc) {
         this.jdbc = jdbc;
     }
@@ -102,5 +118,16 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         )
 
         .ifFailure(Throwable::printStackTrace);
+    }
+
+    @Override
+    public void savePuzzle(final Puzzle puzzle) {
+        if (!puzzle.isEnded()) {
+            throw new IllegalArgumentException("Puzzle is not ended.");
+        }
+
+        String puzzleID = puzzle.ID().toString();
+        jdbc.write(SAVE_PUZZLE, puzzleID, puzzle.startPositionFEN(), puzzle.PGN(), puzzleID, puzzle.player().getId(), puzzle.isSolved())
+                .ifFailure(Throwable::printStackTrace);
     }
 }

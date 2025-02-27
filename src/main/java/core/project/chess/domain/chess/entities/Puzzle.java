@@ -6,24 +6,31 @@ import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import jakarta.annotation.Nullable;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Puzzle {
     private final UUID puzzleId;
     private final ChessBoard chessBoard;
     private final AlgebraicNotation[] algebraicNotations;
     private final UserAccount player;
+    private final String startPositionFEN;
 
     private int currentPosition;
     private boolean isHadMistake;
     private boolean isSolved;
     private boolean isEnded;
+
+    public Puzzle(UUID puzzleId, ChessBoard chessBoard, AlgebraicNotation[] algebraicNotations, UserAccount player) {
+        this.puzzleId = puzzleId;
+        this.chessBoard = chessBoard;
+        this.algebraicNotations = algebraicNotations;
+        this.startPositionFEN = chessBoard.actualRepresentationOfChessBoard();
+        this.player = player;
+        this.player.addPuzzle(this);
+    }
 
     public static Puzzle of(UserAccount userAccount, String pgn, int startPositionOfPuzzle) {
         Objects.requireNonNull(pgn);
@@ -62,8 +69,35 @@ public class Puzzle {
         return player;
     }
 
-    public int currentPosition() {
-        return currentPosition;
+    public String startPositionFEN() {
+        return startPositionFEN;
+    }
+
+    public String PGN() {
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        int number = 1;
+        for (int i = 0; i < algebraicNotations.length; i += 2) {
+            final String notation = algebraicNotations[i].algebraicNotation();
+
+            final String secondNotation;
+            if (i + 1 <= algebraicNotations.length - 1) {
+                secondNotation = algebraicNotations[i + 1].algebraicNotation();
+            } else {
+                secondNotation = "...";
+            }
+
+            stringBuilder.append(number)
+                    .append(". ")
+                    .append(notation)
+                    .append(" ")
+                    .append(secondNotation)
+                    .append(" ");
+
+            number++;
+        }
+
+        return stringBuilder.toString();
     }
 
     public boolean isSolved() {
