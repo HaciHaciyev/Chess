@@ -1,6 +1,6 @@
 Create table UserToken(
-    id char(36) not null,
-    user_id char(36) not null,
+    id UUID not null,
+    user_id UUID not null,
     token char(36) not null,
     is_confirmed boolean not null,
     creation_date timestamp not null,

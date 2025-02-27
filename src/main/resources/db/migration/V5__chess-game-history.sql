@@ -1,6 +1,6 @@
 Create Table ChessGameHistory (
-    id char(36) not null,
-    chess_game_id char(36) not null,
+    id UUID not null,
+    chess_game_id UUID not null,
     pgn_chess_representation varchar not null,
     fen_representations_of_board text[] not null,
     primary key (id),
