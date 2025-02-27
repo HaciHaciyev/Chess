@@ -3,6 +3,7 @@ package core.project.chess.infrastructure.dal.repository.inbound;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -25,6 +26,9 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                     "rating",
                     "rating_deviation",
                     "rating_volatility",
+                    "puzzles_rating",
+                    "puzzles_rating_deviation",
+                    "puzzles_rating_volatility",
                     "is_enable",
                     "creation_date",
                     "last_updated_date"
@@ -68,6 +72,16 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .where("id = ?")
             .build();
 
+    static final String UPDATE_USER_PUZZLES_RATING = update("UserAccount")
+            .set("""
+                puzzles_rating = ?,
+                puzzles_rating_deviation = ?,
+                puzzles_rating_volatility = ?
+                """
+            )
+            .where("id = ?")
+            .build();
+
     static final String UPDATE_USER_TOKEN_AND_ACCOUNT = String.format("%s; %s;",
             update("UserToken")
             .set("is_confirmed = ?")
@@ -106,6 +120,9 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             userAccount.getRating().rating(),
             userAccount.getRating().ratingDeviation(),
             userAccount.getRating().volatility(),
+            userAccount.getPuzzlesRating().rating(),
+            userAccount.getPuzzlesRating().ratingDeviation(),
+            userAccount.getPuzzlesRating().volatility(),
             userAccount.isEnabled(),
             userAccount.getAccountEvents().creationDate(),
             userAccount.getAccountEvents().lastUpdateDate()
@@ -121,6 +138,19 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 userAccount.getRating().rating(),
                 userAccount.getRating().ratingDeviation(),
                 userAccount.getRating().volatility(),
+                userAccount.getId().toString()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
+    }
+
+    @Override
+    public void updateOfPuzzleRating(final UserAccount userAccount) {
+        Rating puzzlesRating = userAccount.getPuzzlesRating();
+        jdbc.write(UPDATE_USER_PUZZLES_RATING,
+                puzzlesRating.rating(),
+                puzzlesRating.ratingDeviation(),
+                puzzlesRating.volatility(),
                 userAccount.getId().toString()
         )
 
