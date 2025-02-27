@@ -8,6 +8,9 @@ public enum MessageType {
     RESIGNATION,
     TREE_FOLD,
 
+    PUZZLE,
+    PUZZLE_MOVE,
+
     MESSAGE,
 
     ERROR,

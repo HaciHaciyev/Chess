@@ -1,6 +1,7 @@
 package core.project.chess.infrastructure.dal.cache;
 
 import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Username;
@@ -21,6 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class SessionStorage {
 
     private static final ConcurrentHashMap<Username, Pair<Session, UserAccount>> sessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Pair<Username, UUID>, Puzzle> puzzles = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<UUID, Pair<ChessGame, CopyOnWriteArraySet<Session>>> gameSessions = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Username, ConcurrentLinkedDeque<Triple<Session, UserAccount, GameParameters>>> waitingForTheGame = new ConcurrentHashMap<>();
     private static final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -96,5 +98,13 @@ public class SessionStorage {
     public Optional<ChessGame> removeGame(UUID gameId) {
         Pair<ChessGame, CopyOnWriteArraySet<Session>> pair = gameSessions.remove(gameId);
         return (pair == null) ? Optional.empty() : Optional.of(pair.getFirst());
+    }
+
+    public void addPuzzle(Puzzle puzzle) {
+        puzzles.put(Pair.of(puzzle.player().getUsername(), puzzle.ID()), puzzle);
+    }
+
+    public Optional<Puzzle> getPuzzle(Username username, UUID puzzleID) {
+        return Optional.ofNullable(puzzles.get(Pair.of(username, puzzleID)));
     }
 }

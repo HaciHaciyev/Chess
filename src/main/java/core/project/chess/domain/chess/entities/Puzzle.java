@@ -9,6 +9,7 @@ import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import jakarta.annotation.Nullable;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -178,5 +179,37 @@ public class Puzzle {
         final Piece requiredPromotion = chessBoard.getInCaseOfPromotion(algebraicNotation);
 
         return from.equals(coordinates.getFirst()) && to.equals(coordinates.getSecond()) && inCaseOfPromotion.equals(requiredPromotion);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof Puzzle puzzle)) return false;
+
+        return startPositionIndex == puzzle.startPositionIndex &&
+                currentPosition == puzzle.currentPosition &&
+                isHadMistake == puzzle.isHadMistake &&
+                isSolved == puzzle.isSolved &&
+                isEnded == puzzle.isEnded &&
+                Objects.equals(puzzleId, puzzle.puzzleId) &&
+                Objects.equals(rating, puzzle.rating) &&
+                chessBoard.equals(puzzle.chessBoard) &&
+                Arrays.equals(algebraicNotations, puzzle.algebraicNotations) &&
+                player.getId().equals(puzzle.player.getId()) &&
+                Objects.equals(startPositionFEN, puzzle.startPositionFEN);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(puzzleId);
+        result = 31 * result + Objects.hashCode(rating);
+        result = 31 * result + chessBoard.hashCode();
+        result = 31 * result + Arrays.hashCode(algebraicNotations);
+        result = 31 * result + Objects.hashCode(startPositionFEN);
+        result = 31 * result + startPositionIndex;
+        result = 31 * result + currentPosition;
+        result = 31 * result + Boolean.hashCode(isHadMistake);
+        result = 31 * result + Boolean.hashCode(isSolved);
+        result = 31 * result + Boolean.hashCode(isEnded);
+        return result;
     }
 }

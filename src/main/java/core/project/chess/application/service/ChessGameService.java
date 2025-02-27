@@ -1,5 +1,6 @@
 package core.project.chess.application.service;
 
+import core.project.chess.domain.chess.services.PuzzleService;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
@@ -41,6 +42,8 @@ public class ChessGameService {
 
     private final JwtUtility jwtUtility;
 
+    private final PuzzleService puzzleService;
+
     private final SessionStorage sessionStorage;
 
     private final ChessGameFactory chessGameFactory;
@@ -76,6 +79,12 @@ public class ChessGameService {
     }
 
     public void onMessage(Session session, Username username, Message message) {
+        final boolean isRelatedToPuzzles = message.type().equals(MessageType.PUZZLE) || message.type().equals(MessageType.PUZZLE_MOVE);
+        if (isRelatedToPuzzles) {
+            handlePuzzleAction(session, username, message);
+            return;
+        }
+
         final boolean isGameInitialization = message.type().equals(MessageType.GAME_INIT);
         if (isGameInitialization) {
             initializeGameSession(session, username, message);
@@ -150,6 +159,29 @@ public class ChessGameService {
 
         sessionStorage.getGameSessions(chessGame.getChessGameId())
                         .forEach(gameSession -> sendMessage(gameSession, resultMessage));
+    }
+
+    private void handlePuzzleAction(Session session, Username username, Message message) {
+        UserAccount user = sessionStorage.getSessionByUsername(username).orElseThrow().getSecond();
+
+        if (message.type().equals(MessageType.PUZZLE)) {
+            sendMessage(session, puzzleService.chessPuzzle(user));
+            return;
+        }
+
+        if (Objects.isNull(message.gameID())) {
+            sendMessage(session, Message.error("Puzzle id is required for move."));
+            return;
+        }
+
+        Result<UUID, Throwable> idResult = Result.ofThrowable(() -> UUID.fromString(message.gameID()));
+        if (!idResult.success()) {
+            sendMessage(session, Message.error("Puzzle id is invalid."));
+            return;
+        }
+
+        Message response = puzzleService.puzzleMove(user, idResult.orElseThrow(), message.from(), message.to(), message.inCaseOfPromotion());
+        sendMessage(session, response);
     }
 
     private void initializeGameSession(Session session, Username username, Message message) {
