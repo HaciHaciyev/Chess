@@ -6,14 +6,12 @@ import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-@Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Puzzle {
     private final UUID puzzleId;
@@ -21,7 +19,9 @@ public class Puzzle {
     private final AlgebraicNotation[] algebraicNotations;
 
     private int currentPosition;
+    private boolean isHadMistake;
     private boolean isSolved;
+    private boolean isEnded;
 
     public static Puzzle of(String pgn, int startPositionOfPuzzle) {
         Objects.requireNonNull(pgn);
@@ -48,6 +48,26 @@ public class Puzzle {
         return new Puzzle(UUID.randomUUID(), chessBoard, algebraicNotations);
     }
 
+    public UUID ID() {
+        return puzzleId;
+    }
+
+    public ChessBoard chessBoard() {
+        return chessBoard;
+    }
+
+    public int currentPosition() {
+        return currentPosition;
+    }
+
+    public boolean isSolved() {
+        return isSolved;
+    }
+
+    public boolean isEnded() {
+        return isEnded;
+    }
+
     public AlgebraicNotation[] getAlgebraicNotations() {
         AlgebraicNotation[] copiedArray = new AlgebraicNotation[algebraicNotations.length];
         System.arraycopy(algebraicNotations, 0, copiedArray, 0, algebraicNotations.length);
@@ -56,11 +76,13 @@ public class Puzzle {
     }
 
     public Pair<String, Optional<String>> makeMovement(final Coordinate from, final Coordinate to, @Nullable final Piece inCaseOfPromotion) {
-        if (this.isSolved) {
+        if (this.isEnded) {
             throw new IllegalArgumentException("Puzzle already solved.");
         }
 
         if (!isProperMove(from, to, inCaseOfPromotion)) {
+            this.isHadMistake = true;
+            this.isSolved = false;
             throw new IllegalArgumentException("Bad move.");
         }
 
@@ -71,7 +93,8 @@ public class Puzzle {
 
             final boolean isLastMove = currentPosition == algebraicNotations.length - 1;
             if (isLastMove) {
-                this.isSolved = true;
+                this.isEnded = true;
+                this.isSolved = !this.isHadMistake;
                 return Pair.of(representationAfterPlayerMove, Optional.empty());
             }
 
