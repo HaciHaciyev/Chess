@@ -142,8 +142,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
     }
 
     @Override
-    public Result<Puzzle, Throwable> puzzle() {
-        return jdbc.read(RANDOM_PUZZLE, this::puzzleMapper);
+    public Result<Puzzle, Throwable> puzzle(double rating) {
+        return jdbc.read(RANDOM_PUZZLE, this::puzzleMapper, rating - 150, rating + 150);
     }
 
     @Override
