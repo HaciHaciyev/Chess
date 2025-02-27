@@ -5,5 +5,6 @@ CREATE TABLE Puzzle (
     rating_volatility real not null,
     startPositionFEN varchar not null,
     pgn varchar not null,
+    startPositionIndex smallint not null,
     primary key (id)
 );

@@ -63,7 +63,8 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                     "rating_deviation",
                     "rating_volatility",
                     "startPositionFEN",
-                    "pgn"
+                    "pgn",
+                    "startPositionIndex"
             )
             .values(6)
             .onConflict("id")
@@ -133,17 +134,21 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         }
 
         String puzzleID = puzzle.ID().toString();
-        jdbc.write(SAVE_PUZZLE, puzzleID,
-                        puzzle.rating().rating(),
-                        puzzle.rating().ratingDeviation(),
-                        puzzle.rating().volatility(),
-                        puzzle.startPositionFEN(),
-                        puzzle.PGN(),
-                        puzzle.rating().ratingDeviation(),
-                        puzzle.rating().volatility(),
-                        puzzleID,
-                        puzzle.player().getId().toString(),
-                        puzzle.isSolved())
-                .ifFailure(Throwable::printStackTrace);
+        jdbc.write(SAVE_PUZZLE,
+                puzzleID,
+                puzzle.rating().rating(),
+                puzzle.rating().ratingDeviation(),
+                puzzle.rating().volatility(),
+                puzzle.startPositionFEN(),
+                puzzle.PGN(),
+                puzzle.startPositionIndex(),
+                puzzle.rating().ratingDeviation(),
+                puzzle.rating().volatility(),
+                puzzleID,
+                puzzle.player().getId().toString(),
+                puzzle.isSolved()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
     }
 }

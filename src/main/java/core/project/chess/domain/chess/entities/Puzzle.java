@@ -20,18 +20,20 @@ public class Puzzle {
     private final AlgebraicNotation[] algebraicNotations;
     private final UserAccount player;
     private final String startPositionFEN;
+    private final int startPositionIndex;
     private int currentPosition;
     private boolean isHadMistake;
     private boolean isSolved;
     private boolean isEnded;
 
-    public Puzzle(UUID puzzleId, Rating rating, ChessBoard chessBoard, AlgebraicNotation[] algebraicNotations, UserAccount player) {
+    private Puzzle(UUID puzzleId, Rating rating, ChessBoard chessBoard, AlgebraicNotation[] algebraicNotations, UserAccount player, int startPositionIndex) {
         this.puzzleId = puzzleId;
         this.rating = rating;
         this.chessBoard = chessBoard;
         this.algebraicNotations = algebraicNotations;
         this.startPositionFEN = chessBoard.actualRepresentationOfChessBoard();
         this.player = player;
+        this.startPositionIndex = startPositionIndex;
         this.player.addPuzzle(this);
     }
 
@@ -59,7 +61,7 @@ public class Puzzle {
             requiredMoveReturns--;
         }
 
-        return new Puzzle(UUID.randomUUID(), rating, chessBoard, algebraicNotations, userAccount);
+        return new Puzzle(UUID.randomUUID(), rating, chessBoard, algebraicNotations, userAccount, startPositionOfPuzzle);
     }
 
     public UUID ID() {
@@ -80,6 +82,10 @@ public class Puzzle {
 
     public String startPositionFEN() {
         return startPositionFEN;
+    }
+
+    public int startPositionIndex() {
+        return this.startPositionIndex;
     }
 
     public String PGN() {
