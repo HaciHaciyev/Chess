@@ -46,6 +46,19 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .where("id = ?")
             .build();
 
+    static final String RANDOM_PUZZLE = select()
+            .column("id")
+            .column("rating")
+            .column("rating_deviation")
+            .column("rating_volatility")
+            .column("pgn")
+            .column("startPositionIndex")
+            .from("Puzzle")
+            .where("rating BETWEEN ?")
+            .and("?")
+            .and("id NOT IN (%s)".formatted(select().column("id").from("UserPuzzles")))
+            .limitAndOffset(1, 0);
+
     static final String LIST_OF_PUZZLES = select()
             .column("id")
             .column("rating")
@@ -126,6 +139,11 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
     @Override
     public Result<List<ChessGameHistory>, Throwable> listOfGames(final Username username, final int limit, final int offSet) {
         return jdbc.readListOf(LIST_OF_GAMES, this::chessGameMapper, Objects.requireNonNull(username).username(), username.username(), limit, offSet);
+    }
+
+    @Override
+    public Result<Puzzle, Throwable> puzzle() {
+        return jdbc.read(RANDOM_PUZZLE, this::puzzleMapper);
     }
 
     @Override
