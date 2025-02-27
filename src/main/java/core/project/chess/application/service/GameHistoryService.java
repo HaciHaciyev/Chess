@@ -9,7 +9,6 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @ApplicationScoped

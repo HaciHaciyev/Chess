@@ -2,6 +2,7 @@ package core.project.chess.application.controller.http;
 
 import core.project.chess.application.service.GameHistoryService;
 import io.quarkus.security.Authenticated;
+import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
@@ -16,8 +17,8 @@ public class GameHistoryResource {
 
     private final GameHistoryService gameHistoryService;
 
-    GameHistoryResource(JsonWebToken jwt, GameHistoryService gameHistoryService) {
-        this.jwt = jwt;
+    GameHistoryResource(Instance<JsonWebToken> jwt, GameHistoryService gameHistoryService) {
+        this.jwt = jwt.get();
         this.gameHistoryService = gameHistoryService;
     }
 

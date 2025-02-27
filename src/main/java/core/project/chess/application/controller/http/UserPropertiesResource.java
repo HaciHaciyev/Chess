@@ -2,6 +2,7 @@ package core.project.chess.application.controller.http;
 
 import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
+import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.WebApplicationException;
@@ -15,8 +16,8 @@ public class UserPropertiesResource {
 
     private final OutboundUserRepository outboundUserRepository;
 
-    UserPropertiesResource(JsonWebToken jwt, OutboundUserRepository outboundUserRepository) {
-        this.jwt = jwt;
+    UserPropertiesResource(Instance<JsonWebToken> jwt, OutboundUserRepository outboundUserRepository) {
+        this.jwt = jwt.get();
         this.outboundUserRepository = outboundUserRepository;
     }
 

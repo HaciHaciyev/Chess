@@ -6,6 +6,7 @@ import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
+import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -25,8 +26,8 @@ public class ProfilePictureResource {
 
     private final ProfileService profileService;
 
-    ProfilePictureResource(JsonWebToken jwt,  ProfileService profileService) {
-        this.jwt = jwt;
+    ProfilePictureResource(Instance<JsonWebToken> jwt, ProfileService profileService) {
+        this.jwt = jwt.get();
         this.profileService = profileService;
     }
 

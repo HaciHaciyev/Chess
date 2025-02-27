@@ -4,14 +4,15 @@ import core.project.chess.domain.user.value_objects.Email;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 @ApplicationScoped
 public class EmailInteractionService {
 
     private final Mailer mailer;
 
-    EmailInteractionService(Mailer mailer) {
-        this.mailer = mailer;
+    EmailInteractionService(Instance<Mailer> mailer) {
+        this.mailer = mailer.get();
     }
 
     public void sendToEmail(Email email, String link) {
