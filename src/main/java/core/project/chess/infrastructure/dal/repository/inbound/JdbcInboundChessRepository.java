@@ -58,10 +58,16 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     static final String SAVE_PUZZLE = String.format("%s; %s;",
             insert()
             .into("Puzzle")
-            .columns("id", "startPositionFEN", "pgn")
-            .values(3)
+            .columns("id",
+                    "rating",
+                    "rating_deviation",
+                    "rating_volatility",
+                    "startPositionFEN",
+                    "pgn"
+            )
+            .values(6)
             .onConflict("id")
-            .doNothing()
+            .doUpdateSet("rating = ?, rating_deviation = ?, rating_volatility = ?")
             .build(),
             insert()
             .into("UserPuzzles")
@@ -127,7 +133,17 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         }
 
         String puzzleID = puzzle.ID().toString();
-        jdbc.write(SAVE_PUZZLE, puzzleID, puzzle.startPositionFEN(), puzzle.PGN(), puzzleID, puzzle.player().getId(), puzzle.isSolved())
+        jdbc.write(SAVE_PUZZLE, puzzleID,
+                        puzzle.rating().rating(),
+                        puzzle.rating().ratingDeviation(),
+                        puzzle.rating().volatility(),
+                        puzzle.startPositionFEN(),
+                        puzzle.PGN(),
+                        puzzle.rating().ratingDeviation(),
+                        puzzle.rating().volatility(),
+                        puzzleID,
+                        puzzle.player().getId().toString(),
+                        puzzle.isSolved())
                 .ifFailure(Throwable::printStackTrace);
     }
 }
