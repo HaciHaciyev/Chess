@@ -1,9 +1,11 @@
 package core.project.chess.infrastructure.dal.repository.outbound;
 
 import core.project.chess.application.dto.chess.ChessGameHistory;
+import core.project.chess.application.dto.chess.Puzzle;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.GameResult;
+import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import core.project.chess.infrastructure.dal.util.sql.Order;
@@ -32,6 +34,29 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .from("ChessGameHistory")
             .where("id = ?")
             .build();
+
+    static final String GET_PUZZLE = select()
+            .column("id")
+            .column("rating")
+            .column("rating_deviation")
+            .column("rating_volatility")
+            .column("pgn")
+            .column("startPositionIndex")
+            .from("Puzzle")
+            .where("id = ?")
+            .build();
+
+    static final String LIST_OF_PUZZLES = select()
+            .column("id")
+            .column("rating")
+            .column("rating_deviation")
+            .column("rating_volatility")
+            .column("pgn")
+            .column("startPositionIndex")
+            .from("Puzzle")
+            .where("rating BETWEEN ?")
+            .and("?")
+            .limitAndOffset();
 
     static final String GET_CHESS_GAME = select()
             .column("cgh.id").as("chessHistoryId")
@@ -103,7 +128,17 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
         return jdbc.readListOf(LIST_OF_GAMES, this::chessGameMapper, Objects.requireNonNull(username).username(), username.username(), limit, offSet);
     }
 
-    private ChessGameHistory chessGameMapper(final ResultSet rs) throws SQLException {
+    @Override
+    public Result<Puzzle, Throwable> puzzle(UUID puzzleId) {
+        return jdbc.read(GET_PUZZLE, this::puzzleMapper, puzzleId.toString());
+    }
+
+    @Override
+    public Result<List<Puzzle>, Throwable> listOfPuzzles(double rating, int limit, int offSet) {
+        return jdbc.readListOf(LIST_OF_PUZZLES, this::puzzleMapper, rating - 150, rating + 150, limit, offSet);
+    }
+
+    ChessGameHistory chessGameMapper(final ResultSet rs) throws SQLException {
 
         return new ChessGameHistory(
                 UUID.fromString(rs.getString("chessHistoryId")),
@@ -117,6 +152,16 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                 rs.getDouble("blackPlayerRating"),
                 rs.getObject("gameStart", Timestamp.class).toLocalDateTime(),
                 rs.getObject("gameEnd", Timestamp.class).toLocalDateTime()
+        );
+    }
+
+    Puzzle puzzleMapper(ResultSet rs) throws SQLException {
+        Rating rating = Rating.fromRepository(rs.getDouble("rating"), rs.getDouble("rating_deviation"), rs.getDouble("rating_volatility"));
+        return new Puzzle(
+                UUID.fromString(rs.getString("id")),
+                rs.getString("pgn"),
+                rs.getInt("startPositionIndex"),
+                rating
         );
     }
 }
