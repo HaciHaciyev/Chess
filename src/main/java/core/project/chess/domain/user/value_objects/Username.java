@@ -26,4 +26,16 @@ public record Username(String username) {
             throw new IllegalArgumentException("Username contains invalid characters.");
         }
     }
+
+    public static boolean validate(String username) {
+        if (Objects.isNull(username)) {
+            return false;
+        }
+        if (username.isBlank()) {
+            return false;
+        }
+
+        Matcher matcher = pattern.matcher(username);
+        return matcher.matches();
+    }
 }
