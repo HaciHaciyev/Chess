@@ -1,5 +1,5 @@
 Create Table ChessGame (
-    id UUID not null,
+    id char(36) not null,
     player_for_white_rating smallint not null,
     player_for_black_rating smallint not null,
     time_controlling_type varchar(7) not null,

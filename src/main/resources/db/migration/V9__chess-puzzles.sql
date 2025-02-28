@@ -1,5 +1,5 @@
 CREATE TABLE Puzzle (
-    id UUID not null,
+    id char(36) not null,
     rating real not null,
     rating_deviation real not null,
     rating_volatility real not null,

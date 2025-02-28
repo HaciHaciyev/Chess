@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS RefreshToken (
-    user_id UUID NOT NULL,
+    user_id char(36) NOT NULL,
     token text NOT NULL,
     PRIMARY KEY (user_id),
     CONSTRAINT fk_user_account

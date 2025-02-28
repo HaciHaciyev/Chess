@@ -1,5 +1,5 @@
 Create Table UserAccount (
-    id UUID not null,
+    id char(36) not null,
     username varchar(32) not null,
     email varchar(255) not null,
     password varchar(128) not null,
