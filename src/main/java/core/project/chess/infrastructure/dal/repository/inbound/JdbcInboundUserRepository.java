@@ -33,7 +33,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                     "creation_date",
                     "last_updated_date"
             )
-            .values(11)
+            .values(14)
             .build();
 
     static final String INSERT_NEW_PARTNERSHIP = insert()
