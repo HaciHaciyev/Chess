@@ -55,20 +55,10 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             .where("id = ?")
             .build();
 
-    static final String SAVE_PUZZLE = String.format("%s; %s;",
-            insert()
-            .into("Puzzle")
-            .columns("id",
-                    "rating",
-                    "rating_deviation",
-                    "rating_volatility",
-                    "startPositionFEN",
-                    "pgn",
-                    "startPositionIndex"
-            )
-            .values(6)
-            .onConflict("id")
-            .doUpdateSet("rating = ?, rating_deviation = ?, rating_volatility = ?")
+    static final String SAVE_PUZZLE_SOLVING = String.format("%s; %s;",
+            update("Puzzle")
+            .set("rating = ?, rating_deviation = ?, rating_volatility = ?")
+            .where("id = ?")
             .build(),
             insert()
             .into("UserPuzzles")
@@ -133,18 +123,11 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             throw new IllegalArgumentException("Puzzle is not ended.");
         }
 
-        String puzzleID = puzzle.ID().toString();
-        jdbc.write(SAVE_PUZZLE,
-                puzzleID,
+        jdbc.write(SAVE_PUZZLE_SOLVING,
                 puzzle.rating().rating(),
                 puzzle.rating().ratingDeviation(),
                 puzzle.rating().volatility(),
-                puzzle.startPositionFEN(),
-                puzzle.PGN(),
-                puzzle.startPositionIndex(),
-                puzzle.rating().ratingDeviation(),
-                puzzle.rating().volatility(),
-                puzzleID,
+                puzzle.ID().toString(),
                 puzzle.player().getId().toString(),
                 puzzle.isSolved()
         )
