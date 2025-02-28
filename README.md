@@ -537,6 +537,71 @@ or
 }
 ```
 
+Chess Puzzles
+
+For starting new puzzle you must send a message below. 
+The server will load a random puzzle corresponding to the player's rating, making sure that the user has not solved this puzzle before:
+
+```json
+{
+   "type": "PUZZLE"
+}
+```
+
+The response will be either:
+
+```json
+{
+   "type": "ERROR",
+   "message": "error description"
+}
+```
+
+or
+
+```json
+{
+   "type": "PUZZLE",
+   "gameID": "string (UUID)",
+   "FEN": "string (Forsyth-Edwards Notation)",
+   "PGN": "string (Portable Game Notation)"
+}
+```
+
+For making move for solving puzzle:
+
+```json
+{
+   "type": "PUZZLE_MOVE",
+   "gameID": "string (UUID)",
+   "from": "coordinate",
+   "to": "coordinate",
+   "inCaseOfPromotion": "null | \"Q\" | \"B\" | \"N\" | \"R\" | \"q\" | \"b\" | \"n\" | \"r\""
+}
+```
+
+The response will be either:
+
+```json
+{
+   "type": "ERROR",
+   "message": "error description"
+}
+```
+
+or
+
+```json
+{
+   "type": "PUZZLE_MOVE",
+   "gameID": "string (UUID)",
+   "FEN": "string (Forsyth-Edwards Notation)",
+   "PGN": "string (Portable Game Notation)",
+   "isPuzzleEnded": "boolean",
+   "isPuzzleSolved": "boolean"
+}
+```
+
 ## Contributing
 We welcome contributions to the Chess Game Backend project. We also welcome front-end developers and designers for the client side.
 If you find any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request.
