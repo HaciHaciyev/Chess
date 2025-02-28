@@ -16,8 +16,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import static core.project.chess.domain.chess.value_objects.AlgebraicNotation.PieceTYPE;
-
 @ApplicationScoped
 public class PuzzleService {
 
@@ -40,6 +38,8 @@ public class PuzzleService {
                 .gameID(puzzle.ID().toString())
                 .FEN(puzzle.chessBoard().actualRepresentationOfChessBoard())
                 .PGN(puzzle.chessBoard().pgn())
+                .isPuzzleEnded(puzzle.isEnded())
+                .isPuzzleSolved(puzzle.isSolved())
                 .build();
     }
 
