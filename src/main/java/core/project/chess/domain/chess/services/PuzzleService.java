@@ -38,8 +38,6 @@ public class PuzzleService {
                 .gameID(puzzle.ID().toString())
                 .FEN(puzzle.chessBoard().actualRepresentationOfChessBoard())
                 .PGN(puzzle.chessBoard().pgn())
-                .isPuzzleEnded(puzzle.isEnded())
-                .isPuzzleSolved(puzzle.isSolved())
                 .build();
     }
 
@@ -59,6 +57,8 @@ public class PuzzleService {
                     .gameID(puzzle.ID().toString())
                     .FEN(puzzle.chessBoard().actualRepresentationOfChessBoard())
                     .PGN(puzzle.chessBoard().pgn())
+                    .isPuzzleEnded(puzzle.isEnded())
+                    .isPuzzleSolved(puzzle.isSolved())
                     .build();
         } catch (IllegalArgumentException e) {
             return Message.error("Invalid move.");
