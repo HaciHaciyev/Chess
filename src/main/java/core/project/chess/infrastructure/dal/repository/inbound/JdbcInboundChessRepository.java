@@ -55,6 +55,19 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             .where("id = ?")
             .build();
 
+    static final String SAVE_PUZZLE = insert()
+            .into("Puzzle")
+            .columns("id",
+                    "rating",
+                    "rating_deviation",
+                    "rating_volatility",
+                    "startPositionFEN",
+                    "pgn",
+                    "startPositionIndex"
+            )
+            .values(7)
+            .build();
+
     static final String SAVE_PUZZLE_SOLVING = String.format("%s; %s;",
             update("Puzzle")
             .set("rating = ?, rating_deviation = ?, rating_volatility = ?")
@@ -118,7 +131,22 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     }
 
     @Override
-    public void savePuzzle(final Puzzle puzzle) {
+    public void savePuzzle(Puzzle puzzle) {
+        jdbc.write(SAVE_PUZZLE,
+                puzzle.ID().toString(),
+                puzzle.rating().rating(),
+                puzzle.rating().ratingDeviation(),
+                puzzle.rating().volatility(),
+                puzzle.startPositionFEN(),
+                puzzle.PGN(),
+                puzzle.startPositionIndex()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
+    }
+
+    @Override
+    public void updatePuzzleOnSolving(final Puzzle puzzle) {
         if (!puzzle.isEnded()) {
             throw new IllegalArgumentException("Puzzle is not ended.");
         }
@@ -134,4 +162,6 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
         .ifFailure(Throwable::printStackTrace);
     }
+
+
 }

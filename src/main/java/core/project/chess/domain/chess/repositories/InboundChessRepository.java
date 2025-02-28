@@ -10,4 +10,6 @@ public interface InboundChessRepository {
     void completelyUpdateFinishedGame(ChessGame chessGame);
 
     void savePuzzle(Puzzle puzzle);
+
+    void updatePuzzleOnSolving(Puzzle puzzle);
 }
