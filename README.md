@@ -229,6 +229,44 @@ DELETE /account/remove-partner?partner={partner}
 
 ---
 
+## Puzzles
+
+---
+
+### Get Puzzle by ID
+**Endpoint:**
+```
+GET /puzzles/{id}
+```
+**Responses:**
+- `200 OK` – Returns puzzle. Body:
+```json
+{
+  "puzzleId": "string (UUID)",
+  "PGN": "string (Portable Game Notation)", 
+  "startPosition": "number",
+  "rating": {
+     "rating": "number",
+     "ratingDeviation": "number",
+     "volatility": "number"
+  }
+}
+```
+- `400 BAD REQUEST` – If puzzle are not found.
+
+---
+
+### List of puzzles
+**Endpoint:**
+```
+GET /puzzles/page?pageNumber={pageNumber}&pageSize={pageSize}
+```
+**Responses:**
+- `200 OK` - Returns list of puzzles, related to defined page and user rating.
+- `400 BAD REQUEST` - puzzles not found.
+
+---
+
 ## Root Endpoint
 
 ### Base API Path
