@@ -1,8 +1,8 @@
-Create Table ChessGameHistory (
-    id char(36) not null,
-    chess_game_id char(36) not null,
-    pgn_chess_representation varchar not null,
-    fen_representations_of_board text[] not null,
-    primary key (id),
-    constraint board_game_fk foreign key (chess_game_id) references ChessGame (id)
+CREATE TABLE ChessGameHistory (
+    id CHAR(36) NOT NULL,
+    chess_game_id CHAR(36) NOT NULL,
+    pgn_chess_representation VARCHAR NOT NULL,
+    fen_representations_of_board TEXT [] NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT board_game_fk FOREIGN KEY (chess_game_id) REFERENCES ChessGame(id)
 );

@@ -1,20 +1,23 @@
-Create Table UserAccount (
-    id char(36) not null,
-    username varchar(32) not null,
-    email varchar(255) not null,
-    password varchar(128) not null,
-    user_role varchar not null,
-    is_enable boolean not null,
-    rating real not null,
-    rating_deviation real not null,
-    rating_volatility real not null,
-    creation_date timestamp not null,
-    last_updated_date timestamp not null,
-    primary key (id)
+CREATE TABLE UserAccount (
+    id CHAR(36) NOT NULL,
+    firstname VARCHAR(48) NOT NULL,
+    surname VARCHAR(56) NOT NULL,
+    username VARCHAR(32) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password VARCHAR(128) NOT NULL,
+    user_role VARCHAR NOT NULL,
+    is_enable boolean NOT NULL,
+    rating REAL NOT NULL,
+    rating_deviation REAL NOT NULL,
+    rating_volatility REAL NOT NULL,
+    puzzles_rating REAL NOT NULL,
+    puzzles_rating_deviation REAL NOT NULL,
+    puzzles_rating_volatility REAL NOT NULL,
+    creation_date TIMESTAMP NOT NULL,
+    last_updated_date TIMESTAMP NOT NULL,
+    PRIMARY KEY (id)
 );
 
-Create Unique Index
-    user_email_index ON UserAccount (email);
+CREATE UNIQUE INDEX user_email_index ON UserAccount (email);
 
-Create Unique Index
-    user_name_index ON UserAccount (username);
+CREATE UNIQUE INDEX user_name_index ON UserAccount (username);

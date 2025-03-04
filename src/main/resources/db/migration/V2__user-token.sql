@@ -1,10 +1,10 @@
-Create table UserToken(
-    id char(36) not null,
-    user_id char(36) not null,
-    token char(36) not null,
-    is_confirmed boolean not null,
-    creation_date timestamp not null,
-    expiration_date timestamp not null,
-    primary key (id),
-    constraint user_token_fk foreign key (user_id) references UserAccount (id)
+CREATE TABLE UserToken (
+    id CHAR(36) NOT NULL,
+    user_id CHAR(36) NOT NULL,
+    token CHAR(36) NOT NULL,
+    is_confirmed boolean NOT NULL,
+    creation_date TIMESTAMP NOT NULL,
+    expiration_date TIMESTAMP NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT user_token_fk FOREIGN KEY (user_id) REFERENCES UserAccount(id)
 );

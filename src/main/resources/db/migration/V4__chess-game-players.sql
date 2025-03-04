@@ -1,9 +1,13 @@
-Create Table GamePlayers (
-    chess_game_id char(36) not null,
-    player_for_white_id char(36) not null,
-    player_for_black_id char(36) not null,
-    primary key (chess_game_id, player_for_white_id, player_for_black_id),
-    constraint game_players_fk foreign key (chess_game_id) references ChessGame (id),
-    constraint player_for_white_fk foreign key (player_for_white_id) references UserAccount (id),
-    constraint player_for_black_fk foreign key (player_for_black_id) references UserAccount (id)
+CREATE TABLE GamePlayers (
+    chess_game_id CHAR(36) NOT NULL,
+    player_for_white_id CHAR(36) NOT NULL,
+    player_for_black_id CHAR(36) NOT NULL,
+    PRIMARY KEY (
+        chess_game_id,
+        player_for_white_id,
+        player_for_black_id
+    ),
+    CONSTRAINT game_players_fk FOREIGN KEY (chess_game_id) REFERENCES ChessGame(id),
+    CONSTRAINT player_for_white_fk FOREIGN KEY (player_for_white_id) REFERENCES UserAccount(id),
+    CONSTRAINT player_for_black_fk FOREIGN KEY (player_for_black_id) REFERENCES UserAccount(id)
 );
