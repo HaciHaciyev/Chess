@@ -24,6 +24,8 @@ import static core.project.chess.domain.chess.enumerations.GameResult.WHITE_WIN;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserAccount {
     private final UUID id;
+    private final Firstname firstname;
+    private final Surname surname;
     private final Username username;
     private final Email email;
     private final Password password;
@@ -37,13 +39,15 @@ public class UserAccount {
     private final Set<Puzzle> puzzles;
     private ProfilePicture profilePicture;
 
-    public static UserAccount of(Username username, Email email, Password password) {
+    public static UserAccount of(Firstname firstname, Surname surname, Username username, Email email, Password password) {
+        Objects.requireNonNull(firstname);
+        Objects.requireNonNull(surname);
         Objects.requireNonNull(username);
         Objects.requireNonNull(email);
         Objects.requireNonNull(password);
 
         return new UserAccount(
-                UUID.randomUUID(), username, email, password, UserRole.NONE, false,
+                UUID.randomUUID(), firstname, surname, username, email, password, UserRole.NONE, false,
                 Rating.defaultRating(), Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(),
                 new HashSet<>(), ProfilePicture.defaultProfilePicture()
         );
@@ -52,9 +56,13 @@ public class UserAccount {
     /**
      * this method is used to call only from repository
      */
-    public static UserAccount fromRepository(UUID id, Username username, Email email, Password password, UserRole userRole,
-                                             boolean enabled, Rating rating, Rating puzzlesRating, AccountEvents events, ProfilePicture profilePicture) {
+    public static UserAccount fromRepository(UUID id, Firstname firstname, Surname surname, Username username, Email email, Password password,
+                                             UserRole userRole, boolean enabled, Rating rating, Rating puzzlesRating, AccountEvents events,
+                                             ProfilePicture profilePicture) {
+
         Objects.requireNonNull(id);
+        Objects.requireNonNull(firstname);
+        Objects.requireNonNull(surname);
         Objects.requireNonNull(username);
         Objects.requireNonNull(email);
         Objects.requireNonNull(password);
@@ -63,7 +71,7 @@ public class UserAccount {
         Objects.requireNonNull(events);
 
         return new UserAccount(
-                id, username, email, password, userRole, enabled, rating, puzzlesRating,
+                id, firstname, surname, username, email, password, userRole, enabled, rating, puzzlesRating,
                 events, new HashSet<>(), new HashSet<>(), new HashSet<>(),
                 Objects.requireNonNullElseGet(profilePicture, ProfilePicture::defaultProfilePicture)
         );

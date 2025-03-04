@@ -19,6 +19,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     static final String INSERT_USER_ACCOUNT = insert()
             .into("UserAccount")
             .columns("id",
+                    "firstname",
+                    "surname",
                     "username",
                     "email",
                     "password",
@@ -33,7 +35,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                     "creation_date",
                     "last_updated_date"
             )
-            .values(14)
+            .values(16)
             .build();
 
     static final String INSERT_NEW_PARTNERSHIP = insert()
@@ -113,6 +115,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
         jdbc.write(INSERT_USER_ACCOUNT,
             userAccount.getId().toString(),
+            userAccount.getFirstname().firstname(),
+            userAccount.getSurname().surname(),
             userAccount.getUsername().username(),
             userAccount.getEmail().email(),
             userAccount.getPassword().password(),

@@ -11,9 +11,7 @@ import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.Email;
-import core.project.chess.domain.user.value_objects.Password;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import lombok.AccessLevel;
@@ -463,6 +461,6 @@ class ChessPerft {
     }
 
     static Supplier<UserAccount> userAccountSupplier(String username, String email) {
-        return () -> UserAccount.of(new Username(username), new Email(email), new Password("password"));
+        return () -> UserAccount.of(new Firstname("generateFirstname"), new Surname("generateSurname"), new Username(username), new Email(email), new Password("password"));
     }
 }

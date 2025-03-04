@@ -6,9 +6,7 @@ import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.Email;
-import core.project.chess.domain.user.value_objects.Password;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
 import core.project.chess.infrastructure.utilities.containers.Pair;
@@ -62,15 +60,11 @@ public class UserAuthService {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Password is not valid").build());
         }
 
-        final Username username = Result.ofThrowable(
-                () -> new Username(loginForm.username())
-        ).orElseThrow(
+        final Username username = Result.ofThrowable(() -> new Username(loginForm.username())).orElseThrow(
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_USERNAME).build())
         );
 
-        final Password password = Result.ofThrowable(
-                () -> new Password(loginForm.password())
-        ).orElseThrow(
+        final Password password = Result.ofThrowable(() -> new Password(loginForm.password())).orElseThrow(
                 () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build())
         );
 
@@ -108,39 +102,35 @@ public class UserAuthService {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Password is not valid").build());
         }
 
-        if (!Objects.equals(
-                registrationForm.password(), registrationForm.passwordConfirmation())
-        ) {
+        if (!Objects.equals(registrationForm.password(), registrationForm.passwordConfirmation())) {
             Log.error("Registration failure, passwords do not match");
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Passwords don`t match.").build());
         }
 
-        Username username = Result.ofThrowable(
-                () -> new Username(registrationForm.username())
-        ).orElseThrow(
-                () -> {
-                    Log.error("Registration failure, invalid username");
-                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_USERNAME).build());
-                }
-        );
+        Username username = Result.ofThrowable(() -> new Username(registrationForm.username())).orElseThrow(() -> {
+            Log.error("Registration failure, invalid username");
+            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_USERNAME).build());
+        });
 
-        Email email = Result.ofThrowable(
-                () -> new Email(registrationForm.email())
-        ).orElseThrow(
-                () -> {
-                    Log.error("Registration failure, invalid email");
-                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid email.").build());
-                }
-        );
+        Email email = Result.ofThrowable(() -> new Email(registrationForm.email())).orElseThrow(() -> {
+            Log.error("Registration failure, invalid email");
+            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid email.").build());
+        });
 
-        Password password = Result.ofThrowable(
-                () -> new Password(passwordEncoder.encode(new Password(registrationForm.password())))
-        ).orElseThrow(
-                () -> {
-                    Log.errorf("Registration failure. Invalid Password.");
-                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build());
-                }
-        );
+        Firstname firstname = Result.ofThrowable(() -> new Firstname(registrationForm.firstname())).orElseThrow(() -> {
+            Log.error("Registration failure, invalid firstname");
+            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid firstname.").build());
+        });
+
+        Surname surname = Result.ofThrowable(() -> new Surname(registrationForm.surname())).orElseThrow(() -> {
+            Log.error("Registration failure, invalid surname");
+            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid surname.").build());
+        });
+
+        Password password = Result.ofThrowable(() -> new Password(passwordEncoder.encode(new Password(registrationForm.password())))).orElseThrow(() -> {
+            Log.errorf("Registration failure. Invalid Password.");
+            return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(INVALID_PASSWORD).build());
+        });
 
         if (outboundUserRepository.isUsernameExists(username)) {
             Log.errorf("Registration failure, user %s already exists", username.username());
@@ -152,7 +142,7 @@ public class UserAuthService {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Email already exists.").build());
         }
 
-        UserAccount userAccount = UserAccount.of(username, email, password);
+        UserAccount userAccount = UserAccount.of(firstname, surname, username, email, password);
 
         Log.infof("Saving user %s to repo", username.username());
         inboundUserRepository.save(userAccount);

@@ -37,7 +37,7 @@ class ProfilePictureTest {
     void profilePicture() throws IOException {
         registrationLoad();
 
-        String emailConfirmationToken = userDBManagement.getToken("HHadzhy");
+        String emailConfirmationToken = userDBManagement.getToken("User");
         Log.infof("Email confirmation token: %s.", emailConfirmationToken);
 
         given().queryParam("token", emailConfirmationToken)
@@ -74,8 +74,8 @@ class ProfilePictureTest {
                 .contentType("application/json")
                 .body("""
                         {
-                          "username": "HHadzhy",
-                          "password": "hhadzhy72"
+                          "username": "User",
+                          "password": "useruser72"
                         }
                         """)
                 .when().post("/chessland/account/login")
@@ -94,10 +94,12 @@ class ProfilePictureTest {
                 .contentType("application/json")
                 .body("""
                       {
-                        "username":"HHadzhy",
-                        "email":"hhadzhy@email.com",
-                        "password":"hhadzhy72",
-                        "passwordConfirmation":"hhadzhy72"
+                        "firstname": "User",
+                        "surname": "Surname",
+                        "username":"User",
+                        "email":"user@email.com",
+                        "password":"useruser72",
+                        "passwordConfirmation":"useruser72"
                       }
                       """)
                 .when().post("/chessland/account/registration")

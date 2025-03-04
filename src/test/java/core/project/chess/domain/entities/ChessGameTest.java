@@ -8,9 +8,7 @@ import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.ChessMove;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.Email;
-import core.project.chess.domain.user.value_objects.Password;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.user.value_objects.*;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -1024,6 +1022,6 @@ public class ChessGameTest {
     }
 
     static Supplier<UserAccount> userAccountSupplier(String username) {
-        return () -> UserAccount.of(new Username(username), new Email("some@email.com"), new Password("password"));
+        return () -> UserAccount.of(new Firstname("generateFirstname"), new Surname("generateSurname"), new Username(username), new Email("some@email.com"), new Password("password"));
     }
 }
