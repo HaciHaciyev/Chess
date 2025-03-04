@@ -71,6 +71,8 @@ POST /account/registration
 **Request Body:** (JSON)
 ```json
 {
+  "firstname": "string",
+  "surname": "string",
   "username": "string",
   "email": "string",
   "password": "string",
