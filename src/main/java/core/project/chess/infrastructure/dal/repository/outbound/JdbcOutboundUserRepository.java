@@ -64,6 +64,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .build();
 
     static final String FIND_USER_PROPERTIES = select()
+            .column("firstname")
+            .column("surname")
             .column("username")
             .column("email")
             .column("rating")
@@ -166,7 +168,11 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public Result<UserProperties, Throwable> userProperties(String username) {
-        return jdbc.read(FIND_USER_PROPERTIES, rs -> new UserProperties(rs.getString("username"), rs.getString("email"), rs.getDouble("rating")), username);
+        return jdbc.read(FIND_USER_PROPERTIES, this::userPropertiesMapper, username);
+    }
+
+    private UserProperties userPropertiesMapper(final ResultSet rs) throws SQLException {
+        return new UserProperties(rs.getString("firstname"), rs.getString("surname"), rs.getString("username"), rs.getString("email"), rs.getDouble("rating"));
     }
 
     private EmailConfirmationToken userTokenMapper(final ResultSet rs) throws SQLException {

@@ -3,7 +3,6 @@ package core.project.chess.application.controller.http;
 import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.security.Authenticated;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.GET;
