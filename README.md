@@ -122,6 +122,8 @@ GET /account/user-properties
 - `200 OK` – Returns user properties. Body:
 ```json
 {
+  "firstname": "string",
+  "surname": "string",
   "username": "string",
   "email": "string",
   "rating": "number"
