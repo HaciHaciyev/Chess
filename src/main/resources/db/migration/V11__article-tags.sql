@@ -1,0 +1,9 @@
+CREATE TABLE Tags (
+    tag VARCHAR(24) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE ArticleTags (
+    article_id CHAR(36) REFERENCES Article(id) ON DELETE CASCADE,
+    tag VARCHAR(24) REFERENCES Tags(tag) ON DELETE CASCADE,
+    PRIMARY KEY (article_id, tag)
+);
