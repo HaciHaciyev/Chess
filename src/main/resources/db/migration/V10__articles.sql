@@ -1,4 +1,4 @@
-CREATE TABLE Articles (
+CREATE TABLE Article (
     id CHAR(36) NOT NULL,
     author_id CHAR(36) NOT NULL,
     header TEXT NOT NULL,
