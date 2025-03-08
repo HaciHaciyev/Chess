@@ -7,7 +7,7 @@ CREATE TABLE Comments (
     respond_to_comment CHAR(36) NULL,
     PRIMARY KEY (id),
     CONSTRAINT comment_article_fk FOREIGN KEY (article_id) REFERENCES Article(id),
-    CONSTRAINT comment_user_fk FOREIGN KEY (user_id) REFERENCES UserAccount(user_id),
+    CONSTRAINT comment_user_fk FOREIGN KEY (user_id) REFERENCES UserAccount(id),
     CONSTRAINT parent_comment_id_fk FOREIGN KEY (parent_comment_id) REFERENCES Comments(id),
     CONSTRAINT respond_comment_id_fk FOREIGN KEY (respond_to_comment) REFERENCES Comments(id)
 );
