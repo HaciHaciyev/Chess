@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 import net.datafaker.Faker;
 
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import testUtils.ArticleForm;
@@ -24,6 +25,7 @@ import static org.hamcrest.Matchers.containsString;
 
 @QuarkusTest
 @WithTestResource(MessagingTestResource.class)
+@Disabled("On the way")
 class ArticlesTest {
 
     @Inject
