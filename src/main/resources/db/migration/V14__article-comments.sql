@@ -2,6 +2,7 @@ CREATE TABLE Comments (
     id CHAR(36) NOT NULL,
     article_id CHAR(36) NOT NULL,
     user_id CHAR(36) NOT NULL,
+    text VARCHAR(56) NOT NULL,
     comment_type VARCHAR(6) NOT NULL,
     parent_comment_id CHAR(36) NULL,
     respond_to_comment CHAR(36) NULL,
