@@ -126,7 +126,11 @@ GET /account/user-properties
   "surname": "string",
   "username": "string",
   "email": "string",
-  "rating": "number"
+  "rating": "number",
+  "bulletRating": "number",
+  "blitzRating": "number",
+  "rapidRating": "number",
+  "puzzlesRating": "number"
 }
 ```
 - `400 BAD REQUEST` – If user properties are not found.
