@@ -5,10 +5,13 @@ import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.MessageAddressee;
 import core.project.chess.domain.chess.enumerations.UndoMoveResult;
+import core.project.chess.domain.chess.repositories.InboundChessRepository;
+import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,6 +22,20 @@ import java.util.Objects;
 
 @ApplicationScoped
 public class GameFunctionalityService {
+
+    private final InboundUserRepository inboundUserRepository;
+
+    private final InboundChessRepository inboundChessRepository;
+
+    private final OutboundChessRepository outboundChessRepository;
+
+    GameFunctionalityService(InboundUserRepository inboundUserRepository,
+                             InboundChessRepository inboundChessRepository,
+                             OutboundChessRepository outboundChessRepository) {
+        this.inboundUserRepository = inboundUserRepository;
+        this.inboundChessRepository = inboundChessRepository;
+        this.outboundChessRepository = outboundChessRepository;
+    }
 
     public boolean validateOpponentEligibility(final UserAccount player, final GameParameters gameParameters,
                                                final UserAccount opponent, final GameParameters opponentGameParameters,
@@ -250,5 +267,41 @@ public class GameFunctionalityService {
                 .build();
 
         return Pair.of(MessageAddressee.FOR_ALL, message);
+    }
+
+    public void executeGameOverOperations(final ChessGame chessGame) {
+        if (chessGame.gameResult().isEmpty()) {
+            throw new IllegalStateException("You can`t save not finished game.");
+        }
+        if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().ID())) {
+            Log.infof("History of game %s is already present", chessGame.getChessGameId());
+            return;
+        }
+
+        Log.infof("Saving finished game %s and changing ratings", chessGame.getChessGameId());
+        inboundChessRepository.completelyUpdateFinishedGame(chessGame);
+
+        if (chessGame.isCasualGame()) {
+            return;
+        }
+
+        switch (chessGame.getTime()) {
+            case CLASSIC, DEFAULT -> {
+                inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
+                inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
+            }
+            case BULLET -> {
+                inboundUserRepository.updateOfBulletRating(chessGame.getPlayerForWhite());
+                inboundUserRepository.updateOfBulletRating(chessGame.getPlayerForBlack());
+            }
+            case BLITZ -> {
+                inboundUserRepository.updateOfBlitzRating(chessGame.getPlayerForWhite());
+                inboundUserRepository.updateOfBlitzRating(chessGame.getPlayerForBlack());
+            }
+            case RAPID -> {
+                inboundUserRepository.updateOfRapidRating(chessGame.getPlayerForWhite());
+                inboundUserRepository.updateOfRapidRating(chessGame.getPlayerForBlack());
+            }
+        }
     }
 }

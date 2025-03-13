@@ -531,23 +531,6 @@ public class ChessGameService {
         sessionStorage.removeSession(session);
     }
 
-    private void gameOverOperationsExecutor(final ChessGame chessGame) {
-        if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().ID())) {
-            Log.infof("History of game %s is already present", chessGame.getChessGameId());
-            return;
-        }
-
-        Log.infof("Saving finished game %s and changing ratings", chessGame.getChessGameId());
-        inboundChessRepository.completelyUpdateFinishedGame(chessGame);
-
-        if (chessGame.isCasualGame()) {
-            return;
-        }
-
-        inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
-        inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
-    }
-
     private class ChessGameSpectator implements Runnable {
         private final ChessGame game;
         private final AtomicBoolean isRunning;
@@ -572,7 +555,7 @@ public class ChessGameService {
                     }
                     sessionStorage.removeGame(game.getChessGameId());
 
-                    CompletableFuture.runAsync(() -> gameOverOperationsExecutor(game));
+                    CompletableFuture.runAsync(() -> gameFunctionalityService.executeGameOverOperations(game));
                     isRunning.set(false);
                 });
             }
