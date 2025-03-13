@@ -9,6 +9,12 @@ public interface InboundUserRepository {
 
     void updateOfRating(UserAccount userAccount);
 
+    void updateOfBulletRating(UserAccount userAccount);
+
+    void updateOfBlitzRating(UserAccount userAccount);
+
+    void updateOfRapidRating(UserAccount userAccount);
+
     void updateOfPuzzleRating(UserAccount userAccount);
 
     void saveUserToken(EmailConfirmationToken token);

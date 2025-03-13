@@ -83,6 +83,33 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .where("id = ?")
             .build();
 
+    static final String UPDATE_USER_BULLET_RATING = update("UserAccount")
+            .set("""
+                 bullet_rating = ?,
+                 bullet_rating_deviation = ?,
+                 bullet_rating_volatility = ?
+                 """)
+            .where("id = ?")
+            .build();
+
+    static final String UPDATE_USER_BLITZ_RATING = update("UserAccount")
+            .set("""
+                 blitz_rating = ?,
+                 blitz_rating_deviation = ?,
+                 blitz_rating_volatility = ?
+                 """)
+            .where("id = ?")
+            .build();
+
+    static final String UPDATE_USER_RAPID_RATING = update("UserAccount")
+            .set("""
+                 rapid_rating = ?,
+                 rapid_rating_deviation = ?,
+                 rapid_rating_volatility = ?
+                 """)
+            .where("id = ?")
+            .build();
+
     static final String UPDATE_USER_PUZZLES_RATING = update("UserAccount")
             .set("""
                 puzzles_rating = ?,
@@ -160,6 +187,45 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 userAccount.getRating().rating(),
                 userAccount.getRating().ratingDeviation(),
                 userAccount.getRating().volatility(),
+                userAccount.getId().toString()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
+    }
+
+    @Override
+    public void updateOfBulletRating(UserAccount userAccount) {
+
+        jdbc.write(UPDATE_USER_BULLET_RATING,
+                userAccount.getBulletRating().rating(),
+                userAccount.getBulletRating().ratingDeviation(),
+                userAccount.getBulletRating().volatility(),
+                userAccount.getId().toString()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
+    }
+
+    @Override
+    public void updateOfBlitzRating(UserAccount userAccount) {
+
+        jdbc.write(UPDATE_USER_BLITZ_RATING,
+                userAccount.getBlitzRating().rating(),
+                userAccount.getBlitzRating().ratingDeviation(),
+                userAccount.getBlitzRating().volatility(),
+                userAccount.getId().toString()
+        )
+
+        .ifFailure(Throwable::printStackTrace);
+    }
+
+    @Override
+    public void updateOfRapidRating(UserAccount userAccount) {
+
+        jdbc.write(UPDATE_USER_RAPID_RATING,
+                userAccount.getRapidRating().rating(),
+                userAccount.getRapidRating().ratingDeviation(),
+                userAccount.getRapidRating().volatility(),
                 userAccount.getId().toString()
         )
 
@@ -245,6 +311,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void saveRefreshToken(UserAccount userAccount, String refreshToken) {
-        jdbc.write(INSERT_OR_UPDATE_REFRESH_TOKEN, userAccount.getId().toString(), refreshToken, refreshToken).ifFailure(Throwable::printStackTrace);
+        jdbc.write(INSERT_OR_UPDATE_REFRESH_TOKEN, userAccount.getId().toString(), refreshToken, refreshToken)
+                .ifFailure(Throwable::printStackTrace);
     }
 }
