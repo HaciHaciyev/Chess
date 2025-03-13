@@ -1,11 +1,11 @@
 package core.project.chess.infrastructure.dal.repository.outbound;
 
 import core.project.chess.application.dto.user.UserProperties;
-import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.events.TokenEvents;
+import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import core.project.chess.infrastructure.utilities.containers.Pair;
@@ -69,6 +69,10 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .column("username")
             .column("email")
             .column("rating")
+            .column("bullet_rating")
+            .column("blitz_rating")
+            .column("rapid_rating")
+            .column("puzzles_rating")
             .from("UserAccount")
             .where("username = ?")
             .build();
@@ -181,7 +185,17 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     private UserProperties userPropertiesMapper(final ResultSet rs) throws SQLException {
-        return new UserProperties(rs.getString("firstname"), rs.getString("surname"), rs.getString("username"), rs.getString("email"), rs.getDouble("rating"));
+        return new UserProperties(
+                rs.getString("firstname"),
+                rs.getString("surname"),
+                rs.getString("username"),
+                rs.getString("email"),
+                rs.getDouble("rating"),
+                rs.getDouble("bullet_rating"),
+                rs.getDouble("blitz_rating"),
+                rs.getDouble("rapid_rating"),
+                rs.getDouble("puzzles_rating")
+        );
     }
 
     private EmailConfirmationToken userTokenMapper(final ResultSet rs) throws SQLException {
