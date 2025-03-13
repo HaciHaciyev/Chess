@@ -7,9 +7,6 @@ import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
 import core.project.chess.domain.user.value_objects.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -20,8 +17,6 @@ import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 import static core.project.chess.domain.chess.enumerations.GameResult.WHITE_WIN;
 
-@Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserAccount {
     private final UUID id;
     private final Firstname firstname;
@@ -32,12 +27,37 @@ public class UserAccount {
     private UserRole userRole;
     private boolean isEnable;
     private Rating rating;
+    private Rating bulletRating;
+    private Rating blitzRating;
+    private Rating rapidRating;
     private Rating puzzlesRating;
     private final AccountEvents accountEvents;
     private final Set<UserAccount> partners;
     private final Set<ChessGame> games;
     private final Set<Puzzle> puzzles;
     private ProfilePicture profilePicture;
+
+    public UserAccount(UUID id, Firstname firstname, Surname surname, Username username,
+                       Email email, Password password, UserRole userRole, boolean isEnable,
+                       Rating rating, Rating puzzlesRating, AccountEvents accountEvents,
+                       Set<UserAccount> partners, Set<ChessGame> games, Set<Puzzle> puzzles,
+                       ProfilePicture profilePicture) {
+        this.id = id;
+        this.firstname = firstname;
+        this.surname = surname;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.userRole = userRole;
+        this.isEnable = isEnable;
+        this.rating = rating;
+        this.puzzlesRating = puzzlesRating;
+        this.accountEvents = accountEvents;
+        this.partners = partners;
+        this.games = games;
+        this.puzzles = puzzles;
+        this.profilePicture = profilePicture;
+    }
 
     public static UserAccount of(Firstname firstname, Surname surname, Username username, Email email, Password password) {
         Objects.requireNonNull(firstname);
@@ -77,12 +97,76 @@ public class UserAccount {
         );
     }
 
+    public UUID getId() {
+        return id;
+    }
+
+    public Firstname getFirstname() {
+        return firstname;
+    }
+
+    public Surname getSurname() {
+        return surname;
+    }
+
+    public Username getUsername() {
+        return username;
+    }
+
+    public Email getEmail() {
+        return email;
+    }
+
+    public Password getPassword() {
+        return password;
+    }
+
+    public UserRole getUserRole() {
+        return userRole;
+    }
+
+    public boolean isEnable() {
+        return isEnable;
+    }
+
+    public AccountEvents getAccountEvents() {
+        return accountEvents;
+    }
+
+    public Set<ChessGame> getGames() {
+        return games;
+    }
+
+    public Set<Puzzle> getPuzzles() {
+        return puzzles;
+    }
+
+    public ProfilePicture getProfilePicture() {
+        return profilePicture;
+    }
+
     public boolean isEnabled() {
         return isEnable;
     }
 
     public Rating getRating() {
-        return Rating.fromRepository(this.rating.rating(), this.rating.ratingDeviation(), this.rating.volatility());
+        return rating;
+    }
+
+    public Rating getBulletRating() {
+        return bulletRating;
+    }
+
+    public Rating getBlitzRating() {
+        return blitzRating;
+    }
+
+    public Rating getRapidRating() {
+        return rapidRating;
+    }
+
+    public Rating getPuzzlesRating() {
+        return puzzlesRating;
     }
 
     public Set<UserAccount> getPartners() {
@@ -128,9 +212,14 @@ public class UserAccount {
         }
 
         final double result = getResult(chessGame.gameResult().get(), color);
-        final Rating opponentRating = color.equals(WHITE) ? chessGame.getPlayerForBlack().getRating() : chessGame.getPlayerForWhite().getRating();
+        final UserAccount opponent =  color.equals(WHITE) ? chessGame.getPlayerForBlack() : chessGame.getPlayerForWhite();
 
-        this.rating = Glicko2RatingCalculator.calculate(this.rating, opponentRating, result);
+        switch (chessGame.getTime()) {
+            case DEFAULT, CLASSIC -> this.rating = Glicko2RatingCalculator.calculate(this.rating, opponent.getRating(), result);
+            case BULLET -> this.bulletRating = Glicko2RatingCalculator.calculate(this.bulletRating, opponent.getBlitzRating(), result);
+            case BLITZ -> this.blitzRating = Glicko2RatingCalculator.calculate(this.blitzRating, opponent.getBlitzRating(), result);
+            case RAPID -> this.rapidRating = Glicko2RatingCalculator.calculate(this.rapidRating, opponent.getRapidRating(), result);
+        }
     }
 
     public void changeRating(final Puzzle puzzle) {
@@ -203,6 +292,10 @@ public class UserAccount {
                     User role : %s,
                     Is enable : %s,
                     Rating : %f,
+                    Bullet rating: %f,
+                    Blitz rating: %f,
+                    Rapid rating: %f,
+                    Puzzles rating: %f,
                     Creation date : %s,
                     Last updated date : %s
                }
@@ -213,6 +306,10 @@ public class UserAccount {
                 userRole,
                 enables,
                 rating.rating(),
+                bulletRating.rating(),
+                blitzRating.rating(),
+                rapidRating.rating(),
+                puzzlesRating.rating(),
                 accountEvents.creationDate().toString(),
                 accountEvents.lastUpdateDate().toString()
         );
