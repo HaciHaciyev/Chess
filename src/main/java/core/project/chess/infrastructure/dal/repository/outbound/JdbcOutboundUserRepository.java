@@ -95,6 +95,15 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .column("u.rating").as("rating")
             .column("u.rating_deviation").as("rating_deviation")
             .column("u.rating_volatility").as("rating_volatility")
+            .column("u.bullet_rating").as("bullet_rating")
+            .column("u.bullet_rating_deviation").as("bullet_rating_deviation")
+            .column("u.bullet_rating_volatility").as("bullet_rating_volatility")
+            .column("u.blitz_rating").as("blitz_rating")
+            .column("u.blitz_rating_deviation").as("blitz_rating_deviation")
+            .column("u.blitz_rating_volatility").as("blitz_rating_volatility")
+            .column("u.rapid_rating").as("rapid_rating")
+            .column("u.rapid_rating_deviation").as("rapid_rating_deviation")
+            .column("u.rapid_rating_volatility").as("rapid_rating_volatility")
             .column("u.puzzles_rating").as("puzzles_rating")
             .column("u.puzzles_rating_deviation").as("puzzles_rating_deviation")
             .column("u.puzzles_rating_volatility").as("puzzles_rating_volatility")
@@ -199,6 +208,24 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 rs.getDouble("rating_volatility")
         );
 
+        var bulletRating = Rating.fromRepository(
+                rs.getDouble("bullet_rating"),
+                rs.getDouble("bullet_rating_deviation"),
+                rs.getDouble("bullet_rating_volatility")
+        );
+
+        var blitzRating = Rating.fromRepository(
+                rs.getDouble("blitz_rating"),
+                rs.getDouble("blitz_rating_deviation"),
+                rs.getDouble("blitz_rating_volatility")
+        );
+
+        var rapidRating = Rating.fromRepository(
+                rs.getDouble("rapid_rating"),
+                rs.getDouble("rapid_rating_deviation"),
+                rs.getDouble("rapid_rating_volatility")
+        );
+
         var puzzlesRating = Rating.fromRepository(
                 rs.getDouble("puzzles_rating"),
                 rs.getDouble("puzzles_rating_deviation"),
@@ -215,6 +242,9 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 UserRole.valueOf(rs.getString("user_role")),
                 rs.getBoolean("is_enable"),
                 rating,
+                bulletRating,
+                blitzRating,
+                rapidRating,
                 puzzlesRating,
                 events,
                 null

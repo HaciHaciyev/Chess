@@ -37,11 +37,10 @@ public class UserAccount {
     private final Set<Puzzle> puzzles;
     private ProfilePicture profilePicture;
 
-    public UserAccount(UUID id, Firstname firstname, Surname surname, Username username,
-                       Email email, Password password, UserRole userRole, boolean isEnable,
-                       Rating rating, Rating puzzlesRating, AccountEvents accountEvents,
-                       Set<UserAccount> partners, Set<ChessGame> games, Set<Puzzle> puzzles,
-                       ProfilePicture profilePicture) {
+    private UserAccount(UUID id, Firstname firstname, Surname surname, Username username, Email email, Password password,
+                       UserRole userRole, boolean isEnable, Rating rating, Rating bulletRating, Rating blitzRating, Rating rapidRating,
+                       Rating puzzlesRating, AccountEvents accountEvents, Set<UserAccount> partners, Set<ChessGame> games,
+                       Set<Puzzle> puzzles, ProfilePicture profilePicture) {
         this.id = id;
         this.firstname = firstname;
         this.surname = surname;
@@ -51,6 +50,9 @@ public class UserAccount {
         this.userRole = userRole;
         this.isEnable = isEnable;
         this.rating = rating;
+        this.bulletRating = bulletRating;
+        this.blitzRating = blitzRating;
+        this.rapidRating = rapidRating;
         this.puzzlesRating = puzzlesRating;
         this.accountEvents = accountEvents;
         this.partners = partners;
@@ -68,17 +70,18 @@ public class UserAccount {
 
         return new UserAccount(
                 UUID.randomUUID(), firstname, surname, username, email, password, UserRole.NONE, false,
-                Rating.defaultRating(), Rating.defaultRating(), AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(),
-                new HashSet<>(), ProfilePicture.defaultProfilePicture()
+                Rating.defaultRating(), Rating.defaultRating(), Rating.defaultRating(), Rating.defaultRating(), Rating.defaultRating(),
+                AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(), ProfilePicture.defaultProfilePicture()
         );
     }
 
     /**
      * this method is used to call only from repository
      */
-    public static UserAccount fromRepository(UUID id, Firstname firstname, Surname surname, Username username, Email email, Password password,
-                                             UserRole userRole, boolean enabled, Rating rating, Rating puzzlesRating, AccountEvents events,
-                                             ProfilePicture profilePicture) {
+    public static UserAccount fromRepository(UUID id, Firstname firstname, Surname surname, Username username, Email email,
+                                             Password password, UserRole userRole, boolean enabled, Rating rating, Rating bulletRating,
+                                             Rating blitzRating, Rating rapidRating, Rating puzzlesRating,
+                                             AccountEvents events, ProfilePicture profilePicture) {
 
         Objects.requireNonNull(id);
         Objects.requireNonNull(firstname);
@@ -88,10 +91,15 @@ public class UserAccount {
         Objects.requireNonNull(password);
         Objects.requireNonNull(userRole);
         Objects.requireNonNull(rating);
+        Objects.requireNonNull(bulletRating);
+        Objects.requireNonNull(blitzRating);
+        Objects.requireNonNull(rapidRating);
+        Objects.requireNonNull(puzzlesRating);
         Objects.requireNonNull(events);
 
         return new UserAccount(
-                id, firstname, surname, username, email, password, userRole, enabled, rating, puzzlesRating,
+                id, firstname, surname, username, email, password, userRole, enabled,
+                rating, bulletRating, blitzRating, rapidRating, puzzlesRating,
                 events, new HashSet<>(), new HashSet<>(), new HashSet<>(),
                 Objects.requireNonNullElseGet(profilePicture, ProfilePicture::defaultProfilePicture)
         );
