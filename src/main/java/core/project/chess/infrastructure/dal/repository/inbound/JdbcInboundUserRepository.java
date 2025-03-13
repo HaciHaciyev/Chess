@@ -28,6 +28,15 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                     "rating",
                     "rating_deviation",
                     "rating_volatility",
+                    "bullet_rating",
+                    "bullet_rating_deviation",
+                    "bullet_rating_volatility",
+                    "blitz_rating",
+                    "blitz_rating_deviation",
+                    "blitz_rating_volatility",
+                    "rapid_rating",
+                    "rapid_rating_deviation",
+                    "rapid_rating_volatility",
                     "puzzles_rating",
                     "puzzles_rating_deviation",
                     "puzzles_rating_volatility",
@@ -35,7 +44,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                     "creation_date",
                     "last_updated_date"
             )
-            .values(16)
+            .values(25)
             .build();
 
     static final String INSERT_NEW_PARTNERSHIP = insert()
@@ -124,6 +133,15 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             userAccount.getRating().rating(),
             userAccount.getRating().ratingDeviation(),
             userAccount.getRating().volatility(),
+            userAccount.getBulletRating().rating(),
+            userAccount.getBulletRating().ratingDeviation(),
+            userAccount.getBulletRating().volatility(),
+            userAccount.getBlitzRating().rating(),
+            userAccount.getBlitzRating().ratingDeviation(),
+            userAccount.getBlitzRating().volatility(),
+            userAccount.getRapidRating().rating(),
+            userAccount.getRapidRating().ratingDeviation(),
+            userAccount.getRapidRating().volatility(),
             userAccount.getPuzzlesRating().rating(),
             userAccount.getPuzzlesRating().ratingDeviation(),
             userAccount.getPuzzlesRating().volatility(),
