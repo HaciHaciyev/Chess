@@ -1,4 +1,4 @@
-package core.project.chess.infrastructure.dal.repository.outbound;
+package core.project.chess.infrastructure.dal.repository;
 
 import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;

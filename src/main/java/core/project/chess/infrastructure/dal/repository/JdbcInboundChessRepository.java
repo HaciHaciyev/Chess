@@ -1,8 +1,8 @@
-package core.project.chess.infrastructure.dal.repository.inbound;
+package core.project.chess.infrastructure.dal.repository;
 
+import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
-import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;

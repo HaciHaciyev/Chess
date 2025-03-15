@@ -1,10 +1,10 @@
-package core.project.chess.infrastructure.dal.repository.outbound;
+package core.project.chess.infrastructure.dal.repository;
 
 import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.application.dto.chess.Puzzle;
-import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.GameResult;
+import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
@@ -21,7 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.*;
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.select;
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.withAndSelect;
 
 @Transactional
 @ApplicationScoped

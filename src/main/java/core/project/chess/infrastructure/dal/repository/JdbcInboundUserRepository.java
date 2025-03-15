@@ -1,8 +1,8 @@
-package core.project.chess.infrastructure.dal.repository.inbound;
+package core.project.chess.infrastructure.dal.repository;
 
-import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
