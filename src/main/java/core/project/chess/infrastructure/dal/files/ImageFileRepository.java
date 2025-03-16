@@ -16,7 +16,8 @@ import java.util.Optional;
 public class ImageFileRepository {
 
     public void put(UserAccount userAccount) {
-        final ProfilePicture profilePicture = userAccount.getProfilePicture();
+        final ProfilePicture profilePicture = userAccount.getProfilePicture()
+                .orElseThrow(() -> new NullPointerException("Can`t get profile picture. UserAccount does`t contains profile picture."));
         final String path = profilePicture.path();
         final byte[] picture = profilePicture.profilePicture();
 

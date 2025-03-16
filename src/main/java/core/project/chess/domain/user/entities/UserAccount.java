@@ -8,10 +8,7 @@ import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
 import core.project.chess.domain.user.value_objects.*;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
@@ -62,7 +59,7 @@ public class UserAccount {
 
         return new UserAccount(
                 UUID.randomUUID(), firstname, surname, username, email, password, UserRole.NONE, false, Ratings.defaultRatings(),
-                AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(), ProfilePicture.defaultProfilePicture()
+                AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(), null
         );
     }
 
@@ -70,8 +67,7 @@ public class UserAccount {
      * this method is used to call only from repository
      */
     public static UserAccount fromRepository(UUID id, Firstname firstname, Surname surname, Username username, Email email,
-                                             Password password, UserRole userRole, boolean enabled, Ratings ratings,
-                                             AccountEvents events, ProfilePicture profilePicture) {
+                                             Password password, UserRole userRole, boolean enabled, Ratings ratings, AccountEvents events) {
 
         Objects.requireNonNull(id);
         Objects.requireNonNull(firstname);
@@ -85,8 +81,7 @@ public class UserAccount {
 
         return new UserAccount(
                 id, firstname, surname, username, email, password, userRole, enabled,
-                ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(),
-                Objects.requireNonNullElseGet(profilePicture, ProfilePicture::defaultProfilePicture)
+                ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(), null
         );
     }
 
@@ -134,8 +129,8 @@ public class UserAccount {
         return puzzles;
     }
 
-    public ProfilePicture getProfilePicture() {
-        return profilePicture;
+    public Optional<ProfilePicture> getProfilePicture() {
+        return Optional.ofNullable(profilePicture);
     }
 
     public boolean isEnabled() {
@@ -264,7 +259,7 @@ public class UserAccount {
     }
 
     public void deleteProfilePicture() {
-        this.profilePicture = ProfilePicture.defaultProfilePicture();
+        this.profilePicture = null;
     }
 
     @Override

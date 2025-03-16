@@ -261,8 +261,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                         rapidRating,
                         puzzlesRating
                 ),
-                events,
-                null
+                events
         );
     }
 }
