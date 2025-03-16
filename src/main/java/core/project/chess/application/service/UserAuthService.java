@@ -2,10 +2,10 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
-import core.project.chess.domain.user.repositories.InboundUserRepository;
-import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.repositories.InboundUserRepository;
+import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
@@ -17,8 +17,6 @@ import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDateTime;
@@ -29,7 +27,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class UserAuthService {
 
     private final JWTParser jwtParser;
@@ -53,6 +50,17 @@ public class UserAuthService {
     public static final String INVALID_USERNAME = "Invalid username. Username can`t be blank an need to contain only letters and digits, no special symbols";
 
     public static final String EMAIL_VERIFICATION_URL = "http://localhost:8080/chessland/account/token/verification?token=%s";
+
+    UserAuthService(JWTParser jwtParser, JwtUtility jwtUtility, PasswordEncoder passwordEncoder,
+                    InboundUserRepository inboundUserRepository, OutboundUserRepository outboundUserRepository,
+                    EmailInteractionService emailInteractionService) {
+        this.jwtParser = jwtParser;
+        this.jwtUtility = jwtUtility;
+        this.passwordEncoder = passwordEncoder;
+        this.inboundUserRepository = inboundUserRepository;
+        this.outboundUserRepository = outboundUserRepository;
+        this.emailInteractionService = emailInteractionService;
+    }
 
     public Map<String, String> login(LoginForm loginForm) {
         Log.infof("User %s is logging in", loginForm.username());
@@ -195,7 +203,7 @@ public class UserAuthService {
 
         Optional<JsonWebToken> refreshJWT = parseJWT(foundedPairResult.getSecond());
         long tokenExpirationDate = refreshJWT.orElseThrow(
-                () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Something went wrong, try again later").build()))
+                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Something went wrong, try again later").build()))
                 .getExpirationTime();
 
         final var tokenExpiration = LocalDateTime.ofEpochSecond(tokenExpirationDate, 0, ZoneOffset.UTC);

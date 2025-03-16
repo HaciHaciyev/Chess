@@ -1,19 +1,17 @@
 package core.project.chess.application.service;
 
-import core.project.chess.domain.chess.services.PuzzleService;
-import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
-import core.project.chess.domain.chess.repositories.InboundChessRepository;
-import core.project.chess.domain.user.repositories.InboundUserRepository;
-import core.project.chess.domain.chess.repositories.OutboundChessRepository;
-import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.MessageAddressee;
 import core.project.chess.domain.chess.factories.ChessGameFactory;
+import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import core.project.chess.domain.chess.services.GameFunctionalityService;
+import core.project.chess.domain.chess.services.PuzzleService;
+import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
@@ -25,8 +23,6 @@ import core.project.chess.infrastructure.utilities.containers.Triple;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.*;
@@ -37,7 +33,6 @@ import static core.project.chess.application.util.WSUtilities.closeSession;
 import static core.project.chess.application.util.WSUtilities.sendMessage;
 
 @ApplicationScoped
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ChessGameService {
 
     private final JwtUtility jwtUtility;
@@ -48,17 +43,26 @@ public class ChessGameService {
 
     private final ChessGameFactory chessGameFactory;
 
-    private final InboundUserRepository inboundUserRepository;
-
     private final InboundChessRepository inboundChessRepository;
 
     private final OutboundUserRepository outboundUserRepository;
 
-    private final OutboundChessRepository outboundChessRepository;
-
     private final GameFunctionalityService gameFunctionalityService;
 
     private final GameInvitationsRepository partnershipGameCacheService;
+
+    ChessGameService(JwtUtility jwtUtility, PuzzleService puzzleService, SessionStorage sessionStorage, ChessGameFactory chessGameFactory,
+                     InboundChessRepository inboundChessRepository, OutboundUserRepository outboundUserRepository,
+                     GameFunctionalityService gameFunctionalityService, GameInvitationsRepository partnershipGameCacheService) {
+        this.jwtUtility = jwtUtility;
+        this.puzzleService = puzzleService;
+        this.sessionStorage = sessionStorage;
+        this.chessGameFactory = chessGameFactory;
+        this.inboundChessRepository = inboundChessRepository;
+        this.outboundUserRepository = outboundUserRepository;
+        this.gameFunctionalityService = gameFunctionalityService;
+        this.partnershipGameCacheService = partnershipGameCacheService;
+    }
 
     public void onOpen(Session session, Username username) {
         CompletableFuture.runAsync(() -> {
@@ -158,7 +162,7 @@ public class ChessGameService {
         }
 
         sessionStorage.getGameSessions(chessGame.getChessGameId())
-                        .forEach(gameSession -> sendMessage(gameSession, resultMessage));
+                .forEach(gameSession -> sendMessage(gameSession, resultMessage));
     }
 
     private void handlePuzzleAction(Session session, Username username, Message message) {

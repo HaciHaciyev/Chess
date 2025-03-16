@@ -1,9 +1,7 @@
 package core.project.chess.domain.chess.enumerations;
 
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
-import lombok.Getter;
 
-@Getter
 public enum Coordinate {
 
     a8('a', 8), b8('b', 8), c8('c', 8), d8('d', 8), e8('e', 8), f8('f', 8), g8('g', 8), h8('h', 8),
@@ -22,6 +20,14 @@ public enum Coordinate {
     Coordinate(char column, int row) {
         this.column = column;
         this.row = row;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public char getColumn() {
+        return column;
     }
 
     /**
@@ -74,7 +80,6 @@ public enum Coordinate {
         };
     }
 
-    @Getter
     public enum Column {
         A(1), B(2), C(3), D(4), E(5), F(6), G(7), H(8);
 
@@ -82,6 +87,10 @@ public enum Coordinate {
 
         Column(int i) {
             this.column = i;
+        }
+
+        public int getColumn() {
+            return column;
         }
 
         public static Column of(final int column) {

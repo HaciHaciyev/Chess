@@ -7,7 +7,6 @@ import core.project.chess.domain.chess.enumerations.Direction;
 import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
-import lombok.NonNull;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -1105,7 +1104,6 @@ public record ChessBoardNavigator(ChessBoard board) {
     private record CoordinateIterable(Direction direction, Coordinate start) implements Iterable<Coordinate> {
 
         @Override
-        @NonNull
         public Iterator<Coordinate> iterator() {
             return new Iterator<>() {
                 private Coordinate current = start;

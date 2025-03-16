@@ -1,8 +1,5 @@
 package core.project.chess.domain.user.value_objects;
 
-import lombok.Getter;
-
-@Getter
 public enum UserRole {
 
     ROLE_USER("User"), NONE("None");
@@ -11,5 +8,9 @@ public enum UserRole {
 
     UserRole(String userRole) {
         this.userRole = userRole;
+    }
+
+    public String getUserRole() {
+        return userRole;
     }
 }

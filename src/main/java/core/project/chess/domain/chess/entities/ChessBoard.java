@@ -14,7 +14,6 @@ import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
-import lombok.Getter;
 
 import java.util.*;
 
@@ -1689,7 +1688,6 @@ public class ChessBoard {
      * Represents the different operations that can be performed during a chess move,
      * such as capture, promotion, check, checkmate, and stalemate or empty if operation not exists.
      */
-    @Getter
     public enum Operations {
         PROMOTION("="),
         CAPTURE("x"),
@@ -1704,6 +1702,9 @@ public class ChessBoard {
             this.algebraicNotation = algebraicNotation;
         }
 
+        public String getAlgebraicNotation() {
+            return algebraicNotation;
+        }
     }
 
     /**
@@ -1712,7 +1713,7 @@ public class ChessBoard {
      */
     public static class Field {
         private Piece piece;
-        private final @Getter Coordinate coordinate;
+        private final Coordinate coordinate;
 
         public Field(Coordinate coordinate, Piece piece) {
             Objects.requireNonNull(coordinate);
@@ -1734,6 +1735,10 @@ public class ChessBoard {
             }
 
             return Optional.of(piece);
+        }
+
+        public Coordinate getCoordinate() {
+            return coordinate;
         }
 
         private void removeFigure() {

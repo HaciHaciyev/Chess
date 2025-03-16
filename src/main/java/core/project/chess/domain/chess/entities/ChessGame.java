@@ -10,7 +10,6 @@ import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
-import lombok.Getter;
 
 import java.time.Duration;
 import java.util.*;
@@ -19,7 +18,6 @@ import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 import static core.project.chess.domain.chess.enumerations.GameResultMessage.*;
 
-@Getter
 public class ChessGame {
     private final UUID chessGameId;
     private final ChessBoard chessBoard;
@@ -116,6 +114,50 @@ public class ChessGame {
                 StatusPair.ofFalse(),
                 isCasualGame
         );
+    }
+
+    public UUID getChessGameId() {
+        return chessGameId;
+    }
+
+    public ChessBoard getChessBoard() {
+        return chessBoard;
+    }
+
+    public UserAccount getPlayerForWhite() {
+        return playerForWhite;
+    }
+
+    public UserAccount getPlayerForBlack() {
+        return playerForBlack;
+    }
+
+    public Rating getPlayerForWhiteRating() {
+        return playerForWhiteRating;
+    }
+
+    public Rating getPlayerForBlackRating() {
+        return playerForBlackRating;
+    }
+
+    public SessionEvents getSessionEvents() {
+        return sessionEvents;
+    }
+
+    public Time getTime() {
+        return time;
+    }
+
+    public Color getPlayersTurn() {
+        return playersTurn;
+    }
+
+    public boolean isThreeFoldActive() {
+        return isThreeFoldActive;
+    }
+
+    public boolean isCasualGame() {
+        return isCasualGame;
     }
 
     public void addChatMessage(final String username, final ChatMessage message) {
@@ -443,7 +485,6 @@ public class ChessGame {
         );
     }
 
-    @Getter
     public enum Time {
         BULLET(1),
         BLITZ(5),
@@ -455,6 +496,10 @@ public class ChessGame {
 
         Time(int minutes) {
             this.minutes = minutes;
+        }
+
+        public int getMinutes() {
+            return minutes;
         }
     }
 

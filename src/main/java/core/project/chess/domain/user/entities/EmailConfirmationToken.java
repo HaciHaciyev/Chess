@@ -2,13 +2,11 @@ package core.project.chess.domain.user.entities;
 
 import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.value_objects.Token;
-import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-@Getter
 public class EmailConfirmationToken {
     private final UUID tokenId;
     private final Token token;
@@ -39,6 +37,26 @@ public class EmailConfirmationToken {
             UUID tokenId, Token token, TokenEvents tokenEvents, Boolean isConfirmed, UserAccount userAccount
     ) {
         return new EmailConfirmationToken(tokenId, token, tokenEvents, isConfirmed, userAccount);
+    }
+
+    public UUID getTokenId() {
+        return tokenId;
+    }
+
+    public Token getToken() {
+        return token;
+    }
+
+    public TokenEvents getTokenEvents() {
+        return tokenEvents;
+    }
+
+    public boolean isConfirmed() {
+        return isConfirmed;
+    }
+
+    public UserAccount getUserAccount() {
+        return userAccount;
     }
 
     public boolean isExpired() {

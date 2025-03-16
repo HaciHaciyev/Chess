@@ -8,7 +8,6 @@ import core.project.chess.domain.chess.util.ChessNotationsValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
-import lombok.Getter;
 
 import java.util.Objects;
 import java.util.Set;
@@ -549,7 +548,6 @@ public class AlgebraicNotation {
     /**
      * Represents the two types of castling moves: short castling and long castling.
      */
-    @Getter
     public enum Castle {
         SHORT_CASTLING("O-O"), LONG_CASTLING("O-O-O");
 
@@ -558,12 +556,15 @@ public class AlgebraicNotation {
         Castle(String algebraicNotation) {
             this.algebraicNotation = algebraicNotation;
         }
+
+        public String getAlgebraicNotation() {
+            return algebraicNotation;
+        }
     }
 
     /**
      * Represents the different types of chess pieces.
      */
-    @Getter
     public enum PieceTYPE {
         K("K"), Q("Q"), B("B"), N("N"), R("R"), P("");
 
@@ -571,6 +572,10 @@ public class AlgebraicNotation {
 
         PieceTYPE(String pieceType) {
             this.pieceType = pieceType;
+        }
+
+        public String getPieceType() {
+            return pieceType;
         }
     }
 }

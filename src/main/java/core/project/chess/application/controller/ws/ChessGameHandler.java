@@ -10,14 +10,15 @@ import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.ServerEndpoint;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @ServerEndpoint(value = "/chessland/chess-game", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
 public class ChessGameHandler {
 
     private final ChessGameService chessGameService;
+
+    ChessGameHandler(ChessGameService chessGameService) {
+        this.chessGameService = chessGameService;
+    }
 
     @OnOpen
     public void onOpen(final Session session) {

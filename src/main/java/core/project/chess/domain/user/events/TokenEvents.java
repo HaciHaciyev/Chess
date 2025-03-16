@@ -1,10 +1,7 @@
 package core.project.chess.domain.user.events;
 
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 
-@Getter
 public final class TokenEvents {
 
     private final LocalDateTime creationDate;
@@ -14,6 +11,14 @@ public final class TokenEvents {
     public TokenEvents(LocalDateTime creationDate) {
         this.creationDate = creationDate;
         this.expirationDate = creationDate.plusMinutes(6);
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public LocalDateTime getExpirationDate() {
+        return expirationDate;
     }
 
     public boolean isExpired() {

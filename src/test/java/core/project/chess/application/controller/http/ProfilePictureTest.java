@@ -9,11 +9,11 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import testUtils.ByteArrayToImageConsole;
 import testUtils.UserDBManagement;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static core.project.chess.application.controller.http.LoginTests.TOKEN_VERIFICATION;
 import static io.restassured.RestAssured.given;
@@ -148,7 +148,7 @@ class ProfilePictureTest {
         JsonNode node = mapper.readTree(response);
 
         byte[] bytes = node.get("profilePicture").binaryValue();
-        ByteArrayToImageConsole.renderImage(bytes);
+        System.out.println("Picture " + Arrays.toString(bytes));
     }
 
     static String extractToken(String json) {

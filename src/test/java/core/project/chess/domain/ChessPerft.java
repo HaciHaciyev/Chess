@@ -14,8 +14,6 @@ import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Disabled;
@@ -380,7 +378,6 @@ class ChessPerft {
         perftValues.capturesOnPassage++;
     }
 
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     static class PerftValues {
         long nodes;
         long captures;
@@ -389,6 +386,17 @@ class ChessPerft {
         long promotions;
         long checks;
         long checkMates;
+
+        private PerftValues(long nodes, long captures, long capturesOnPassage,
+                            long castles, long promotions, long checks, long checkMates) {
+            this.nodes = nodes;
+            this.captures = captures;
+            this.capturesOnPassage = capturesOnPassage;
+            this.castles = castles;
+            this.promotions = promotions;
+            this.checks = checks;
+            this.checkMates = checkMates;
+        }
 
         public static PerftValues newInstance() {
             return new PerftValues(0L, 0L, 0L, 0L, 0L, 0L, 0L);
