@@ -255,11 +255,12 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 new Password(rs.getString("password")),
                 UserRole.valueOf(rs.getString("user_role")),
                 rs.getBoolean("is_enable"),
-                rating,
-                bulletRating,
-                blitzRating,
-                rapidRating,
-                puzzlesRating,
+                new Ratings(rating,
+                        bulletRating,
+                        blitzRating,
+                        rapidRating,
+                        puzzlesRating
+                ),
                 events,
                 null
         );

@@ -26,11 +26,7 @@ public class UserAccount {
     private final Password password;
     private UserRole userRole;
     private boolean isEnable;
-    private Rating rating;
-    private Rating bulletRating;
-    private Rating blitzRating;
-    private Rating rapidRating;
-    private Rating puzzlesRating;
+    private Ratings ratings;
     private final AccountEvents accountEvents;
     private final Set<UserAccount> partners;
     private final Set<ChessGame> games;
@@ -38,9 +34,9 @@ public class UserAccount {
     private ProfilePicture profilePicture;
 
     private UserAccount(UUID id, Firstname firstname, Surname surname, Username username, Email email, Password password,
-                       UserRole userRole, boolean isEnable, Rating rating, Rating bulletRating, Rating blitzRating, Rating rapidRating,
-                       Rating puzzlesRating, AccountEvents accountEvents, Set<UserAccount> partners, Set<ChessGame> games,
-                       Set<Puzzle> puzzles, ProfilePicture profilePicture) {
+                        UserRole userRole, boolean isEnable, Ratings ratings, AccountEvents accountEvents,
+                        Set<UserAccount> partners, Set<ChessGame> games, Set<Puzzle> puzzles,
+                        ProfilePicture profilePicture) {
         this.id = id;
         this.firstname = firstname;
         this.surname = surname;
@@ -49,11 +45,7 @@ public class UserAccount {
         this.password = password;
         this.userRole = userRole;
         this.isEnable = isEnable;
-        this.rating = rating;
-        this.bulletRating = bulletRating;
-        this.blitzRating = blitzRating;
-        this.rapidRating = rapidRating;
-        this.puzzlesRating = puzzlesRating;
+        this.ratings = ratings;
         this.accountEvents = accountEvents;
         this.partners = partners;
         this.games = games;
@@ -69,8 +61,7 @@ public class UserAccount {
         Objects.requireNonNull(password);
 
         return new UserAccount(
-                UUID.randomUUID(), firstname, surname, username, email, password, UserRole.NONE, false,
-                Rating.defaultRating(), Rating.defaultRating(), Rating.defaultRating(), Rating.defaultRating(), Rating.defaultRating(),
+                UUID.randomUUID(), firstname, surname, username, email, password, UserRole.NONE, false, Ratings.defaultRatings(),
                 AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(), ProfilePicture.defaultProfilePicture()
         );
     }
@@ -79,8 +70,7 @@ public class UserAccount {
      * this method is used to call only from repository
      */
     public static UserAccount fromRepository(UUID id, Firstname firstname, Surname surname, Username username, Email email,
-                                             Password password, UserRole userRole, boolean enabled, Rating rating, Rating bulletRating,
-                                             Rating blitzRating, Rating rapidRating, Rating puzzlesRating,
+                                             Password password, UserRole userRole, boolean enabled, Ratings ratings,
                                              AccountEvents events, ProfilePicture profilePicture) {
 
         Objects.requireNonNull(id);
@@ -90,17 +80,12 @@ public class UserAccount {
         Objects.requireNonNull(email);
         Objects.requireNonNull(password);
         Objects.requireNonNull(userRole);
-        Objects.requireNonNull(rating);
-        Objects.requireNonNull(bulletRating);
-        Objects.requireNonNull(blitzRating);
-        Objects.requireNonNull(rapidRating);
-        Objects.requireNonNull(puzzlesRating);
+        Objects.requireNonNull(ratings);
         Objects.requireNonNull(events);
 
         return new UserAccount(
                 id, firstname, surname, username, email, password, userRole, enabled,
-                rating, bulletRating, blitzRating, rapidRating, puzzlesRating,
-                events, new HashSet<>(), new HashSet<>(), new HashSet<>(),
+                ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(),
                 Objects.requireNonNullElseGet(profilePicture, ProfilePicture::defaultProfilePicture)
         );
     }
@@ -158,23 +143,23 @@ public class UserAccount {
     }
 
     public Rating getRating() {
-        return rating;
+        return ratings.rating();
     }
 
     public Rating getBulletRating() {
-        return bulletRating;
+        return ratings.bulletRating();
     }
 
     public Rating getBlitzRating() {
-        return blitzRating;
+        return ratings.blitzRating();
     }
 
     public Rating getRapidRating() {
-        return rapidRating;
+        return ratings.rapidRating();
     }
 
     public Rating getPuzzlesRating() {
-        return puzzlesRating;
+        return ratings.puzzlesRating();
     }
 
     public Set<UserAccount> getPartners() {
@@ -223,10 +208,25 @@ public class UserAccount {
         final UserAccount opponent =  color.equals(WHITE) ? chessGame.getPlayerForBlack() : chessGame.getPlayerForWhite();
 
         switch (chessGame.getTime()) {
-            case DEFAULT, CLASSIC -> this.rating = Glicko2RatingCalculator.calculate(this.rating, opponent.getRating(), result);
-            case BULLET -> this.bulletRating = Glicko2RatingCalculator.calculate(this.bulletRating, opponent.getBlitzRating(), result);
-            case BLITZ -> this.blitzRating = Glicko2RatingCalculator.calculate(this.blitzRating, opponent.getBlitzRating(), result);
-            case RAPID -> this.rapidRating = Glicko2RatingCalculator.calculate(this.rapidRating, opponent.getRapidRating(), result);
+            case DEFAULT, CLASSIC -> {
+                Rating newRating = Glicko2RatingCalculator.calculate(this.ratings.rating(), opponent.getRating(), result);
+                this.ratings = Ratings.newRating(this.ratings, newRating);
+            }
+
+            case BULLET -> {
+                Rating newBulletRating = Glicko2RatingCalculator.calculate(this.ratings.bulletRating(), opponent.getBlitzRating(), result);
+                this.ratings = Ratings.newBulletRating(this.ratings, newBulletRating);
+            }
+
+            case BLITZ -> {
+                Rating newBlitzRating = Glicko2RatingCalculator.calculate(this.ratings.blitzRating(), opponent.getBlitzRating(), result);
+                this.ratings = Ratings.newBlitzRating(this.ratings, newBlitzRating);
+            }
+
+            case RAPID -> {
+                Rating newRapidRating = Glicko2RatingCalculator.calculate(this.ratings.rapidRating(), opponent.getRapidRating(), result);
+                this.ratings = Ratings.newRapidRating(this.ratings, newRapidRating);
+            }
         }
     }
 
@@ -242,7 +242,8 @@ public class UserAccount {
         }
 
         final double result = puzzle.isSolved() ? 1 : -1;
-        this.puzzlesRating = Glicko2RatingCalculator.calculate(this.rating, puzzle.rating(), result);
+        Rating newPuzzlesRating = Glicko2RatingCalculator.calculate(this.ratings.rating(), puzzle.rating(), result);
+        this.ratings = Ratings.newPuzzlesRating(this.ratings, newPuzzlesRating);
     }
 
     private double getResult(final GameResult gameResult, final Color color) {
@@ -271,17 +272,21 @@ public class UserAccount {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserAccount that = (UserAccount) o;
-
-        return isEnable == that.isEnable && Objects.equals(id, that.id) && Objects.equals(username, that.username) &&
-                Objects.equals(email, that.email) && Objects.equals(password, that.password) && userRole == that.userRole &&
-                Objects.equals(rating, that.rating) && Objects.equals(accountEvents, that.accountEvents);
+        return isEnable == that.isEnable &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(firstname, that.firstname) &&
+                Objects.equals(surname, that.surname) &&
+                Objects.equals(username, that.username) &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(password, that.password) &&
+                userRole == that.userRole &&
+                Objects.equals(ratings, that.ratings) &&
+                Objects.equals(accountEvents, that.accountEvents);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                id, username, email, password, userRole, isEnable, rating, accountEvents
-        );
+        return Objects.hash(id, firstname, surname, username, email, password, userRole, isEnable, ratings, accountEvents);
     }
 
     @Override
@@ -295,6 +300,8 @@ public class UserAccount {
 
         return String.format("""
                UserAccount: %s {
+                    Firstname: %s,
+                    Surname: %s,
                     Username : %s,
                     Email : %s,
                     User role : %s,
@@ -309,15 +316,17 @@ public class UserAccount {
                }
                """,
                 id,
+                firstname.firstname(),
+                surname.surname(),
                 username.username(),
                 email.email(),
                 userRole,
                 enables,
-                rating.rating(),
-                bulletRating.rating(),
-                blitzRating.rating(),
-                rapidRating.rating(),
-                puzzlesRating.rating(),
+                ratings.rating().rating(),
+                ratings.bulletRating().rating(),
+                ratings.blitzRating().rating(),
+                ratings.rapidRating().rating(),
+                ratings.puzzlesRating().rating(),
                 accountEvents.creationDate().toString(),
                 accountEvents.lastUpdateDate().toString()
         );

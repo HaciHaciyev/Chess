@@ -171,6 +171,7 @@ public class Puzzle {
 
         final double result = this.isSolved ? -1 : 1;
         this.rating = Glicko2RatingCalculator.calculate(this.rating, player.getRating(), result);
+        this.player.changeRating(this);
     }
 
     private boolean isProperMove(Coordinate from, Coordinate to, Piece inCaseOfPromotion) {
