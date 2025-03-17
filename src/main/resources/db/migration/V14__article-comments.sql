@@ -6,6 +6,8 @@ CREATE TABLE Comments (
     comment_type VARCHAR(6) NOT NULL,
     parent_comment_id CHAR(36) NULL,
     respond_to_comment CHAR(36) NULL,
+    creation_date TIMESTAMP NOT NULL,
+    last_updated TIMESTAMP NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT comment_article_fk FOREIGN KEY (article_id) REFERENCES Article(id),
     CONSTRAINT comment_user_fk FOREIGN KEY (user_id) REFERENCES UserAccount(id),
