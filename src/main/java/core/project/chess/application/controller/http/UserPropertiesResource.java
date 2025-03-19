@@ -7,9 +7,10 @@ import io.quarkus.security.Authenticated;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+
+import static core.project.chess.application.util.JSONUtilities.responseException;
 
 @Authenticated
 @Path("/account")
@@ -29,14 +30,11 @@ public class UserPropertiesResource {
     public Response userProperties() {
         String username = jwt.getName();
         if (!Username.validate(username)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build());
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid username");
         }
 
-        UserProperties userProperties = outboundUserRepository
-                .userProperties(username)
-                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Can`t find user properties for %s.".formatted(username))
-                        .build()));
+        UserProperties userProperties = outboundUserRepository.userProperties(username)
+                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "Can`t find user properties."));
 
         return Response.ok(userProperties).build();
     }

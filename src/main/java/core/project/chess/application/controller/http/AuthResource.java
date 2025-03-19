@@ -9,6 +9,8 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.Objects;
 
+import static core.project.chess.application.util.JSONUtilities.responseException;
+
 @PermitAll
 @Path("/account")
 public class AuthResource {
@@ -23,7 +25,7 @@ public class AuthResource {
     @Path("/login")
     public Response login(LoginForm loginForm) {
         if (Objects.isNull(loginForm)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Login form is null.").build());
+            throw responseException(Response.Status.BAD_REQUEST, "Login form is null.");
         }
 
         return Response.ok(userAuthService.login(loginForm)).build();
@@ -33,7 +35,7 @@ public class AuthResource {
     @Path("/registration")
     public Response registration(RegistrationForm registrationForm) {
         if (Objects.isNull(registrationForm)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Registration form is null.").build());
+            throw responseException(Response.Status.BAD_REQUEST, "Registration form is null.");
         }
 
         userAuthService.registration(registrationForm);
@@ -44,7 +46,7 @@ public class AuthResource {
     @Path("/token/verification")
     public Response tokenVerification(@QueryParam("token") String token) {
         if (Objects.isNull(token)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Token can`t be null.").build());
+            throw responseException(Response.Status.BAD_REQUEST, "Token is null.");
         }
 
         userAuthService.tokenVerification(token);
@@ -55,7 +57,7 @@ public class AuthResource {
     @Path("/refresh-token")
     public Response refresh(@HeaderParam("Refresh-Token") String refreshToken) {
         if (Objects.isNull(refreshToken) || refreshToken.isBlank()) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid refresh token.").build());
+            throw responseException(Response.Status.BAD_REQUEST, "Refresh token is null.");
         }
 
         return Response.ok(userAuthService.refreshToken(refreshToken)).build();

@@ -6,7 +6,6 @@ import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.UUID;
 
 import static core.project.chess.application.service.GameHistoryService.buildLimit;
 import static core.project.chess.application.service.GameHistoryService.buildOffSet;
+import static core.project.chess.application.util.JSONUtilities.responseException;
 
 @ApplicationScoped
 public class PuzzlesQueryService {
@@ -29,26 +29,24 @@ public class PuzzlesQueryService {
 
     public Puzzle puzzle(String id) {
         UUID puzzleId = Result.ofThrowable(() -> UUID.fromString(id))
-                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid puzzle ID").build()));
+                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Invalid puzzleID."));
 
         return outboundChessRepository.puzzle(puzzleId)
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Puzzle by this id is do not exists.").build())
-                );
+                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Puzzle by this id is do not exists."));
     }
 
     public List<Puzzle> page(String username, int pageNumber, int pageSize) {
         if (!Username.validate(username)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username").build());
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
         }
 
-        double rating = outboundUserRepository.userProperties(username).orElseThrow().rating();
+        double rating = outboundUserRepository.userProperties(username)
+                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "User not found."))
+                .rating();
+
         int limit = buildLimit(pageSize);
         int offSet = buildOffSet(limit, pageNumber);
-
         return outboundChessRepository.listOfPuzzles(rating, limit, offSet)
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("No puzzles found").build())
-                );
+                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "Can`t found puzzles."));
     }
 }

@@ -5,11 +5,12 @@ import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 import java.util.UUID;
+
+import static core.project.chess.application.util.JSONUtilities.responseException;
 
 @ApplicationScoped
 public class GameHistoryService {
@@ -22,26 +23,21 @@ public class GameHistoryService {
 
     public ChessGameHistory getGameByID(String gameID) {
         UUID chessGameId = Result.ofThrowable(() -> UUID.fromString(gameID))
-                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid gameID").build()));
+                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Invalid gameID."));
 
-        return outboundChessRepository
-                .findById(chessGameId)
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Can`t find a game history.").build())
-                );
+        return outboundChessRepository.findById(chessGameId)
+                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "Can`t find chess game history."));
     }
 
     public List<ChessGameHistory> listOfGames(String name, int pageNumber, int pageSize) {
         Username username = Result.ofThrowable(() -> new Username(name))
-                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build()));
+                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Invalid username."));
 
         int limit = buildLimit(pageSize);
         int offSet = buildOffSet(limit, pageNumber);
         return outboundChessRepository
                 .listOfGames(username, limit, offSet)
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User does not exist.\uD83D\uDC7B").build())
-                );
+                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "User does not exist.\uD83D\uDC7B"));
     }
 
     static int buildLimit(Integer pageSize) {

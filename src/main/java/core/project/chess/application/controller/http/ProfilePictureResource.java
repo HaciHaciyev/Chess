@@ -18,6 +18,8 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Objects;
 
+import static core.project.chess.application.util.JSONUtilities.responseException;
+
 @Authenticated
 @Path("/account")
 public class ProfilePictureResource {
@@ -36,21 +38,17 @@ public class ProfilePictureResource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response putProfilePicture(InputStream inputStream) {
         if (Objects.isNull(inputStream)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Picture can`t be null.").build());
+            throw responseException(Response.Status.BAD_REQUEST, "Picture can`t be null.");
         }
 
-        Username username = Result
-                .ofThrowable(() -> new Username(jwt.getName()))
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
-                );
+        Username username = getUsername();
 
         try {
             profileService.putProfilePicture(IOUtils.toByteArray(inputStream), username);
             inputStream.close();
         } catch (IOException e) {
             Log.errorf("Can`t read input stream for profile inputStream as bytes: %s", e.getMessage());
-            throw new WebApplicationException("Invalid file");
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid file: corrupted or to big.");
         }
         return Response.accepted("Successfully saved inputStream.").build();
     }
@@ -58,11 +56,7 @@ public class ProfilePictureResource {
     @GET
     @Path("/profile-picture")
     public Response getProfilePicture() {
-        Username username = Result
-                .ofThrowable(() -> new Username(jwt.getName()))
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
-                );
+        Username username = getUsername();
 
         ProfilePicture profilePicture = profileService.getProfilePicture(username);
         return Response.ok(Map.of("profilePicture", profilePicture.profilePicture(), "imageType", profilePicture.imageType())).build();
@@ -71,13 +65,14 @@ public class ProfilePictureResource {
     @DELETE
     @Path("/delete-profile-picture")
     public Response deleteProfilePicture() {
-        Username username = Result
-                .ofThrowable(() -> new Username(jwt.getName()))
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Invalid username.").build())
-                );
+        Username username = getUsername();
 
         profileService.deleteProfilePicture(username);
         return Response.accepted("Successfully delete a profile image.").build();
+    }
+
+    private Username getUsername() {
+        return Result.ofThrowable(() -> new Username(jwt.getName()))
+                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Invalid username provided."));
     }
 }

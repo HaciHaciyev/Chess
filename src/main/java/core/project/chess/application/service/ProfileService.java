@@ -8,8 +8,9 @@ import core.project.chess.infrastructure.dal.files.ImageFileRepository;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+
+import static core.project.chess.application.util.JSONUtilities.responseException;
 
 @ApplicationScoped
 public class ProfileService {
@@ -28,7 +29,7 @@ public class ProfileService {
                 .findByUsername(username)
                 .orElseThrow(() -> {
                     Log.error("User not found");
-                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build());
+                    return responseException(Response.Status.BAD_REQUEST, "User not found.");
                 });
 
         final ProfilePicture profilePicture = Result
@@ -36,7 +37,7 @@ public class ProfileService {
                 .orElseThrow(() -> {
                     String errorMessage = "Invalid image or image size is too big";
                     Log.error(errorMessage);
-                    return new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(errorMessage).build());
+                    return responseException(Response.Status.BAD_REQUEST, errorMessage);
                 });
 
         Log.info("Successfully validate image.");
@@ -46,11 +47,8 @@ public class ProfileService {
     }
 
     public ProfilePicture getProfilePicture(Username username) {
-        final UserAccount userAccount = outboundUserRepository
-                .findByUsername(username)
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build())
-                );
+        final UserAccount userAccount = outboundUserRepository.findByUsername(username)
+                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "User not found."));
 
         return imageFileRepository
                 .load(ProfilePicture.profilePicturePath(userAccount.getId().toString()))
@@ -58,11 +56,8 @@ public class ProfileService {
     }
 
     public void deleteProfilePicture(Username username) {
-        final UserAccount userAccount = outboundUserRepository
-                .findByUsername(username)
-                .orElseThrow(
-                        () -> new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("User not found.").build())
-                );
+        final UserAccount userAccount = outboundUserRepository.findByUsername(username)
+                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "User not found."));
 
         userAccount.deleteProfilePicture();
         imageFileRepository.delete(ProfilePicture.profilePicturePath(userAccount.getId().toString()));
