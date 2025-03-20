@@ -24,15 +24,15 @@ public record Email(String email) {
         String[] splitEmail = email.split("@");
 
         if (splitEmail.length != 2) {
-            throw new IllegalArgumentException("Email can`t be formatted correctly");
+            throw new IllegalArgumentException("Invalid email format.");
         }
 
         if (splitEmail[0].isEmpty() || splitEmail[0].length() > 64) {
-            throw new IllegalArgumentException("Email can`t be formatted correctly");
+            throw new IllegalArgumentException("Invalid email format.");
         }
 
         if (splitEmail[1].isEmpty() || (splitEmail[1].length() < 3 || splitEmail[1].length() > 252)) {
-            throw new IllegalArgumentException("Email can`t be formatted correctly");
+            throw new IllegalArgumentException("Invalid email format.");
         }
 
         Matcher matcher = pattern.matcher(email);

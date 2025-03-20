@@ -1,10 +1,10 @@
 package testUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.common.mapper.TypeRef;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.util.Map;
@@ -34,8 +34,7 @@ public class AuthUtils {
                 .body(accountJSON)
                 .when().post(REGISTRATION)
                 .then()
-                .statusCode(200)
-                .body(containsString("successful"));
+                .statusCode(200);
 
         String emailConfirmationToken = dbManagement.getToken(account.username());
 

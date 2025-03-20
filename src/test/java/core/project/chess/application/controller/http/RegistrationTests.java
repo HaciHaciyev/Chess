@@ -2,17 +2,20 @@ package core.project.chess.application.controller.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import testUtils.RegistrationForm;
 import testUtils.UserDBManagement;
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
 
 @QuarkusTest
 class RegistrationTests {
@@ -92,12 +95,25 @@ class RegistrationTests {
         RegistrationForm account = RegistrationForm.randomForm().withUsername(username);
         String accountJSON = objectMapper.writer().writeValueAsString(account);
 
-        given().contentType("application/json")
+        String result = given().contentType("application/json")
                 .body(accountJSON)
                 .when().post(REGISTRATION)
                 .then()
                 .statusCode(400)
-                .body(containsString("Invalid username"));
+                .extract()
+                .body()
+                .asString();
+
+        boolean assertion = result.equals("Username cannot be null.") ||
+                result.equals("Username cannot be blank.") ||
+                result.equals("This username is too long.") ||
+                result.equals("Username contains invalid characters.");
+
+        if (!assertion) {
+            throw new AssertionError();
+        }
+
+        Log.infof("Response: %s", result);
     }
 
     @ParameterizedTest
@@ -108,12 +124,25 @@ class RegistrationTests {
         RegistrationForm account = RegistrationForm.randomForm().withEmail(email);
         String accountJSON = objectMapper.writer().writeValueAsString(account);
 
-        given().contentType("application/json")
+        String result = given().contentType("application/json")
                 .body(accountJSON)
                 .when().post(REGISTRATION)
                 .then()
                 .statusCode(400)
-                .body(containsString("Invalid email"));
+                .extract()
+                .body()
+                .asString();
+
+        boolean assertion = result.equals("Email can`t be null") ||
+                result.equals("Email can`t be blank") ||
+                result.equals("Invalid email format.") ||
+                result.equals("Email format error");
+
+        if (!assertion) {
+            throw new AssertionError();
+        }
+
+        Log.infof("Response: %s", result);
     }
 
     @ParameterizedTest
@@ -130,7 +159,7 @@ class RegistrationTests {
                 .then()
                 .statusCode(400)
                 .log().all()
-                .body(containsString("Password is not valid"));
+                .body(containsString("Invalid password."));
 
         account = account.withPasswordConfirmation("something");
         accountJSON = objectMapper.writer().writeValueAsString(account);
@@ -140,6 +169,6 @@ class RegistrationTests {
                 .when().post(REGISTRATION)
                 .then()
                 .statusCode(400)
-                .body(containsString("Password is not valid"));
+                .body(containsString("Invalid password."));
     }
 }

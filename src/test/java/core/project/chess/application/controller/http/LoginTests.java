@@ -4,7 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import testUtils.AuthUtils;
 import testUtils.LoginForm;
 import testUtils.RegistrationForm;
@@ -63,8 +66,10 @@ public class LoginTests {
                 .body(loginJSON)
                 .when().post(LOGIN)
                 .then()
-                .statusCode(400)
-                .body(containsString("%s not found".formatted(loginForm.username())));
+                .statusCode(404)
+                .body(containsString("User %s not found, check data for correctness or register account if you do not have."
+                        .formatted(loginForm.username()))
+                );
     }
 
     @RepeatedTest(3)
@@ -151,7 +156,9 @@ public class LoginTests {
                 .body(loginJSON)
                 .when().post(LOGIN)
                 .then()
-                .statusCode(400)
-                .body(containsString("%s not found".formatted(loginForm.username())));
+                .statusCode(404)
+                .body(containsString("User %s not found, check data for correctness or register account if you do not have."
+                        .formatted(loginForm.username()))
+                );
     }
 }
