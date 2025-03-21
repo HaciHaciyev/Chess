@@ -3,7 +3,7 @@ CREATE TABLE Comments (
     article_id CHAR(36) NOT NULL,
     user_id CHAR(36) NOT NULL,
     text VARCHAR(56) NOT NULL,
-    comment_type VARCHAR(6) NOT NULL,
+    comment_type VARCHAR(6) NOT NULL CHECK ( comment_type IN ('PARENT', 'CHILD')),
     parent_comment_id CHAR(36) NULL,
     respond_to_comment CHAR(36) NULL,
     creation_date TIMESTAMP NOT NULL,
