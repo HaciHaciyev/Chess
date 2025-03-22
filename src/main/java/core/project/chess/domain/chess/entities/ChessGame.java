@@ -8,6 +8,7 @@ import core.project.chess.domain.chess.util.ChessCountdownTimer;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Rating;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
 
@@ -17,6 +18,8 @@ import java.util.*;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 import static core.project.chess.domain.chess.enumerations.GameResultMessage.*;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 public class ChessGame {
     private final UUID chessGameId;
@@ -36,7 +39,10 @@ public class ChessGame {
     private boolean isThreeFoldActive;
     private AgreementPair agreementPair;
     private AgreementPair returnOfMovement;
+    private ChessCountdownTimer afkTimer;
     private StatusPair<GameResult> isGameOver;
+
+    public static final int TIME_FOR_AFK = 45;
 
     private ChessGame(UUID chessGameId,
                       ChessBoard chessBoard,
@@ -197,6 +203,10 @@ public class ChessGame {
         return agreementPair.whitePlayerUsername != null && agreementPair.blackPlayerUsername != null;
     }
 
+    public boolean isPlayer(Username username) {
+        return username.equals(playerForWhite.getUsername()) || username.equals(playerForBlack.getUsername());
+    }
+
     public GameResultMessage makeMovement(final String username, final Coordinate from,final Coordinate to, @Nullable Piece inCaseOfPromotion)
             throws IllegalArgumentException {
         Objects.requireNonNull(username);
@@ -264,9 +274,9 @@ public class ChessGame {
 
     private boolean attemptToUndoMovement(Color color) {
         if (color.equals(WHITE)) {
-            return Objects.nonNull(returnOfMovement.blackPlayerUsername());
+            return nonNull(returnOfMovement.blackPlayerUsername());
         } else {
-            return Objects.nonNull(returnOfMovement.whitePlayerUsername());
+            return nonNull(returnOfMovement.whitePlayerUsername());
         }
     }
 
@@ -328,11 +338,44 @@ public class ChessGame {
         setAgreement(color, username);
     }
 
+    public void awayFromTheBoard(Username username) {
+        if (!isPlayer(username)) {
+            return;
+        }
+        if (nonNull(afkTimer)) {
+            return;
+        }
+
+        Color color = username.equals(playerForWhite.getUsername()) ? WHITE : BLACK;
+
+        if (color.equals(WHITE)) {
+            this.afkTimer = new ChessCountdownTimer(this, "AFK White timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
+                this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN);
+                calculatePlayersRating();
+            });
+            return;
+        }
+
+        this.afkTimer = new ChessCountdownTimer(this, "AFK Black timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
+            this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
+            calculatePlayersRating();
+        });
+    }
+
+    public void returnedToTheBoard(Username username) {
+        if (isNull(afkTimer)) {
+            return;
+        }
+
+        afkTimer.stop();
+        this.afkTimer = null;
+    }
+
     private boolean attemptToFinalizeAgreement(Color color) {
         if (color.equals(WHITE)) {
-            return Objects.nonNull(agreementPair.blackPlayerUsername());
+            return nonNull(agreementPair.blackPlayerUsername());
         } else {
-            return Objects.nonNull(agreementPair.whitePlayerUsername());
+            return nonNull(agreementPair.whitePlayerUsername());
         }
     }
 
@@ -343,7 +386,6 @@ public class ChessGame {
             this.agreementPair = new AgreementPair(null, username);
         }
     }
-
 
     private void gameOver(final Operations operation) {
         if (isGameOver.status()) {

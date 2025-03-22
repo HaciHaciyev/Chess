@@ -22,17 +22,20 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session) {
-        chessGameService.validateToken(session).ifPresent(token -> chessGameService.onOpen(session, new Username(token.getName())));
+        chessGameService.validateToken(session)
+                .ifPresent(token -> chessGameService.onOpen(session, new Username(token.getName())));
     }
 
     @OnMessage
     public void onMessage(final Session session, final Message message) {
-        chessGameService.validateToken(session).ifPresent(token -> chessGameService.onMessage(session, new Username(token.getName()), message));
+        chessGameService.validateToken(session)
+                .ifPresent(token -> chessGameService.onMessage(session, new Username(token.getName()), message));
     }
 
     @OnClose
     public void onClose(final Session session) {
-        chessGameService.onClose(session);
+        chessGameService.validateToken(session)
+                .ifPresent(token -> chessGameService.onClose(session, new Username(token.getName())));
     }
 
 }

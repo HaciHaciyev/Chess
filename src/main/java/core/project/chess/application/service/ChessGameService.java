@@ -236,9 +236,18 @@ public class ChessGameService {
         sessionStorage.addSessionToGame(gameId, session);
 
         final ChessGame game = chessGame.orElseThrow();
-        final boolean isAPlayer = game.getPlayerForWhite().getUsername().equals(username) || game.getPlayerForBlack().getUsername().equals(username);
-        if (isAPlayer) {
+        if (game.isPlayer(username)) {
+            game.returnedToTheBoard(username);
             updateSessionGameIds(session, gameID);
+
+            Message message = Message.builder(MessageType.INFO)
+                    .gameID(gameID)
+                    .message("Player %s returned to the game".formatted(username.username()))
+                    .build();
+
+            for (Session gameSession : sessionStorage.getGameSessions(game.getChessGameId())) {
+                sendMessage(gameSession, message);
+            }
         }
 
         sendGameStartNotifications(session, game);
@@ -499,7 +508,7 @@ public class ChessGameService {
         sendMessage(session, message);
     }
 
-    public void onClose(Session session) {
+    public void onClose(Session session, Username username) {
         final Object gameIdObj = session.getUserProperties().get("game-id");
         if (Objects.isNull(gameIdObj)) {
             return;
@@ -519,6 +528,9 @@ public class ChessGameService {
                 continue;
             }
             if (chessGame.orElseThrow().gameResult().isEmpty()) {
+                if (chessGame.get().isPlayer(username)) {
+                    handleAFK(username, chessGame.get(), gameUuid);
+                }
                 continue;
             }
 
@@ -533,6 +545,18 @@ public class ChessGameService {
         }
 
         sessionStorage.removeSession(session);
+    }
+
+    private void handleAFK(Username username, ChessGame chessGame, UUID gameUuid) {
+        chessGame.awayFromTheBoard(username);
+        Message message = Message.builder(MessageType.INFO)
+                .gameID(chessGame.getChessGameId().toString())
+                .message("Player %s is AFK.".formatted(username.username()))
+                .build();
+
+        for (Session gameSession : sessionStorage.getGameSessions(gameUuid)) {
+            sendMessage(gameSession, message);
+        }
     }
 
     private class ChessGameSpectator implements Runnable {
