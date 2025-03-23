@@ -38,6 +38,10 @@ public class ChessCountdownTimer implements Runnable {
         this.name = name + "#" + threadID++;
     }
 
+    public String getName() {
+        return name;
+    }
+
     @Override
     public void run() {
         try {

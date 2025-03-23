@@ -446,6 +446,14 @@ public class ChessGame {
         if (!isWhitePlayer && !isBlackPlayer) {
             throw new IllegalArgumentException("Not a player.");
         }
+        if (nonNull(afkTimer)) {
+            final boolean illegalAccess = (isWhitePlayer && afkTimer.getName().equals("AFK White timer")) ||
+                    (isBlackPlayer && afkTimer.getName().equals("AFK Black timer"));
+
+            if (illegalAccess) {
+                throw new IllegalStateException("A player cannot make a move without being at the board.");
+            }
+        }
 
         return isWhitePlayer ? WHITE : BLACK;
     }
