@@ -7,7 +7,7 @@ CREATE TABLE Article (
     status VARCHAR(9) NOT NULL CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),
     creation_date TIMESTAMP NOT NULL,
     last_updated TIMESTAMP NOT NULL,
-    search_document ts_vector,
+    search_document tsvector,
     PRIMARY KEY (id)
 );
 
