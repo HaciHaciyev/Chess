@@ -328,7 +328,9 @@ public class ChessGameService {
         final String addressee = addresseeAccount.getUsername().username();
 
         final boolean isHavePartnership = outboundUserRepository.havePartnership(addresseeAccount, addresserAccount);
+        Log.info("Is partnership for chess game exists: %s.".formatted(isHavePartnership));
         if (!isHavePartnership) {
+            Log.error("Partnership not exists.");
             sendMessage(session, Message.error("You can`t invite someone who`s have not partnership with you."));
             return;
         }

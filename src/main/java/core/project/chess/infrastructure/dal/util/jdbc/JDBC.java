@@ -121,7 +121,8 @@ public class JDBC {
                     return Result.failure(new DataNotFoundException("Data in for this query was not found."));
                 }
 
-                return Result.success(extractor.extractData(resultSet));
+                T value = extractor.extractData(resultSet);
+                return Result.success(value);
             }
         } catch (SQLException e) {
             Log.error(e);
@@ -172,7 +173,8 @@ public class JDBC {
                     return Result.failure(new DataNotFoundException("Data in query for object was not found."));
                 }
 
-                return Result.success((T) wrapperMapFunctions.get(type).apply(resultSet));
+                T value = (T) wrapperMapFunctions.get(type).apply(resultSet);
+                return Result.success(value);
             }
         } catch (SQLException | IllegalArgumentException e) {
             Log.error(e);
