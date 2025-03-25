@@ -33,12 +33,12 @@ CREATE UNIQUE INDEX user_name_index ON UserAccount (username);
 
 CREATE FUNCTION update_user_date() RETURNS TRIGGER AS $$
 BEGIN
-    NEW.last_updated_date = NOW();
+    NEW.last_updated_date = LOCALTIMESTAMP;
 RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER user_account_update_tr
-    BEFORE UPDATE ON UserAccount
+    BEFORE INSERT OR UPDATE ON UserAccount
     FOR EACH ROW
     EXECUTE FUNCTION update_user_date();

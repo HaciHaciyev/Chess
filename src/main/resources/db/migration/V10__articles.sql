@@ -27,12 +27,12 @@ CREATE TRIGGER article_search_update
 
 CREATE FUNCTION update_article_date() RETURNS TRIGGER AS $$
 BEGIN
-    NEW.last_updated = NOW();
+    NEW.last_updated = LOCALTIMESTAMP;
 RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER article_update_tr
-    BEFORE UPDATE ON Article
+    BEFORE INSERT OR UPDATE ON Article
     FOR EACH ROW
     EXECUTE FUNCTION update_article_date();
