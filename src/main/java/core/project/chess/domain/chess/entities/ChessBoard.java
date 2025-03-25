@@ -1498,8 +1498,6 @@ public class ChessBoard {
             this.ruleOf50Moves--;
         }
 
-        System.out.println(new ChessBoardNavigator(this).prettyToString());
-
         fenRepresentationsOfBoard.removeLast();
         listOfAlgebraicNotations.removeLast();
 
