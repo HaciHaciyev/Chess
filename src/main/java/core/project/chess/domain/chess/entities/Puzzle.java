@@ -27,7 +27,8 @@ public class Puzzle {
     private boolean isSolved;
     private boolean isEnded;
 
-    private Puzzle(UUID puzzleId, Rating rating, ChessBoard chessBoard, AlgebraicNotation[] algebraicNotations, UserAccount player, int startPositionIndex) {
+    private Puzzle(UUID puzzleId, Rating rating, ChessBoard chessBoard,
+                   AlgebraicNotation[] algebraicNotations, UserAccount player, int startPositionIndex) {
         this.puzzleId = puzzleId;
         this.rating = rating;
         this.chessBoard = chessBoard;
@@ -38,7 +39,32 @@ public class Puzzle {
         this.player.addPuzzle(this);
     }
 
-    public static Puzzle of(UserAccount userAccount, String pgn, int startPositionOfPuzzle, Rating rating) {
+    /**
+     Only for saving, not for play.
+     */
+    public static Puzzle of(String pgn, int startPositionOfPuzzle) {
+        if (pgn == null) {
+            throw new IllegalArgumentException("PGN is null. Puzzle requires PGN.");
+        }
+        if (pgn.isBlank()) {
+            throw new IllegalArgumentException("PGN can`t be blank.");
+        }
+        if (startPositionOfPuzzle < 0) {
+            throw new IllegalArgumentException("Position index can`t be lower then 0.");
+        }
+
+        ChessBoard chessBoard = ChessBoard.fromPGN(pgn);
+        AlgebraicNotation[] algebraicNotations = chessBoard.arrayOfAlgebraicNotations();
+
+        if ((algebraicNotations.length - 1) >= startPositionOfPuzzle) {
+            throw new IllegalArgumentException("Start position of puzzle can`t be greater or equal to size of halfmoves.");
+        }
+
+        return new Puzzle(UUID.randomUUID(), Rating.defaultRating(), chessBoard, algebraicNotations, null, startPositionOfPuzzle);
+    }
+
+    public static Puzzle fromRepository(UUID id, UserAccount userAccount, String pgn, int startPositionOfPuzzle, Rating rating) {
+        Objects.requireNonNull(id);
         Objects.requireNonNull(pgn);
         Objects.requireNonNull(userAccount);
         Objects.requireNonNull(rating);
@@ -62,7 +88,7 @@ public class Puzzle {
             requiredMoveReturns--;
         }
 
-        return new Puzzle(UUID.randomUUID(), rating, chessBoard, algebraicNotations, userAccount, startPositionOfPuzzle);
+        return new Puzzle(id, rating, chessBoard, algebraicNotations, userAccount, startPositionOfPuzzle);
     }
 
     public UUID ID() {
@@ -131,7 +157,9 @@ public class Puzzle {
         return copiedArray;
     }
 
-    public Pair<String, Optional<String>> makeMovement(final Coordinate from, final Coordinate to, @Nullable final Piece inCaseOfPromotion) {
+    public Pair<String, Optional<String>> makeMovement(final Coordinate from,
+                                                       final Coordinate to,
+                                                       @Nullable final Piece inCaseOfPromotion) {
         if (this.isEnded) {
             throw new IllegalArgumentException("Puzzle already solved.");
         }
