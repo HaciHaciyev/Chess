@@ -13,6 +13,7 @@ import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.infrastructure.clients.PuzzlerClient;
 import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
 import core.project.chess.infrastructure.security.JwtUtility;
@@ -39,6 +40,8 @@ public class ChessGameService {
 
     private final PuzzleService puzzleService;
 
+    private final PuzzlerClient puzzlerClient;
+
     private final SessionStorage sessionStorage;
 
     private final ChessGameFactory chessGameFactory;
@@ -51,11 +54,13 @@ public class ChessGameService {
 
     private final GameInvitationsRepository partnershipGameCacheService;
 
-    ChessGameService(JwtUtility jwtUtility, PuzzleService puzzleService, SessionStorage sessionStorage, ChessGameFactory chessGameFactory,
-                     InboundChessRepository inboundChessRepository, OutboundUserRepository outboundUserRepository,
-                     GameFunctionalityService gameFunctionalityService, GameInvitationsRepository partnershipGameCacheService) {
+    ChessGameService(JwtUtility jwtUtility, PuzzleService puzzleService, PuzzlerClient puzzlerClient, SessionStorage sessionStorage,
+                     ChessGameFactory chessGameFactory, InboundChessRepository inboundChessRepository,
+                     OutboundUserRepository outboundUserRepository, GameFunctionalityService gameFunctionalityService,
+                     GameInvitationsRepository partnershipGameCacheService) {
         this.jwtUtility = jwtUtility;
         this.puzzleService = puzzleService;
+        this.puzzlerClient = puzzlerClient;
         this.sessionStorage = sessionStorage;
         this.chessGameFactory = chessGameFactory;
         this.inboundChessRepository = inboundChessRepository;
@@ -585,6 +590,7 @@ public class ChessGameService {
                     }
                     sessionStorage.removeGame(game.getChessGameId());
 
+                    puzzlerClient.sendPGN(game.getChessBoard().pgn());
                     CompletableFuture.runAsync(() -> gameFunctionalityService.executeGameOverOperations(game));
                     isRunning.set(false);
                 });
