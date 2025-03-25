@@ -1478,13 +1478,13 @@ public class ChessBoard {
             return true;
         }
 
-        final var movementPair = lastMovement.coordinates();
+        final Pair<Coordinate, Coordinate> movementPair = lastMovement.coordinates();
         final Coordinate from = movementPair.getFirst();
         final Coordinate to = movementPair.getSecond();
 
         final Field startedField = fieldMap.get(from);
         final Field endedField = fieldMap.get(to);
-        final Piece piece = endedField.pieceOptional().orElseThrow();
+        final Piece piece = getPieceForUndo(endedField, lastMovement);
 
         endedField.removeFigure();
         startedField.addFigure(piece);
@@ -1497,6 +1497,8 @@ public class ChessBoard {
         if (!isCapture && !(piece instanceof Pawn) && ruleOf50Moves != 0){
             this.ruleOf50Moves--;
         }
+
+        System.out.println(new ChessBoardNavigator(this).prettyToString());
 
         fenRepresentationsOfBoard.removeLast();
         listOfAlgebraicNotations.removeLast();
@@ -1519,6 +1521,16 @@ public class ChessBoard {
 
         switchFiguresTurn();
         return true;
+    }
+
+    private static Piece getPieceForUndo(Field endedField, AlgebraicNotation lastMovement) {
+        if (lastMovement.isPromotion()) {
+            boolean wasBlackPromotion = lastMovement.coordinates().getSecond().getRow() == 1;
+            Color color = wasBlackPromotion ? BLACK : WHITE;
+            return new Pawn(color);
+        }
+        
+        return endedField.pieceOptional().orElseThrow();
     }
 
     /**

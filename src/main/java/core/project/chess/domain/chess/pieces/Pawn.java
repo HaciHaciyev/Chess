@@ -1,12 +1,12 @@
 package core.project.chess.domain.chess.pieces;
 
-import core.project.chess.domain.chess.util.ChessNotationsValidator;
-import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
+import core.project.chess.domain.chess.util.ChessNotationsValidator;
+import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
@@ -98,8 +98,9 @@ public record Pawn(Color color)
     }
 
     public boolean isValidPromotion(final Pawn pawnForPromotion, final Piece inCaseOfPromotion) {
-        Objects.requireNonNull(pawnForPromotion);
-        Objects.requireNonNull(inCaseOfPromotion);
+        if (pawnForPromotion == null || inCaseOfPromotion == null) {
+            return false;
+        }
 
         if (inCaseOfPromotion instanceof King || inCaseOfPromotion instanceof Pawn) {
             return false;

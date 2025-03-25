@@ -506,6 +506,11 @@ public class AlgebraicNotation {
         return Pair.of(from, to);
     }
 
+    public boolean isPromotion() {
+        return ChessNotationsValidator.isPromotion(this.algebraicNotation) ||
+                ChessNotationsValidator.isPromotionPlusOperation(this.algebraicNotation);
+    }
+
     /**
      * Retrieves the pair of coordinates representing a castling move.
      *
