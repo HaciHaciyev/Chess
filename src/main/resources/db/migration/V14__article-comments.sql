@@ -14,3 +14,15 @@ CREATE TABLE Comments (
     CONSTRAINT parent_comment_id_fk FOREIGN KEY (parent_comment_id) REFERENCES Comments(id),
     CONSTRAINT respond_comment_id_fk FOREIGN KEY (respond_to_comment) REFERENCES Comments(id)
 );
+
+CREATE FUNCTION update_comment_date() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.last_updated = NOW();
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER comment_update_tr
+    BEFORE UPDATE ON Article
+    FOR EACH ROW
+    EXECUTE FUNCTION update_comment_date();

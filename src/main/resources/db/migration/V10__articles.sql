@@ -24,3 +24,15 @@ CREATE TRIGGER article_search_update
     BEFORE INSERT OR UPDATE ON Article
         FOR EACH ROW
         EXECUTE FUNCTION update_search_document();
+
+CREATE FUNCTION update_article_date() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.last_updated = NOW();
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER article_update_tr
+    BEFORE UPDATE ON Article
+    FOR EACH ROW
+    EXECUTE FUNCTION update_article_date();
