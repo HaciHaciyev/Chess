@@ -275,6 +275,25 @@ GET /puzzles/page?pageNumber={pageNumber}&pageSize={pageSize}
 
 ---
 
+---
+
+### Save puzzle
+**Endpoint:**
+```
+POST /puzzles/save
+```
+Body:
+```json
+{
+   "PGN": "string (PGN - Portable Game Notation)",
+   "startPositionOfPuzzle": "number"
+}
+```
+**Responses:**
+- `200 OK` - Successfully saved a chess puzzle.
+- `400 BAD REQUEST` - Invalid puzzle.
+---
+
 ## Root Endpoint
 
 ### Base API Path
