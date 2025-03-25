@@ -1056,6 +1056,10 @@ public class ChessGameTest {
 
         game.returnMovement(whitePlayer);
         game.returnMovement(blackPlayer);
+        System.out.println(navigator.prettyToString());
+
+        game.makeMovement(blackPlayer, d8, h4, new Queen(Color.BLACK));
+        System.out.println(navigator.prettyToString());
     }
 
     static Supplier<ChessGame> defaultChessGameSupplier() {
