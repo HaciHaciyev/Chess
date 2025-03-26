@@ -3,7 +3,6 @@ package core.project.chess.application.service;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
-import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.files.ImageFileRepository;
 import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
@@ -24,7 +23,7 @@ public class ProfileService {
         this.outboundUserRepository = outboundUserRepository;
     }
 
-    public void putProfilePicture(byte[] picture, Username username) {
+    public void putProfilePicture(byte[] picture, String username) {
         final UserAccount userAccount = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(() -> {
@@ -46,7 +45,7 @@ public class ProfileService {
         imageFileRepository.put(userAccount);
     }
 
-    public ProfilePicture getProfilePicture(Username username) {
+    public ProfilePicture getProfilePicture(String username) {
         final UserAccount userAccount = outboundUserRepository.findByUsername(username)
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "User not found."));
 
@@ -55,7 +54,7 @@ public class ProfileService {
                 .orElseGet(ProfilePicture::defaultProfilePicture);
     }
 
-    public void deleteProfilePicture(Username username) {
+    public void deleteProfilePicture(String username) {
         final UserAccount userAccount = outboundUserRepository.findByUsername(username)
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "User not found."));
 

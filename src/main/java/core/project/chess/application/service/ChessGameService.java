@@ -72,7 +72,7 @@ public class ChessGameService {
 
     public void onOpen(Session session, Username username) {
         CompletableFuture.runAsync(() -> {
-            Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(username);
+            Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(username.username());
             if (!result.success()) {
                 closeSession(session, Message.error("This account is do not founded."));
                 return;
@@ -260,7 +260,7 @@ public class ChessGameService {
     }
 
     private void startNewGame(Session session, Username username, GameParameters gameParameters) {
-        final UserAccount firstPlayer = outboundUserRepository.findByUsername(username).orElseThrow();
+        final UserAccount firstPlayer = outboundUserRepository.findByUsername(username.username()).orElseThrow();
 
         sendMessage(session, Message.userInfo("Finding opponent..."));
 
@@ -325,11 +325,11 @@ public class ChessGameService {
             return;
         }
 
-        final UserAccount addresserAccount = outboundUserRepository.findByUsername(addresserUsername).orElseThrow();
+        final UserAccount addresserAccount = outboundUserRepository.findByUsername(addresserUsername.username()).orElseThrow();
 
         final Optional<Pair<Session, UserAccount>> optionalSession = sessionStorage.getSessionByUsername(addresseeUsername.username());
         final UserAccount addresseeAccount = optionalSession.map(Pair::getSecond)
-                .orElseGet(() -> outboundUserRepository.findByUsername(addresseeUsername).orElseThrow());
+                .orElseGet(() -> outboundUserRepository.findByUsername(addresseeUsername.username()).orElseThrow());
 
         final String addressee = addresseeAccount.getUsername();
 

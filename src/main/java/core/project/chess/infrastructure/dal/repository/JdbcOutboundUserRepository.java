@@ -164,8 +164,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public Result<UserAccount, Throwable> findByUsername(Username username) {
-        return jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username.username());
+    public Result<UserAccount, Throwable> findByUsername(String username) {
+        return jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username);
     }
 
     @Override

@@ -68,15 +68,13 @@ public class UserAuthService {
             if (!Password.validate(loginForm.password())) {
                 throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
             }
-
-            final Username username = new Username(loginForm.username());
-            final Password password = new Password(loginForm.password());
+            Username.validate(loginForm.username());
 
             final UserAccount userAccount = outboundUserRepository
-                    .findByUsername(username)
+                    .findByUsername(loginForm.username())
                     .orElseThrow(() -> {
                         Log.error("Login failure, user not found");
-                        return responseException(Response.Status.NOT_FOUND, String.format(USER_NOT_FOUND, username.username()));
+                        return responseException(Response.Status.NOT_FOUND, String.format(USER_NOT_FOUND, loginForm.username()));
                     });
 
             if (!userAccount.isEnabled()) {
@@ -84,7 +82,7 @@ public class UserAuthService {
                 throw responseException(Response.Status.BAD_REQUEST, NOT_ENABLED);
             }
 
-            final boolean isPasswordsMatch = passwordEncoder.verify(password.password(), userAccount.getPassword());
+            final boolean isPasswordsMatch = passwordEncoder.verify(loginForm.password(), userAccount.getPassword());
             if (!isPasswordsMatch) {
                 Log.error("Login failure, wrong password");
                 throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");

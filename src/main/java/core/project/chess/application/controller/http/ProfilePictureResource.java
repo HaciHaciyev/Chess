@@ -3,7 +3,6 @@ package core.project.chess.application.controller.http;
 import core.project.chess.application.service.ProfileService;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
 import jakarta.enterprise.inject.Instance;
@@ -41,7 +40,7 @@ public class ProfilePictureResource {
             throw responseException(Response.Status.BAD_REQUEST, "Picture can`t be null.");
         }
 
-        Username username = getUsername();
+        String username = getUsername();
 
         try {
             profileService.putProfilePicture(IOUtils.toByteArray(inputStream), username);
@@ -56,7 +55,7 @@ public class ProfilePictureResource {
     @GET
     @Path("/profile-picture")
     public Response getProfilePicture() {
-        Username username = getUsername();
+        String username = getUsername();
 
         ProfilePicture profilePicture = profileService.getProfilePicture(username);
         return Response.ok(Map.of("profilePicture", profilePicture.profilePicture(), "imageType", profilePicture.imageType())).build();
@@ -65,14 +64,18 @@ public class ProfilePictureResource {
     @DELETE
     @Path("/delete-profile-picture")
     public Response deleteProfilePicture() {
-        Username username = getUsername();
+        String username = getUsername();
 
         profileService.deleteProfilePicture(username);
         return Response.accepted("Successfully delete a profile image.").build();
     }
 
-    private Username getUsername() {
-        return Result.ofThrowable(() -> new Username(jwt.getName()))
-                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Invalid username provided."));
+    private String getUsername() {
+        String username = jwt.getName();
+        if (!Username.isValid(username)) {
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid username provided.");
+        }
+
+        return username;
     }
 }

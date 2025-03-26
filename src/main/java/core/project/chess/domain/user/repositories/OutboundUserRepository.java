@@ -4,7 +4,6 @@ import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Email;
-import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Result;
 
@@ -20,7 +19,7 @@ public interface OutboundUserRepository {
 
     Result<UserAccount, Throwable> findById(UUID userId);
 
-    Result<UserAccount, Throwable> findByUsername(Username username);
+    Result<UserAccount, Throwable> findByUsername(String username);
 
     Result<UserAccount, Throwable> findByEmail(Email email);
 

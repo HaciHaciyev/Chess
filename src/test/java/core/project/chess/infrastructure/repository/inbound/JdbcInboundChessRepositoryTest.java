@@ -5,7 +5,6 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.repository.JdbcInboundChessRepository;
 import core.project.chess.infrastructure.dal.repository.JdbcOutboundUserRepository;
 import io.quarkus.test.junit.QuarkusTest;
@@ -82,6 +81,6 @@ class JdbcInboundChessRepositoryTest {
     }
 
     Supplier<UserAccount> userAccountSupplier(String username) {
-        return () -> userRepository.findByUsername(new Username(username)).orElseThrow();
+        return () -> userRepository.findByUsername(username).orElseThrow();
     }
 }
