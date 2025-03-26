@@ -375,6 +375,9 @@ public class ChessGame {
     }
 
     public void returnedToTheBoard(Username username) {
+        if (!isPlayer(username)) {
+            throw new IllegalArgumentException("Not a player.");
+        }
         if (isNull(afkTimer)) {
             return;
         }
