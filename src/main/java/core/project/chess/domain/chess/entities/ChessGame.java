@@ -108,18 +108,30 @@ public class ChessGame {
             Time time,
             boolean isCasualGame
     ) {
+        Rating whitePlayerRating = getRating(playerForWhite, time);
+        Rating blackPlayerRating = getRating(playerForBlack, time);
+
         return new ChessGame(
                 chessGameId,
                 chessBoard,
                 playerForWhite,
                 playerForBlack,
-                playerForWhite.getRating(),
-                playerForBlack.getRating(),
+                whitePlayerRating,
+                blackPlayerRating,
                 sessionEvents,
                 time,
                 StatusPair.ofFalse(),
                 isCasualGame
         );
+    }
+
+    private static Rating getRating(UserAccount user, Time time) {
+        return switch (time) {
+            case DEFAULT, CLASSIC -> user.getRating();
+            case BULLET -> user.getBulletRating();
+            case BLITZ -> user.getBlitzRating();
+            case RAPID -> user.getRapidRating();
+        };
     }
 
     public UUID getChessGameId() {
@@ -204,7 +216,7 @@ public class ChessGame {
     }
 
     public boolean isPlayer(Username username) {
-        return username.equals(playerForWhite.getUsername()) || username.equals(playerForBlack.getUsername());
+        return username.username().equals(playerForWhite.getUsername()) || username.username().equals(playerForBlack.getUsername());
     }
 
     public GameResultMessage makeMovement(final String username, final Coordinate from,final Coordinate to, @Nullable Piece inCaseOfPromotion)
@@ -346,7 +358,7 @@ public class ChessGame {
             return;
         }
 
-        Color color = username.equals(playerForWhite.getUsername()) ? WHITE : BLACK;
+        Color color = username.username().equals(playerForWhite.getUsername()) ? WHITE : BLACK;
 
         if (color.equals(WHITE)) {
             this.afkTimer = new ChessCountdownTimer(this, "AFK White timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
