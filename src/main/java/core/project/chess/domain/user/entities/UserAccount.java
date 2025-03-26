@@ -199,7 +199,7 @@ public class UserAccount {
             }
 
             case BULLET -> {
-                Rating newBulletRating = Glicko2RatingCalculator.calculate(this.ratings.bulletRating(), opponent.getBlitzRating(), result);
+                Rating newBulletRating = Glicko2RatingCalculator.calculate(this.ratings.bulletRating(), opponent.getBulletRating(), result);
                 this.ratings = Ratings.newBulletRating(this.ratings, newBulletRating);
             }
 
@@ -227,7 +227,7 @@ public class UserAccount {
         }
 
         final double result = puzzle.isSolved() ? 1 : -1;
-        Rating newPuzzlesRating = Glicko2RatingCalculator.calculate(this.ratings.rating(), puzzle.rating(), result);
+        Rating newPuzzlesRating = Glicko2RatingCalculator.calculate(this.ratings.puzzlesRating(), puzzle.rating(), result);
         this.ratings = Ratings.newPuzzlesRating(this.ratings, newPuzzlesRating);
     }
 
