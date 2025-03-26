@@ -43,6 +43,14 @@ public class LoginTests {
     }
 
     @Test
+    @DisplayName("Login 150 users")
+    void login_150_Users() throws JsonProcessingException {
+        for (int i = 0; i < 150; i++) {
+            authUtils.fullDistinctLoginProcess();
+        }
+    }
+
+    @Test
     @DisplayName("Refresh-Token test")
     void refreshToken() throws JsonProcessingException {
         String refreshToken = authUtils.fullLoginProcess().serverResponse().get("refreshToken");
