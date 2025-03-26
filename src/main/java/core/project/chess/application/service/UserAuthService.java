@@ -7,7 +7,7 @@ import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Password;
-import core.project.chess.domain.user.value_objects.UserProfile;
+import core.project.chess.domain.user.value_objects.PersonalData;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
@@ -45,8 +45,6 @@ public class UserAuthService {
 
     public static final String NOT_ENABLED = "This account is not enabled.";
 
-    public static final String INVALID_PASSWORD = "Invalid password. Must contains at least 8 characters.";
-
     private static final String USER_NOT_FOUND = "User %s not found, check data for correctness or register account if you do not have.";
 
     public static final String EMAIL_VERIFICATION_URL = "http://localhost:8080/chessland/account/token/verification?token=%s";
@@ -64,9 +62,7 @@ public class UserAuthService {
 
     public Map<String, String> login(LoginForm loginForm) {
         try {
-            if (!Password.validate(loginForm.password())) {
-                throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
-            }
+            Password.validate(loginForm.password());
             Username.validate(loginForm.username());
 
             final UserAccount userAccount = outboundUserRepository
@@ -99,16 +95,14 @@ public class UserAuthService {
 
     public void registration(RegistrationForm registrationForm) {
         try {
-            if (!Password.validate(registrationForm.password())) {
-                throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
-            }
+            Password.validate(registrationForm.password());
 
             if (!Objects.equals(registrationForm.password(), registrationForm.passwordConfirmation())) {
                 Log.error("Registration failure, passwords do not match");
                 throw responseException(Response.Status.BAD_REQUEST, "Passwords do not match");
             }
 
-            UserProfile userProfile = new UserProfile(
+            PersonalData personalData = new PersonalData(
                     registrationForm.firstname(),
                     registrationForm.surname(),
                     registrationForm.username(),
@@ -126,7 +120,7 @@ public class UserAuthService {
                 throw responseException(Response.Status.BAD_REQUEST, "Email already exists.");
             }
 
-            UserAccount userAccount = UserAccount.of(userProfile);
+            UserAccount userAccount = UserAccount.of(personalData);
             inboundUserRepository.save(userAccount);
 
             EmailConfirmationToken token = EmailConfirmationToken.createToken(userAccount);
@@ -134,7 +128,7 @@ public class UserAuthService {
 
             String link = EMAIL_VERIFICATION_URL.formatted(token.getToken().token());
 
-            emailInteractionService.sendToEmail(userProfile.email(), link);
+            emailInteractionService.sendToEmail(personalData.email(), link);
         } catch (IllegalArgumentException | NullPointerException e) {
             throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
         }

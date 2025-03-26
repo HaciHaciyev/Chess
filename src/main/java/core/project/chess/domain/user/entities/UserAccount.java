@@ -17,7 +17,7 @@ import static core.project.chess.domain.chess.enumerations.GameResult.WHITE_WIN;
 
 public class UserAccount {
     private final UUID id;
-    private final UserProfile userProfile;
+    private final PersonalData personalData;
     private UserRole userRole;
     private boolean isEnable;
     private Ratings ratings;
@@ -28,7 +28,7 @@ public class UserAccount {
     private @Nullable ProfilePicture profilePicture;
 
     private UserAccount(UUID id,
-                        UserProfile userProfile,
+                        PersonalData personalData,
                         UserRole userRole,
                         boolean isEnable, Ratings ratings,
                         AccountEvents accountEvents,
@@ -37,7 +37,7 @@ public class UserAccount {
                         @Nullable Set<Puzzle> puzzles,
                         @Nullable ProfilePicture profilePicture) {
         this.id = id;
-        this.userProfile = userProfile;
+        this.personalData = personalData;
         this.userRole = userRole;
         this.isEnable = isEnable;
         this.ratings = ratings;
@@ -48,13 +48,13 @@ public class UserAccount {
         this.profilePicture = profilePicture;
     }
 
-    public static UserAccount of(UserProfile userProfile) {
-        if (userProfile == null) {
+    public static UserAccount of(PersonalData personalData) {
+        if (personalData == null) {
             throw new IllegalArgumentException("UserProfile cannot be null");
         }
 
         return new UserAccount(
-                UUID.randomUUID(), userProfile, UserRole.NONE, false, Ratings.defaultRatings(),
+                UUID.randomUUID(), personalData, UserRole.NONE, false, Ratings.defaultRatings(),
                 AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(), null
         );
     }
@@ -62,14 +62,18 @@ public class UserAccount {
     /**
      * this method is used to call only from repository
      */
-    public static UserAccount fromRepository(UUID id, UserProfile userProfile,
-                                             UserRole userRole, boolean enabled, Ratings ratings, AccountEvents events) {
-        if (id == null || userProfile == null || userRole == null || enabled || ratings == null || events == null) {
-            throw new IllegalArgumentException("UserProfile and UserRole cannot be null");
+    public static UserAccount fromRepository(UUID id,
+                                             PersonalData personalData,
+                                             UserRole userRole,
+                                             boolean enabled,
+                                             Ratings ratings,
+                                             AccountEvents events) {
+        if (id == null || personalData == null || userRole == null || ratings == null || events == null) {
+            throw new IllegalArgumentException("Values cannot be null");
         }
 
         return new UserAccount(
-                id, userProfile, userRole, enabled, ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(), null
+                id, personalData, userRole, enabled, ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(), null
         );
     }
 
@@ -78,23 +82,23 @@ public class UserAccount {
     }
 
     public String getFirstname() {
-        return userProfile.firstname();
+        return personalData.firstname();
     }
 
     public String getSurname() {
-        return userProfile.surname();
+        return personalData.surname();
     }
 
     public String getUsername() {
-        return userProfile.username();
+        return personalData.username();
     }
 
     public String getEmail() {
-        return userProfile.email();
+        return personalData.email();
     }
 
     public String getPassword() {
-        return userProfile.password();
+        return personalData.password();
     }
 
     public UserRole getUserRole() {
@@ -259,7 +263,7 @@ public class UserAccount {
         UserAccount that = (UserAccount) o;
         return isEnable == that.isEnable &&
                 Objects.equals(id, that.id) &&
-                Objects.equals(userProfile, that.userProfile) &&
+                Objects.equals(personalData, that.personalData) &&
                 userRole == that.userRole &&
                 Objects.equals(ratings, that.ratings) &&
                 Objects.equals(accountEvents, that.accountEvents);
@@ -267,7 +271,7 @@ public class UserAccount {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, userProfile, userRole, isEnable, ratings, accountEvents);
+        return Objects.hash(id, personalData, userRole, isEnable, ratings, accountEvents);
     }
 
     @Override
@@ -297,10 +301,10 @@ public class UserAccount {
                }
                """,
                 id,
-                userProfile.firstname(),
-                userProfile.surname(),
-                userProfile.username(),
-                userProfile.email(),
+                personalData.firstname(),
+                personalData.surname(),
+                personalData.username(),
+                personalData.email(),
                 userRole,
                 enables,
                 ratings.rating().rating(),

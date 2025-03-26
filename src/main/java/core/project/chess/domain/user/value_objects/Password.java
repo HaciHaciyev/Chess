@@ -5,17 +5,20 @@ import java.util.Objects;
 public record Password(String password) {
     public static final int MIN_SIZE = 8;
     public static final int MAX_SIZE = 64;
+    public static final String INVALID_PASSWORD = "Invalid password.";
 
-    public static boolean validate(String password) {
+    public static void validate(String password) {
         if (Objects.isNull(password)) {
-            return false;
+            throw new IllegalArgumentException(INVALID_PASSWORD);
         }
         if (password.isBlank()) {
-            return false;
+            throw new IllegalArgumentException(INVALID_PASSWORD);
         }
         if (password.length() < MIN_SIZE) {
-            return false;
+            throw new IllegalArgumentException(INVALID_PASSWORD);
         }
-        return password.length() <= MAX_SIZE;
+        if (password.length() > MAX_SIZE) {
+            throw new IllegalArgumentException(INVALID_PASSWORD);
+        }
     }
 }

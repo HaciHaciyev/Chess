@@ -252,7 +252,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
         return UserAccount.fromRepository(
                 UUID.fromString(rs.getString("id")),
-                new UserProfile(
+                new PersonalData(
                         rs.getString("firstname"),
                         rs.getString("surname"),
                         rs.getString("username"),

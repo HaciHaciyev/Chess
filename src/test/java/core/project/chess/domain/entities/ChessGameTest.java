@@ -10,7 +10,7 @@ import core.project.chess.domain.chess.pieces.Queen;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.ChessMove;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.UserProfile;
+import core.project.chess.domain.user.value_objects.PersonalData;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -1075,7 +1075,7 @@ public class ChessGameTest {
     }
 
     static Supplier<UserAccount> userAccountSupplier(String username) {
-        return () -> UserAccount.of(new UserProfile(
+        return () -> UserAccount.of(new PersonalData(
                 "generateFirstname",
                 "generateSurname",
                 username,

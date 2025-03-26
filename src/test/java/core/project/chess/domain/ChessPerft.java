@@ -11,7 +11,7 @@ import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.UserProfile;
+import core.project.chess.domain.user.value_objects.PersonalData;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import org.jetbrains.annotations.NotNull;
@@ -469,7 +469,7 @@ class ChessPerft {
     }
 
     static Supplier<UserAccount> userAccountSupplier(String username, String email) {
-        return () -> UserAccount.of(new UserProfile(
+        return () -> UserAccount.of(new PersonalData(
                 "generateFirstname",
                 "generateSurname",
                 username,

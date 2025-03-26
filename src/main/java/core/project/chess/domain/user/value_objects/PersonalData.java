@@ -1,9 +1,9 @@
 package core.project.chess.domain.user.value_objects;
 
 /** Password must be hashed*/
-public record UserProfile(String firstname, String surname, String username, String email, String password) {
+public record PersonalData(String firstname, String surname, String username, String email, String password) {
 
-    public UserProfile {
+    public PersonalData {
         Firstname.validate(firstname);
         Surname.validate(surname);
         Username.validate(username);
