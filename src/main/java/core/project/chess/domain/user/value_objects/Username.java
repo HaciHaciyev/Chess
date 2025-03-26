@@ -11,6 +11,10 @@ public record Username(String username) {
     private static final Pattern pattern = Pattern.compile(usernameRegex);
 
     public Username {
+        validate(username);
+    }
+
+    public static void validate(String username) {
         if (Objects.isNull(username)) {
             throw new IllegalArgumentException("Username cannot be null.");
         }
@@ -27,7 +31,7 @@ public record Username(String username) {
         }
     }
 
-    public static boolean validate(String username) {
+    public static boolean isValid(String username) {
         if (Objects.isNull(username)) {
             return false;
         }

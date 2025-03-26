@@ -4,7 +4,6 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.Triple;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,18 +12,17 @@ import jakarta.websocket.Session;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-
-import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @ApplicationScoped
 public class SessionStorage {
 
-    private static final ConcurrentHashMap<Username, Pair<Session, UserAccount>> sessions = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Pair<Username, UUID>, Puzzle> puzzles = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Pair<Session, UserAccount>> sessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Pair<String, UUID>, Puzzle> puzzles = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<UUID, Pair<ChessGame, CopyOnWriteArraySet<Session>>> gameSessions = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Username, ConcurrentLinkedDeque<Triple<Session, UserAccount, GameParameters>>> waitingForTheGame = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, ConcurrentLinkedDeque<Triple<Session, UserAccount, GameParameters>>> waitingForTheGame = new ConcurrentHashMap<>();
     private static final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public void addWaitingUser(Session session, UserAccount account, GameParameters gameParameters) {
@@ -33,23 +31,23 @@ public class SessionStorage {
                 .offerLast(Triple.of(session, account, gameParameters));
     }
 
-    public Optional<Triple<Session, UserAccount, GameParameters>> getWaitingUser(Username username) {
+    public Optional<Triple<Session, UserAccount, GameParameters>> getWaitingUser(String username) {
         var queue = waitingForTheGame.get(username);
         return (queue == null) ? Optional.empty() : Optional.of(queue.peekLast());
     }
 
-    public void removeWaitingUser(Username username) {
+    public void removeWaitingUser(String username) {
         waitingForTheGame.computeIfPresent(username, (key, queue) -> {
             queue.pollLast();
             return queue.isEmpty() ? null : queue;
         });
     }
 
-    public Set<Map.Entry<Username, ConcurrentLinkedDeque<Triple<Session, UserAccount, GameParameters>>>> waitingUsers() {
+    public Set<Map.Entry<String, ConcurrentLinkedDeque<Triple<Session, UserAccount, GameParameters>>>> waitingUsers() {
         return waitingForTheGame.entrySet();
     }
 
-    public Optional<Pair<Session, UserAccount>> getSessionByUsername(Username username) {
+    public Optional<Pair<Session, UserAccount>> getSessionByUsername(String username) {
         return Optional.ofNullable(sessions.get(username));
     }
 
@@ -57,7 +55,7 @@ public class SessionStorage {
         sessions.put(account.getUsername(), Pair.of(session, account));
     }
 
-    public boolean containsSession(Username addresseeUsername) {
+    public boolean containsSession(String addresseeUsername) {
         return sessions.containsKey(addresseeUsername);
     }
 
@@ -104,7 +102,7 @@ public class SessionStorage {
         puzzles.put(Pair.of(puzzle.player().getUsername(), puzzle.ID()), puzzle);
     }
 
-    public Optional<Puzzle> getPuzzle(Username username, UUID puzzleID) {
+    public Optional<Puzzle> getPuzzle(String username, UUID puzzleID) {
         return Optional.ofNullable(puzzles.get(Pair.of(username, puzzleID)));
     }
 }

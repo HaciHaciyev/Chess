@@ -172,7 +172,7 @@ public class ChessGameService {
     }
 
     private void handlePuzzleAction(Session session, Username username, Message message) {
-        UserAccount user = sessionStorage.getSessionByUsername(username).orElseThrow().getSecond();
+        UserAccount user = sessionStorage.getSessionByUsername(username.username()).orElseThrow().getSecond();
 
         if (message.type().equals(MessageType.PUZZLE)) {
             sendMessage(session, puzzleService.chessPuzzle(user));
@@ -284,7 +284,7 @@ public class ChessGameService {
     }
 
     private void cancelGameSearch(Username username) {
-        sessionStorage.removeWaitingUser(username);
+        sessionStorage.removeWaitingUser(username.username());
     }
 
     private StatusPair<Triple<Session, UserAccount, GameParameters>> locateOpponentForGame(final UserAccount firstPlayer,
@@ -320,18 +320,18 @@ public class ChessGameService {
         }
 
         Username addresseeUsername = partnerUsername.orElseThrow();
-        if (!outboundUserRepository.isUsernameExists(addresseeUsername)) {
+        if (!outboundUserRepository.isUsernameExists(addresseeUsername.username())) {
             sendMessage(session, Message.error("User %s do not exists.".formatted(addresseeUsername)));
             return;
         }
 
         final UserAccount addresserAccount = outboundUserRepository.findByUsername(addresserUsername).orElseThrow();
 
-        final Optional<Pair<Session, UserAccount>> optionalSession = sessionStorage.getSessionByUsername(addresseeUsername);
+        final Optional<Pair<Session, UserAccount>> optionalSession = sessionStorage.getSessionByUsername(addresseeUsername.username());
         final UserAccount addresseeAccount = optionalSession.map(Pair::getSecond)
                 .orElseGet(() -> outboundUserRepository.findByUsername(addresseeUsername).orElseThrow());
 
-        final String addressee = addresseeAccount.getUsername().username();
+        final String addressee = addresseeAccount.getUsername();
 
         final boolean isHavePartnership = outboundUserRepository.havePartnership(addresseeAccount, addresserAccount);
         Log.info("Is partnership for chess game exists: %s.".formatted(isHavePartnership));
@@ -349,7 +349,7 @@ public class ChessGameService {
 
         partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
 
-        final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername);
+        final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername.username());
 
         final boolean isRespondRequest = message.respond() != null && message.respond().equals(Message.Respond.YES);
         if (isRespondRequest) {
@@ -361,7 +361,7 @@ public class ChessGameService {
         if (isDeclineRequest) {
             cancelRequests(addresserAccount, addresseeAccount);
             if (isAddresseeActive) {
-                sessionStorage.getSessionByUsername(addresseeUsername)
+                sessionStorage.getSessionByUsername(addresseeUsername.username())
                         .map(Pair::getFirst)
                         .ifPresent(addresseeSession -> sendMessage(addresseeSession, Message.userInfo(
                                 "User %s has declined the partnership game.".formatted(addresseeUsername.username())
@@ -386,16 +386,16 @@ public class ChessGameService {
             ));
         }
 
-        Username addresserUsername = addresserAccount.getUsername();
-        Username addresseeUsername = addresseeAccount.getUsername();
+        String addresserUsername = addresserAccount.getUsername();
+        String addresseeUsername = addresseeAccount.getUsername();
 
-        Map<String, GameParameters> partnershipGameRequests = partnershipGameCacheService.getAll(addresserUsername.username());
-        if (!partnershipGameRequests.containsKey(addresseeUsername.username())) {
+        Map<String, GameParameters> partnershipGameRequests = partnershipGameCacheService.getAll(addresserUsername);
+        if (!partnershipGameRequests.containsKey(addresseeUsername)) {
             sendMessage(session, Message.error("You can`t respond to partnership request if it don`t exist."));
             return;
         }
 
-        GameParameters addresseeGameParameters = partnershipGameRequests.get(addresseeUsername.username());
+        GameParameters addresseeGameParameters = partnershipGameRequests.get(addresseeUsername);
 
         final boolean isOpponentEligible = gameFunctionalityService.validateOpponentEligibility(
                 addresserAccount, addresserGameParameters, addresseeAccount, addresseeGameParameters, true
@@ -439,12 +439,12 @@ public class ChessGameService {
                 .color(color)
                 .build();
 
-        sendMessage(sessionStorage.getSessionByUsername(addresseeUsername).orElseThrow().getFirst(), message);
+        sendMessage(sessionStorage.getSessionByUsername(addresseeUsername.username()).orElseThrow().getFirst(), message);
     }
 
     private void cancelRequests(UserAccount firstPlayer, UserAccount secondPlayer) {
-        partnershipGameCacheService.delete(firstPlayer.getUsername().username(), secondPlayer.getUsername().username());
-        partnershipGameCacheService.delete(secondPlayer.getUsername().username(), firstPlayer.getUsername().username());
+        partnershipGameCacheService.delete(firstPlayer.getUsername(), secondPlayer.getUsername());
+        partnershipGameCacheService.delete(secondPlayer.getUsername(), firstPlayer.getUsername());
     }
 
     private void startStandardChessGame(Triple<Session, UserAccount, GameParameters> firstPlayerData,

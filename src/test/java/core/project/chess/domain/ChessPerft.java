@@ -11,7 +11,7 @@ import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.*;
+import core.project.chess.domain.user.value_objects.UserProfile;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import org.jetbrains.annotations.NotNull;
@@ -30,8 +30,8 @@ class ChessPerft {
     public static final int DEPTH = 5;
     private final Board board = new Board();
     private final ChessGame chessGame = chessGameSupplier().get();
-    private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername().username();
-    private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername().username();
+    private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername();
+    private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
     private final PerftValues perftValues = PerftValues.newInstance();
     private final PerftValues secondPerftValues = PerftValues.newInstance();
 
@@ -469,6 +469,12 @@ class ChessPerft {
     }
 
     static Supplier<UserAccount> userAccountSupplier(String username, String email) {
-        return () -> UserAccount.of(new Firstname("generateFirstname"), new Surname("generateSurname"), new Username(username), new Email(email), new Password("password"));
+        return () -> UserAccount.of(new UserProfile(
+                "generateFirstname",
+                "generateSurname",
+                username,
+                email,
+                "password"
+        ));
     }
 }

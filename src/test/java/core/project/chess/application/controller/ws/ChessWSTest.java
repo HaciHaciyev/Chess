@@ -12,7 +12,10 @@ import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import jakarta.websocket.*;
+import jakarta.websocket.CloseReason;
+import jakarta.websocket.ContainerProvider;
+import jakarta.websocket.DeploymentException;
+import jakarta.websocket.Session;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.*;
 import testUtils.AuthUtils;
@@ -649,8 +652,8 @@ class ChessWSTest {
                         return false;
                     }
 
-                    return message.whitePlayerUsername().username().equals(firstPlayer) ||
-                            message.blackPlayerUsername().username().equals(firstPlayer);
+                    return message.whitePlayerUsername().equals(firstPlayer) ||
+                            message.blackPlayerUsername().equals(firstPlayer);
                 }) &&
 
                 USER_MESSAGES.user2.stream()
@@ -660,15 +663,15 @@ class ChessWSTest {
                         return false;
                     }
 
-                    return message.whitePlayerUsername().username().equals(secondPlayer) ||
-                            message.blackPlayerUsername().username().equals(secondPlayer);
+                    return message.whitePlayerUsername().equals(secondPlayer) ||
+                            message.blackPlayerUsername().equals(secondPlayer);
                 })
         );
 
         Message gameStartedMessage = USER_MESSAGES.user1.stream().filter(message -> message.whitePlayerUsername() != null).findFirst().orElseThrow();
         String gameId = Objects.requireNonNull(gameStartedMessage.gameID(), "Game ID cannot be null");
 
-        final boolean firstPlayerWhite = gameStartedMessage.whitePlayerUsername().username().equals(firstPlayer);
+        final boolean firstPlayerWhite = gameStartedMessage.whitePlayerUsername().equals(firstPlayer);
         if (firstPlayerWhite) {
             Pair.of(processRandomGameWithReconnection(firstPlayerSession, firstPlayer,
                     secondPlayerSession, secondPlayer, secondPlayerToken, gameId), secondPlayer);
@@ -926,8 +929,8 @@ class ChessWSTest {
                                 return false;
                             }
 
-                            return message.whitePlayerUsername().username().equals(firstPlayer) ||
-                                    message.blackPlayerUsername().username().equals(firstPlayer);
+                            return message.whitePlayerUsername().equals(firstPlayer) ||
+                                    message.blackPlayerUsername().equals(firstPlayer);
                         }) &&
                         USER_MESSAGES.user1().stream().anyMatch(message -> {
                             final boolean isHaveChessNotations = message.type().equals(MessageType.FEN_PGN);
@@ -945,8 +948,8 @@ class ChessWSTest {
                                         return false;
                                     }
 
-                                    return message.whitePlayerUsername().username().equals(secondPlayer) ||
-                                            message.blackPlayerUsername().username().equals(secondPlayer);
+                                    return message.whitePlayerUsername().equals(secondPlayer) ||
+                                            message.blackPlayerUsername().equals(secondPlayer);
                                 }) &&
                         USER_MESSAGES.user2().stream().anyMatch(message -> {
                             final boolean isHaveChessNotations = message.type().equals(MessageType.FEN_PGN);

@@ -7,6 +7,7 @@ import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
 import core.project.chess.domain.user.value_objects.*;
+import jakarta.annotation.Nullable;
 
 import java.util.*;
 
@@ -16,30 +17,27 @@ import static core.project.chess.domain.chess.enumerations.GameResult.WHITE_WIN;
 
 public class UserAccount {
     private final UUID id;
-    private final Firstname firstname;
-    private final Surname surname;
-    private final Username username;
-    private final Email email;
-    private final Password password;
+    private final UserProfile userProfile;
     private UserRole userRole;
     private boolean isEnable;
     private Ratings ratings;
     private final AccountEvents accountEvents;
-    private final Set<UserAccount> partners;
-    private final Set<ChessGame> games;
-    private final Set<Puzzle> puzzles;
-    private ProfilePicture profilePicture;
+    private final @Nullable Set<UserAccount> partners;
+    private final @Nullable Set<ChessGame> games;
+    private final @Nullable Set<Puzzle> puzzles;
+    private @Nullable ProfilePicture profilePicture;
 
-    private UserAccount(UUID id, Firstname firstname, Surname surname, Username username, Email email, Password password,
-                        UserRole userRole, boolean isEnable, Ratings ratings, AccountEvents accountEvents,
-                        Set<UserAccount> partners, Set<ChessGame> games, Set<Puzzle> puzzles,
-                        ProfilePicture profilePicture) {
+    private UserAccount(UUID id,
+                        UserProfile userProfile,
+                        UserRole userRole,
+                        boolean isEnable, Ratings ratings,
+                        AccountEvents accountEvents,
+                        @Nullable Set<UserAccount> partners,
+                        @Nullable Set<ChessGame> games,
+                        @Nullable Set<Puzzle> puzzles,
+                        @Nullable ProfilePicture profilePicture) {
         this.id = id;
-        this.firstname = firstname;
-        this.surname = surname;
-        this.username = username;
-        this.email = email;
-        this.password = password;
+        this.userProfile = userProfile;
         this.userRole = userRole;
         this.isEnable = isEnable;
         this.ratings = ratings;
@@ -50,15 +48,13 @@ public class UserAccount {
         this.profilePicture = profilePicture;
     }
 
-    public static UserAccount of(Firstname firstname, Surname surname, Username username, Email email, Password password) {
-        Objects.requireNonNull(firstname);
-        Objects.requireNonNull(surname);
-        Objects.requireNonNull(username);
-        Objects.requireNonNull(email);
-        Objects.requireNonNull(password);
+    public static UserAccount of(UserProfile userProfile) {
+        if (userProfile == null) {
+            throw new IllegalArgumentException("UserProfile cannot be null");
+        }
 
         return new UserAccount(
-                UUID.randomUUID(), firstname, surname, username, email, password, UserRole.NONE, false, Ratings.defaultRatings(),
+                UUID.randomUUID(), userProfile, UserRole.NONE, false, Ratings.defaultRatings(),
                 AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(), null
         );
     }
@@ -66,22 +62,14 @@ public class UserAccount {
     /**
      * this method is used to call only from repository
      */
-    public static UserAccount fromRepository(UUID id, Firstname firstname, Surname surname, Username username, Email email,
-                                             Password password, UserRole userRole, boolean enabled, Ratings ratings, AccountEvents events) {
-
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(firstname);
-        Objects.requireNonNull(surname);
-        Objects.requireNonNull(username);
-        Objects.requireNonNull(email);
-        Objects.requireNonNull(password);
-        Objects.requireNonNull(userRole);
-        Objects.requireNonNull(ratings);
-        Objects.requireNonNull(events);
+    public static UserAccount fromRepository(UUID id, UserProfile userProfile,
+                                             UserRole userRole, boolean enabled, Ratings ratings, AccountEvents events) {
+        if (id == null || userProfile == null || userRole == null || enabled || ratings == null || events == null) {
+            throw new IllegalArgumentException("UserProfile and UserRole cannot be null");
+        }
 
         return new UserAccount(
-                id, firstname, surname, username, email, password, userRole, enabled,
-                ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(), null
+                id, userProfile, userRole, enabled, ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(), null
         );
     }
 
@@ -89,24 +77,24 @@ public class UserAccount {
         return id;
     }
 
-    public Firstname getFirstname() {
-        return firstname;
+    public String getFirstname() {
+        return userProfile.firstname();
     }
 
-    public Surname getSurname() {
-        return surname;
+    public String getSurname() {
+        return userProfile.surname();
     }
 
-    public Username getUsername() {
-        return username;
+    public String getUsername() {
+        return userProfile.username();
     }
 
-    public Email getEmail() {
-        return email;
+    public String getEmail() {
+        return userProfile.email();
     }
 
-    public Password getPassword() {
-        return password;
+    public String getPassword() {
+        return userProfile.password();
     }
 
     public UserRole getUserRole() {
@@ -121,10 +109,12 @@ public class UserAccount {
         return accountEvents;
     }
 
+    @Nullable
     public Set<ChessGame> getGames() {
         return games;
     }
 
+    @Nullable
     public Set<Puzzle> getPuzzles() {
         return puzzles;
     }
@@ -269,11 +259,7 @@ public class UserAccount {
         UserAccount that = (UserAccount) o;
         return isEnable == that.isEnable &&
                 Objects.equals(id, that.id) &&
-                Objects.equals(firstname, that.firstname) &&
-                Objects.equals(surname, that.surname) &&
-                Objects.equals(username, that.username) &&
-                Objects.equals(email, that.email) &&
-                Objects.equals(password, that.password) &&
+                Objects.equals(userProfile, that.userProfile) &&
                 userRole == that.userRole &&
                 Objects.equals(ratings, that.ratings) &&
                 Objects.equals(accountEvents, that.accountEvents);
@@ -281,7 +267,7 @@ public class UserAccount {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, firstname, surname, username, email, password, userRole, isEnable, ratings, accountEvents);
+        return Objects.hash(id, userProfile, userRole, isEnable, ratings, accountEvents);
     }
 
     @Override
@@ -311,10 +297,10 @@ public class UserAccount {
                }
                """,
                 id,
-                firstname.firstname(),
-                surname.surname(),
-                username.username(),
-                email.email(),
+                userProfile.firstname(),
+                userProfile.surname(),
+                userProfile.username(),
+                userProfile.email(),
                 userRole,
                 enables,
                 ratings.rating().rating(),

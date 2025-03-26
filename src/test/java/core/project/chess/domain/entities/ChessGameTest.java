@@ -10,7 +10,7 @@ import core.project.chess.domain.chess.pieces.Queen;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.ChessMove;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.*;
+import core.project.chess.domain.user.value_objects.UserProfile;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -237,8 +237,8 @@ public class ChessGameTest {
     void undoMove() {
         ChessGame game = defaultChessGameSupplier().get();
 
-        String white = game.getPlayerForWhite().getUsername().username();
-        String black = game.getPlayerForBlack().getUsername().username();
+        String white = game.getPlayerForWhite().getUsername();
+        String black = game.getPlayerForBlack().getUsername();
 
         ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
 
@@ -313,8 +313,8 @@ public class ChessGameTest {
     public static void executeGameFromPGN(String pgn, int pgnNum, boolean enableLogging, boolean enableAssertions, boolean enablePGN) {
         ChessGame game = defaultChessGameSupplier().get();
 
-        String white = game.getPlayerForWhite().getUsername().username();
-        String black = game.getPlayerForBlack().getUsername().username();
+        String white = game.getPlayerForWhite().getUsername();
+        String black = game.getPlayerForBlack().getUsername();
 
         ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
 
@@ -471,8 +471,8 @@ public class ChessGameTest {
     void fenTest() {
         final ChessGame chessGame = defaultChessGameSupplier().get();
 
-        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
-        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
+        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername();
+        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername();
 
         System.out.println(chessGame.getChessBoard().toString());
 
@@ -491,8 +491,8 @@ public class ChessGameTest {
     void testChessGameEndByPat() {
         final ChessGame chessGame = defaultChessGameSupplier().get();
 
-        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
-        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
+        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername();
+        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername();
 
         // 1.
         chessGame.makeMovement(firstPlayerUsername, e2, e3, null);
@@ -550,8 +550,8 @@ public class ChessGameTest {
     void gameOn_2024_08_04() {
         ChessGame game = defaultChessGameSupplier().get();
 
-        String whitePlayer = game.getPlayerForWhite().getUsername().username();
-        String blackPlayer = game.getPlayerForBlack().getUsername().username();
+        String whitePlayer = game.getPlayerForWhite().getUsername();
+        String blackPlayer = game.getPlayerForBlack().getUsername();
 
         //1.
         game.makeMovement(whitePlayer, e2, e4, null);
@@ -767,8 +767,8 @@ public class ChessGameTest {
     public void chessGameLoad() {
         final ChessGame chessGame = defaultChessGameSupplier().get();
 
-        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername().username();
-        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername().username();
+        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername();
+        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername();
 
         // INVALID. Invalid players turn.
         assertThrows(
@@ -1016,8 +1016,8 @@ public class ChessGameTest {
         ChessGame game = defaultChessGameSupplier().get();
         ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
 
-        String whitePlayer = game.getPlayerForWhite().getUsername().username();
-        String blackPlayer = game.getPlayerForBlack().getUsername().username();
+        String whitePlayer = game.getPlayerForWhite().getUsername();
+        String blackPlayer = game.getPlayerForBlack().getUsername();
 
         //1.
         game.makeMovement(whitePlayer, e2, e4, null);
@@ -1075,6 +1075,12 @@ public class ChessGameTest {
     }
 
     static Supplier<UserAccount> userAccountSupplier(String username) {
-        return () -> UserAccount.of(new Firstname("generateFirstname"), new Surname("generateSurname"), new Username(username), new Email("some@email.com"), new Password("password"));
+        return () -> UserAccount.of(new UserProfile(
+                "generateFirstname",
+                "generateSurname",
+                username,
+                "some@email.com",
+                "password"
+        ));
     }
 }

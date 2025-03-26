@@ -6,7 +6,9 @@ import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
-import core.project.chess.domain.user.value_objects.*;
+import core.project.chess.domain.user.value_objects.Password;
+import core.project.chess.domain.user.value_objects.UserProfile;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
 import core.project.chess.infrastructure.utilities.containers.Pair;
@@ -82,7 +84,7 @@ public class UserAuthService {
                 throw responseException(Response.Status.BAD_REQUEST, NOT_ENABLED);
             }
 
-            final boolean isPasswordsMatch = passwordEncoder.verify(password, userAccount.getPassword());
+            final boolean isPasswordsMatch = passwordEncoder.verify(password.password(), userAccount.getPassword());
             if (!isPasswordsMatch) {
                 Log.error("Login failure, wrong password");
                 throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
@@ -101,7 +103,6 @@ public class UserAuthService {
 
     public void registration(RegistrationForm registrationForm) {
         try {
-            Log.infof("Starting registration process for user %s", registrationForm.username());
             if (!Password.validate(registrationForm.password())) {
                 throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
             }
@@ -111,35 +112,34 @@ public class UserAuthService {
                 throw responseException(Response.Status.BAD_REQUEST, "Passwords do not match");
             }
 
-            Username username = new Username(registrationForm.username());
-            Email email = new Email(registrationForm.email());
-            Firstname firstname = new Firstname(registrationForm.firstname());
-            Surname surname = new Surname(registrationForm.surname());
-            Password password = new Password(passwordEncoder.encode(new Password(registrationForm.password())));
+            UserProfile userProfile = new UserProfile(
+                    registrationForm.firstname(),
+                    registrationForm.surname(),
+                    registrationForm.username(),
+                    registrationForm.email(),
+                    passwordEncoder.encode(registrationForm.password())
+            );
 
-            if (outboundUserRepository.isUsernameExists(username)) {
-                Log.errorf("Registration failure, user %s already exists", username.username());
+            if (outboundUserRepository.isUsernameExists(registrationForm.username())) {
+                Log.errorf("Registration failure, user %s already exists", registrationForm.username());
                 throw responseException(Response.Status.BAD_REQUEST, "Username already exists.");
             }
 
-            if (outboundUserRepository.isEmailExists(email)) {
-                Log.errorf("Registration failure, email %s already exists", email.email());
+            if (outboundUserRepository.isEmailExists(registrationForm.email())) {
+                Log.errorf("Registration failure, email %s already exists", registrationForm.email());
                 throw responseException(Response.Status.BAD_REQUEST, "Email already exists.");
             }
 
-            UserAccount userAccount = UserAccount.of(firstname, surname, username, email, password);
+            UserAccount userAccount = UserAccount.of(userProfile);
 
-            Log.infof("Saving user %s to repo", username.username());
             inboundUserRepository.save(userAccount);
 
             EmailConfirmationToken token = EmailConfirmationToken.createToken(userAccount);
-            Log.info("Saving email token to repo");
             inboundUserRepository.saveUserToken(token);
 
             String link = EMAIL_VERIFICATION_URL.formatted(token.getToken().token());
 
-            Log.infof("Sending verification link to %s", username.username());
-            emailInteractionService.sendToEmail(email, link);
+            emailInteractionService.sendToEmail(userProfile.email(), link);
 
             Log.info("Registration successful");
         } catch (IllegalArgumentException | NullPointerException e) {
@@ -159,7 +159,7 @@ public class UserAuthService {
         if (foundToken.isExpired()) {
             Log.error("Verification failure, token expired");
             try {
-                Log.infof("Deleting user %s", foundToken.getUserAccount().getUsername().username());
+                Log.infof("Deleting user %s", foundToken.getUserAccount().getUsername());
                 inboundUserRepository.deleteByToken(foundToken);
             } catch (IllegalAccessException e) {
                 Log.error("Can't delete enabled account", e);

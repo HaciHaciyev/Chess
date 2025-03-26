@@ -18,8 +18,8 @@ public record Message(MessageType type,
                       String gameID,
                       String FEN,
                       String PGN,
-                      Username whitePlayerUsername,
-                      Username blackPlayerUsername,
+                      String whitePlayerUsername,
+                      String blackPlayerUsername,
                       Double whitePlayerRating,
                       Double blackPlayerRating,
                       String timeLeft,
@@ -184,8 +184,8 @@ public record Message(MessageType type,
         private String gameID;
         private String FEN;
         private String PGN;
-        private Username whitePlayerUsername;
-        private Username blackPlayerUsername;
+        private String whitePlayerUsername;
+        private String blackPlayerUsername;
         private Double whitePlayerRating;
         private Double blackPlayerRating;
         private String timeLeft;
@@ -221,12 +221,12 @@ public record Message(MessageType type,
             return this;
         }
 
-        public Builder whitePlayerUsername(Username whitePlayerUsername) {
+        public Builder whitePlayerUsername(String whitePlayerUsername) {
             this.whitePlayerUsername = whitePlayerUsername;
             return this;
         }
 
-        public Builder blackPlayerUsername(Username blackPlayerUsername) {
+        public Builder blackPlayerUsername(String blackPlayerUsername) {
             this.blackPlayerUsername = blackPlayerUsername;
             return this;
         }

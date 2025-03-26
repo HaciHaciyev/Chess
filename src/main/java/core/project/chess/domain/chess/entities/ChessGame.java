@@ -330,7 +330,7 @@ public class ChessGame {
         }
 
         if (attemptToFinalizeAgreement(color)) {
-            this.agreementPair = new AgreementPair(playerForWhite.getUsername().username(), playerForBlack.getUsername().username());
+            this.agreementPair = new AgreementPair(playerForWhite.getUsername(), playerForBlack.getUsername());
             gameOver(Operations.STALEMATE);
             return;
         }
@@ -440,8 +440,8 @@ public class ChessGame {
     }
 
     private Color validateUsername(final String username) {
-        final boolean isWhitePlayer = username.equals(playerForWhite.getUsername().username());
-        final boolean isBlackPlayer = username.equals(playerForBlack.getUsername().username());
+        final boolean isWhitePlayer = username.equals(playerForWhite.getUsername());
+        final boolean isBlackPlayer = username.equals(playerForBlack.getUsername());
 
         if (!isWhitePlayer && !isBlackPlayer) {
             throw new IllegalArgumentException("Not a player.");

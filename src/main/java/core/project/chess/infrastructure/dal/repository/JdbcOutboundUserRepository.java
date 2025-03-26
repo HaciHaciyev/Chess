@@ -124,8 +124,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public boolean isEmailExists(Email verifiableEmail) {
-        return jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
+    public boolean isEmailExists(String verifiableEmail) {
+        return jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail)
                 .mapSuccess(count -> count != null && count > 0)
                 .orElseGet(() -> {
                     Log.error("Error checking email existence.");
@@ -134,8 +134,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public boolean isUsernameExists(Username verifiableUsername) {
-        return jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
+    public boolean isUsernameExists(String verifiableUsername) {
+        return jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername)
                 .mapSuccess(count -> count != null && count > 0)
                 .orElseGet(() -> {
                     Log.error("Error checking username existence.");
@@ -252,11 +252,13 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
         return UserAccount.fromRepository(
                 UUID.fromString(rs.getString("id")),
-                new Firstname(rs.getString("firstname")),
-                new Surname(rs.getString("surname")),
-                new Username(rs.getString("username")),
-                new Email(rs.getString("email")),
-                new Password(rs.getString("password")),
+                new UserProfile(
+                        rs.getString("firstname"),
+                        rs.getString("surname"),
+                        rs.getString("username"),
+                        rs.getString("email"),
+                        rs.getString("password")
+                ),
                 UserRole.valueOf(rs.getString("user_role")),
                 rs.getBoolean("is_enable"),
                 new Ratings(rating,

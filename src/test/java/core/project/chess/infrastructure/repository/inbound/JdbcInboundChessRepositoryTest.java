@@ -36,8 +36,8 @@ class JdbcInboundChessRepositoryTest {
                 final ChessGame chessGame = defaultChessGameSupplier("HHadzhy", "AinGrace").get();
                 jdbcInboundChessRepository.completelySaveStartedChessGame(chessGame);
 
-                final String firstUsername = chessGame.getPlayerForWhite().getUsername().username();
-                final String secondUsername = chessGame.getPlayerForBlack().getUsername().username();
+                final String firstUsername = chessGame.getPlayerForWhite().getUsername();
+                final String secondUsername = chessGame.getPlayerForBlack().getUsername();
 
                 chessGame.makeMovement(firstUsername, Coordinate.e2, Coordinate.e4, null);
                 chessGame.makeMovement(secondUsername, Coordinate.e7, Coordinate.e5, null);
@@ -54,8 +54,8 @@ class JdbcInboundChessRepositoryTest {
             final ChessGame chessGame = defaultChessGameSupplier("HHadzhy", "AinGrace").get();
             jdbcInboundChessRepository.completelySaveStartedChessGame(chessGame);
 
-            final String firstUsername = chessGame.getPlayerForWhite().getUsername().username();
-            final String secondUsername = chessGame.getPlayerForBlack().getUsername().username();
+            final String firstUsername = chessGame.getPlayerForWhite().getUsername();
+            final String secondUsername = chessGame.getPlayerForBlack().getUsername();
 
             chessGame.makeMovement(firstUsername, Coordinate.e2, Coordinate.e4, null);
             chessGame.makeMovement(secondUsername, Coordinate.e7, Coordinate.e5, null);

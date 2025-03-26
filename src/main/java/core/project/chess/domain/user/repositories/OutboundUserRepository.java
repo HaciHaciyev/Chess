@@ -12,9 +12,9 @@ import java.util.UUID;
 
 public interface OutboundUserRepository {
 
-    boolean isEmailExists(Email verifiableEmail);
+    boolean isEmailExists(String verifiableEmail);
 
-    boolean isUsernameExists(Username verifiableUsername);
+    boolean isUsernameExists(String verifiableUsername);
 
     boolean havePartnership(UserAccount user, UserAccount partner);
 

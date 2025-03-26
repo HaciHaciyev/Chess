@@ -13,8 +13,12 @@ public record Email(String email) {
     private static final Pattern pattern = Pattern.compile(emailRegex);
 
     public Email {
+        validate(email);
+    }
+
+    public static void validate(String email) {
         if (Objects.isNull(email)) {
-            throw new NullPointerException("Email can`t be null");
+            throw new IllegalArgumentException("Email can`t be null");
         }
 
         if (email.isBlank()) {

@@ -29,7 +29,7 @@ public class UserPropertiesResource {
     @Path("/user-properties")
     public Response userProperties() {
         String username = jwt.getName();
-        if (!Username.validate(username)) {
+        if (!Username.isValid(username)) {
             throw responseException(Response.Status.BAD_REQUEST, "Invalid username");
         }
 

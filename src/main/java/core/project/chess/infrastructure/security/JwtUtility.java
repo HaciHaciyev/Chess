@@ -26,7 +26,7 @@ public class JwtUtility {
         Duration expiration = Duration.ofDays(1).plusSeconds(1);
 
         return Jwt.issuer("Chessland")
-                .upn(userAccount.getUsername().username())
+                .upn(userAccount.getUsername())
                 .groups(userAccount.getUserRole().getUserRole())
                 .expiresIn(expiration)
                 .sign();
@@ -36,7 +36,7 @@ public class JwtUtility {
         Duration year = Duration.ofDays(365);
 
         return Jwt.issuer("Chessland")
-                .upn(userAccount.getUsername().username())
+                .upn(userAccount.getUsername())
                 .groups(userAccount.getUserRole().getUserRole())
                 .expiresIn(year)
                 .sign();

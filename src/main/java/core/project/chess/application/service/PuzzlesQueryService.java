@@ -36,7 +36,7 @@ public class PuzzlesQueryService {
     }
 
     public List<Puzzle> page(String username, int pageNumber, int pageSize) {
-        if (!Username.validate(username)) {
+        if (!Username.isValid(username)) {
             throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
         }
 

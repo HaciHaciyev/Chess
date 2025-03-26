@@ -1,6 +1,5 @@
 package core.project.chess.application.service;
 
-import core.project.chess.domain.user.value_objects.Email;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -15,7 +14,7 @@ public class EmailInteractionService {
         this.mailer = mailer.get();
     }
 
-    public void sendToEmail(Email email, String link) {
+    public void sendToEmail(String email, String link) {
         String subject = "Email confirmation";
         String body = String.format(
                 """
@@ -26,6 +25,6 @@ public class EmailInteractionService {
                 link
         );
 
-        mailer.send(Mail.withText(email.email(), subject, body));
+        mailer.send(Mail.withText(email, subject, body));
     }
 }

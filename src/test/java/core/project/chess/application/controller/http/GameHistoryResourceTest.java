@@ -302,7 +302,7 @@ class GameHistoryResourceTest {
 
         return USER_MESSAGES.user1.stream()
                 .filter(message -> message.whitePlayerUsername() != null &&
-                        message.whitePlayerUsername().username().equals(username))
+                        message.whitePlayerUsername().equals(username))
                 .findFirst()
                 .orElseThrow()
                 .gameID();

@@ -1,6 +1,5 @@
 package core.project.chess.domain.user.value_objects;
 
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +14,13 @@ public record Firstname(String firstname) {
     private static final Pattern FIRST_NAME_PATTERN = Pattern.compile(FIRSTNAME_REGEX);
 
     public Firstname {
-        Objects.requireNonNull(firstname, "Firstname must not be null.");
+        validate(firstname);
+    }
+
+    public static void validate(String firstname) {
+        if (firstname == null) {
+            throw new IllegalArgumentException("Firstname must not be null.");
+        }
         if (firstname.isBlank()) {
             throw new IllegalArgumentException("First Name should`t be blank.");
         }
