@@ -3,7 +3,6 @@ package core.project.chess.application.service;
 import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 
@@ -22,16 +21,21 @@ public class GameHistoryService {
     }
 
     public ChessGameHistory getGameByID(String gameID) {
-        UUID chessGameId = Result.ofThrowable(() -> UUID.fromString(gameID))
-                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Invalid gameID."));
+        UUID chessGameId;
+        try {
+            chessGameId = UUID.fromString(gameID);
+        } catch (IllegalArgumentException e) {
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid gameID.");
+        }
 
         return outboundChessRepository.findById(chessGameId)
                 .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "Can`t find chess game history."));
     }
 
-    public List<ChessGameHistory> listOfGames(String name, int pageNumber, int pageSize) {
-        Username username = Result.ofThrowable(() -> new Username(name))
-                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Invalid username."));
+    public List<ChessGameHistory> listOfGames(String username, int pageNumber, int pageSize) {
+        if (!Username.isValid(username)) {
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
+        }
 
         int limit = buildLimit(pageSize);
         int offSet = buildOffSet(limit, pageNumber);

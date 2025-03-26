@@ -64,7 +64,6 @@ public class UserAuthService {
 
     public Map<String, String> login(LoginForm loginForm) {
         try {
-            Log.infof("User %s is logging in", loginForm.username());
             if (!Password.validate(loginForm.password())) {
                 throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
             }
@@ -88,7 +87,6 @@ public class UserAuthService {
                 throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
             }
 
-            Log.info("Login successful");
             final String refreshToken = jwtUtility.refreshToken(userAccount);
             inboundUserRepository.saveRefreshToken(userAccount, refreshToken);
 
@@ -129,7 +127,6 @@ public class UserAuthService {
             }
 
             UserAccount userAccount = UserAccount.of(userProfile);
-
             inboundUserRepository.save(userAccount);
 
             EmailConfirmationToken token = EmailConfirmationToken.createToken(userAccount);
@@ -138,8 +135,6 @@ public class UserAuthService {
             String link = EMAIL_VERIFICATION_URL.formatted(token.getToken().token());
 
             emailInteractionService.sendToEmail(userProfile.email(), link);
-
-            Log.info("Registration successful");
         } catch (IllegalArgumentException | NullPointerException e) {
             throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
         }
@@ -169,7 +164,6 @@ public class UserAuthService {
         foundToken.confirm();
         foundToken.getUserAccount().enable();
         inboundUserRepository.enable(foundToken);
-        Log.infof("Verification successful");
     }
 
     public String refreshToken(String refreshToken) {

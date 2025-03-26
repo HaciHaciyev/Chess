@@ -4,7 +4,6 @@ import core.project.chess.application.dto.chess.Puzzle;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 
@@ -28,8 +27,12 @@ public class PuzzlesQueryService {
     }
 
     public Puzzle puzzle(String id) {
-        UUID puzzleId = Result.ofThrowable(() -> UUID.fromString(id))
-                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Invalid puzzleID."));
+        UUID puzzleId;
+        try {
+            puzzleId = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid puzzleID.");
+        }
 
         return outboundChessRepository.puzzle(puzzleId)
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Puzzle by this id is do not exists."));
