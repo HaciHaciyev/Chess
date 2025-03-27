@@ -322,6 +322,10 @@ public class ChessBoard {
         return Optional.ofNullable(this.enPassaunt);
     }
 
+    public Color turn() {
+        return figuresTurn;
+    }
+
     /**
      * Retrieves the `Field` object at the specified coordinate on the chess board.
      *

@@ -73,7 +73,7 @@ public class ChessGame {
         this.agreementPair = new AgreementPair(null, null);
         this.returnOfMovement = new AgreementPair(null, null);
         this.chessBoard = chessBoard;
-        this.playersTurn = WHITE;
+        this.playersTurn = this.chessBoard.turn();
         this.isThreeFoldActive = false;
         this.playerForWhite = playerForWhite;
         this.playerForBlack = playerForBlack;
@@ -476,12 +476,12 @@ public class ChessGame {
     private void validateMovesTurn(Color color) {
         final boolean whiteTriesToMoveButNotHisTurn = color.equals(WHITE) && !WHITE.equals(playersTurn);
         if (whiteTriesToMoveButNotHisTurn) {
-            throw new IllegalArgumentException("It`s opponent move turn.");
+            throw new IllegalArgumentException("It`s black move turn.");
         }
 
         final boolean blackTriesToMoveButNotHistTurn = color.equals(BLACK) && !BLACK.equals(playersTurn);
         if (blackTriesToMoveButNotHistTurn) {
-            throw new IllegalArgumentException("It`s opponent move turn.");
+            throw new IllegalArgumentException("It`s white move turn.");
         }
     }
 
