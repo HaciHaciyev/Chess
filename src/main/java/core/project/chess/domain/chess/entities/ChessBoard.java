@@ -16,10 +16,12 @@ import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
 
 import java.util.*;
+import java.util.regex.Matcher;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations.*;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
+import static core.project.chess.domain.chess.util.ChessNotationsValidator.passageCoordinatePattern;
 
 /**
  * The `ChessBoard` class represents the central entity of the Chess Aggregate. It encapsulates the state and behavior of a chess board,
@@ -82,6 +84,8 @@ public class ChessBoard {
      */
     private final boolean isPureChess;
 
+    private @Nullable Coordinate enPassaunt;
+
     private byte materialAdvantageOfWhite;
     private byte materialAdvantageOfBlack;
     private boolean validWhiteShortCasting;
@@ -117,6 +121,8 @@ public class ChessBoard {
 
     private final List<Piece> capturedWhitePieces = new ArrayList<>();
     private final List<Piece> capturedBlackPieces = new ArrayList<>();
+
+    private final InitType initType;
 
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
@@ -160,11 +166,14 @@ public class ChessBoard {
             final String currentBoard = this.toString();
             this.hashCodeOfBoard.put(currentBoard, 1);
             this.fenRepresentationsOfBoard.add(FEN(currentBoard));
+            InitType tempInitType = InitType.DEFAULT;
 
             if (Objects.nonNull(listOfAlgebraicNotations)) {
                 validateAndForward(listOfAlgebraicNotations);
+                tempInitType = InitType.PGN;
             }
 
+            this.initType = tempInitType;
             return;
         }
 
@@ -174,6 +183,8 @@ public class ChessBoard {
         String currentPositionHash = fenToHashCodeOfBoard(FEN);
         hashCodeOfBoard.put(currentPositionHash, hashCodeOfBoard.getOrDefault(currentPositionHash, 0) + 1);
         fenRepresentationsOfBoard.add(FEN);
+
+        this.enPassaunt = getEnPassaunt(inCaseOfInitFromFEN);
 
         this.figuresTurn = inCaseOfInitFromFEN.figuresTurn();
         this.currentWhiteKingPosition = inCaseOfInitFromFEN.whiteKing();
@@ -187,6 +198,7 @@ public class ChessBoard {
         this.validBlackShortCasting = inCaseOfInitFromFEN.validBlackShortCasting();
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
 
+        this.initType = InitType.FEN;
         initializerFromFEN(FEN);
         validateStalemateAndCheckmate(inCaseOfInitFromFEN);
     }
@@ -304,6 +316,10 @@ public class ChessBoard {
 
     public boolean isPureChess() {
         return isPureChess;
+    }
+
+    public Optional<Coordinate> enPassaunt() {
+        return Optional.ofNullable(this.enPassaunt);
     }
 
     /**
@@ -760,39 +776,6 @@ public class ChessBoard {
     }
 
     /**
-     * Determines if a pawn can perform a capture en passant on the specified coordinate.
-     *
-     * <p>This method checks if the given piece is a pawn and if its previous move was a
-     * double advance (two squares forward) from its starting position. If so, it verifies
-     * whether the target coordinate is directly adjacent to the pawn's last move's ending
-     * position, allowing for an en passant capture.</p>
-     *
-     * @param piece The piece to check, which should be an instance of {@link Pawn}.
-     * @param to The target coordinate where the pawn is attempting to capture en passant.
-     * @return {@code true} if the pawn can capture en passant at the specified coordinate;
-     *         {@code false} otherwise.
-     *
-     * @throws NoSuchElementException if there is no latest movement recorded.
-     */
-    private boolean isCaptureOnPassage(final Piece piece, final Coordinate to) {
-        if (piece instanceof Pawn pawn && pawn.previousMoveWasPassage(this)) {
-            final Coordinate lastMoveEnd = latestMovement().orElseThrow().getSecond();
-
-            if (lastMoveEnd.columnToInt() != to.columnToInt()) {
-                return false;
-            }
-
-            if (piece.color().equals(WHITE) && lastMoveEnd.getRow() - to.getRow() == -1) {
-                return true;
-            }
-
-            return piece.color().equals(BLACK) && lastMoveEnd.getRow() - to.getRow() == 1;
-        }
-
-        return false;
-    }
-
-    /**
      * Updates the castling ability based on the movement of a Rook or King piece.
      * <p>
      * This method modifies the following class-level variables:
@@ -1182,13 +1165,15 @@ public class ChessBoard {
         }
 
         /** Process operations from StatusPair. All validation need to be processed before that.*/
+        Coordinate tempEnPassaunt = enPassaunt;
+        this.enPassaunt = null;
         this.countOfHalfMoves++;
         final Set<Operations> operations = statusPair.orElseThrow();
 
         startField.removeFigure();
 
         if (operations.contains(CAPTURE)) {
-            inCaseOfCapture(to, piece, endField);
+            inCaseOfCapture(piece, endField, tempEnPassaunt);
         }
 
         if (operations.contains(PROMOTION)) {
@@ -1226,6 +1211,11 @@ public class ChessBoard {
 
         switchFiguresTurn();
         ruleOf50MovesAbility(piece, operations);
+
+        if (piece instanceof Pawn && from.columnToInt() == to.columnToInt() && Math.abs(from.getRow() - to.getRow()) == 2) {
+            int enPassauntRow = to.getRow() == 4 ? 3 : 6;
+            this.enPassaunt = Coordinate.of(enPassauntRow, to.columnToInt()).orElseThrow();
+        }
 
         /** Recording the move made in algebraic notation and Fen.*/
         final var inCaseOfPromotionPieceType = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
@@ -1280,10 +1270,11 @@ public class ChessBoard {
         """, from, to, pgn(), fenRepresentationsOfBoard.toString());
     }
 
-    private void inCaseOfCapture(Coordinate to, Piece piece, Field endField) {
-        final boolean captureOnPassage = isCaptureOnPassage(piece, to);
+    private void inCaseOfCapture(Piece piece, Field endField, Coordinate tempEnPassaunt) {
+        final boolean captureOnPassage = piece instanceof Pawn && tempEnPassaunt != null && endField.coordinate.equals(tempEnPassaunt);
         if (captureOnPassage) {
-            Field field = fieldMap.get(latestMovement().orElseThrow().getSecond());
+            int row = endField.coordinate.getRow() == 6 ? 5 : 4;
+            Field field = fieldMap.get(Coordinate.of(row, endField.coordinate.columnToInt()).orElseThrow());
 
             final boolean isCapturedPieceWhite = field.piece.color().equals(WHITE);
             if (isCapturedPieceWhite) {
@@ -1491,7 +1482,7 @@ public class ChessBoard {
 
         final boolean isCapture = lastMovement.algebraicNotation().contains("x");
         if (isCapture) {
-             revertCapture(startedField, endedField, piece);
+             revertCapture(endedField, piece);
         }
 
         if (!isCapture && !(piece instanceof Pawn) && ruleOf50Moves != 0){
@@ -1527,7 +1518,7 @@ public class ChessBoard {
             Color color = wasBlackPromotion ? BLACK : WHITE;
             return new Pawn(color);
         }
-        
+
         return endedField.pieceOptional().orElseThrow();
     }
 
@@ -1626,8 +1617,8 @@ public class ChessBoard {
         startField.addFigure(rook);
     }
 
-    private void revertCapture(final Field startedField, final Field endedField, final Piece piece) {
-        if (revertPotentialCaptureOnPassage(startedField, endedField, piece)) {
+    private void revertCapture(final Field endedField, final Piece piece) {
+        if (revertPotentialCaptureOnPassage(endedField, piece)) {
             return;
         }
 
@@ -1643,55 +1634,93 @@ public class ChessBoard {
         materialAdvantageOfWhite += materialAdvantageOfFigure(capturedPiece);
     }
 
-    private boolean revertPotentialCaptureOnPassage(final Field startedField, final Field endedField, final Piece piece) {
+    private boolean revertPotentialCaptureOnPassage(final Field endedField, final Piece piece) {
         if (!(piece instanceof Pawn)) {
             return false;
         }
 
-        final AlgebraicNotation penultimateMove = listOfAlgebraicNotations.get(listOfAlgebraicNotations.size() - 2);
+        AlgebraicNotation penultimateMove = null;
+        if (listOfAlgebraicNotations.size() > 1) {
+            penultimateMove = listOfAlgebraicNotations.get(listOfAlgebraicNotations.size() - 2);
+        }
 
-        final boolean isTheMoveBeforeLastWasPassage = Pawn.isPassage(penultimateMove);
-        if (!isTheMoveBeforeLastWasPassage) {
+        if (!initType.equals(InitType.FEN) && penultimateMove == null) {
             return false;
         }
 
-        final int startColumn = startedField.getCoordinate().columnToInt();
-        final int startRow = startedField.getCoordinate().getRow();
-        final int endColumn = endedField.getCoordinate().columnToInt();
-        final int endRow = endedField.getCoordinate().getRow();
-
-        final boolean isDiagonalMove = Math.abs(startColumn - endColumn) == 1 && Math.abs(startRow - endRow) == 1;
-        if (!isDiagonalMove) {
+        final StatusPair<Coordinate> enPassaun = enPassaunt(penultimateMove);
+        if (!enPassaun.status()) {
             return false;
         }
 
-        final Coordinate passageEnd = penultimateMove.coordinates().getSecond();
+        this.enPassaunt = enPassaun.orElseThrow();
 
-        if (endColumn != passageEnd.columnToInt()) {
+        if (!enPassaun.orElseThrow().equals(endedField.coordinate)) {
             return false;
         }
 
+        int requiredRow = enPassaunt.getRow() == 6 ? 5 : 4;
+        Coordinate required = Coordinate.of(requiredRow, enPassaunt.columnToInt()).orElseThrow();
         if (piece.color().equals(WHITE)) {
-            final boolean isValidRows = endRow - passageEnd.getRow() == 1;
-            if (!isValidRows) {
-                return false;
-            }
-
             Piece capturedPawn = capturedBlackPieces.removeLast();
-            fieldMap.get(passageEnd).addFigure(capturedPawn);
+            fieldMap.get(required).addFigure(capturedPawn);
             materialAdvantageOfBlack++;
             return true;
         }
 
-        final boolean isValidRows = endRow - passageEnd.getRow() == -1;
-        if (!isValidRows) {
-            return false;
-        }
-
         Piece capturedPawn = capturedWhitePieces.removeLast();
-        fieldMap.get(passageEnd).addFigure(capturedPawn);
+        fieldMap.get(required).addFigure(capturedPawn);
         materialAdvantageOfWhite++;
         return true;
+    }
+
+    private StatusPair<Coordinate> enPassaunt(AlgebraicNotation penultimateMove) {
+        if (penultimateMove == null && initType == InitType.FEN) {
+            String firstPosition = fenRepresentationsOfBoard.getFirst();
+            final String[] split = firstPosition.split(" ", 2);
+            final String tail = split[1];
+
+            final Matcher matcher = passageCoordinatePattern.matcher(tail);
+            if (matcher.find()) {
+                return StatusPair.ofTrue(Coordinate.valueOf(matcher.group()));
+            }
+            return StatusPair.ofFalse();
+        }
+
+        if (penultimateMove == null) return StatusPair.ofFalse();
+
+        AlgebraicNotation.PieceTYPE pieceTYPE = penultimateMove.pieceTYPE();
+        if (!pieceTYPE.equals(AlgebraicNotation.PieceTYPE.P)) {
+            return StatusPair.ofFalse();
+        }
+
+        Pair<Coordinate, Coordinate> coordinates = penultimateMove.coordinates();
+        Coordinate from = coordinates.getFirst();
+        Coordinate to = coordinates.getSecond();
+
+        if (from.columnToInt() != to.columnToInt()) {
+            return StatusPair.ofFalse();
+        }
+
+        if (from.getRow() == 2 && to.getRow() == 4) {
+            return Coordinate.of(3, to.columnToInt());
+        }
+        if (from.getRow() == 7 && to.getRow() == 5) {
+            return Coordinate.of(6, to.columnToInt());
+        }
+
+        return StatusPair.ofFalse();
+    }
+
+    private Coordinate getEnPassaunt(FromFEN inCaseOfInitFromFEN) {
+        Optional<Pair<Coordinate, Coordinate>> lastMovement = inCaseOfInitFromFEN.isLastMovementWasPassage();
+        if (lastMovement.isEmpty()) {
+            return null;
+        }
+
+        Coordinate endCoordinate = lastMovement.get().getSecond();
+        int enPassauntRow = endCoordinate.getRow() == 4 ? 3 : 6;
+        return Coordinate.of(enPassauntRow, endCoordinate.columnToInt()).orElseThrow();
     }
 
     /**
@@ -1715,6 +1744,12 @@ public class ChessBoard {
         public String getAlgebraicNotation() {
             return algebraicNotation;
         }
+    }
+
+    public enum InitType {
+        DEFAULT,
+        FEN,
+        PGN
     }
 
     /**
@@ -1870,34 +1905,14 @@ public class ChessBoard {
             }
         }
 
-        final var lastMovement = latestMovement();
-        if (lastMovement.isEmpty()) {
-            if (fen.charAt(fen.length() - 1) == ' ') {
-                fen.append("- ");
-            } else {
-                fen.append(" - ");
-            }
+        if (fen.charAt(fen.length() - 1) != ' ') {
+            fen.append(" ");
         }
 
-        if (latestMovement().isPresent()) {
-            final boolean previousMoveWasPassage = new Pawn(WHITE).previousMoveWasPassage(this);
-            if (previousMoveWasPassage) {
-                final Coordinate to = lastMovement.orElseThrow().getSecond();
-
-                final Coordinate intermediateFieldOfPassage = Coordinate
-                        .of(to.getRow() == 4 ? to.getRow() - 1 : to.getRow() + 1, to.columnToInt())
-                        .orElseThrow();
-
-                final String result = "" + intermediateFieldOfPassage.getColumn() + intermediateFieldOfPassage.getRow();
-                final String whiteSpace = fen.charAt(fen.length() - 1) == ' ' ? "" : " ";
-                fen.append(whiteSpace).append(result);
-            } else {
-                if (fen.charAt(fen.length() - 1) == ' ') {
-                    fen.append("- ");
-                } else {
-                    fen.append(" - ");
-                }
-            }
+        if (this.enPassaunt != null) {
+            fen.append(enPassaunt);
+        } else {
+            fen.append("-").append(" ");
         }
 
         return fen.toString();

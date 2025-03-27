@@ -5,8 +5,6 @@ import core.project.chess.domain.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
-import core.project.chess.domain.chess.util.ChessNotationsValidator;
-import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
@@ -14,7 +12,6 @@ import jakarta.annotation.Nullable;
 import java.util.*;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
-import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 
 public record Pawn(Color color)
@@ -174,7 +171,8 @@ public record Pawn(Color color)
                 }
             }
 
-            final boolean isCaptureOnPassage = Objects.nonNull(latestMovement) && isValidCaptureOnPassage(latestMovement, currentCoordinate, pawn.color());
+            final boolean isCaptureOnPassage = Objects.nonNull(latestMovement) &&
+                    isValidCaptureOnPassage(chessBoard, latestMovement, currentCoordinate, pawn.color());
             if (isCaptureOnPassage && !endFieldOccupied && king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)) {
                 return false;
             }
@@ -235,29 +233,6 @@ public record Pawn(Color color)
         }
 
         return StatusPair.ofFalse();
-    }
-
-    public static boolean isPassage(final AlgebraicNotation algebraicNotationVO) {
-        Objects.requireNonNull(algebraicNotationVO);
-
-        final String algebraicNotation = algebraicNotationVO.algebraicNotation();
-        if (!ChessNotationsValidator.isSimplePawnMovement(algebraicNotation)) {
-            return false;
-        }
-
-        final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
-        final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
-
-        if (from.getColumn() != to.getColumn()) {
-            return false;
-        }
-
-        final boolean validPassage = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
-        if (validPassage) {
-            return true;
-        }
-
-        return false;
     }
 
     private StatusPair<Set<Operations>> straightMove(
@@ -343,57 +318,14 @@ public record Pawn(Color color)
             throw new IllegalArgumentException("Illegal column or (and) row.");
         }
 
-        Optional<Coordinate> lastMoveCoordinate = previousMoveCoordinate(chessBoard);
-
-        if (!previousMoveWasPassage(chessBoard)) {
+        Optional<Coordinate> enPassaunt = chessBoard.enPassaunt();
+        if (enPassaunt.isEmpty()) {
             return false;
         }
-
-        if (lastMoveCoordinate.isEmpty()) {
+        if (enPassaunt.get().columnToInt() != endColumn) {
             return false;
         }
-
-        if (lastMoveCoordinate.orElseThrow().columnToInt() != endColumn) {
-            return false;
-        }
-
-        if (this.color.equals(Color.WHITE) && lastMoveCoordinate.orElseThrow().getRow() - endRow == -1) {
-            return true;
-        }
-
-        return this.color.equals(Color.BLACK) && lastMoveCoordinate.orElseThrow().getRow() - endRow == 1;
-    }
-
-    public boolean previousMoveWasPassage(ChessBoard chessBoard) {
-        Objects.requireNonNull(chessBoard);
-
-        if (chessBoard.latestMovement().isEmpty()) {
-            return false;
-        }
-
-        final Optional<AlgebraicNotation> figureTypeOptional = chessBoard.lastAlgebraicNotation();
-
-        if (figureTypeOptional.isEmpty()) {
-            return false;
-        }
-
-        final AlgebraicNotation figureType = figureTypeOptional.get();
-        final boolean isLastMoveWasMadeByPawn = figureType.pieceTYPE().equals(AlgebraicNotation.PieceTYPE.P);
-        if (!isLastMoveWasMadeByPawn) {
-            return false;
-        }
-
-        Pair<Coordinate, Coordinate> lastMovement = chessBoard.latestMovement().orElseThrow();
-        Coordinate from = lastMovement.getFirst();
-        Coordinate to = lastMovement.getSecond();
-
-        return (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
-    }
-
-    private Optional<Coordinate> previousMoveCoordinate(ChessBoard chessBoard) {
-        return Optional.ofNullable(
-                chessBoard.latestMovement().isPresent() ? chessBoard.latestMovement().orElseThrow().getSecond() : null
-        );
+        return enPassaunt.get().getRow() == endRow;
     }
 
     private boolean isPassage(final Coordinate coordinate, final Coordinate currentCoordinate, final Color color) {
@@ -416,26 +348,21 @@ public record Pawn(Color color)
                 return false;
             }
 
-            if (endRow != 4) {
-                return false;
-            }
-
-            return true;
+            return endRow == 4;
         }
 
         if (startRow != 7) {
             return false;
         }
 
-        if (endRow != 5) {
-            return false;
-        }
-
-        return true;
+        return endRow == 5;
     }
 
-    private boolean isValidCaptureOnPassage(final Pair<Coordinate, Coordinate> previousPassageMove, final Coordinate endCoord, final Color color) {
-        if (!previousMoveWasPassage(previousPassageMove, color.equals(WHITE) ? BLACK : WHITE)) {
+    private boolean isValidCaptureOnPassage(final ChessBoard chessBoard,
+                                            final Pair<Coordinate, Coordinate> previousPassageMove,
+                                            final Coordinate endCoord,
+                                            final Color color) {
+        if (chessBoard.enPassaunt().isEmpty()) {
             return false;
         }
 
@@ -446,15 +373,5 @@ public record Pawn(Color color)
         } else {
             return coordOfPassagePawn.columnToInt() == endCoord.columnToInt() && endCoord.getRow() - coordOfPassagePawn.getRow() == -1;
         }
-    }
-
-    private boolean previousMoveWasPassage(final Pair<Coordinate, Coordinate> latestMovement, final Color color) {
-        final Coordinate from = latestMovement.getFirst();
-        final Coordinate to = latestMovement.getSecond();
-
-        return switch (color) {
-            case WHITE -> from.columnToInt() == to.columnToInt() && from.getRow() == 2 && to.getRow() == 4;
-            case BLACK -> from.columnToInt() == to.columnToInt() && from.getRow() == 7 && to.getRow() == 5;
-        };
     }
 }

@@ -22,15 +22,15 @@ public class ChessNotationsValidator {
 
     private ChessNotationsValidator() {}
 
-    private static final String COORDINATES = "[a-h][1-8]";
+    public static final String COORDINATES = "[a-h][1-8]";
 
-    private static final String INFLUENCE_ON_OPPONENT_KING = "[+#.]?";
+    public static final String INFLUENCE_ON_OPPONENT_KING = "[+#.]?";
 
-    private static final String PAWN_START_MOVEMENT_COORDINATES = "[a-h][2-7]";
+    public static final String PAWN_START_MOVEMENT_COORDINATES = "[a-h][2-7]";
 
-    private static final Pattern passageCoordinatePattern = Pattern.compile("\\b[a-h][36]\\b");
+    public static final Pattern passageCoordinatePattern = Pattern.compile("\\b[a-h][36]\\b");
 
-    private static final String FEN_FORMAT = "^((([pnbrqkPNBRQK1-8]{1,8})/){7}([pnbrqkPNBRQK1-8]{1,8}))\\s([wb])\\s(-|[KQkq]{1,4})((\\s-)|(\\s[a-h][36])){1,2}?(\\s(\\d+)\\s(\\d+))?$";
+    public static final String FEN_FORMAT = "^((([pnbrqkPNBRQK1-8]{1,8})/){7}([pnbrqkPNBRQK1-8]{1,8}))\\s([wb])\\s(-|[KQkq]{1,4})((\\s-)|(\\s[a-h][36])){1,2}?(\\s(\\d+)\\s(\\d+))?$";
 
     /**
      * Validates a given FEN (Forsyth-Edwards Notation) string.

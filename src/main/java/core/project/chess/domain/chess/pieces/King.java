@@ -1,12 +1,12 @@
 package core.project.chess.domain.chess.pieces;
 
-import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessBoard.Field;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.Direction;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
+import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
@@ -552,8 +552,7 @@ public record King(Color color)
         for (final Field possiblePawn : pawnsThreateningCoordinates) {
             final Pawn pawn = (Pawn) possiblePawn.pieceOptional().orElseThrow();
 
-            final boolean isEaten = possiblePawn.getCoordinate().equals(to);
-
+            final boolean isEaten = isPawnEaten(to, possiblePawn, boardNavigator);
             if (!isEaten && !pawn.color().equals(color)) {
                 return false;
             }
@@ -610,6 +609,30 @@ public record King(Color color)
         }
 
         return true;
+    }
+
+    private static boolean isPawnEaten(Coordinate to, Field possiblePawn, ChessBoardNavigator boardNavigator) {
+        Optional<Coordinate> enPassaunt = boardNavigator.board().enPassaunt();
+        Coordinate opponentPawn = possiblePawn.getCoordinate();
+        if (enPassaunt.isPresent() && enPassaunt.get().equals(to)) {
+            if (opponentPawn.equals(to)) {
+                return true;
+            }
+
+            if (opponentPawn.columnToInt() != to.columnToInt()) {
+                return false;
+            }
+
+            int row = to.getRow();
+            int opponentRow = opponentPawn.getRow();
+            if (possiblePawn.pieceOptional().orElseThrow().color().equals(BLACK)) {
+                return row - opponentRow == 1;
+            }
+
+            return row - opponentRow == -1;
+        }
+
+        return opponentPawn.equals(to);
     }
 
     private boolean canEat(final ChessBoardNavigator boardNavigator,

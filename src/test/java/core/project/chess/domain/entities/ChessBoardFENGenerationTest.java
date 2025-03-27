@@ -7,14 +7,14 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 
 import static core.project.chess.domain.chess.enumerations.Coordinate.*;
-import static core.project.chess.domain.entities.ChessGameTest.defaultChessGameSupplier;
+import static core.project.chess.domain.entities.ChessGameTest.chessGameSupplier;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ChessBoardFENGenerationTest {
 
     @Test
     void testFENGeneration() throws InterruptedException {
-        ChessGame chessGame = defaultChessGameSupplier().get();
+        ChessGame chessGame = chessGameSupplier().get();
         String firstPlayer = chessGame.getPlayerForWhite().getUsername();
         String secondPlayer = chessGame.getPlayerForBlack().getUsername();
 
