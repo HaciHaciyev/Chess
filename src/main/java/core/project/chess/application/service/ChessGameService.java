@@ -27,6 +27,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -579,6 +580,12 @@ public class ChessGameService {
         @Override
         public void run() {
             while (isRunning.get()) {
+                try {
+					Thread.sleep(Duration.ofMillis(100));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
                 game.gameResult().ifPresent(gameResult -> {
                     String message = "Game is over by result {%s}".formatted(gameResult);
                     Log.info(message);
