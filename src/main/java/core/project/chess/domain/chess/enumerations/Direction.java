@@ -35,8 +35,8 @@ public enum Direction {
     }
 
     public static Direction ofPath(Coordinate begin, Coordinate end) {
-        int rowDiff = Math.abs(end.getRow() - begin.getRow());
-        int colDiff = Math.abs(end.columnToInt() - begin.columnToInt());
+        int rowDiff = Math.abs(end.row() - begin.row());
+        int colDiff = Math.abs(end.column() - begin.column());
 
         int absDiff = Math.abs(rowDiff - colDiff);
 
@@ -45,8 +45,8 @@ public enum Direction {
             throw new IllegalArgumentException("Invalid path");
         }
 
-        int rowOffset = Integer.compare(end.getRow(), begin.getRow());
-        int colOffset = Integer.compare(end.columnToInt(), begin.columnToInt());
+        int rowOffset = Integer.compare(end.row(), begin.row());
+        int colOffset = Integer.compare(end.column(), begin.column());
 
         return Stream.of(values())
                 .filter(direction -> direction.rowDelta == rowOffset && direction.colDelta == colOffset)
@@ -55,6 +55,6 @@ public enum Direction {
     }
 
     public Coordinate apply(Coordinate coordinate) {
-        return Coordinate.of(coordinate.getRow() + rowDelta, coordinate.columnToInt() + colDelta);
+        return Coordinate.of(coordinate.row() + rowDelta, coordinate.column() + colDelta);
     }
 }

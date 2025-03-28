@@ -383,8 +383,8 @@ public record ChessBoardNavigator(ChessBoard board) {
     public List<ChessBoard.Field> surroundingFields(Coordinate pivot) {
         Objects.requireNonNull(pivot);
 
-        int row = pivot.getRow();
-        int column = pivot.columnToInt();
+        int row = pivot.row();
+        int column = pivot.column();
 
         int[][] directions = {
                 {1, 0}, {-1, 0}, {0, -1}, {0, 1},   // up, down, left, right
@@ -456,11 +456,11 @@ public record ChessBoardNavigator(ChessBoard board) {
         final List<Coordinate> possibleCoordinates = new ArrayList<>(2);
 
         if (Color.WHITE.equals(color)) {
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() + 1));
+            possibleCoordinates.add(Coordinate.of(pivot.row() + 1, pivot.column() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.row() + 1, pivot.column() + 1));
         } else {
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() + 1));
+            possibleCoordinates.add(Coordinate.of(pivot.row() - 1, pivot.column() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.row() - 1, pivot.column() + 1));
         }
 
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -506,11 +506,11 @@ public record ChessBoardNavigator(ChessBoard board) {
 
         final List<Coordinate> possibleCoordinates = new ArrayList<>(2);
         if (Color.WHITE.equals(colorOfRequiredPawns)) {
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() + 1));
+            possibleCoordinates.add(Coordinate.of(pivot.row() - 1, pivot.column() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.row() - 1, pivot.column() + 1));
         } else {
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() - 1));
-            possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() + 1));
+            possibleCoordinates.add(Coordinate.of(pivot.row() + 1, pivot.column() - 1));
+            possibleCoordinates.add(Coordinate.of(pivot.row() + 1, pivot.column() + 1));
         }
 
         List<ChessBoard.Field> fields = new ArrayList<>();
@@ -561,8 +561,8 @@ public record ChessBoardNavigator(ChessBoard board) {
         Objects.requireNonNull(pivot);
         Objects.requireNonNull(predicate);
 
-        int row = pivot.getRow();
-        int col = pivot.columnToInt();
+        int row = pivot.row();
+        int col = pivot.column();
 
         int[][] moves = {
                 {1, -2}, {2, -1},   // top-left
@@ -658,7 +658,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         Piece piece = field.pieceOptional().orElseThrow();
 
         int direction = piece.color().equals(Color.WHITE) ? 1 : -1;
-        final var possibleForwardCoordinate = Coordinate.of(coordinate.getRow() + direction, coordinate.columnToInt());
+        final var possibleForwardCoordinate = Coordinate.of(coordinate.row() + direction, coordinate.column());
 
         if (possibleForwardCoordinate != null) {
             ChessBoard.Field forwardField = board.field(possibleForwardCoordinate);
@@ -1013,8 +1013,8 @@ public record ChessBoardNavigator(ChessBoard board) {
         Objects.requireNonNull(pivot);
         Objects.requireNonNull(color);
 
-        final int column = pivot.columnToInt();
-        final int row = pivot.getRow();
+        final int column = pivot.column();
+        final int row = pivot.row();
 
         if (color.equals(Color.WHITE)) {
             final var top = Coordinate.of(row + 1, column);

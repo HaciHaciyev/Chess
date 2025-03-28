@@ -1216,9 +1216,9 @@ public class ChessBoard {
         switchFiguresTurn();
         ruleOf50MovesAbility(piece, operations);
 
-        if (piece instanceof Pawn && from.columnToInt() == to.columnToInt() && Math.abs(from.getRow() - to.getRow()) == 2) {
-            int enPassauntRow = to.getRow() == 4 ? 3 : 6;
-            this.enPassaunt = Coordinate.of(enPassauntRow, to.columnToInt());
+        if (piece instanceof Pawn && from.column() == to.column() && Math.abs(from.row() - to.row()) == 2) {
+            int enPassauntRow = to.row() == 4 ? 3 : 6;
+            this.enPassaunt = Coordinate.of(enPassauntRow, to.column());
         }
 
         /** Recording the move made in algebraic notation and Fen.*/
@@ -1277,8 +1277,8 @@ public class ChessBoard {
     private void inCaseOfCapture(Piece piece, Field endField, Coordinate tempEnPassaunt) {
         final boolean captureOnPassage = piece instanceof Pawn && tempEnPassaunt != null && endField.coordinate.equals(tempEnPassaunt);
         if (captureOnPassage) {
-            int row = endField.coordinate.getRow() == 6 ? 5 : 4;
-            Field field = fieldMap.get(Coordinate.of(row, endField.coordinate.columnToInt()));
+            int row = endField.coordinate.row() == 6 ? 5 : 4;
+            Field field = fieldMap.get(Coordinate.of(row, endField.coordinate.column()));
 
             final boolean isCapturedPieceWhite = field.piece.color().equals(WHITE);
             if (isCapturedPieceWhite) {
@@ -1406,7 +1406,7 @@ public class ChessBoard {
      * @param to The coordinate the king is moving to during the castling.
      */
     private void moveRookInShortCastling(final Coordinate to) {
-        final boolean isWhiteCastling = to.getRow() == 1;
+        final boolean isWhiteCastling = to.row() == 1;
 
         if (isWhiteCastling) {
             final Field startField = fieldMap.get(Coordinate.h1);
@@ -1432,7 +1432,7 @@ public class ChessBoard {
      * @param to The coordinate the king is moving to during the castling.
      */
     private void moveRookInLongCastling(final Coordinate to) {
-        final boolean isWhiteCastling = to.getRow() == 1;
+        final boolean isWhiteCastling = to.row() == 1;
 
         if (isWhiteCastling) {
             final Field startField = fieldMap.get(Coordinate.a1);
@@ -1518,7 +1518,7 @@ public class ChessBoard {
 
     private static Piece getPieceForUndo(Field endedField, AlgebraicNotation lastMovement) {
         if (lastMovement.isPromotion()) {
-            boolean wasBlackPromotion = lastMovement.coordinates().getSecond().getRow() == 1;
+            boolean wasBlackPromotion = lastMovement.coordinates().getSecond().row() == 1;
             Color color = wasBlackPromotion ? BLACK : WHITE;
             return new Pawn(color);
         }
@@ -1575,7 +1575,7 @@ public class ChessBoard {
      * @param to the coordinate where the rook ended up after the castling
      */
     private void revertRookInShortCastling(Coordinate to) {
-        final boolean isWhiteCastling = to.getRow() == 1;
+        final boolean isWhiteCastling = to.row() == 1;
 
         if (isWhiteCastling) {
             final Field startField = fieldMap.get(Coordinate.h1);
@@ -1601,7 +1601,7 @@ public class ChessBoard {
      * @param to the coordinate where the rook ended up after the castling
      */
     private void revertRookInLongCastling(Coordinate to) {
-        final boolean isWhiteCastling = to.getRow() == 1;
+        final boolean isWhiteCastling = to.row() == 1;
 
         if (isWhiteCastling) {
             final Field startField = fieldMap.get(Coordinate.a1);
@@ -1662,8 +1662,8 @@ public class ChessBoard {
             return false;
         }
 
-        int requiredRow = enPassaunt.getRow() == 6 ? 5 : 4;
-        Coordinate required = Coordinate.of(requiredRow, enPassaunt.columnToInt());
+        int requiredRow = enPassaunt.row() == 6 ? 5 : 4;
+        Coordinate required = Coordinate.of(requiredRow, enPassaunt.column());
         if (piece.color().equals(WHITE)) {
             Piece capturedPawn = capturedBlackPieces.removeLast();
             fieldMap.get(required).addFigure(capturedPawn);
@@ -1701,15 +1701,15 @@ public class ChessBoard {
         Coordinate from = coordinates.getFirst();
         Coordinate to = coordinates.getSecond();
 
-        if (from.columnToInt() != to.columnToInt()) {
+        if (from.column() != to.column()) {
             return null;
         }
 
-        if (from.getRow() == 2 && to.getRow() == 4) {
-            return Coordinate.of(3, to.columnToInt());
+        if (from.row() == 2 && to.row() == 4) {
+            return Coordinate.of(3, to.column());
         }
-        if (from.getRow() == 7 && to.getRow() == 5) {
-            return Coordinate.of(6, to.columnToInt());
+        if (from.row() == 7 && to.row() == 5) {
+            return Coordinate.of(6, to.column());
         }
 
         return null;
@@ -1722,8 +1722,8 @@ public class ChessBoard {
         }
 
         Coordinate endCoordinate = lastMovement.get().getSecond();
-        int enPassauntRow = endCoordinate.getRow() == 4 ? 3 : 6;
-        return Coordinate.of(enPassauntRow, endCoordinate.columnToInt());
+        int enPassauntRow = endCoordinate.row() == 4 ? 3 : 6;
+        return Coordinate.of(enPassauntRow, endCoordinate.column());
     }
 
     /**
@@ -1845,7 +1845,7 @@ public class ChessBoard {
         int countOfEmptyFields = 0;
         for (final Coordinate coordinate : Coordinate.values()) {
 
-            if (coordinate.getRow() == row - 1) {
+            if (coordinate.row() == row - 1) {
                 row -= 1;
 
                 if (countOfEmptyFields == 0) {
@@ -1977,11 +1977,11 @@ public class ChessBoard {
         fieldMap.put(Coordinate.h8, new Field(Coordinate.h8, new Rook(BLACK)));
 
         for (Coordinate coordinate : Coordinate.values()) {
-            if (coordinate.getRow() == 1 || coordinate.getRow() == 8) {
+            if (coordinate.row() == 1 || coordinate.row() == 8) {
                 continue;
             }
 
-            switch (coordinate.getRow()) {
+            switch (coordinate.row()) {
                 case 2 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(WHITE)));
                 case 7 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(BLACK)));
                 default -> fieldMap.put(coordinate, new Field(coordinate, null));

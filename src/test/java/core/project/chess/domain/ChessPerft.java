@@ -335,7 +335,7 @@ class ChessPerft {
 
         AlgebraicNotation lastAN = AlgebraicNotation.of(lastMove);
         Pair<Coordinate, Coordinate> coordinatesOfLastMove = lastAN.coordinates();
-        final int endOfLastMove = coordinatesOfLastMove.getSecond().getRow();
+        final int endOfLastMove = coordinatesOfLastMove.getSecond().row();
 
         final boolean isCaptureOnEnPassaunLine = endOfLastMove == 3 || endOfLastMove == 6;
         if (!isCaptureOnEnPassaunLine) {
@@ -344,10 +344,10 @@ class ChessPerft {
 
         AlgebraicNotation preLastAN = AlgebraicNotation.of(preLastMove);
         Pair<Coordinate, Coordinate> coordinatesOfPreLastMove = preLastAN.coordinates();
-        final int startOfPreLastMove = coordinatesOfPreLastMove.getFirst().getRow();
-        final int endOfPreLastMove = coordinatesOfPreLastMove.getSecond().getRow();
+        final int startOfPreLastMove = coordinatesOfPreLastMove.getFirst().row();
+        final int endOfPreLastMove = coordinatesOfPreLastMove.getSecond().row();
 
-        final boolean isNotTheSameColumn = coordinatesOfPreLastMove.getSecond().getColumn() != coordinatesOfLastMove.getSecond().getColumn();
+        final boolean isNotTheSameColumn = coordinatesOfPreLastMove.getSecond().column() != coordinatesOfLastMove.getSecond().column();
         if (isNotTheSameColumn) {
             return;
         }

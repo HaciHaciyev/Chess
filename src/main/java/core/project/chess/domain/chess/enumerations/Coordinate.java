@@ -4,40 +4,44 @@ import jakarta.annotation.Nullable;
 
 public enum Coordinate {
 
-    a8('a', 8), b8('b', 8), c8('c', 8), d8('d', 8), e8('e', 8), f8('f', 8), g8('g', 8), h8('h', 8),
-    a7('a', 7), b7('b', 7), c7('c', 7), d7('d', 7), e7('e', 7), f7('f', 7), g7('g', 7), h7('h', 7),
-    a6('a', 6), b6('b', 6), c6('c', 6), d6('d', 6), e6('e', 6), f6('f', 6), g6('g', 6), h6('h', 6),
-    a5('a', 5), b5('b', 5), c5('c', 5), d5('d', 5), e5('e', 5), f5('f', 5), g5('g', 5), h5('h', 5),
-    a4('a', 4), b4('b', 4), c4('c', 4), d4('d', 4), e4('e', 4), f4('f', 4), g4('g', 4), h4('h', 4),
-    a3('a', 3), b3('b', 3), c3('c', 3), d3('d', 3), e3('e', 3), f3('f', 3), g3('g', 3), h3('h', 3),
-    a2('a', 2), b2('b', 2), c2('c', 2), d2('d', 2), e2('e', 2), f2('f', 2), g2('g', 2), h2('h', 2),
-    a1('a', 1), b1('b', 1), c1('c', 1), d1('d', 1), e1('e', 1), f1('f', 1), g1('g', 1), h1('h', 1);
+    a8(1, 8), b8(2, 8), c8(3, 8), d8(4, 8), e8(5, 8), f8(6, 8), g8(7, 8), h8(8, 8),
+    a7(1, 7), b7(2, 7), c7(3, 7), d7(4, 7), e7(5, 7), f7(6, 7), g7(7, 7), h7(8, 7),
+    a6(1, 6), b6(2, 6), c6(3, 6), d6(4, 6), e6(5, 6), f6(6, 6), g6(7, 6), h6(8, 6),
+    a5(1, 5), b5(2, 5), c5(3, 5), d5(4, 5), e5(5, 5), f5(6, 5), g5(7, 5), h5(8, 5),
+    a4(1, 4), b4(2, 4), c4(3, 4), d4(4, 4), e4(5, 4), f4(6, 4), g4(7, 4), h4(8, 4),
+    a3(1, 3), b3(2, 3), c3(3, 3), d3(4, 3), e3(5, 3), f3(6, 3), g3(7, 3), h3(8, 3),
+    a2(1, 2), b2(2, 2), c2(3, 2), d2(4, 2), e2(5, 2), f2(6, 2), g2(7, 2), h2(8, 2),
+    a1(1, 1), b1(2, 1), c1(3, 1), d1(4, 1), e1(5, 1), f1(6, 1), g1(7, 1), h1(8, 1);
+
+    private final int column;
 
     private final int row;
-
-    private final char column;
 
     private static final Coordinate[][] COORDINATE_CACHE = new Coordinate[8][8];
 
     static {
         for (Coordinate c : Coordinate.values()) {
-            int row = c.getRow() - 1;
-            int col = c.columnToInt() - 1;
+            int row = c.row() - 1;
+            int col = c.column() - 1;
             COORDINATE_CACHE[row][col] = c;
         }
     }
 
-    Coordinate(char column, int row) {
+    Coordinate(int column, int row) {
         this.column = column;
         this.row = row;
     }
 
-    public int getRow() {
+    public int row() {
         return row;
     }
 
-    public char getColumn() {
+    public int column() {
         return column;
+    }
+
+    public char columnChar() {
+        return intToColumn(column);
     }
 
     /**
@@ -74,20 +78,6 @@ public enum Coordinate {
             case 7 -> 'g';
             case 8 -> 'h';
             default -> throw new IllegalStateException("Unexpected value: " + columnNumber);
-        };
-    }
-
-    public int columnToInt() {
-        return switch (column) {
-            case 'a' -> 1;
-            case 'b' -> 2;
-            case 'c' -> 3;
-            case 'd' -> 4;
-            case 'e' -> 5;
-            case 'f' -> 6;
-            case 'g' -> 7;
-            case 'h' -> 8;
-            default -> throw new IllegalStateException("Unexpected value: " + column);
         };
     }
 

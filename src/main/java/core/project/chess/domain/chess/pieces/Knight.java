@@ -88,8 +88,8 @@ public record Knight(Color color)
      * @throws IllegalArgumentException if any of the preconditions are not met (e.g., if <code>from</code> or <code>to</code> is <code>null</code>).
      */
     boolean knightMove(final Coordinate from, final Coordinate to) {
-        int differenceOfRow = Math.abs(from.getRow() - to.getRow());
-        int differenceOfColumn = Math.abs(from.columnToInt() - to.columnToInt());
+        int differenceOfRow = Math.abs(from.row() - to.row());
+        int differenceOfColumn = Math.abs(from.column() - to.column());
 
         return (differenceOfRow == 2 && differenceOfColumn == 1) || (differenceOfRow == 1 && differenceOfColumn == 2);
     }

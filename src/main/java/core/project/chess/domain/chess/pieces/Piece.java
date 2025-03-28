@@ -33,11 +33,11 @@ public sealed interface Piece
      */
     default boolean clearPath(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
 
-        final int startRow = from.getRow();
-        final int startColumn = from.columnToInt();
+        final int startRow = from.row();
+        final int startColumn = from.column();
 
-        final int endRow = to.getRow();
-        final int endColumn = to.columnToInt();
+        final int endRow = to.row();
+        final int endColumn = to.column();
 
         final int rowDirection = compareDirection(startRow, endRow);
         final int columnDirection = compareDirection(startColumn, endColumn);

@@ -147,18 +147,18 @@ public class ChessNotationsValidator {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
 
-        if (from.getColumn() != to.getColumn()) {
+        if (from.column() != to.column()) {
             throw new IllegalArgumentException("'From' can`t be equal to 'to' coordinate.");
         }
 
-        final boolean validPassage = (from.getRow() == 2 && to.getRow() == 4) || (from.getRow() == 7 && to.getRow() == 5);
+        final boolean validPassage = (from.row() == 2 && to.row() == 4) || (from.row() == 7 && to.row() == 5);
         if (validPassage) {
             return;
         }
 
-        final boolean validMoveDistance = Math.abs(from.getRow() - to.getRow()) == 1;
+        final boolean validMoveDistance = Math.abs(from.row() - to.row()) == 1;
         if (validMoveDistance) {
-            final boolean fieldForPromotion = to.getRow() == 1 || to.getRow() == 8;
+            final boolean fieldForPromotion = to.row() == 1 || to.row() == 8;
             if (fieldForPromotion) {
                 throw new IllegalArgumentException("It is the field for PROMOTION but promotion is not added.");
             }
@@ -172,14 +172,14 @@ public class ChessNotationsValidator {
     public static void validatePawnCaptureOperation(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
-        final int startColumn = from.columnToInt();
-        final int endColumn = to.columnToInt();
-        final int startRow = from.getRow();
-        final int endRow = to.getRow();
+        final int startColumn = from.column();
+        final int endColumn = to.column();
+        final int startRow = from.row();
+        final int endRow = to.row();
 
         final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 && Math.abs(startColumn - endColumn) == 1;
         if (diagonalCapture) {
-            final boolean fieldForPromotion = to.getRow() == 1 || to.getRow() == 8;
+            final boolean fieldForPromotion = to.row() == 1 || to.row() == 8;
             if (fieldForPromotion) {
                 throw new IllegalArgumentException("It is the field for PROMOTION but promotion is not added.");
             }
@@ -193,10 +193,10 @@ public class ChessNotationsValidator {
     public static void validatePromotion(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
-        final int startColumn = from.columnToInt();
-        final int endColumn = to.columnToInt();
-        final int startRow = from.getRow();
-        final int endRow = to.getRow();
+        final int startColumn = from.column();
+        final int endColumn = to.column();
+        final int startRow = from.row();
+        final int endRow = to.row();
 
         final boolean validRows = (startRow == 7 && endRow == 8) || (startRow == 2 && endRow == 1);
         if (!validRows) {
@@ -212,10 +212,10 @@ public class ChessNotationsValidator {
     public static void validateSimpleFigureMovementOrCapture(final String algebraicNotation) {
         final Coordinate from = Coordinate.valueOf(algebraicNotation.substring(1, 3));
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
-        final int startColumn = from.columnToInt();
-        final int endColumn = to.columnToInt();
-        final int startRow = from.getRow();
-        final int endRow = to.getRow();
+        final int startColumn = from.column();
+        final int endColumn = to.column();
+        final int startRow = from.row();
+        final int endRow = to.row();
 
         final boolean king = algebraicNotation.charAt(0) == 'K';
         if (king) {
@@ -273,8 +273,8 @@ public class ChessNotationsValidator {
 
         final boolean knight = algebraicNotation.charAt(0) == 'N';
         if (knight) {
-            int differenceOfRow = Math.abs(from.getRow() - to.getRow());
-            int differenceOfColumn = Math.abs(from.columnToInt() - to.columnToInt());
+            int differenceOfRow = Math.abs(from.row() - to.row());
+            int differenceOfColumn = Math.abs(from.column() - to.column());
             final boolean knightMove =
                     (differenceOfRow == 2 && differenceOfColumn == 1) || (differenceOfRow == 1 && differenceOfColumn == 2);
 
@@ -373,8 +373,8 @@ public class ChessNotationsValidator {
                     }
 
                     if (Objects.nonNull(blackKingCoordinate)) {
-                        final boolean isSurround = Math.abs(whiteKingCoordinate.getRow() - blackKingCoordinate.getRow()) <= 1
-                                && Math.abs(whiteKingCoordinate.columnToInt() - blackKingCoordinate.columnToInt()) <= 1;
+                        final boolean isSurround = Math.abs(whiteKingCoordinate.row() - blackKingCoordinate.row()) <= 1
+                                && Math.abs(whiteKingCoordinate.column() - blackKingCoordinate.column()) <= 1;
 
                         if (isSurround) {
                             return StatusPair.ofFalse();
@@ -393,8 +393,8 @@ public class ChessNotationsValidator {
                     }
 
                     if (Objects.nonNull(whiteKingCoordinate)) {
-                        final boolean isSurround = Math.abs(whiteKingCoordinate.getRow() - blackKingCoordinate.getRow()) <= 1
-                                && Math.abs(whiteKingCoordinate.columnToInt() - blackKingCoordinate.columnToInt()) <= 1;
+                        final boolean isSurround = Math.abs(whiteKingCoordinate.row() - blackKingCoordinate.row()) <= 1
+                                && Math.abs(whiteKingCoordinate.column() - blackKingCoordinate.column()) <= 1;
 
                         if (isSurround) {
                             return StatusPair.ofFalse();
@@ -492,7 +492,7 @@ public class ChessNotationsValidator {
                     }
                 }
                 case 'P' -> {
-                    if (coordinate.getRow() == 1 || coordinate.getRow() == 8) {
+                    if (coordinate.row() == 1 || coordinate.row() == 8) {
                         return StatusPair.ofFalse();
                     }
 
@@ -509,7 +509,7 @@ public class ChessNotationsValidator {
                     }
                 }
                 case 'p' -> {
-                    if (coordinate.getRow() == 1 || coordinate.getRow() == 8) {
+                    if (coordinate.row() == 1 || coordinate.row() == 8) {
                         return StatusPair.ofFalse();
                     }
 
@@ -594,8 +594,8 @@ public class ChessNotationsValidator {
     }
 
     private static Color getColorOfField(final Coordinate coordinate) {
-        final int row = coordinate.getRow();
-        final int column = coordinate.columnToInt();
+        final int row = coordinate.row();
+        final int column = coordinate.column();
 
         if (row % 2 != 0) {
             if (column % 2 != 0) {
@@ -615,19 +615,19 @@ public class ChessNotationsValidator {
         if (matcher.find()) {
             final Coordinate captureCoord = Coordinate.valueOf(matcher.group());
 
-            if (captureCoord.getRow() == 3) {
-                return Optional.ofNullable(Coordinate.of(4, captureCoord.columnToInt()));
+            if (captureCoord.row() == 3) {
+                return Optional.ofNullable(Coordinate.of(4, captureCoord.column()));
             }
 
-            return Optional.ofNullable(Coordinate.of(5, captureCoord.columnToInt()));
+            return Optional.ofNullable(Coordinate.of(5, captureCoord.column()));
         }
 
         return Optional.empty();
     }
 
     private static Pair<Coordinate, Coordinate> passageCoordinates(Coordinate endCoordinate) {
-        final int row = endCoordinate.getRow();
-        final int column = endCoordinate.columnToInt();
+        final int row = endCoordinate.row();
+        final int column = endCoordinate.column();
 
         int startRow = row;
         if (row == 4) {

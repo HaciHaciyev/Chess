@@ -89,10 +89,10 @@ public record Rook(Color color)
      * @throws IllegalArgumentException if any of the preconditions are not met (e.g., if <code>startField</code> or <code>endField</code> is <code>null</code>).
      */
     boolean validate(final ChessBoard chessBoard, final Field startField, final Field endField) {
-        final char startColumn = startField.getCoordinate().getColumn();
-        final char endColumn = endField.getCoordinate().getColumn();
-        final int startRow = startField.getCoordinate().getRow();
-        final int endRow = endField.getCoordinate().getRow();
+        final int startColumn = startField.getCoordinate().column();
+        final int endColumn = endField.getCoordinate().column();
+        final int startRow = startField.getCoordinate().row();
+        final int endRow = endField.getCoordinate().row();
 
         final boolean verticalMove = startColumn == endColumn && startRow != endRow;
         if (verticalMove) {

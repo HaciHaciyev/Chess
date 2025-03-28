@@ -98,10 +98,10 @@ public record King(Color color)
     private boolean isValidKingMovementCoordinates(final ChessBoard chessBoard, final Field startField, final Field endField) {
         final Coordinate from = startField.getCoordinate();
         final Coordinate to = endField.getCoordinate();
-        final int startColumn = from.columnToInt();
-        final int endColumn = to.columnToInt();
-        final int startRow = from.getRow();
-        final int endRow = to.getRow();
+        final int startColumn = from.column();
+        final int endColumn = to.column();
+        final int startRow = from.row();
+        final int endRow = to.row();
 
         final boolean surroundField = Math.abs(startColumn - endColumn) <= 1 && Math.abs(startRow - endRow) <= 1;
         if (surroundField) {
@@ -396,7 +396,7 @@ public record King(Color color)
 
     private boolean safeToCastle(final ChessBoardNavigator boardNavigator, final Coordinate presentKingPosition, final Coordinate futureKingPosition) {
         final Castle castle;
-        if (presentKingPosition.getColumn() < futureKingPosition.getColumn()) {
+        if (presentKingPosition.column() < futureKingPosition.column()) {
             castle = Castle.SHORT_CASTLING;
         } else {
             castle = Castle.LONG_CASTLING;
@@ -504,10 +504,10 @@ public record King(Color color)
         for (final Field field : diagonalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
-            final int enemyRow = field.getCoordinate().getRow();
-            final int enemyColumn = field.getCoordinate().columnToInt();
+            final int enemyRow = field.getCoordinate().row();
+            final int enemyColumn = field.getCoordinate().column();
 
-            final boolean surroundField = Math.abs(futureKing.getRow() - enemyRow) <= 1 && Math.abs(futureKing.columnToInt() - enemyColumn) <= 1;
+            final boolean surroundField = Math.abs(futureKing.row() - enemyRow) <= 1 && Math.abs(futureKing.column() - enemyColumn) <= 1;
 
             final boolean isOppositionOfKing = (piece instanceof King) && !piece.color().equals(this.color) && surroundField;
             if (isOppositionOfKing) {
@@ -527,10 +527,10 @@ public record King(Color color)
         for (final Field field : horizontalVerticalFields) {
             final Piece piece = field.pieceOptional().orElseThrow();
 
-            final int enemyRow = field.getCoordinate().getRow();
-            final int enemyColumn = field.getCoordinate().columnToInt();
+            final int enemyRow = field.getCoordinate().row();
+            final int enemyColumn = field.getCoordinate().column();
 
-            final boolean surroundField = Math.abs(futureKing.getRow() - enemyRow) <= 1 && Math.abs(futureKing.columnToInt() - enemyColumn) <= 1;
+            final boolean surroundField = Math.abs(futureKing.row() - enemyRow) <= 1 && Math.abs(futureKing.column() - enemyColumn) <= 1;
 
             final boolean isOppositionOfKing = (piece instanceof King) && !piece.color().equals(this.color) && surroundField;
             if (isOppositionOfKing) {
@@ -621,12 +621,12 @@ public record King(Color color)
                 return true;
             }
 
-            if (opponentPawn.columnToInt() != to.columnToInt()) {
+            if (opponentPawn.column() != to.column()) {
                 return false;
             }
 
-            int row = to.getRow();
-            int opponentRow = opponentPawn.getRow();
+            int row = to.row();
+            int opponentRow = opponentPawn.row();
             if (possiblePawn.pieceOptional().orElseThrow().color().equals(BLACK)) {
                 return row - opponentRow == 1;
             }
@@ -647,18 +647,18 @@ public record King(Color color)
             final Coordinate startOfLastMove = latestMovement.getFirst();
             final Coordinate endOfLastMove = latestMovement.getSecond();
 
-            final boolean sameColumn = startOfLastMove.columnToInt() == endOfLastMove.columnToInt();
+            final boolean sameColumn = startOfLastMove.column() == endOfLastMove.column();
 
-            final boolean isLastMoveWasPassage = sameColumn && Math.abs(startOfLastMove.getRow() - endOfLastMove.getRow()) == 2;
+            final boolean isLastMoveWasPassage = sameColumn && Math.abs(startOfLastMove.row() - endOfLastMove.row()) == 2;
             if (isLastMoveWasPassage) {
 
                 final Coordinate intermediateCoordinateOnPassage;
                 if (kingColor.equals(WHITE)) {
                     intermediateCoordinateOnPassage = Coordinate
-                            .of(enemyField.getCoordinate().getRow() + 1, enemyField.getCoordinate().columnToInt());
+                            .of(enemyField.getCoordinate().row() + 1, enemyField.getCoordinate().column());
                 } else {
                     intermediateCoordinateOnPassage = Coordinate
-                            .of(enemyField.getCoordinate().getRow() - 1, enemyField.getCoordinate().columnToInt());
+                            .of(enemyField.getCoordinate().row() - 1, enemyField.getCoordinate().column());
                 }
 
                 final List<Field> surroundedPawns = boardNavigator.pawnsThreateningCoordinate(intermediateCoordinateOnPassage, kingColor);
@@ -737,7 +737,7 @@ public record King(Color color)
 
         final Coordinate enemyCoord = enemyField.getCoordinate();
 
-        final boolean surround = Math.abs(king.getRow() - enemyCoord.getRow()) <= 1 && Math.abs(king.columnToInt() - enemyCoord.columnToInt()) <= 1;
+        final boolean surround = Math.abs(king.row() - enemyCoord.row()) <= 1 && Math.abs(king.column() - enemyCoord.column()) <= 1;
         if (surround) {
             return false;
         }
@@ -748,9 +748,9 @@ public record King(Color color)
 
             final Coordinate potentialPawnThatCanBlockAttackBySimpleMove;
             if (WHITE.equals(kingColor)) {
-                potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
+                potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(currentCoordinate.row() - 1, currentCoordinate.column());
             } else {
-                potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
+                potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(currentCoordinate.row() + 1, currentCoordinate.column());
             }
 
             if (potentialPawnThatCanBlockAttackBySimpleMove != null) {
@@ -769,19 +769,19 @@ public record King(Color color)
                 }
             }
 
-            final boolean potentiallyCanBeBlockedByPawnPassage = currentCoordinate.getRow() == 5 && kingColor.equals(BLACK)
-                    || currentCoordinate.getRow() == 4 && kingColor.equals(WHITE);
+            final boolean potentiallyCanBeBlockedByPawnPassage = currentCoordinate.row() == 5 && kingColor.equals(BLACK)
+                    || currentCoordinate.row() == 4 && kingColor.equals(WHITE);
 
             if (potentiallyCanBeBlockedByPawnPassage) {
                 final Coordinate potentialPawnCoordinate;
                 final Coordinate secondPassageCoordinate;
 
                 if (WHITE.equals(kingColor)) {
-                    potentialPawnCoordinate = Coordinate.of(2, currentCoordinate.columnToInt());
-                    secondPassageCoordinate = Coordinate.of(5, currentCoordinate.columnToInt());
+                    potentialPawnCoordinate = Coordinate.of(2, currentCoordinate.column());
+                    secondPassageCoordinate = Coordinate.of(5, currentCoordinate.column());
                 } else {
-                    potentialPawnCoordinate = Coordinate.of(7, currentCoordinate.columnToInt());
-                    secondPassageCoordinate = Coordinate.of(4, currentCoordinate.columnToInt());
+                    potentialPawnCoordinate = Coordinate.of(7, currentCoordinate.column());
+                    secondPassageCoordinate = Coordinate.of(4, currentCoordinate.column());
                 }
 
                 final Field field2 = boardNavigator.board().field(potentialPawnCoordinate);

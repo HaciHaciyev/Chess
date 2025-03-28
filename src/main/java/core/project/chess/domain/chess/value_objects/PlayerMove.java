@@ -20,15 +20,15 @@ public record PlayerMove(Coordinate from, Coordinate to, @Nullable Piece promoti
 
     @Override
     public int compareTo(PlayerMove m) {
-        char ourColFrom = from.getColumn();
-        char ourColTo = to.getColumn();
-        int ourRowFrom = from.getRow();
-        int ourRowTo = to.getRow();
+        int ourColFrom = from.column();
+        int ourColTo = to.column();
+        int ourRowFrom = from.row();
+        int ourRowTo = to.row();
 
-        char theirColFrom = m.from.getColumn();
-        char theirColTo = m.to.getColumn();
-        int theirRowFrom = m.from.getRow();
-        int theirRowTo = m.to.getRow();
+        int theirColFrom = m.from.column();
+        int theirColTo = m.to.column();
+        int theirRowFrom = m.from.row();
+        int theirRowTo = m.to.row();
 
         if (ourColFrom < theirColFrom) {
             return -1;

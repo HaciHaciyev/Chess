@@ -14,18 +14,15 @@ import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.PersonalData;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -500,7 +497,7 @@ class ParallelPerft {
 
                 AlgebraicNotation lastAN = AlgebraicNotation.of(lastMove);
                 Pair<Coordinate, Coordinate> coordinatesOfLastMove = lastAN.coordinates();
-                final int endOfLastMove = coordinatesOfLastMove.getSecond().getRow();
+                final int endOfLastMove = coordinatesOfLastMove.getSecond().row();
 
                 final boolean isCaptureOnEnPassaunLine = endOfLastMove == 3 || endOfLastMove == 6;
                 if (!isCaptureOnEnPassaunLine) {
@@ -509,11 +506,10 @@ class ParallelPerft {
 
                 AlgebraicNotation preLastAN = AlgebraicNotation.of(preLastMove);
                 Pair<Coordinate, Coordinate> coordinatesOfPreLastMove = preLastAN.coordinates();
-                final int startOfPreLastMove = coordinatesOfPreLastMove.getFirst().getRow();
-                final int endOfPreLastMove = coordinatesOfPreLastMove.getSecond().getRow();
+                final int startOfPreLastMove = coordinatesOfPreLastMove.getFirst().row();
+                final int endOfPreLastMove = coordinatesOfPreLastMove.getSecond().row();
 
-                final boolean isNotTheSameColumn = coordinatesOfPreLastMove.getSecond()
-                        .getColumn() != coordinatesOfLastMove.getSecond().getColumn();
+                final boolean isNotTheSameColumn = coordinatesOfPreLastMove.getSecond().column() != coordinatesOfLastMove.getSecond().column();
                 if (isNotTheSameColumn) {
                     return;
                 }

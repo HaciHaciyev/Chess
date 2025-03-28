@@ -131,8 +131,8 @@ public record Pawn(Color color)
         Objects.requireNonNull(pawn);
 
         final ChessBoard chessBoard = boardNavigator.board();
-        final int startColumn = ourField.getCoordinate().columnToInt();
-        final int startRow = ourField.getCoordinate().getRow();
+        final int startColumn = ourField.getCoordinate().column();
+        final int startRow = ourField.getCoordinate().row();
         final King king = chessBoard.theKing(kingColor);
 
         final List<Coordinate> fieldsForPawnMovement = boardNavigator.fieldsForPawnMovement(ourField.getCoordinate(), pawn.color());
@@ -145,8 +145,8 @@ public record Pawn(Color color)
                 continue;
             }
 
-            final int endColumn = currentCoordinate.columnToInt();
-            final int endRow = currentCoordinate.getRow();
+            final int endColumn = currentCoordinate.column();
+            final int endRow = currentCoordinate.row();
 
             final boolean straightMove = startColumn == endColumn && Math.abs(startRow - endRow) == 1;
             if (straightMove && !endFieldOccupied && king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)) {
@@ -212,10 +212,10 @@ public record Pawn(Color color)
             final ChessBoard chessBoard, final Set<Operations> setOfOperations, final Field startField, final Field endField
     ) {
         final Color pawnColor = startField.pieceOptional().orElseThrow().color();
-        final int startColumn = startField.getCoordinate().columnToInt();
-        final int endColumn = endField.getCoordinate().columnToInt();
-        final int startRow = startField.getCoordinate().getRow();
-        final int endRow = endField.getCoordinate().getRow();
+        final int startColumn = startField.getCoordinate().column();
+        final int endColumn = endField.getCoordinate().column();
+        final int startRow = startField.getCoordinate().row();
+        final int endRow = endField.getCoordinate().row();
 
         final boolean isRightPawnMovingWay = (pawnColor.equals(Color.WHITE) && startRow < endRow) || (pawnColor.equals(Color.BLACK) && startRow > endRow);
         if (!isRightPawnMovingWay) {
@@ -322,17 +322,17 @@ public record Pawn(Color color)
         if (enPassaunt.isEmpty()) {
             return false;
         }
-        if (enPassaunt.get().columnToInt() != endColumn) {
+        if (enPassaunt.get().column() != endColumn) {
             return false;
         }
-        return enPassaunt.get().getRow() == endRow;
+        return enPassaunt.get().row() == endRow;
     }
 
     private boolean isPassage(final Coordinate coordinate, final Coordinate currentCoordinate, final Color color) {
-        final int startColumn = coordinate.columnToInt();
-        final int startRow = coordinate.getRow();
-        final int endColumn = currentCoordinate.columnToInt();
-        final int endRow = currentCoordinate.getRow();
+        final int startColumn = coordinate.column();
+        final int startRow = coordinate.row();
+        final int endColumn = currentCoordinate.column();
+        final int endRow = currentCoordinate.row();
 
         if (startColumn != endColumn) {
             return false;
@@ -369,9 +369,9 @@ public record Pawn(Color color)
         final Coordinate coordOfPassagePawn = previousPassageMove.getSecond();
 
         if (color.equals(WHITE)) {
-            return coordOfPassagePawn.columnToInt() == endCoord.columnToInt() && endCoord.getRow() - coordOfPassagePawn.getRow() == 1;
+            return coordOfPassagePawn.column() == endCoord.column() && endCoord.row() - coordOfPassagePawn.row() == 1;
         } else {
-            return coordOfPassagePawn.columnToInt() == endCoord.columnToInt() && endCoord.getRow() - coordOfPassagePawn.getRow() == -1;
+            return coordOfPassagePawn.column() == endCoord.column() && endCoord.row() - coordOfPassagePawn.row() == -1;
         }
     }
 }
