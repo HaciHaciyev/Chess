@@ -6,7 +6,6 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.Direction;
 import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -396,10 +395,8 @@ public record ChessBoardNavigator(ChessBoard board) {
 
         for (int[] direction : directions) {
             var possibleCoordinate = Coordinate.of(row + direction[0], column + direction[1]);
-
-            if (possibleCoordinate.status()) {
-                Coordinate coordinate = possibleCoordinate.orElseThrow();
-                ChessBoard.Field field = board.field(coordinate);
+            if (possibleCoordinate != null) {
+                ChessBoard.Field field = board.field(possibleCoordinate);
                 list.add(field);
             }
         }
@@ -456,7 +453,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         Objects.requireNonNull(pivot);
         Objects.requireNonNull(color);
 
-        final List<StatusPair<Coordinate>> possibleCoordinates = new ArrayList<>(2);
+        final List<Coordinate> possibleCoordinates = new ArrayList<>(2);
 
         if (Color.WHITE.equals(color)) {
             possibleCoordinates.add(Coordinate.of(pivot.getRow() + 1, pivot.columnToInt() - 1));
@@ -468,9 +465,8 @@ public record ChessBoardNavigator(ChessBoard board) {
 
         List<ChessBoard.Field> fields = new ArrayList<>();
         for (var possibleCoordinate : possibleCoordinates) {
-            if (possibleCoordinate.status()) {
-                Coordinate coordinate = possibleCoordinate.orElseThrow();
-                ChessBoard.Field field = board.field(coordinate);
+            if (possibleCoordinate != null) {
+                ChessBoard.Field field = board.field(possibleCoordinate);
                 fields.add(field);
             }
         }
@@ -508,8 +504,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         Objects.requireNonNull(pivot);
         Objects.requireNonNull(colorOfRequiredPawns);
 
-        final List<StatusPair<Coordinate>> possibleCoordinates = new ArrayList<>(2);
-
+        final List<Coordinate> possibleCoordinates = new ArrayList<>(2);
         if (Color.WHITE.equals(colorOfRequiredPawns)) {
             possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() - 1));
             possibleCoordinates.add(Coordinate.of(pivot.getRow() - 1, pivot.columnToInt() + 1));
@@ -520,21 +515,13 @@ public record ChessBoardNavigator(ChessBoard board) {
 
         List<ChessBoard.Field> fields = new ArrayList<>();
         for (var possibleCoordinate : possibleCoordinates) {
-            if (!possibleCoordinate.status()) {
-                continue;
-            }
+            if (possibleCoordinate == null) continue;
 
-            Coordinate coordinate = possibleCoordinate.orElseThrow();
-            var field = board.field(coordinate);
-
-            if (field.isEmpty()) {
-                continue;
-            }
+            var field = board.field(possibleCoordinate);
+            if (field.isEmpty()) continue;
 
             Piece piece = field.pieceOptional().orElseThrow();
-            if (piece instanceof Pawn && piece.color().equals(colorOfRequiredPawns)) {
-                fields.add(field);
-            }
+            if (piece instanceof Pawn && piece.color().equals(colorOfRequiredPawns)) fields.add(field);
         }
 
         return fields;
@@ -589,13 +576,9 @@ public record ChessBoardNavigator(ChessBoard board) {
         for (int[] move : moves) {
             var possibleCoordinate = Coordinate.of(row + move[0], col + move[1]);
 
-            if (possibleCoordinate.status()) {
-                Coordinate coordinate = possibleCoordinate.orElseThrow();
-                ChessBoard.Field field = board.field(coordinate);
-
-                if (predicate.test(field)) {
-                    fields.add(field);
-                }
+            if (possibleCoordinate != null) {
+                ChessBoard.Field field = board.field(possibleCoordinate);
+                if (predicate.test(field)) fields.add(field);
             }
         }
 
@@ -621,7 +604,6 @@ public record ChessBoardNavigator(ChessBoard board) {
      * or ensuring the king and rook have not moved before). It simply identifies the fields that
      * would be involved in the move.</p>
      *
-     * @param color
      * @return A list of {@link ChessBoard.Field} objects representing all fields involved in the castling move, including the king's path.
      * @throws NullPointerException  if any of {@code chessBoard}, {@code presentKing}, or {@code futureKingPosition} is {@code null}.
      * @throws IllegalStateException if an invalid coordinate is encountered during calculation.
@@ -678,10 +660,8 @@ public record ChessBoardNavigator(ChessBoard board) {
         int direction = piece.color().equals(Color.WHITE) ? 1 : -1;
         final var possibleForwardCoordinate = Coordinate.of(coordinate.getRow() + direction, coordinate.columnToInt());
 
-        if (possibleForwardCoordinate.status()) {
-            Coordinate forward = possibleForwardCoordinate.orElseThrow();
-            ChessBoard.Field forwardField = board.field(forward);
-
+        if (possibleForwardCoordinate != null) {
+            ChessBoard.Field forwardField = board.field(possibleForwardCoordinate);
             return Optional.of(forwardField);
         }
 
@@ -916,12 +896,12 @@ public record ChessBoardNavigator(ChessBoard board) {
 
         Coordinate current = start;
         while (true) {
-            StatusPair<Coordinate> next = direction.apply(current);
-            if (!next.status()) {
+            Coordinate next = direction.apply(current);
+            if (next == null) {
                 break;
             }
 
-            current = next.orElseThrow();
+            current = next;
             if (current.equals(end) && inclusive) {
                 fields.add(board.field(current));
                 break;
@@ -1043,8 +1023,7 @@ public record ChessBoardNavigator(ChessBoard board) {
             final var topTop = Coordinate.of(row + 2, column);
 
             return Stream.of(top, topLeft, topRight, topTop)
-                    .filter(StatusPair::status)
-                    .map(StatusPair::orElseThrow)
+                    .filter(Objects::nonNull)
                     .toList();
         }
 
@@ -1054,8 +1033,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         final var bottomBottom = Coordinate.of(row - 2, column);
 
         return Stream.of(bottom, bottomLeft, bottomRight, bottomBottom)
-                .filter(StatusPair::status)
-                .map(StatusPair::orElseThrow)
+                .filter(Objects::nonNull)
                 .toList();
     }
 
@@ -1110,7 +1088,7 @@ public record ChessBoardNavigator(ChessBoard board) {
 
                 @Override
                 public boolean hasNext() {
-                    return direction.apply(current).status();
+                    return direction.apply(current) != null;
                 }
 
                 @Override
@@ -1118,7 +1096,7 @@ public record ChessBoardNavigator(ChessBoard board) {
                     if (!hasNext()) {
                         throw new NoSuchElementException();
                     }
-                    var result = direction.apply(current).orElseThrow();
+                    var result = direction.apply(current);
                     current = result;
                     return result;
                 }

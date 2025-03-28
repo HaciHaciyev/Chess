@@ -1,7 +1,5 @@
 package core.project.chess.domain.chess.enumerations;
 
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
-
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -56,7 +54,7 @@ public enum Direction {
                 .orElseThrow(() -> new IllegalArgumentException("No matching direction"));
     }
 
-    public StatusPair<Coordinate> apply(Coordinate coordinate) {
+    public Coordinate apply(Coordinate coordinate) {
         return Coordinate.of(coordinate.getRow() + rowDelta, coordinate.columnToInt() + colDelta);
     }
 }

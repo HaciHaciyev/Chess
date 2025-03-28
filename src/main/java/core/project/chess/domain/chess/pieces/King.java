@@ -41,7 +41,9 @@ public record King(Color color)
             throw new IllegalStateException("Invalid method usage, check documentation.");
         }
 
-        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().orElseThrow().color().equals(kingColor);
+        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() &&
+                endField.pieceOptional().orElseThrow().color().equals(kingColor);
+
         if (endFieldOccupiedBySameColorPiece) {
             return StatusPair.ofFalse();
         }
@@ -650,17 +652,23 @@ public record King(Color color)
             final boolean isLastMoveWasPassage = sameColumn && Math.abs(startOfLastMove.getRow() - endOfLastMove.getRow()) == 2;
             if (isLastMoveWasPassage) {
 
-                final StatusPair<Coordinate> intermediateCoordinateOnPassage;
+                final Coordinate intermediateCoordinateOnPassage;
                 if (kingColor.equals(WHITE)) {
-                    intermediateCoordinateOnPassage = Coordinate.of(enemyField.getCoordinate().getRow() + 1, enemyField.getCoordinate().columnToInt());
+                    intermediateCoordinateOnPassage = Coordinate
+                            .of(enemyField.getCoordinate().getRow() + 1, enemyField.getCoordinate().columnToInt());
                 } else {
-                    intermediateCoordinateOnPassage = Coordinate.of(enemyField.getCoordinate().getRow() - 1, enemyField.getCoordinate().columnToInt());
+                    intermediateCoordinateOnPassage = Coordinate
+                            .of(enemyField.getCoordinate().getRow() - 1, enemyField.getCoordinate().columnToInt());
                 }
 
-                final List<Field> surroundedPawns = boardNavigator.pawnsThreateningCoordinate(intermediateCoordinateOnPassage.orElseThrow(), kingColor);
+                final List<Field> surroundedPawns = boardNavigator.pawnsThreateningCoordinate(intermediateCoordinateOnPassage, kingColor);
                 for (final Field possiblePawn : surroundedPawns) {
 
-                    final boolean canCaptureOnPassage = safeForKing(boardNavigator.board(), kingColor, possiblePawn.getCoordinate(), enemyField.getCoordinate());
+                    final boolean canCaptureOnPassage = safeForKing(boardNavigator.board(),
+                            kingColor,
+                            possiblePawn.getCoordinate(),
+                            enemyField.getCoordinate());
+
                     if (canCaptureOnPassage) {
                         return true;
                     }
@@ -738,62 +746,56 @@ public record King(Color color)
         for (final Field field : path) {
             final Coordinate currentCoordinate = field.getCoordinate();
 
-            final StatusPair<Coordinate> potentialPawnThatCanBlockAttackBySimpleMove;
+            final Coordinate potentialPawnThatCanBlockAttackBySimpleMove;
             if (WHITE.equals(kingColor)) {
                 potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(currentCoordinate.getRow() - 1, currentCoordinate.columnToInt());
             } else {
                 potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(currentCoordinate.getRow() + 1, currentCoordinate.columnToInt());
             }
 
-            if (potentialPawnThatCanBlockAttackBySimpleMove.status()) {
-                final Coordinate pawnCoordinate = potentialPawnThatCanBlockAttackBySimpleMove.orElseThrow();
-                final Field possiblePawn = boardNavigator.board().field(pawnCoordinate);
+            if (potentialPawnThatCanBlockAttackBySimpleMove != null) {
+                final Field possiblePawn = boardNavigator.board().field(potentialPawnThatCanBlockAttackBySimpleMove);
 
                 if (possiblePawn.isPresent()) {
                     final boolean isPawn = possiblePawn.pieceOptional().orElseThrow() instanceof Pawn;
 
                     final boolean isFriendly = possiblePawn.pieceOptional().orElseThrow().color().equals(kingColor);
 
-                    final boolean pawnCanBlock = isPawn && isFriendly && safeForKing(boardNavigator.board(), kingColor, pawnCoordinate, currentCoordinate);
+                    final boolean pawnCanBlock = isPawn && isFriendly &&
+                            safeForKing(boardNavigator.board(), kingColor, potentialPawnThatCanBlockAttackBySimpleMove, currentCoordinate);
                     if (pawnCanBlock) {
                         return true;
                     }
-
                 }
             }
 
             final boolean potentiallyCanBeBlockedByPawnPassage = currentCoordinate.getRow() == 5 && kingColor.equals(BLACK)
                     || currentCoordinate.getRow() == 4 && kingColor.equals(WHITE);
-            if (potentiallyCanBeBlockedByPawnPassage) {
 
+            if (potentiallyCanBeBlockedByPawnPassage) {
                 final Coordinate potentialPawnCoordinate;
                 final Coordinate secondPassageCoordinate;
 
                 if (WHITE.equals(kingColor)) {
-
-                    potentialPawnCoordinate = Coordinate.of(2, currentCoordinate.columnToInt()).orElseThrow();
-                    secondPassageCoordinate = Coordinate.of(5, currentCoordinate.columnToInt()).orElseThrow();
-
+                    potentialPawnCoordinate = Coordinate.of(2, currentCoordinate.columnToInt());
+                    secondPassageCoordinate = Coordinate.of(5, currentCoordinate.columnToInt());
                 } else {
-
-                    potentialPawnCoordinate = Coordinate.of(7, currentCoordinate.columnToInt()).orElseThrow();
-                    secondPassageCoordinate = Coordinate.of(4, currentCoordinate.columnToInt()).orElseThrow();
-
+                    potentialPawnCoordinate = Coordinate.of(7, currentCoordinate.columnToInt());
+                    secondPassageCoordinate = Coordinate.of(4, currentCoordinate.columnToInt());
                 }
 
                 final Field field2 = boardNavigator.board().field(potentialPawnCoordinate);
 
-                final boolean isFriendlyPawnExists =
-                        field2.isPresent() && field2.pieceOptional().orElseThrow() instanceof Pawn pawn && pawn.color().equals(kingColor);
+                final boolean isFriendlyPawnExists = field2.isPresent() &&
+                        field2.pieceOptional().orElseThrow() instanceof Pawn (Color pawnColor) && pawnColor.equals(kingColor);
 
                 final boolean isPathClear = clearPath(boardNavigator.board(), potentialPawnCoordinate, secondPassageCoordinate);
 
-                final boolean canBlockByPassage =
-                        isFriendlyPawnExists && isPathClear && safeForKing(boardNavigator.board(), kingColor, potentialPawnCoordinate, currentCoordinate);
+                final boolean canBlockByPassage = isFriendlyPawnExists &&
+                        isPathClear &&
+                        safeForKing(boardNavigator.board(), kingColor, potentialPawnCoordinate, currentCoordinate);
 
-                if (canBlockByPassage) {
-                    return true;
-                }
+                if (canBlockByPassage) return true;
             }
 
             final List<Field> knights = boardNavigator.knightAttackPositions(currentCoordinate, Field::isPresent);
@@ -922,7 +924,8 @@ public record King(Color color)
             }
         }
 
-        final List<Field> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), kingCoordinate);
+        final List<Field> horizontalVerticalFields = boardNavigator
+                .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), kingCoordinate);
         for (Field horizontalVerticalField : horizontalVerticalFields) {
             final Piece piece = horizontalVerticalField.pieceOptional().orElseThrow();
 

@@ -163,7 +163,7 @@ public record Pawn(Color color)
             if (isPassage && !endFieldOccupied && king.safeForKing(chessBoard, kingColor, ourField.getCoordinate(), currentCoordinate)) {
 
                 final int passageIntermediateRow = startRow < endRow ? startRow + 1 : startRow - 1;
-                final Coordinate passageIntermediateCoord = Coordinate.of(passageIntermediateRow, startColumn).orElseThrow();
+                final Coordinate passageIntermediateCoord = Coordinate.of(passageIntermediateRow, startColumn);
 
                 final boolean isPassageIntermediateFieldNotOccupied = chessBoard.field(passageIntermediateCoord).isEmpty();
                 if (isPassageIntermediateFieldNotOccupied) {
@@ -275,7 +275,7 @@ public record Pawn(Color color)
             intermediateRow = endRow + 1;
         }
 
-        final Coordinate intermediateCoordinate = Coordinate.of(intermediateRow, column).orElseThrow();
+        final Coordinate intermediateCoordinate = Coordinate.of(intermediateRow, column);
         Field interMediateField = chessBoard.field(intermediateCoordinate);
         if (!interMediateField.isEmpty()) {
             return StatusPair.ofFalse();

@@ -51,12 +51,7 @@ public sealed interface Piece
         int column = startColumn + columnDirection;
 
         do {
-            final Coordinate coordinate = Coordinate
-                    .of(row, column)
-                    .orElseThrow(
-                            () -> new IllegalStateException("Can`t create coordinate. The method needs repair.")
-                    );
-
+            final Coordinate coordinate = Coordinate.of(row, column);
             final boolean fieldEmpty = chessBoard.field(coordinate).isEmpty();
             if (!fieldEmpty) {
                 return false;

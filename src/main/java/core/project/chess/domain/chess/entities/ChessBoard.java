@@ -1218,7 +1218,7 @@ public class ChessBoard {
 
         if (piece instanceof Pawn && from.columnToInt() == to.columnToInt() && Math.abs(from.getRow() - to.getRow()) == 2) {
             int enPassauntRow = to.getRow() == 4 ? 3 : 6;
-            this.enPassaunt = Coordinate.of(enPassauntRow, to.columnToInt()).orElseThrow();
+            this.enPassaunt = Coordinate.of(enPassauntRow, to.columnToInt());
         }
 
         /** Recording the move made in algebraic notation and Fen.*/
@@ -1278,7 +1278,7 @@ public class ChessBoard {
         final boolean captureOnPassage = piece instanceof Pawn && tempEnPassaunt != null && endField.coordinate.equals(tempEnPassaunt);
         if (captureOnPassage) {
             int row = endField.coordinate.getRow() == 6 ? 5 : 4;
-            Field field = fieldMap.get(Coordinate.of(row, endField.coordinate.columnToInt()).orElseThrow());
+            Field field = fieldMap.get(Coordinate.of(row, endField.coordinate.columnToInt()));
 
             final boolean isCapturedPieceWhite = field.piece.color().equals(WHITE);
             if (isCapturedPieceWhite) {
@@ -1652,19 +1652,18 @@ public class ChessBoard {
             return false;
         }
 
-        final StatusPair<Coordinate> enPassaun = enPassaunt(penultimateMove);
-        if (!enPassaun.status()) {
+        final Coordinate enPassaun = enPassaunt(penultimateMove);
+        if (enPassaun == null) {
             return false;
         }
 
-        this.enPassaunt = enPassaun.orElseThrow();
-
-        if (!enPassaun.orElseThrow().equals(endedField.coordinate)) {
+        this.enPassaunt = enPassaun;
+        if (!enPassaun.equals(endedField.coordinate)) {
             return false;
         }
 
         int requiredRow = enPassaunt.getRow() == 6 ? 5 : 4;
-        Coordinate required = Coordinate.of(requiredRow, enPassaunt.columnToInt()).orElseThrow();
+        Coordinate required = Coordinate.of(requiredRow, enPassaunt.columnToInt());
         if (piece.color().equals(WHITE)) {
             Piece capturedPawn = capturedBlackPieces.removeLast();
             fieldMap.get(required).addFigure(capturedPawn);
@@ -1678,7 +1677,7 @@ public class ChessBoard {
         return true;
     }
 
-    private StatusPair<Coordinate> enPassaunt(AlgebraicNotation penultimateMove) {
+    private Coordinate enPassaunt(AlgebraicNotation penultimateMove) {
         if (penultimateMove == null && initType == InitType.FEN) {
             String firstPosition = fenRepresentationsOfBoard.getFirst();
             final String[] split = firstPosition.split(" ", 2);
@@ -1686,16 +1685,16 @@ public class ChessBoard {
 
             final Matcher matcher = passageCoordinatePattern.matcher(tail);
             if (matcher.find()) {
-                return StatusPair.ofTrue(Coordinate.valueOf(matcher.group()));
+                return Coordinate.valueOf(matcher.group());
             }
-            return StatusPair.ofFalse();
+            return null;
         }
 
-        if (penultimateMove == null) return StatusPair.ofFalse();
+        if (penultimateMove == null) return null;
 
         AlgebraicNotation.PieceTYPE pieceTYPE = penultimateMove.pieceTYPE();
         if (!pieceTYPE.equals(AlgebraicNotation.PieceTYPE.P)) {
-            return StatusPair.ofFalse();
+            return null;
         }
 
         Pair<Coordinate, Coordinate> coordinates = penultimateMove.coordinates();
@@ -1703,7 +1702,7 @@ public class ChessBoard {
         Coordinate to = coordinates.getSecond();
 
         if (from.columnToInt() != to.columnToInt()) {
-            return StatusPair.ofFalse();
+            return null;
         }
 
         if (from.getRow() == 2 && to.getRow() == 4) {
@@ -1713,7 +1712,7 @@ public class ChessBoard {
             return Coordinate.of(6, to.columnToInt());
         }
 
-        return StatusPair.ofFalse();
+        return null;
     }
 
     private Coordinate getEnPassaunt(FromFEN inCaseOfInitFromFEN) {
@@ -1724,7 +1723,7 @@ public class ChessBoard {
 
         Coordinate endCoordinate = lastMovement.get().getSecond();
         int enPassauntRow = endCoordinate.getRow() == 4 ? 3 : 6;
-        return Coordinate.of(enPassauntRow, endCoordinate.columnToInt()).orElseThrow();
+        return Coordinate.of(enPassauntRow, endCoordinate.columnToInt());
     }
 
     /**

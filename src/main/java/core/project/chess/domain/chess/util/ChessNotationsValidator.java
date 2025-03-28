@@ -358,7 +358,7 @@ public class ChessNotationsValidator {
                 return StatusPair.ofFalse();
             }
 
-            final Coordinate coordinate = Coordinate.of(row, column).orElseThrow();
+            final Coordinate coordinate = Coordinate.of(row, column);
             final Color fieldColor = getColorOfField(coordinate);
             switch (c) {
                 case 'K' -> {
@@ -616,10 +616,10 @@ public class ChessNotationsValidator {
             final Coordinate captureCoord = Coordinate.valueOf(matcher.group());
 
             if (captureCoord.getRow() == 3) {
-                return Optional.of(Coordinate.of(4, captureCoord.columnToInt()).orElseThrow());
+                return Optional.ofNullable(Coordinate.of(4, captureCoord.columnToInt()));
             }
 
-            return Optional.of(Coordinate.of(5, captureCoord.columnToInt()).orElseThrow());
+            return Optional.ofNullable(Coordinate.of(5, captureCoord.columnToInt()));
         }
 
         return Optional.empty();
@@ -636,7 +636,7 @@ public class ChessNotationsValidator {
             startRow += 2;
         }
 
-        return Pair.of(Coordinate.of(startRow, column).orElseThrow(), endCoordinate);
+        return Pair.of(Coordinate.of(startRow, column), endCoordinate);
     }
 
     public static List<AlgebraicNotation> algebraicNotationsOf(String pgn) {

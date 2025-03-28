@@ -1,6 +1,6 @@
 package core.project.chess.domain.chess.enumerations;
 
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import jakarta.annotation.Nullable;
 
 public enum Coordinate {
 
@@ -16,6 +16,16 @@ public enum Coordinate {
     private final int row;
 
     private final char column;
+
+    private static final Coordinate[][] COORDINATE_CACHE = new Coordinate[8][8];
+
+    static {
+        for (Coordinate c : Coordinate.values()) {
+            int row = c.getRow() - 1;
+            int col = c.columnToInt() - 1;
+            COORDINATE_CACHE[row][col] = c;
+        }
+    }
 
     Coordinate(char column, int row) {
         this.column = column;
@@ -35,14 +45,15 @@ public enum Coordinate {
      *
      * @param row    the row number (1-8)
      * @param column the column number (1-8)
-     * @return a StatusPair containing the Coordinate object if the row and column are valid, or a StatusPair with a false status if the row or column is out of bounds
+     * @return a Coordinate containing the Coordinate object if the row and column are valid,
+     * or a null with a false status if the row or column is out of bounds
      */
-    public static StatusPair<Coordinate> of(int row, int column) {
+    public static @Nullable Coordinate of(int row, int column) {
         if (row > 8 || column > 8 || row < 1 || column < 1) {
-            return StatusPair.ofFalse();
+            return null;
         }
 
-        return StatusPair.ofTrue(Coordinate.valueOf(String.valueOf(intToColumn(column)) + row));
+        return COORDINATE_CACHE[row - 1][column - 1];
     }
 
     /**
