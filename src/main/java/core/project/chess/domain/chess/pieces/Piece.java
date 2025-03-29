@@ -3,7 +3,7 @@ package core.project.chess.domain.chess.pieces;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import jakarta.annotation.Nullable;
 
 import java.util.Set;
 
@@ -16,10 +16,10 @@ public sealed interface Piece
 
     /**
      * Fully validates the move, and also returns
-     * a list of operations that the given operation can perform,
-     * in the order in which they should be performed.
+     * a list of operations that the given operation need to perform.
+     * Or returns null if move is invalid.
      */
-    StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
+    @Nullable Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
 
     /**
      * Checks if the path between the given 'start' and 'end' coordinates on the chess board is clear.
@@ -52,8 +52,8 @@ public sealed interface Piece
 
         do {
             final Coordinate coordinate = Coordinate.of(row, column);
-            final boolean fieldEmpty = chessBoard.field(coordinate).isEmpty();
-            if (!fieldEmpty) {
+            final boolean fieldOccupied = chessBoard.piece(coordinate) != null;
+            if (fieldOccupied) {
                 return false;
             }
 

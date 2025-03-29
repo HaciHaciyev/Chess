@@ -3,63 +3,40 @@ package core.project.chess.domain.chess.pieces;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static core.project.chess.domain.chess.entities.ChessBoard.Field;
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 
-public record Rook(Color color)
-        implements Piece {
+public record Rook(Color color) implements Piece {
 
     @Override
-    public StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+    public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
         if (from.equals(to)) {
-            return StatusPair.ofFalse();
+            return null;
         }
 
-        Field startField = chessBoard.field(from);
-        Field endField = chessBoard.field(to);
+        Piece startField = chessBoard.piece(from);
+        Piece endField = chessBoard.piece(to);
 
-        final boolean pieceNotExists = startField.pieceOptional().isEmpty();
-        if (pieceNotExists) {
-            return StatusPair.ofFalse();
-        }
+        if (startField == null) return null;
+        final boolean endFieldOccupiedBySameColorPiece = endField != null && endField.color().equals(color);
+        if (endFieldOccupiedBySameColorPiece) return null;
+        if (!rookMove(chessBoard, from, to)) return null;
+        if (!chessBoard.safeForKing(from, to)) return null;
 
-        if (!(startField.pieceOptional().get() instanceof Rook (var rookColor))) {
-            throw new IllegalStateException("Invalid method usage, check documentation.");
-        }
+        Set<Operations> setOfOperations = new HashSet<>();
 
-        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(rookColor);
-        if (endFieldOccupiedBySameColorPiece) {
-            return StatusPair.ofFalse();
-        }
+        final Color opponentPieceColor = color == Color.WHITE ? Color.BLACK : Color.WHITE;
+        final boolean opponentPieceInEndField = endField != null && endField.color().equals(opponentPieceColor);
+        if (opponentPieceInEndField) setOfOperations.add(Operations.CAPTURE);
 
-        var setOfOperations = new LinkedHashSet<Operations>();
-
-        final boolean isValidMove = validate(chessBoard, startField, endField);
-        if (!isValidMove) {
-            return StatusPair.ofFalse();
-        }
-
-        final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
-        if (!isSafeForTheKing) {
-            return StatusPair.ofFalse();
-        }
-
-        final Color opponentPieceColor = rookColor == Color.WHITE ? Color.BLACK : Color.WHITE;
-        final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
-        if (opponentPieceInEndField) {
-            setOfOperations.add(Operations.CAPTURE);
-        }
-
-        return StatusPair.ofTrue(setOfOperations);
+        return setOfOperations;
     }
 
     /**
@@ -88,21 +65,17 @@ public record Rook(Color color)
      *
      * @throws IllegalArgumentException if any of the preconditions are not met (e.g., if <code>startField</code> or <code>endField</code> is <code>null</code>).
      */
-    boolean validate(final ChessBoard chessBoard, final Field startField, final Field endField) {
-        final int startColumn = startField.getCoordinate().column();
-        final int endColumn = endField.getCoordinate().column();
-        final int startRow = startField.getCoordinate().row();
-        final int endRow = endField.getCoordinate().row();
+    boolean rookMove(final ChessBoard chessBoard, final Coordinate startField, final Coordinate endField) {
+        final int startColumn = startField.column();
+        final int endColumn = endField.column();
+        final int startRow = startField.row();
+        final int endRow = endField.row();
 
         final boolean verticalMove = startColumn == endColumn && startRow != endRow;
-        if (verticalMove) {
-            return clearPath(chessBoard, startField.getCoordinate(), endField.getCoordinate());
-        }
+        if (verticalMove) return clearPath(chessBoard, startField, endField);
 
         final boolean horizontalMove = startColumn != endColumn && startRow == endRow;
-        if (horizontalMove) {
-            return clearPath(chessBoard, startField.getCoordinate(), endField.getCoordinate());
-        }
+        if (horizontalMove) return clearPath(chessBoard, startField, endField);
 
         return false;
     }

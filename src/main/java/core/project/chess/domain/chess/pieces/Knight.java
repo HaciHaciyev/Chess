@@ -3,63 +3,39 @@ package core.project.chess.domain.chess.pieces;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static core.project.chess.domain.chess.entities.ChessBoard.Field;
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 
-public record Knight(Color color)
-        implements Piece {
+public record Knight(Color color) implements Piece {
 
     @Override
-    public StatusPair<Set<Operations>> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
+    public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Objects.requireNonNull(chessBoard);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
-        if (from.equals(to)) {
-            return StatusPair.ofFalse();
-        }
 
-        Field startField = chessBoard.field(from);
-        Field endField = chessBoard.field(to);
+        if (from.equals(to)) return null;
 
-        final boolean pieceNotExists = startField.pieceOptional().isEmpty();
-        if (pieceNotExists) {
-            return StatusPair.ofFalse();
-        }
+        Piece startField = chessBoard.piece(from);
+        Piece endField = chessBoard.piece(to);
 
-        if (!(startField.pieceOptional().get() instanceof Knight (var knightColor))) {
-            throw new IllegalStateException("Invalid method usage, check documentation.");
-        }
+        if (startField == null) return null;
+        final boolean endFieldOccupiedBySameColorPiece = endField != null && endField.color().equals(color);
+        if (endFieldOccupiedBySameColorPiece) return null;
+        if (!knightMove(from, to)) return null;
+        if (!chessBoard.safeForKing(from, to)) return null;
 
-        final boolean endFieldOccupiedBySameColorPiece = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(knightColor);
-        if (endFieldOccupiedBySameColorPiece) {
-            return StatusPair.ofFalse();
-        }
+        Set<Operations> setOfOperations = new HashSet<>();
 
-        final boolean knightMove = knightMove(startField.getCoordinate(), endField.getCoordinate());
-        if (!knightMove) {
-            return StatusPair.ofFalse();
-        }
+        final Color opponentPieceColor = color == Color.WHITE ? Color.BLACK : Color.WHITE;
+        final boolean opponentPieceInEndField = endField != null && endField.color().equals(opponentPieceColor);
+        if (opponentPieceInEndField) setOfOperations.add(Operations.CAPTURE);
 
-        final boolean isSafeForTheKing = chessBoard.safeForKing(from, to);
-        if (!isSafeForTheKing) {
-            return StatusPair.ofFalse();
-        }
-
-        var setOfOperations = new LinkedHashSet<Operations>();
-
-        final Color opponentPieceColor = knightColor == Color.WHITE ? Color.BLACK : Color.WHITE;
-        final boolean opponentPieceInEndField = endField.pieceOptional().isPresent() && endField.pieceOptional().get().color().equals(opponentPieceColor);
-        if (opponentPieceInEndField) {
-            setOfOperations.add(Operations.CAPTURE);
-        }
-
-        return StatusPair.ofTrue(setOfOperations);
+        return setOfOperations;
     }
 
     /**

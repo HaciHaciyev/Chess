@@ -275,7 +275,7 @@ public class AlgebraicNotation {
      *         - {@link ChessBoard.Operations#STALEMATE} if the opponent's king is in stalemate
      *         - {@link ChessBoard.Operations#CHECKMATE} if the opponent's king is in checkmate
      *         - {@link ChessBoard.Operations#CHECK} if the opponent's king is in check
-     *         - {@link ChessBoard.Operations#EMPTY} if none of the above conditions are met
+     *         - {@link ChessBoard.Operations#CONTINUE} if none of the above conditions are met
      * @throws IllegalArgumentException if the set of operations contains more than one operation involving the opponent's king or stalemate
      */
     public static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
@@ -306,7 +306,7 @@ public class AlgebraicNotation {
             return ChessBoard.Operations.CHECK;
         }
 
-        return ChessBoard.Operations.EMPTY;
+        return ChessBoard.Operations.CONTINUE;
     }
 
     /**
