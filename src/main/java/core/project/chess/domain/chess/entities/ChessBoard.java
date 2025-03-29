@@ -1174,9 +1174,10 @@ public class ChessBoard {
 
         /** Check for Checkmate, Stalemate, Check after move executed...*/
         final King opponentKing = theKing(piece.color() == WHITE ? BLACK : WHITE);
-        operations.add(opponentKing.kingStatus(this));
+        Operations opponentKingStatus = opponentKing.kingStatus(this);
+        operations.add(opponentKingStatus);
 
-        final boolean isStalemate = countOfHalfMoves() + 1 >= 10 && opponentKing.stalemate(this);
+        final boolean isStalemate = countOfHalfMoves() + 1 >= 10 && opponentKingStatus == CONTINUE && opponentKing.stalemate(this);
         if (isStalemate) {
             operations.add(STALEMATE);
         }
@@ -1208,15 +1209,15 @@ public class ChessBoard {
         hashCodeOfBoard.put(currentPositionHash, hashCodeOfBoard.getOrDefault(currentPositionHash, 0) + 1);
 
         /** Retrieve message about game result.*/
-        final Operations opponentKingStatus = AlgebraicNotation.opponentKingStatus(operations);
+        final Operations opponentKingStatusRes = AlgebraicNotation.opponentKingStatus(operations);
 
-        if (opponentKingStatus.equals(STALEMATE)) {
+        if (opponentKingStatusRes.equals(STALEMATE)) {
             return GameResultMessage.Stalemate;
         }
-        if (opponentKingStatus.equals(CHECKMATE)) {
+        if (opponentKingStatusRes.equals(CHECKMATE)) {
             return GameResultMessage.Checkmate;
         }
-        if (opponentKingStatus.equals(CHECK)) {
+        if (opponentKingStatusRes.equals(CHECK)) {
             return GameResultMessage.Continue;
         }
 

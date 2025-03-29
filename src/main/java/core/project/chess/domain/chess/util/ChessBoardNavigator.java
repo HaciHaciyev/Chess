@@ -203,7 +203,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         List<Coordinate> list = new ArrayList<>();
         for (Direction direction : directions) {
             Coordinate optionalField = occupiedFieldInDirection(direction, pivot, occupiedPredicate);
-            if (optionalField != null) list.add(optionalField);
+            if (optionalField != null && board.piece(optionalField) != null) list.add(optionalField);
         }
         return list;
     }
@@ -214,7 +214,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         List<Coordinate> list = new ArrayList<>();
         for (Direction direction : directions) {
             Coordinate coordinate = occupiedFieldInDirection(direction, pivot, skipPredicate, stopPredicate, x -> true);
-            if (board.piece(coordinate) != null) list.add(coordinate);
+            if (coordinate != null && board.piece(coordinate) != null) list.add(coordinate);
         }
         return list;
     }
@@ -264,7 +264,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         return occupiedFieldInDirection(direction, pivot, coordinate -> false, coordinate -> false, predicate);
     }
 
-    public Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot,
+    private Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot,
                                                Predicate<Coordinate> skipPredicate,
                                                Predicate<Coordinate> stopPredicate,
                                                Predicate<Coordinate> occupiedPredicate) {
@@ -286,7 +286,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         return null;
     }
 
-    public List<Coordinate> fieldsInDirection(Direction direction, Coordinate pivot) {
+    private List<Coordinate> fieldsInDirection(Direction direction, Coordinate pivot) {
         List<Coordinate> listOfFields = new ArrayList<>();
 
         for (Coordinate coordinate : new CoordinateIterable(direction, pivot)) {

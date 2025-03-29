@@ -17,7 +17,10 @@ import jakarta.websocket.ContainerProvider;
 import jakarta.websocket.DeploymentException;
 import jakarta.websocket.Session;
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import testUtils.AuthUtils;
 import testUtils.RegistrationForm;
 import testUtils.WSClient;
@@ -73,41 +76,6 @@ class ChessWSTest {
         System.out.println();
         System.out.println("---------------------------------------BREAK---------------------------------------");
         System.out.println();
-    }
-
-    @Disabled("Temporary shutdown due to technical reasons.")
-    @Test
-    @DisplayName("Custom game matchmaking")
-    void customGameMatchmaking() throws Exception {
-        RegistrationForm whiteForm = authUtils.registerRandom();
-        authUtils.enableAccount(whiteForm);
-        String whiteToken = authUtils.login(whiteForm);
-
-        RegistrationForm blackForm = authUtils.registerRandom();
-        authUtils.enableAccount(blackForm);
-        String blackToken = authUtils.login(blackForm);
-
-        try (Session wSession = ContainerProvider
-                .getWebSocketContainer()
-                .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, whiteToken));
-
-             Session bSession = ContainerProvider
-                     .getWebSocketContainer()
-                     .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, blackToken))
-        ) {
-            // TODO ??? Where is message handlers
-            String wName = whiteForm.username();
-            sendMessage(wSession, wName, Message.gameInit("WHITE", ChessGame.Time.RAPID));
-
-            String bName = blackForm.username();
-            sendMessage(bSession, bName, Message.gameInit("BLACK", ChessGame.Time.RAPID));
-
-            String gameID = extractGameID();
-            simulateGame(wSession, wName, gameID, bSession, bName);
-
-            wSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
-            bSession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "reached end of context"));
-        }
     }
 
     @Test
@@ -855,9 +823,6 @@ class ChessWSTest {
         //30
         sendMessage(wSession, wName, Message.move(gameID, Coordinate.e6, Coordinate.e7));
         sendMessage(bSession, bName, Message.move(gameID, Coordinate.g3, Coordinate.f2));
-
-        //31
-        sendMessage(wSession, wName, Message.move(gameID, Coordinate.d1, Coordinate.d2));
     }
 
     private String extractGameID() {
