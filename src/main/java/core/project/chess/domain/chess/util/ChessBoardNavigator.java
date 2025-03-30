@@ -269,19 +269,12 @@ public record ChessBoardNavigator(ChessBoard board) {
                                                Predicate<Coordinate> stopPredicate,
                                                Predicate<Coordinate> occupiedPredicate) {
         for (Coordinate field : new CoordinateIterable(direction, pivot)) {
-            if (skipPredicate.test(field)) {
-                continue;
-            }
+            if (skipPredicate.test(field)) continue;
 
-            if (stopPredicate.test(field)) {
-                break;
-            }
+            if (stopPredicate.test(field)) break;
 
             Piece piece = board.piece(field);
-            if (piece != null && occupiedPredicate.test(field)) {
-                return field;
-            }
-
+            if (piece != null && occupiedPredicate.test(field)) return field;
         }
         return null;
     }

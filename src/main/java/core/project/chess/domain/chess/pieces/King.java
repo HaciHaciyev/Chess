@@ -465,7 +465,7 @@ public record King(Color color) implements Piece {
                 if (isOurKnight && safeForKing(boardNavigator.board(), knight, field)) return true;
             }
 
-            final List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), field);
+            List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), field);
             for (Coordinate diagonalField : diagonalFields) {
                 Piece piece = boardNavigator.board().piece(diagonalField);
 
@@ -536,6 +536,7 @@ public record King(Color color) implements Piece {
 
     private boolean isFieldDangerousOrBlockedForKing(ChessBoardNavigator boardNavigator, Coordinate pivot, Color kingColor) {
         ChessBoard board = boardNavigator.board();
+        Coordinate kingCoordinate = boardNavigator.kingCoordinate(kingColor);
         Piece pivotPiece = board.piece(pivot);
         Color oppositeColor = kingColor == WHITE ? BLACK : WHITE;
 
@@ -561,25 +562,30 @@ public record King(Color color) implements Piece {
         if (!kingOppositionNotExists) return true;
 
         List<Coordinate> diagonalFields = boardNavigator
-                .occupiedFieldsInDirections(
-                        Direction.diagonalDirections(),
+                .occupiedFieldsInDirections(Direction.diagonalDirections(),
                         pivot,
-                        coord -> {
-                            Piece piece = board.piece(coord);
-                            return piece.color() != kingColor && (piece instanceof Bishop || piece instanceof Queen);
-                        }
+                        coordinate -> coordinate == kingCoordinate,
+                        coordinate -> false
                 );
-        if (!diagonalFields.isEmpty()) return true;
 
-        List<Coordinate> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(
-                Direction.horizontalVerticalDirections(),
-                pivot,
-                coord -> {
-                    Piece piece = board.piece(coord);
-                    return piece.color() != kingColor && (piece instanceof Rook || piece instanceof Queen);
-                }
-        );
-        return !horizontalVerticalFields.isEmpty();
+        for (Coordinate coordinate : diagonalFields) {
+            Piece piece = board.piece(coordinate);
+            if (piece.color() != kingColor && (piece instanceof Bishop || piece instanceof Queen)) return true;
+        }
+
+        List<Coordinate> horizontalVerticalFields = boardNavigator
+                .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(),
+                        pivot,
+                        coordinate -> coordinate == kingCoordinate,
+                        coordinate -> false
+                );
+
+        for (Coordinate coordinate : horizontalVerticalFields) {
+            Piece piece = board.piece(coordinate);
+            if (piece.color() != kingColor && (piece instanceof Rook || piece instanceof Queen)) return true;
+        }
+
+        return false;
     }
 
     private List<Coordinate> enemiesFromAllDirections(ChessBoardNavigator boardNavigator,
