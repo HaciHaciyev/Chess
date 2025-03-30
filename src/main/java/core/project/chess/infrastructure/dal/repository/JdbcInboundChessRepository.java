@@ -32,22 +32,15 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             .build(),
             insert()
             .into("GamePlayers")
-            .columns("chess_game_id",
-                    "player_for_white_id",
-                    "player_for_black_id"
-            )
+            .columns("chess_game_id", "player_for_white_id", "player_for_black_id")
             .values(3)
             .build()
     );
 
     static final String SAVE_CHESS_GAME_HISTORY = insert()
             .into("ChessGameHistory")
-            .columns("id",
-                    "chess_game_id",
-                    "pgn_chess_representation",
-                    "fen_representations_of_board"
-            )
-            .values(4)
+            .columns("id", "chess_game_id", "pgn_chess_representation")
+            .values(3)
             .build();
 
     static final String UPDATE_FINISHED_CHESS_GAME = update("ChessGame")
@@ -118,10 +111,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
         .ifFailure(Throwable::printStackTrace);
 
-        final byte arrayIndex = 4;
-        final String arrayDefinition = "TEXT";
-        jdbc.writeArrayOf(SAVE_CHESS_GAME_HISTORY,
-            arrayDefinition, arrayIndex, chessGame.getChessBoard().arrayOfFEN(),
+        jdbc.write(SAVE_CHESS_GAME_HISTORY,
             chessGame.getChessBoard().ID().toString(),
             chessGame.getChessGameId().toString(),
             chessGame.getChessBoard().pgn()
