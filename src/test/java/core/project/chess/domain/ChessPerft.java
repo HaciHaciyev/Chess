@@ -16,6 +16,7 @@ import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -24,8 +25,9 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Disabled("Only for separate run.")
 class ChessPerft {
-    public static final int DEPTH = 5;
+    public static final int DEPTH = 6;
     private final Board board = new Board();
     private final ChessGame chessGame = chessGameSupplier().get();
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername();
