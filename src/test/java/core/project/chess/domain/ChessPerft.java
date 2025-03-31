@@ -166,7 +166,7 @@ class ChessPerft {
         }
 
         Log.errorf("Perft failed. On move: from - %s, to - %s, inCaseOfPromotion - %s", from, to, inCaseOfPromotion);
-        Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", Arrays.toString(chessGame.getChessBoard().arrayOfFEN()), chessGame.getChessBoard().pgn());
+        Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", chessGame.getChessBoard().toString(), chessGame.getChessBoard().pgn());
         System.out.println();
         board.undoMove();
         String[] fen = new String[2];

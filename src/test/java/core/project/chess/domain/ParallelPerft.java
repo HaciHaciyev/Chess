@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -557,7 +556,7 @@ class ParallelPerft {
                     Log.error(String.format(
                             "Perft verification failed. Move: %s, FEN: %s, PGN: %s",
                             move,
-                            Arrays.toString(game.getChessBoard().arrayOfFEN()),
+                            game.getChessBoard().toString(),
                             game.getChessBoard().pgn()));
 
                     // Detailed logging of discrepancies

@@ -2,11 +2,9 @@ package core.project.chess.domain.entities;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.events.SessionEvents;
-import core.project.chess.domain.chess.pieces.Queen;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.ChessMove;
 import core.project.chess.domain.user.entities.UserAccount;
@@ -1011,58 +1009,7 @@ public class ChessGameTest {
         chessGame.makeMovement(secondPlayerUsername, Coordinate.a8, Coordinate.b8, null);
     }
 
-    @Test
-    void revertPromotion() {
-        ChessGame game = chessGameSupplier().get();
-        ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
-
-        String whitePlayer = game.getPlayerForWhite().getUsername();
-        String blackPlayer = game.getPlayerForBlack().getUsername();
-
-        //1.
-        game.makeMovement(whitePlayer, e2, e4, null);
-        System.out.println(navigator.prettyToString());
-
-        game.makeMovement(blackPlayer, e7, e5, null);
-        System.out.println(navigator.prettyToString());
-
-        //2.
-        game.makeMovement(whitePlayer, f2, f4, null);
-        System.out.println(navigator.prettyToString());
-
-        game.makeMovement(blackPlayer, e5, f4, null);
-        System.out.println(navigator.prettyToString());
-
-        //3.
-        game.makeMovement(whitePlayer, g2, g3, null);
-        System.out.println(navigator.prettyToString());
-
-        game.makeMovement(blackPlayer, f4, g3, null);
-        System.out.println(navigator.prettyToString());
-
-        //4.
-        game.makeMovement(whitePlayer, g1, f3, null);
-        System.out.println(navigator.prettyToString());
-
-        game.makeMovement(blackPlayer, g3, h2, null);
-        System.out.println(navigator.prettyToString());
-
-        //5.
-        game.makeMovement(whitePlayer, f3, g1, null);
-        System.out.println(navigator.prettyToString());
-
-        game.makeMovement(blackPlayer, h2, g1, new Queen(Color.BLACK));
-        System.out.println(navigator.prettyToString());
-
-        game.returnMovement(whitePlayer);
-        game.returnMovement(blackPlayer);
-        System.out.println(navigator.prettyToString());
-
-        game.makeMovement(blackPlayer, d8, h4, new Queen(Color.BLACK));
-        System.out.println(navigator.prettyToString());
-    }
-
-    static Supplier<ChessGame> chessGameSupplier() {
+    public static Supplier<ChessGame> chessGameSupplier() {
         final ChessBoard chessBoard = ChessBoard.starndardChessBoard();
 
         return () -> ChessGame.of(
