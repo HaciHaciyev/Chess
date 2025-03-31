@@ -6,10 +6,7 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
@@ -172,7 +169,7 @@ public final class Pawn implements Piece {
         final boolean passage = (startRow == 7 && endRow == 5) || (startRow == 2 && endRow == 4);
         if (passage) return isPassageValid(chessBoard, column, startRow, endRow);
 
-        Set<Operations> setOfOperations = new HashSet<>();
+        Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
         final boolean validMoveDistance = Math.abs(startRow - endRow) == 1;
         final boolean fieldForPromotion = endRow == 1 || endRow == 8;
 
@@ -205,7 +202,7 @@ public final class Pawn implements Piece {
 
         if (endField == null) return null;
 
-        Set<Operations> setOfOperations = new HashSet<>();
+        Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
         if (endRow == 1 || endRow == 8) setOfOperations.add(Operations.PROMOTION);
 
         setOfOperations.add(Operations.CAPTURE);

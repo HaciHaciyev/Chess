@@ -57,7 +57,7 @@ public final class King implements Piece {
         if (!isValidKingMovementCoordinates(chessBoard, from, to)) return null;
         if (!chessBoard.safeForKing(from, to)) return null;
 
-        Set<Operations> setOfOperations = new HashSet<>();
+        Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
 
         final boolean opponentPieceInEndField = endField != null;
         if (opponentPieceInEndField) setOfOperations.add(Operations.CAPTURE);

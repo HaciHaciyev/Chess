@@ -4,7 +4,7 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -53,7 +53,7 @@ public final class Knight implements Piece {
         if (!knightMove(from, to)) return null;
         if (!chessBoard.safeForKing(from, to)) return null;
 
-        Set<Operations> setOfOperations = new HashSet<>();
+        Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
 
         final Color opponentPieceColor = color == Color.WHITE ? Color.BLACK : Color.WHITE;
         final boolean opponentPieceInEndField = endField != null && endField.color().equals(opponentPieceColor);
