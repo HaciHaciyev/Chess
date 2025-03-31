@@ -105,7 +105,7 @@ public class AlgebraicNotation {
     public static AlgebraicNotation of(final String algebraicNotation) {
         Objects.requireNonNull(algebraicNotation);
         if (algebraicNotation.isBlank()) {
-            throw new IllegalArgumentException("Algebraic notation can`t be black.");
+            throw new IllegalArgumentException("Algebraic notation can`t be blank.");
         }
 
         ChessNotationsValidator.validateAlgebraicNotation(algebraicNotation);
@@ -130,29 +130,14 @@ public class AlgebraicNotation {
     ) {
 
         final boolean castle = isCastling(piece, from, to);
-        if (castle) {
-            if (operationsSet.contains(ChessBoard.Operations.CAPTURE) || operationsSet.contains(ChessBoard.Operations.PROMOTION)) {
-                throw new IllegalArgumentException("Invalid set of operations.");
-            }
-
-            return castlingRecording(operationsSet, to);
-        }
+        if (castle) return castlingRecording(operationsSet, to);
 
         final boolean promotion = operationsSet.contains(ChessBoard.Operations.PROMOTION);
-        if (promotion) {
-            if (!piece.equals(PieceTYPE.P)) {
-                throw new IllegalArgumentException("Only pawns available for promotion.");
-            }
-
-            return promotionRecording(operationsSet, from, to, inCaseOfPromotion);
-        }
+        if (promotion) return promotionRecording(operationsSet, from, to, inCaseOfPromotion);
 
         final boolean capture = operationsSet.contains(ChessBoard.Operations.CAPTURE);
         if (capture) {
-            if (piece.equals(PieceTYPE.P)) {
-                return pawnCaptureRecording(operationsSet, from, to);
-            }
-
+            if (piece.equals(PieceTYPE.P)) return pawnCaptureRecording(operationsSet, from, to);
             return figureCaptureRecording(piece, operationsSet, from, to);
         }
 
@@ -355,37 +340,12 @@ public class AlgebraicNotation {
         };
     }
 
-    public PieceTYPE pieceTYPE() {
-        final char firstChar = this.algebraicNotation.charAt(0);
-
-        return switch (firstChar) {
-            case 'K', 'O' -> PieceTYPE.K;
-            case 'Q' -> PieceTYPE.Q;
-            case 'R' -> PieceTYPE.R;
-            case 'B' -> PieceTYPE.B;
-            case 'N' -> PieceTYPE.N;
-            default -> PieceTYPE.P;
-        };
-    }
-
-    public static byte pieceRank(Piece piece) {
-        return switch (piece) {
-            case Pawn pawn -> 1;
-            case Knight knight -> 2;
-            case Bishop bishop -> 3;
-            case Rook rook -> 4;
-            case Queen queen -> 5;
-            default -> throw new IllegalStateException("Unexpected value: " + piece);
-        };
-    }
-
     public static byte pieceRank(PieceTYPE piece) {
         return switch (piece) {
             case PieceTYPE.P -> 1;
-            case PieceTYPE.N -> 2;
-            case PieceTYPE.B -> 3;
-            case PieceTYPE.R -> 4;
-            case PieceTYPE.Q -> 5;
+            case PieceTYPE.N, PieceTYPE.B -> 3;
+            case PieceTYPE.R -> 5;
+            case PieceTYPE.Q -> 9;
             default -> throw new IllegalStateException("Unexpected value: " + piece);
         };
     }
@@ -398,10 +358,7 @@ public class AlgebraicNotation {
      */
     public static Castle castle(final Coordinate to) {
         final boolean isShortCasting = to.equals(Coordinate.g1) || to.equals(Coordinate.g8);
-        if (isShortCasting) {
-            return Castle.SHORT_CASTLING;
-        }
-
+        if (isShortCasting) return Castle.SHORT_CASTLING;
         return Castle.LONG_CASTLING;
     }
 
@@ -421,17 +378,13 @@ public class AlgebraicNotation {
                 .equals(Castle.SHORT_CASTLING.getAlgebraicNotation())
                 || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
                 .equals(Castle.SHORT_CASTLING.getAlgebraicNotation());
-        if (shortCasting) {
-            return StatusPair.ofTrue(Castle.SHORT_CASTLING);
-        }
+        if (shortCasting) return StatusPair.ofTrue(Castle.SHORT_CASTLING);
 
         final boolean longCasting = algebraicNotationSTR
                 .equals(Castle.LONG_CASTLING.getAlgebraicNotation())
                 || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
                 .equals(Castle.LONG_CASTLING.getAlgebraicNotation());
-        if (longCasting) {
-            return StatusPair.ofTrue(Castle.LONG_CASTLING);
-        }
+        if (longCasting) return StatusPair.ofTrue(Castle.LONG_CASTLING);
 
         return StatusPair.ofFalse();
     }
@@ -442,14 +395,10 @@ public class AlgebraicNotation {
      */
     public static boolean isCastling(final PieceTYPE piece, final Coordinate from, final Coordinate to) {
         final boolean isKing = piece.equals(PieceTYPE.K);
-        if (!isKing) {
-            return false;
-        }
+        if (!isKing) return false;
 
         final boolean isValidKingPosition = from.equals(Coordinate.e1) || from.equals(Coordinate.e8);
-        if (!isValidKingPosition) {
-            return false;
-        }
+        if (!isValidKingPosition) return false;
 
         return to.equals(Coordinate.c1) || to.equals(Coordinate.g1) ||
                 to.equals(Coordinate.c8) || to.equals(Coordinate.g8);
@@ -458,24 +407,24 @@ public class AlgebraicNotation {
     /**
      * Determines the type of promotion for a chess move in algebraic notation.
      *
-     * @return a {@link StatusPair<PieceTYPE>} indicating the promotion type (Q, R, B, N) if valid,
-     *         or {@link StatusPair#ofFalse()} if not a promotion.
+     * @return a PieceType or null.
      * @throws IllegalStateException if the promotion type is unexpected.
      */
-    public StatusPair<PieceTYPE> promotionType() {
-        if (ChessNotationsValidator.isPromotion(this.algebraicNotation) && ChessNotationsValidator.isPromotionPlusOperation(this.algebraicNotation)) {
+    public @Nullable PieceTYPE promotionType() {
+        if (ChessNotationsValidator.isPromotion(this.algebraicNotation) ||
+                ChessNotationsValidator.isPromotionPlusOperation(this.algebraicNotation)) {
             final char promotionType = this.algebraicNotation.charAt(6);
 
             return switch (promotionType) {
-                case 'Q' -> StatusPair.ofTrue(PieceTYPE.Q);
-                case 'R' -> StatusPair.ofTrue(PieceTYPE.R);
-                case 'B' -> StatusPair.ofTrue(PieceTYPE.B);
-                case 'N' -> StatusPair.ofTrue(PieceTYPE.N);
+                case 'Q' -> PieceTYPE.Q;
+                case 'R' -> PieceTYPE.R;
+                case 'B' -> PieceTYPE.B;
+                case 'N' -> PieceTYPE.N;
                 default -> throw new IllegalStateException("Unexpected value: " + promotionType);
             };
         }
 
-        return StatusPair.ofFalse();
+        return null;
     }
 
     /**
