@@ -14,6 +14,8 @@ public sealed interface Piece
 
     Color color();
 
+    int index();
+
     /**
      * Fully validates the move, and also returns
      * a list of operations that the given operation need to perform.

@@ -6,6 +6,7 @@ import core.project.chess.domain.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
+import core.project.chess.domain.chess.util.ZobristHashKeys;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.CastlingAbility;
 import core.project.chess.domain.chess.value_objects.FromFEN;
@@ -94,7 +95,7 @@ public class ChessBoard {
     private Coordinate currentBlackKingPosition;
 
     /** Zobrist Hashing*/
-    private final long[][] zobristTable;
+    private final ZobristHashKeys zobrist;
 
     /**
      * Hash codes representing unique board positions for repetition detection.
@@ -152,14 +153,6 @@ public class ChessBoard {
         this.algebraicNotations = new ArrayDeque<>();
         this.fieldMap = new EnumMap<>(Coordinate.class);
 
-        if (isPureChess) {
-            zobristTable = new long[12][64];
-            zobristHash = new HashMap<>();
-        } else {
-            zobristTable = null;
-            zobristHash = null;
-        }
-
         if (inCaseOfInitFromFEN == null) {
             this.figuresTurn = WHITE;
             this.currentWhiteKingPosition = Coordinate.e1;
@@ -182,6 +175,15 @@ public class ChessBoard {
             }
 
             this.initType = tempInitType;
+
+            if (isPureChess) {
+                zobrist = new ZobristHashKeys(this);
+                zobristHash = new HashMap<>();
+                zobristHash.put(zobrist.hash(), 0);
+            } else {
+                zobrist = null;
+                zobristHash = null;
+            }
             return;
         }
 
@@ -201,6 +203,15 @@ public class ChessBoard {
         this.validWhiteLongCasting = inCaseOfInitFromFEN.validWhiteLongCasting();
         this.validBlackShortCasting = inCaseOfInitFromFEN.validBlackShortCasting();
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
+
+        if (isPureChess) {
+            zobrist = new ZobristHashKeys(this);
+            zobristHash = new HashMap<>();
+            zobristHash.put(zobrist.hash(), 0);
+        } else {
+            zobrist = null;
+            zobristHash = null;
+        }
 
         initializerFromFEN(FEN);
         validateStalemateAndCheckmate(inCaseOfInitFromFEN);
@@ -622,10 +633,10 @@ public class ChessBoard {
     }
 
     Piece getInCaseOfPromotion(AlgebraicNotation algebraicNotation) {
-        StatusPair<AlgebraicNotation.PieceTYPE> promotion = algebraicNotation.promotionType();
+        AlgebraicNotation.PieceTYPE promotion = algebraicNotation.promotionType();
 
         Piece inCaseOfPromotion = null;
-        if (promotion.status()) inCaseOfPromotion = AlgebraicNotation.fromSymbol(promotion.orElseThrow(), figuresTurn);
+        if (promotion == null) inCaseOfPromotion = AlgebraicNotation.fromSymbol(promotion, figuresTurn);
         return inCaseOfPromotion;
     }
 
@@ -1201,7 +1212,7 @@ public class ChessBoard {
         if (lastMovement.isPromotion()) {
             boolean wasBlackPromotion = lastMovement.coordinates().getSecond().row() == 1;
             Color color = wasBlackPromotion ? BLACK : WHITE;
-            return new Pawn(color);
+            return Pawn.of(color);
         }
 
         return endedField.piece();
@@ -1550,12 +1561,12 @@ public class ChessBoard {
 
     private String convertPieceToChar(final Piece piece) {
         return switch (piece) {
-            case King(Color color) -> color.equals(WHITE) ? "K" : "k";
-            case Queen(Color color) -> color.equals(WHITE) ? "Q" : "q";
-            case Rook(Color color) -> color.equals(WHITE) ? "R" : "r";
-            case Bishop(Color color) -> color.equals(WHITE) ? "B" : "b";
-            case Knight(Color color) -> color.equals(WHITE) ? "N" : "n";
-            case Pawn(Color color) -> color.equals(WHITE) ? "P" : "p";
+            case King king -> king.color() == WHITE ? "K" : "k";
+            case Queen queen -> queen.color() == WHITE ? "Q" : "q";
+            case Rook rook -> rook.color() == WHITE ? "R" : "r";
+            case Bishop bishop -> bishop.color() == WHITE ? "B" : "b";
+            case Knight knight -> knight.color() == WHITE ? "N" : "n";
+            case Pawn pawn -> pawn.color() == WHITE ? "P" : "p";
         };
     }
 
@@ -1567,22 +1578,22 @@ public class ChessBoard {
      * The remaining fields are left empty.
      */
     private void standardInitializer() {
-        fieldMap.put(Coordinate.a1, new Field(Coordinate.a1, new Rook(WHITE)));
-        fieldMap.put(Coordinate.b1, new Field(Coordinate.b1, new Knight(WHITE)));
-        fieldMap.put(Coordinate.c1, new Field(Coordinate.c1, new Bishop(WHITE)));
-        fieldMap.put(Coordinate.d1, new Field(Coordinate.d1, new Queen(WHITE)));
-        fieldMap.put(Coordinate.e1, new Field(Coordinate.e1, new King(WHITE)));
-        fieldMap.put(Coordinate.f1, new Field(Coordinate.f1, new Bishop(WHITE)));
-        fieldMap.put(Coordinate.g1, new Field(Coordinate.g1, new Knight(WHITE)));
-        fieldMap.put(Coordinate.h1, new Field(Coordinate.h1, new Rook(WHITE)));
-        fieldMap.put(Coordinate.a8, new Field(Coordinate.a8, new Rook(BLACK)));
-        fieldMap.put(Coordinate.b8, new Field(Coordinate.b8, new Knight(BLACK)));
-        fieldMap.put(Coordinate.c8, new Field(Coordinate.c8, new Bishop(BLACK)));
-        fieldMap.put(Coordinate.d8, new Field(Coordinate.d8, new Queen(BLACK)));
-        fieldMap.put(Coordinate.e8, new Field(Coordinate.e8, new King(BLACK)));
-        fieldMap.put(Coordinate.f8, new Field(Coordinate.f8, new Bishop(BLACK)));
-        fieldMap.put(Coordinate.g8, new Field(Coordinate.g8, new Knight(BLACK)));
-        fieldMap.put(Coordinate.h8, new Field(Coordinate.h8, new Rook(BLACK)));
+        fieldMap.put(Coordinate.a1, new Field(Coordinate.a1, Rook.of(WHITE)));
+        fieldMap.put(Coordinate.b1, new Field(Coordinate.b1, Knight.of(WHITE)));
+        fieldMap.put(Coordinate.c1, new Field(Coordinate.c1, Bishop.of(WHITE)));
+        fieldMap.put(Coordinate.d1, new Field(Coordinate.d1, Queen.of(WHITE)));
+        fieldMap.put(Coordinate.e1, new Field(Coordinate.e1, King.of(WHITE)));
+        fieldMap.put(Coordinate.f1, new Field(Coordinate.f1, Bishop.of(WHITE)));
+        fieldMap.put(Coordinate.g1, new Field(Coordinate.g1, Knight.of(WHITE)));
+        fieldMap.put(Coordinate.h1, new Field(Coordinate.h1, Rook.of(WHITE)));
+        fieldMap.put(Coordinate.a8, new Field(Coordinate.a8, Rook.of(BLACK)));
+        fieldMap.put(Coordinate.b8, new Field(Coordinate.b8, Knight.of(BLACK)));
+        fieldMap.put(Coordinate.c8, new Field(Coordinate.c8, Bishop.of(BLACK)));
+        fieldMap.put(Coordinate.d8, new Field(Coordinate.d8, Queen.of(BLACK)));
+        fieldMap.put(Coordinate.e8, new Field(Coordinate.e8, King.of(BLACK)));
+        fieldMap.put(Coordinate.f8, new Field(Coordinate.f8, Bishop.of(BLACK)));
+        fieldMap.put(Coordinate.g8, new Field(Coordinate.g8, Knight.of(BLACK)));
+        fieldMap.put(Coordinate.h8, new Field(Coordinate.h8, Rook.of(BLACK)));
 
         for (Coordinate coordinate : Coordinate.values()) {
             if (coordinate.row() == 1 || coordinate.row() == 8) {
@@ -1590,8 +1601,8 @@ public class ChessBoard {
             }
 
             switch (coordinate.row()) {
-                case 2 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(WHITE)));
-                case 7 -> fieldMap.put(coordinate, new Field(coordinate, new Pawn(BLACK)));
+                case 2 -> fieldMap.put(coordinate, new Field(coordinate, Pawn.of(WHITE)));
+                case 7 -> fieldMap.put(coordinate, new Field(coordinate, Pawn.of(BLACK)));
                 default -> fieldMap.put(coordinate, new Field(coordinate, null));
             }
         }

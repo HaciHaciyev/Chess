@@ -10,7 +10,31 @@ import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 
-public record Rook(Color color) implements Piece {
+public final class Rook implements Piece {
+    private final Color color;
+    private final int index;
+
+    private static final Rook WHITE_ROOK = new Rook(Color.WHITE, 3);
+    private static final Rook BLACK_ROOK = new Rook(Color.BLACK, 9);
+
+    public static Rook of(Color color) {
+        return color == Color.WHITE ? WHITE_ROOK : BLACK_ROOK;
+    }
+
+    private Rook(Color color, int index) {
+        this.color = color;
+        this.index = index;
+    }
+
+    @Override
+    public Color color() {
+        return color;
+    }
+
+    @Override
+    public int index() {
+        return index;
+    }
 
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {

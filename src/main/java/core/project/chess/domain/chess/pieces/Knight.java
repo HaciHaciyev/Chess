@@ -10,7 +10,31 @@ import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 
-public record Knight(Color color) implements Piece {
+public final class Knight implements Piece {
+    private final Color color;
+    private final int index;
+
+    private static final Knight WHITE_KNIGHT = new Knight(Color.WHITE, 1);
+    private static final Knight BLACK_KNIGHT = new Knight(Color.BLACK, 7);
+
+    public static Knight of(Color color) {
+        return color == Color.WHITE ? WHITE_KNIGHT : BLACK_KNIGHT;
+    }
+
+    private Knight(Color color, int index) {
+        this.color = color;
+        this.index = index;
+    }
+
+    @Override
+    public Color color() {
+        return color;
+    }
+
+    @Override
+    public int index() {
+        return index;
+    }
 
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {

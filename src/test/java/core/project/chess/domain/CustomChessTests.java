@@ -51,14 +51,14 @@ class CustomChessTests {
         game.makeMovement(whitePlayer, f3, g1, null);
         System.out.println(navigator.prettyToString());
 
-        game.makeMovement(blackPlayer, h2, g1, new Queen(Color.BLACK));
+        game.makeMovement(blackPlayer, h2, g1, Queen.of(Color.BLACK));
         System.out.println(navigator.prettyToString());
 
         game.returnMovement(whitePlayer);
         game.returnMovement(blackPlayer);
         System.out.println(navigator.prettyToString());
 
-        game.makeMovement(blackPlayer, d8, h4, new Queen(Color.BLACK));
+        game.makeMovement(blackPlayer, d8, h4, Queen.of(Color.BLACK));
         System.out.println(navigator.prettyToString());
     }
 

@@ -15,7 +15,31 @@ import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 
-public record Pawn(Color color) implements Piece {
+public final class Pawn implements Piece {
+    private final Color color;
+    private final int index;
+
+    private static final Pawn WHITE_PAWN = new Pawn(WHITE, 0);
+    private static final Pawn BLACK_PAWN = new Pawn(BLACK, 6);
+
+    public static Pawn of(Color color) {
+        return color == WHITE ? WHITE_PAWN : BLACK_PAWN;
+    }
+
+    private Pawn(Color color, int index) {
+        this.color = color;
+        this.index = index;
+    }
+
+    @Override
+    public Color color() {
+        return color;
+    }
+
+    @Override
+    public int index() {
+        return index;
+    }
 
     /**
      * Validates whether a move from the 'from' coordinate to the 'to' coordinate is a valid move for a Pawn on the chessboard.

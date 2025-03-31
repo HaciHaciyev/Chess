@@ -115,10 +115,10 @@ public class SimplePGNReader {
             s = s.substring(0, s.length() - 1);
 
             promotionPiece = switch (promotion) {
-                case "N" -> new Knight(color);
-                case "B" -> new Bishop(color);
-                case "R" -> new Rook(color);
-                case "Q" -> new Queen(color);
+                case "N" -> Knight.of(color);
+                case "B" -> Bishop.of(color);
+                case "R" -> Rook.of(color);
+                case "Q" -> Queen.of(color);
                 default -> null;
             };
         }

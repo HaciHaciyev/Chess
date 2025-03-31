@@ -128,7 +128,7 @@ public record ChessBoardNavigator(ChessBoard board) {
     }
 
     private boolean isPawnExists(Color colorOfRequiredPawns, Coordinate coordinate) {
-        return coordinate != null && board.piece(coordinate) instanceof Pawn(Color pawnColor) && pawnColor == colorOfRequiredPawns;
+        return coordinate != null && board.piece(coordinate) instanceof Pawn pawn && pawn.color() == colorOfRequiredPawns;
     }
 
     public List<Coordinate> knightAttackPositions(Coordinate pivot) {
@@ -628,11 +628,11 @@ public record ChessBoardNavigator(ChessBoard board) {
 
     private String pieceToPretty(Piece piece) {
         return switch (piece) {
-            case Pawn(Color c) -> c.equals(Color.WHITE) ? "♟" : "♙";
-            case Knight(Color c) -> c.equals(Color.WHITE) ? "♞" : "♘";
-            case Bishop(Color c) -> c.equals(Color.WHITE) ? "♝" : "♗";
-            case Rook(Color c) -> c.equals(Color.WHITE) ? "♜" : "♖";
-            case Queen(Color c) -> c.equals(Color.WHITE) ? "♛" : "♕";
+            case Pawn pawn -> pawn.color() == Color.WHITE ? "♟" : "♙";
+            case Knight knight -> knight.color() == Color.WHITE ? "♞" : "♘";
+            case Bishop bishop -> bishop.color() == Color.WHITE ? "♝" : "♗";
+            case Rook rook -> rook.color() == Color.WHITE ? "♜" : "♖";
+            case Queen queen -> queen.color() == Color.WHITE ? "♛" : "♕";
             default -> "";
         };
     }

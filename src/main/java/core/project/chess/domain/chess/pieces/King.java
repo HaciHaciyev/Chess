@@ -13,7 +13,31 @@ import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 
-public record King(Color color) implements Piece {
+public final class King implements Piece {
+    private final Color color;
+    private final int index;
+
+    private static final King WHITE_KING = new King(WHITE, 5);
+    private static final King BLACK_KING = new King(BLACK, 11);
+
+    public static King of(Color color) {
+        return color == WHITE ? WHITE_KING : BLACK_KING;
+    }
+
+    private King(Color color, int index) {
+        this.color = color;
+        this.index = index;
+    }
+
+    @Override
+    public Color color() {
+        return color;
+    }
+
+    @Override
+    public int index() {
+        return index;
+    }
 
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {

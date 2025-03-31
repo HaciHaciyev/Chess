@@ -313,30 +313,30 @@ public class AlgebraicNotation {
 
     public static Piece fromSymbol(String symbol) {
         return switch (symbol) {
-            case "K" -> new King(Color.WHITE);
-            case "Q" -> new Queen(Color.WHITE);
-            case "R" -> new Rook(Color.WHITE);
-            case "B" -> new Bishop(Color.WHITE);
-            case "N" -> new Knight(Color.WHITE);
-            case "P" -> new Pawn(Color.WHITE);
-            case "k" -> new King(Color.BLACK);
-            case "q" -> new Queen(Color.BLACK);
-            case "r" -> new Rook(Color.BLACK);
-            case "b" -> new Bishop(Color.BLACK);
-            case "n" -> new Knight(Color.BLACK);
-            case "p" -> new Pawn(Color.BLACK);
+            case "K" -> King.of(Color.WHITE);
+            case "Q" -> Queen.of(Color.WHITE);
+            case "R" -> Rook.of(Color.WHITE);
+            case "B" -> Bishop.of(Color.WHITE);
+            case "N" -> Knight.of(Color.WHITE);
+            case "P" -> Pawn.of(Color.WHITE);
+            case "k" -> King.of(Color.BLACK);
+            case "q" -> Queen.of(Color.BLACK);
+            case "r" -> Rook.of(Color.BLACK);
+            case "b" -> Bishop.of(Color.BLACK);
+            case "n" -> Knight.of(Color.BLACK);
+            case "p" -> Pawn.of(Color.BLACK);
             default -> throw new IllegalArgumentException("Unknown piece symbol: " + symbol);
         };
     }
 
     public static Piece fromSymbol(PieceTYPE symbol, Color color) {
         return switch (symbol) {
-            case K -> new King(color);
-            case Q -> new Queen(color);
-            case R -> new Rook(color);
-            case B -> new Bishop(color);
-            case N -> new Knight(color);
-            case P -> new Pawn(color);
+            case K -> King.of(color);
+            case Q -> Queen.of(color);
+            case R -> Rook.of(color);
+            case B -> Bishop.of(color);
+            case N -> Knight.of(color);
+            case P -> Pawn.of(color);
         };
     }
 
