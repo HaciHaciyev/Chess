@@ -153,11 +153,13 @@ public class AlgebraicNotation {
      */
     private static AlgebraicNotation castlingRecording(Set<ChessBoard.Operations> operationsSet, Coordinate finalCoordinate) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
-        final String algebraicNotation = CASTLE_PLUS_OPERATION_FORMAT.formatted(
-                castle(finalCoordinate).getAlgebraicNotation(), opponentKingStatus.getAlgebraicNotation()
-        );
 
-        return new AlgebraicNotation(algebraicNotation);
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(castle(finalCoordinate)
+                .getAlgebraicNotation());
+
+        return new AlgebraicNotation(new StringBuilder(castle(finalCoordinate).getAlgebraicNotation())
+                .append(opponentKingStatus.getAlgebraicNotation())
+                .toString());
     }
 
     /**
@@ -170,11 +172,17 @@ public class AlgebraicNotation {
      */
     private static AlgebraicNotation pawnCaptureRecording(Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
-        final String algebraicNotation = PAWN_CAPTURE_OPERATION_FORMAT.formatted(
-                from, ChessBoard.Operations.CAPTURE.getAlgebraicNotation(), to, opponentKingStatus.getAlgebraicNotation()
-        );
 
-        return new AlgebraicNotation(algebraicNotation);
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(from.toString())
+                .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
+                .append(to.toString())
+                .toString());
+
+        return new AlgebraicNotation(new StringBuilder(from.toString())
+                .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
+                .append(to.toString())
+                .append(opponentKingStatus.getAlgebraicNotation())
+                .toString());
     }
 
     /**
@@ -190,11 +198,19 @@ public class AlgebraicNotation {
             PieceTYPE piece, Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to
     ) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
-        final String algebraicNotation = FIGURE_CAPTURE_OPERATION_FORMAT.formatted(
-                piece, from, ChessBoard.Operations.CAPTURE.getAlgebraicNotation(), to, opponentKingStatus.getAlgebraicNotation()
-        );
 
-        return new AlgebraicNotation(algebraicNotation);
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(piece.getPieceType())
+                .append(from.toString())
+                .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
+                .append(to.toString())
+                .toString());
+
+        return new AlgebraicNotation(new StringBuilder(piece.getPieceType())
+                .append(from.toString())
+                .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
+                .append(to.toString())
+                .append(opponentKingStatus.getAlgebraicNotation())
+                .toString());
     }
 
     /**
@@ -209,19 +225,32 @@ public class AlgebraicNotation {
     private static AlgebraicNotation simpleMovementRecording(
             PieceTYPE piece, Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to
     ) {
-        if (piece.equals(PieceTYPE.P)) {
-            final String algebraicNotation = SIMPLE_PAWN_MOVEMENT_FORMAT.formatted(
-                    from, to, opponentKingStatus(operationsSet).getAlgebraicNotation()
-            );
+        final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
+        if (piece == PieceTYPE.P) {
+            if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(from.toString())
+                    .append("-")
+                    .append(to.toString())
+                    .toString());
 
-            return new AlgebraicNotation(algebraicNotation);
+            return new AlgebraicNotation(new StringBuilder(from.toString())
+                    .append("-")
+                    .append(to.toString())
+                    .append(opponentKingStatus.getAlgebraicNotation())
+                    .toString());
         }
 
-        final String algebraicNotation = SIMPLE_FIGURE_MOVEMENT_FORMAT.formatted(
-                piece, from, to, opponentKingStatus(operationsSet).getAlgebraicNotation()
-        );
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(piece.getPieceType())
+                .append(from.toString())
+                .append("-")
+                .append(to.toString())
+                .toString());
 
-        return new AlgebraicNotation(algebraicNotation);
+        return new AlgebraicNotation(new StringBuilder(piece.getPieceType())
+                .append(from.toString())
+                .append("-")
+                .append(to.toString())
+                .append(opponentKingStatus.getAlgebraicNotation())
+                .toString());
     }
 
     /**
@@ -236,20 +265,37 @@ public class AlgebraicNotation {
     private static AlgebraicNotation promotionRecording(
             Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to, PieceTYPE inCaseOfPromotion
     ) {
-        final String algebraicNotation;
-
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
 
         if (operationsSet.contains(ChessBoard.Operations.CAPTURE)) {
-            algebraicNotation = PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT.formatted(
-                    from, ChessBoard.Operations.CAPTURE.getAlgebraicNotation(), to, inCaseOfPromotion.getPieceType(), opponentKingStatus.getAlgebraicNotation()
-            );
+            if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(from.toString())
+                    .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
+                    .append(to.toString())
+                    .append("=")
+                    .append(inCaseOfPromotion.getPieceType())
+                    .toString());
 
-            return new AlgebraicNotation(algebraicNotation);
+            return new AlgebraicNotation(new StringBuilder(from.toString())
+                    .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
+                    .append(to.toString())
+                    .append("=")
+                    .append(inCaseOfPromotion.getPieceType())
+                    .append(opponentKingStatus.getAlgebraicNotation())
+                    .toString());
         }
 
-        algebraicNotation = PROMOTION_FORMAT.formatted(from, to, inCaseOfPromotion, opponentKingStatus.getAlgebraicNotation());
-        return new AlgebraicNotation(algebraicNotation);
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(from.toString())
+                .append(to.toString())
+                .append("=")
+                .append(inCaseOfPromotion.getPieceType())
+                .toString());
+
+        return new AlgebraicNotation(new StringBuilder(from.toString())
+                .append(to.toString())
+                .append("=")
+                .append(inCaseOfPromotion.getPieceType())
+                .append(opponentKingStatus.getAlgebraicNotation())
+                .toString());
     }
 
     /**
@@ -264,33 +310,9 @@ public class AlgebraicNotation {
      * @throws IllegalArgumentException if the set of operations contains more than one operation involving the opponent's king or stalemate
      */
     public static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
-        int opponentKingStatusCount = 0;
-        if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) {
-            opponentKingStatusCount++;
-        }
-        if (operationsSet.contains(ChessBoard.Operations.CHECKMATE)) {
-            opponentKingStatusCount++;
-        }
-        if (operationsSet.contains(ChessBoard.Operations.CHECK)) {
-            opponentKingStatusCount++;
-        }
-
-        if (opponentKingStatusCount > 1) {
-            throw new IllegalArgumentException(
-                    "A move must have only one operation involving the enemy King or stalemate, an invalid set of operations."
-            );
-        }
-
-        if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) {
-            return ChessBoard.Operations.STALEMATE;
-        }
-        if (operationsSet.contains(ChessBoard.Operations.CHECKMATE)) {
-            return ChessBoard.Operations.CHECKMATE;
-        }
-        if (operationsSet.contains(ChessBoard.Operations.CHECK)) {
-            return ChessBoard.Operations.CHECK;
-        }
-
+        if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) return ChessBoard.Operations.STALEMATE;
+        if (operationsSet.contains(ChessBoard.Operations.CHECKMATE)) return ChessBoard.Operations.CHECKMATE;
+        if (operationsSet.contains(ChessBoard.Operations.CHECK)) return ChessBoard.Operations.CHECK;
         return ChessBoard.Operations.CONTINUE;
     }
 
