@@ -61,24 +61,31 @@ public enum Coordinate {
     }
 
     /**
-     * Converts a column number (1-8) to the corresponding column letter (A-H).
+     * Converts a column letter (a-h) to the corresponding column number (1-8).
+     *
+     * @param c the column letter (a-h)
+     * @return the corresponding column number (1-8)
+     * @throws IllegalStateException if the character is not between 'a' and 'h'
+     */
+    public static int columnToInt(char c) {
+        if (c >= 'a' && c <= 'h') {
+            return c - 'a' + 1;
+        }
+        throw new IllegalStateException("Unexpected value: " + c);
+    }
+
+    /**
+     * Converts a column number (1-8) to the corresponding column letter (a-h).
      *
      * @param columnNumber the column number (1-8)
-     * @return the corresponding column letter (A-H)
+     * @return the corresponding column letter (a-h)
      * @throws IllegalStateException if the columnNumber is not between 1 and 8 (inclusive)
      */
     public static char intToColumn(int columnNumber) {
-        return switch (columnNumber) {
-            case 1 -> 'a';
-            case 2 -> 'b';
-            case 3 -> 'c';
-            case 4 -> 'd';
-            case 5 -> 'e';
-            case 6 -> 'f';
-            case 7 -> 'g';
-            case 8 -> 'h';
-            default -> throw new IllegalStateException("Unexpected value: " + columnNumber);
-        };
+        if (columnNumber >= 1 && columnNumber <= 8) {
+            return (char) ('a' + columnNumber - 1);
+        }
+        throw new IllegalStateException("Unexpected value: " + columnNumber);
     }
 
     public enum Column {

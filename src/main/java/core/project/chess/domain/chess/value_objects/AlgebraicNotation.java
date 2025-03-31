@@ -463,23 +463,23 @@ public class AlgebraicNotation {
         final Coordinate from;
         final Coordinate to;
 
-        final boolean startFromFigureType = Character.isLetter(algebraicNotation.charAt(0)) && Character.isLetter(algebraicNotation.charAt(1));
-        if (startFromFigureType) {
-            from = Coordinate.valueOf(algebraicNotation.substring(1, 3));
-            to = Coordinate.valueOf(algebraicNotation.substring(4, 6));
+        final boolean startsFromFigureType = Character.isLetter(algebraicNotation.charAt(0)) &&
+                Character.isLetter(algebraicNotation.charAt(1));
 
+        if (startsFromFigureType) {
+            from = Coordinate.of(algebraicNotation.charAt(2) - '0', Coordinate.columnToInt(algebraicNotation.charAt(1)));
+            to = Coordinate.of(algebraicNotation.charAt(5) - '0', Coordinate.columnToInt(algebraicNotation.charAt(4)));
             return Pair.of(from, to);
         }
 
-        from = Coordinate.valueOf(algebraicNotation.substring(0, 2));
-        to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
-
+        from = Coordinate.of(algebraicNotation.charAt(1) - '0', Coordinate.columnToInt(algebraicNotation.charAt(0)));
+        to = Coordinate.of(algebraicNotation.charAt(4) - '0', Coordinate.columnToInt(algebraicNotation.charAt(3)));
         return Pair.of(from, to);
     }
 
     public boolean isPromotion() {
-        return ChessNotationsValidator.isPromotion(this.algebraicNotation) ||
-                ChessNotationsValidator.isPromotionPlusOperation(this.algebraicNotation);
+        int length = this.algebraicNotation.length();
+        return this.algebraicNotation.charAt(length - 2) == '=' || this.algebraicNotation.charAt(length - 3) == '=';
     }
 
     /**
@@ -489,23 +489,15 @@ public class AlgebraicNotation {
      * @return A Pair of Coordinates representing the castling move.
      */
     public Pair<Coordinate, Coordinate> castlingCoordinates(final Castle castle, final Color color) {
-        final boolean shortCastling = castle.equals(Castle.SHORT_CASTLING);
+        final boolean shortCastling = castle == Castle.SHORT_CASTLING;
 
         if (shortCastling) {
-
-            if (color.equals(Color.WHITE)) {
-                return Pair.of(Coordinate.e1, Coordinate.h1);
-            } else {
-                return Pair.of(Coordinate.e8, Coordinate.h8);
-            }
-
+            if (color == Color.WHITE) return Pair.of(Coordinate.e1, Coordinate.h1);
+            else return Pair.of(Coordinate.e8, Coordinate.h8);
         }
 
-        if (color.equals(Color.WHITE)) {
-            return Pair.of(Coordinate.e1, Coordinate.a1);
-        } else {
-            return Pair.of(Coordinate.e1, Coordinate.a8);
-        }
+        if (color == Color.WHITE) return Pair.of(Coordinate.e1, Coordinate.a1);
+        return Pair.of(Coordinate.e1, Coordinate.a8);
     }
 
     @Override
