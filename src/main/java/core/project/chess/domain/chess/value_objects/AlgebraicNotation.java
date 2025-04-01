@@ -482,6 +482,10 @@ public class AlgebraicNotation {
         return this.algebraicNotation.charAt(length - 2) == '=' || this.algebraicNotation.charAt(length - 3) == '=';
     }
 
+    public boolean isCapture() {
+        return algebraicNotation.charAt(2) == 'x' || algebraicNotation.charAt(3) == 'x';
+    }
+
     /**
      * Retrieves the pair of coordinates representing a castling move.
      *
