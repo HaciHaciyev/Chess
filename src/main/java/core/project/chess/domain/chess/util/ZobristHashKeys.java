@@ -52,7 +52,10 @@ public class ZobristHashKeys {
             square++;
         }
 
-        zobristHash ^= CASTLING_RIGHTS[chessBoard.castlingRights()];
+        int castlingRights = chessBoard.castlingRights();
+        if (castlingRights >= 0) {
+            zobristHash ^= CASTLING_RIGHTS[castlingRights];
+        }
 
         int enPassantFile = chessBoard.enPassantFile();
         if (enPassantFile >= 0) {
@@ -82,7 +85,9 @@ public class ZobristHashKeys {
 
         newHash ^= ZOBRIST_TABLE[endedPiece.index()][to.ordinal()];
 
-        newHash ^= CASTLING_RIGHTS[castlingRights];
+        if (castlingRights >= 0) {
+            newHash ^= CASTLING_RIGHTS[castlingRights];
+        }
 
         if (enPassantFile >= 0) {
             newHash ^= EN_PASSANTS[enPassantFile];
@@ -160,7 +165,9 @@ public class ZobristHashKeys {
 
         newHash ^= ZOBRIST_TABLE[startedPiece.index()][from.ordinal()];
 
-        newHash ^= CASTLING_RIGHTS[castlingRights];
+        if (castlingRights >= 0) {
+            newHash ^= CASTLING_RIGHTS[castlingRights];
+        }
 
         if (enPassantFile >= 0) {
             newHash ^= EN_PASSANTS[enPassantFile];
