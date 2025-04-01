@@ -75,9 +75,23 @@ public class ZobristHashKeys {
                            final Piece endedPiece,
                            final Coordinate to,
                            final int castlingRights,
-                           final int enPassantFile,
-                           final Color turn) {
-        return 0L; // TODO
+                           final int enPassantFile) {
+        long newHash = this.hash;
+
+        newHash ^= ZOBRIST_TABLE[startedPiece.index()][from.ordinal()];
+
+        newHash ^= ZOBRIST_TABLE[endedPiece.index()][to.ordinal()];
+
+        newHash ^= CASTLING_RIGHTS[castlingRights];
+
+        if (enPassantFile >= 0) {
+            newHash ^= EN_PASSANTS[enPassantFile];
+        }
+
+        newHash ^= SIDE_TO_MOVE;
+
+        this.hash = newHash;
+        return newHash;
     }
 
     public long updateHash(final Piece startedPiece,
@@ -87,13 +101,51 @@ public class ZobristHashKeys {
                            final Piece capturedPiece,
                            final Coordinate capturedAt,
                            final int castlingRights,
-                           final int enPassantFile,
-                           final Color turn) {
-        return 0L; // TODO
+                           final int enPassantFile) {
+
+        long newHash = updateHash(startedPiece, from, endedPiece, to, castlingRights, enPassantFile);
+
+        newHash ^= ZOBRIST_TABLE[capturedPiece.index()][capturedAt.ordinal()];
+
+        this.hash = newHash;
+        return newHash;
     }
 
     public long updateHashForCastling(final Color color, final AlgebraicNotation.Castle castle, int castlingRights) {
-        return 0L; // TODO
+        long newHash = this.hash;
+
+        if (color == Color.WHITE) {
+            if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
+                newHash ^= ZOBRIST_TABLE[5][Coordinate.e1.ordinal()];
+                newHash ^= ZOBRIST_TABLE[5][Coordinate.g1.ordinal()];
+                newHash ^= ZOBRIST_TABLE[3][Coordinate.h1.ordinal()];
+                newHash ^= ZOBRIST_TABLE[3][Coordinate.f1.ordinal()];
+            } else {
+                newHash ^= ZOBRIST_TABLE[11][Coordinate.e1.ordinal()];
+                newHash ^= ZOBRIST_TABLE[11][Coordinate.c1.ordinal()];
+                newHash ^= ZOBRIST_TABLE[9][Coordinate.a1.ordinal()];
+                newHash ^= ZOBRIST_TABLE[9][Coordinate.d1.ordinal()];
+            }
+        } else {
+            if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
+                newHash ^= ZOBRIST_TABLE[5][Coordinate.e8.ordinal()];
+                newHash ^= ZOBRIST_TABLE[5][Coordinate.g8.ordinal()];
+                newHash ^= ZOBRIST_TABLE[3][Coordinate.h8.ordinal()];
+                newHash ^= ZOBRIST_TABLE[3][Coordinate.f8.ordinal()];
+            } else {
+                newHash ^= ZOBRIST_TABLE[11][Coordinate.e8.ordinal()];
+                newHash ^= ZOBRIST_TABLE[11][Coordinate.c8.ordinal()];
+                newHash ^= ZOBRIST_TABLE[9][Coordinate.a8.ordinal()];
+                newHash ^= ZOBRIST_TABLE[9][Coordinate.d8.ordinal()];
+            }
+        }
+
+        newHash ^= CASTLING_RIGHTS[castlingRights];
+
+        newHash ^= SIDE_TO_MOVE;
+
+        this.hash = newHash;
+        return newHash;
     }
 
     public long updateHashOnRevertMove(final Piece startedPiece,
@@ -101,9 +153,23 @@ public class ZobristHashKeys {
                                        final Piece endedPiece,
                                        final Coordinate to,
                                        final int castlingRights,
-                                       final int enPassantFile,
-                                       final Color turn) {
-        return 0L; // TODO
+                                       final int enPassantFile) {
+        long newHash = this.hash;
+
+        newHash ^= ZOBRIST_TABLE[endedPiece.index()][to.ordinal()];
+
+        newHash ^= ZOBRIST_TABLE[startedPiece.index()][from.ordinal()];
+
+        newHash ^= CASTLING_RIGHTS[castlingRights];
+
+        if (enPassantFile >= 0) {
+            newHash ^= EN_PASSANTS[enPassantFile];
+        }
+
+        newHash ^= SIDE_TO_MOVE;
+
+        this.hash = newHash;
+        return newHash;
     }
 
     public long updateHashOnRevertMove(final Piece startedPiece,
@@ -113,12 +179,55 @@ public class ZobristHashKeys {
                                        final Piece capturedPiece,
                                        final Coordinate capturedAt,
                                        final int castlingRights,
-                                       final int enPassantFile,
-                                       final Color turn) {
-        return 0L; // TODO
+                                       final int enPassantFile) {
+        long newHash = updateHashOnRevertMove(startedPiece, from, endedPiece, to, castlingRights, enPassantFile);
+
+        newHash ^= ZOBRIST_TABLE[capturedPiece.index()][capturedAt.ordinal()];
+
+        this.hash = newHash;
+        return newHash;
     }
 
     public long updateHashForCastlingRevert(final Color color, final AlgebraicNotation.Castle castle, int castlingRights) {
-        return 0L; // TODO
+        long newHash = this.hash;
+
+        Coordinate kingFrom;
+        Coordinate kingTo;
+        Coordinate rookFrom;
+        Coordinate rookTo;
+
+        if (color == Color.WHITE) {
+            if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
+                kingFrom = Coordinate.e1; kingTo = Coordinate.g1;
+                rookFrom = Coordinate.h1; rookTo = Coordinate.f1;
+            } else {
+                kingFrom = Coordinate.e1; kingTo = Coordinate.c1;
+                rookFrom = Coordinate.a1; rookTo = Coordinate.d1;
+            }
+        } else {
+            if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
+                kingFrom = Coordinate.e8; kingTo = Coordinate.g8;
+                rookFrom = Coordinate.h8; rookTo = Coordinate.f8;
+            } else {
+                kingFrom = Coordinate.e8; kingTo = Coordinate.c8;
+                rookFrom = Coordinate.a8; rookTo = Coordinate.d8;
+            }
+        }
+
+        int kingIndex = color == Color.WHITE ? 5 : 11;
+        int rookIndex = color == Color.WHITE ? 3 : 9;
+
+        newHash ^= ZOBRIST_TABLE[kingIndex][kingTo.ordinal()];
+        newHash ^= ZOBRIST_TABLE[kingIndex][kingFrom.ordinal()];
+
+        newHash ^= ZOBRIST_TABLE[rookIndex][rookTo.ordinal()];
+        newHash ^= ZOBRIST_TABLE[rookIndex][rookFrom.ordinal()];
+
+        newHash ^= CASTLING_RIGHTS[castlingRights];
+
+        newHash ^= SIDE_TO_MOVE;
+
+        this.hash = newHash;
+        return newHash;
     }
 }

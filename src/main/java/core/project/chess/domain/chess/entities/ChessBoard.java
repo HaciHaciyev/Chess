@@ -844,8 +844,7 @@ public class ChessBoard {
                     figuresTurn == BLACK ? capturedBlackPieces.peekLast() : capturedWhitePieces.peekLast(),
                     capturedAt,
                     castlingRights(),
-                    enPassantFile(),
-                    figuresTurn
+                    enPassantFile()
             );
             zobristHash.put(newZobristHash, zobristHash.getOrDefault(newZobristHash, 0) + 1);
             return;
@@ -857,8 +856,7 @@ public class ChessBoard {
                 inCaseOfPromotion == null ? piece : inCaseOfPromotion,
                 to,
                 castlingRights(),
-                enPassantFile(),
-                figuresTurn
+                enPassantFile()
         );
         zobristHash.put(newZobristHash, zobristHash.getOrDefault(newZobristHash, 0) + 1);
     }
@@ -872,15 +870,14 @@ public class ChessBoard {
 
         if (capturedPieceAt != null) {
             long newZobristHash = this.zobrist.updateHashOnRevertMove(
-                    pieceOnEndField,
-                    endedField.coordinate,
                     piece,
                     startedField.coordinate,
+                    pieceOnEndField,
+                    endedField.coordinate,
                     capturedPieceAt.getFirst(),
                     capturedPieceAt.getSecond(),
                     castlingRights(),
-                    enPassantFile(),
-                    figuresTurn
+                    enPassantFile()
             );
 
             final int newValue = zobristHash.get(newZobristHash) - 1;
@@ -889,13 +886,12 @@ public class ChessBoard {
         }
 
         long newZobristHash = this.zobrist.updateHashOnRevertMove(
-                pieceOnEndField,
-                endedField.coordinate,
                 piece,
                 startedField.coordinate,
+                pieceOnEndField,
+                endedField.coordinate,
                 castlingRights(),
-                enPassantFile(),
-                figuresTurn
+                enPassantFile()
         );
         final int newValue = zobristHash.get(newZobristHash) - 1;
         if (newValue == 0) zobristHash.remove(newZobristHash);
