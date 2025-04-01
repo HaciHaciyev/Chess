@@ -31,7 +31,7 @@ class ChessBoardByFENTest {
     @DisplayName("Test initialization of chess board by FEN.")
     void testFromPosition(String validFEN) {
         assertDoesNotThrow(() -> {
-            ChessBoard board = ChessBoard.fromPosition(validFEN);
+            ChessBoard board = ChessBoard.pureChessFromPosition(validFEN);
             assertNotNull(board);
         });
     }

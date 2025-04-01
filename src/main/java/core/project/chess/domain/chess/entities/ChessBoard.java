@@ -176,7 +176,7 @@ public class ChessBoard {
 
             this.initType = tempInitType;
 
-            if (isPureChess) {
+            if (!isPureChess) {
                 zobrist = new ZobristHashKeys(this);
                 zobristHash = new HashMap<>();
                 zobristHash.put(zobrist.hash(), 0);
@@ -204,7 +204,7 @@ public class ChessBoard {
         this.validBlackShortCasting = inCaseOfInitFromFEN.validBlackShortCasting();
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
 
-        if (isPureChess) {
+        if (!isPureChess) {
             zobrist = new ZobristHashKeys(this);
             zobristHash = new HashMap<>();
             zobristHash.put(zobrist.hash(), 0);
@@ -649,7 +649,7 @@ public class ChessBoard {
         AlgebraicNotation.PieceTYPE promotion = algebraicNotation.promotionType();
 
         Piece inCaseOfPromotion = null;
-        if (promotion == null) inCaseOfPromotion = AlgebraicNotation.fromSymbol(promotion, figuresTurn);
+        if (promotion != null) inCaseOfPromotion = AlgebraicNotation.fromSymbol(promotion, figuresTurn);
         return inCaseOfPromotion;
     }
 

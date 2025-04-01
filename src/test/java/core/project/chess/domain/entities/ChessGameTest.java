@@ -1010,7 +1010,7 @@ public class ChessGameTest {
     }
 
     public static Supplier<ChessGame> chessGameSupplier() {
-        final ChessBoard chessBoard = ChessBoard.starndardChessBoard();
+        final ChessBoard chessBoard = ChessBoard.pureChess();
 
         return () -> ChessGame.of(
                 UUID.randomUUID(),
@@ -1022,7 +1022,7 @@ public class ChessGameTest {
     }
 
     public static Supplier<ChessGame> chessGameSupplier(String FEN) {
-        final ChessBoard chessBoard = ChessBoard.fromPosition(FEN);
+        final ChessBoard chessBoard = ChessBoard.pureChessFromPosition(FEN);
 
         return () -> ChessGame.of(
                 UUID.randomUUID(),

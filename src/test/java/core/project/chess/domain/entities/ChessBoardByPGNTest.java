@@ -25,7 +25,7 @@ class ChessBoardByPGNTest {
     @DisplayName("Test initialization of chess board by FEN.")
     void testFromPosition(String validPGN) {
         assertDoesNotThrow(() -> {
-            ChessBoard board = ChessBoard.fromPGN(validPGN);
+            ChessBoard board = ChessBoard.pureChessFromPGN(validPGN);
             assertNotNull(board);
         });
     }
