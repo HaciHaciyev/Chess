@@ -868,6 +868,8 @@ public class ChessBoard {
                                              Field endedField,
                                              Piece piece,
                                              Field startedField) {
+        if (isPureChess) return;
+
         if (capturedPieceAt != null) {
             long newZobristHash = this.zobrist.updateHashOnRevertMove(
                     pieceOnEndField,
@@ -1188,9 +1190,10 @@ public class ChessBoard {
 
         /** Recording the move made in algebraic notation and Zobrist hashing.*/
         algebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
-        long newZobristHash = this.zobrist.updateHashForCastling(piece.color(), AlgebraicNotation.castle(to), castlingRights());
-        zobristHash.put(newZobristHash, zobristHash.getOrDefault(newZobristHash, 0) + 1);
-
+        if (!isPureChess) {
+            long newZobristHash = this.zobrist.updateHashForCastling(piece.color(), AlgebraicNotation.castle(to), castlingRights());
+            zobristHash.put(newZobristHash, zobristHash.getOrDefault(newZobristHash, 0) + 1);
+        }
         /** Retrieve message about move result.*/
         if (opponentKingStatus.equals(STALEMATE)) return GameResultMessage.Stalemate;
         if (opponentKingStatus.equals(CHECKMATE)) return GameResultMessage.Checkmate;
@@ -1330,10 +1333,12 @@ public class ChessBoard {
         changedKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(king);
         switchFiguresTurn();
-        long newZobristHash = this.zobrist.updateHashForCastlingRevert(figuresTurn == WHITE ? BLACK : WHITE, castle, castlingRights());
-        final int newValue = zobristHash.get(newZobristHash) - 1;
-        if (newValue == 0) zobristHash.remove(newZobristHash);
-        else zobristHash.put(newZobristHash, newValue);
+        if (!isPureChess) {
+            long newZobristHash = this.zobrist.updateHashForCastlingRevert(figuresTurn == WHITE ? BLACK : WHITE, castle, castlingRights());
+            final int newValue = zobristHash.get(newZobristHash) - 1;
+            if (newValue == 0) zobristHash.remove(newZobristHash);
+            else zobristHash.put(newZobristHash, newValue);
+        }
     }
 
     /**
