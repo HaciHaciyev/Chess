@@ -65,7 +65,7 @@ import static java.util.Objects.nonNull;
  *      - fifty-move rule.
  *
  * @author Hadzhyiev Hadzhy
- * @version 4.0
+ * @version 4.1
  */
 public class ChessBoard {
     private final UUID chessBoardId;
@@ -83,7 +83,7 @@ public class ChessBoard {
      * - fifty-move rule.
      */
     private final boolean isPureChess;
-    
+
     private byte materialAdvantageOfWhite;
     private byte materialAdvantageOfBlack;
 
@@ -99,6 +99,12 @@ public class ChessBoard {
     private final ZobristHashKeys zobrist;
 
     /**
+     * Map representing the current state of the board, where each coordinate is linked to a field.
+     * Field is a nested class of ChessBoard and contains fields such as coordinates and, if available, a chess piece.
+     */
+    private final Map<Coordinate, Field> fieldMap;
+
+    /**
      * Hash codes representing unique board positions for repetition detection.
      * Using Zobrist Hashing.
      * Necessary for counting identical positions on the board. Especially for ThreeFold rule.
@@ -107,15 +113,14 @@ public class ChessBoard {
     private final @Nullable Map<Long, Integer> zobristHash;
 
     /**
-     * Map representing the current state of the board, where each coordinate is linked to a field.
-     * Field is a nested class of ChessBoard and contains fields such as coordinates and, if available, a chess piece.
+     * Zobrist hash history
      */
-    private final Map<Coordinate, Field> fieldMap;
+    private final Deque<Long> zobristHashKeys = new ArrayDeque<>();
 
     /**
      * Stack of moves recorded in algebraic notation for game replay and analysis.
      */
-    private final Deque<AlgebraicNotation> algebraicNotations;
+    private final Deque<AlgebraicNotation> algebraicNotations = new ArrayDeque<>();
 
     /**
      * History of castling abilities for every position
@@ -131,6 +136,9 @@ public class ChessBoard {
     private final Deque<Piece> capturedWhitePieces = new ArrayDeque<>();
     private final Deque<Piece> capturedBlackPieces = new ArrayDeque<>();
 
+    /**
+     * Utility classes for navigating chess board
+     */
     private final ChessBoardNavigator navigator = new ChessBoardNavigator(this);
 
     /**
@@ -151,7 +159,6 @@ public class ChessBoard {
         this.isPureChess = isPureChess;
         this.ruleOf50Moves = 0;
         this.countOfHalfMoves = 0;
-        this.algebraicNotations = new ArrayDeque<>();
         this.fieldMap = new EnumMap<>(Coordinate.class);
 
         if (inCaseOfInitFromFEN == null) {
@@ -172,6 +179,14 @@ public class ChessBoard {
                     validBlackLongCasting));
 
             standardInitializer();
+            this.zobrist = new ZobristHashKeys();
+            long key = zobrist.computeZobristHash(this);
+            this.zobristHashKeys.add(key);
+            if (!isPureChess) {
+                this.zobristHash = new HashMap<>();
+                this.zobristHash.put(key, 1);
+            }
+            else this.zobristHash = null;
 
             InitType tempInitType = InitType.DEFAULT;
             if (nonNull(algebraicNotations)) {
@@ -180,12 +195,6 @@ public class ChessBoard {
             }
 
             this.initType = tempInitType;
-            this.zobrist = new ZobristHashKeys(this);
-            if (!isPureChess) {
-                this.zobristHash = new HashMap<>();
-                this.zobristHash.put(zobrist.hash(), 1);
-            }
-            else this.zobristHash = null;
             return;
         }
 
@@ -212,10 +221,13 @@ public class ChessBoard {
 
         initializerFromFEN(FEN);
         validateStalemateAndCheckmate(inCaseOfInitFromFEN);
-        this.zobrist = new ZobristHashKeys(this);
+
+        this.zobrist = new ZobristHashKeys();
+        long key = zobrist.computeZobristHash(this);
+        this.zobristHashKeys.add(key);
         if (!isPureChess) {
             this.zobristHash = new HashMap<>();
-            this.zobristHash.put(zobrist.hash(), 1);
+            this.zobristHash.put(key, 1);
         }
         else this.zobristHash = null;
     }
@@ -479,7 +491,7 @@ public class ChessBoard {
     }
 
     public long zobristHash() {
-        return zobrist.hash();
+        return zobristHashKeys.peekLast();
     }
 
     /**
@@ -495,7 +507,7 @@ public class ChessBoard {
      * @return {@code true} if the position has been repeated three times under valid conditions, {@code false} otherwise.
      */
     public boolean isThreeFoldActive() {
-        return !isPureChess && zobristHash.get(zobrist.hash()) == 3;
+        return !isPureChess && zobristHash.get(zobristHash()) == 3;
     }
 
     /**
@@ -857,49 +869,27 @@ public class ChessBoard {
         int castlingRights = isCastlingAbilityChanged ? -1 : castlingRights();
 
         if (nonNull(capturedAt)) {
-            long newZobristHash = this.zobrist.updateHash(piece, from, endedPiece, to,
+            long newZobristHash = this.zobrist.updateHash(zobristHash(),
+                    piece, from, endedPiece, to,
                     capturedAt.getFirst(), capturedAt.getSecond(),
-                    castlingRights, enPassantFile());
-
+                    castlingRights, enPassantFile()
+            );
+            zobristHashKeys.addLast(newZobristHash);
             if (isPureChess) return;
             zobristHash.put(newZobristHash, zobristHash.getOrDefault(newZobristHash, 0) + 1);
             return;
         }
 
-        long newZobristHash = this.zobrist.updateHash(piece, from, endedPiece, to, castlingRights(), enPassantFile());
+        long newZobristHash = this.zobrist.updateHash(zobristHash(), piece, from, endedPiece, to, castlingRights(), enPassantFile());
+        zobristHashKeys.addLast(newZobristHash);
         if (isPureChess) return;
         zobristHash.put(newZobristHash, zobristHash.getOrDefault(newZobristHash, 0) + 1);
     }
 
-    private void updateZobristHashOnUndoMove(final Piece piece, final Coordinate from, final Piece pieceOnEndField, final Coordinate to,
-                                             final Pair<Piece, Coordinate> capturedPieceAt, final boolean isCastlingAbilityChanged) {
-        if (!isPureChess) {
-            final int newValue = zobristHash.get(zobristHash()) - 1;
-            if (newValue == 0) zobristHash.remove(zobristHash());
-            else zobristHash.put(zobristHash(), newValue);
-        }
-
-        int castlingRights = isCastlingAbilityChanged ? -1 : castlingRights();
-        if (nonNull(capturedPieceAt)) {
-            this.zobrist.updateHashOnRevertMove(piece, from, pieceOnEndField, to, capturedPieceAt.getFirst(),
-                    capturedPieceAt.getSecond(), castlingRights, enPassantFile());
-            return;
-        }
-
-        this.zobrist.updateHashOnRevertMove(piece, from, pieceOnEndField, to, castlingRights(), enPassantFile());
-    }
-
-    private void updateZobristHashForCastling(AlgebraicNotation.Castle castle, Color color) {
-        long newZobristHash = this.zobrist.updateHashForCastling(color, castle, castlingRights());
+    private void updateZobristHashForCastling(final AlgebraicNotation.Castle castle, final Color color) {
+        long newZobristHash = this.zobrist.updateHashForCastling(zobristHash(), color, castle, castlingRights());
+        zobristHashKeys.addLast(newZobristHash);
         if (!isPureChess) zobristHash.put(newZobristHash, zobristHash.getOrDefault(newZobristHash, 0) + 1);
-    }
-
-    private void updateZobristHashOnUndoCastling(AlgebraicNotation.Castle castle, Color color) {
-        long newZobristHash = this.zobrist.updateHashForCastlingRevert(color, castle, castlingRights());
-        if (isPureChess) return;
-        final int newValue = zobristHash.get(newZobristHash) - 1;
-        if (newValue == 0) zobristHash.remove(newZobristHash);
-        else zobristHash.put(newZobristHash, newValue);
     }
 
     /**
@@ -973,7 +963,7 @@ public class ChessBoard {
      *
      * @return true if at least one pawn is present on the board, false otherwise.
      */
-    public boolean isAtLeastOnePawnOnBoard() {
+    private boolean isAtLeastOnePawnOnBoard() {
         for (final Coordinate coordinate : Coordinate.values()) {
             final Field field = fieldMap.get(coordinate);
 
@@ -1098,7 +1088,7 @@ public class ChessBoard {
         updateZobristHash(piece, from, to, inCaseOfPromotion, capturedAt, isCastlingChanged);
 
         /** Retrieve message about game result.*/
-        if (opponentKingStatus.equals(STALEMATE)) return GameResultMessage.Stalemate;
+        if (isStalemate) return GameResultMessage.Stalemate;
         if (opponentKingStatus.equals(CHECKMATE)) return GameResultMessage.Checkmate;
         if (opponentKingStatus.equals(CHECK)) return GameResultMessage.Continue;
         if (isInsufficientMatingMaterial()) return GameResultMessage.InsufficientMatingMaterial;
@@ -1198,7 +1188,7 @@ public class ChessBoard {
         updateZobristHashForCastling(castle, piece.color());
 
         /** Retrieve message about move result.*/
-        if (opponentKingStatus.equals(STALEMATE)) return GameResultMessage.Stalemate;
+        if (isStalemate) return GameResultMessage.Stalemate;
         if (opponentKingStatus.equals(CHECKMATE)) return GameResultMessage.Checkmate;
         if (!isPureChess && ruleOf50Moves == 100) return GameResultMessage.RuleOf50Moves;
         if (isThreeFoldActive()) return GameResultMessage.RuleOf3EqualsPositions;
@@ -1279,23 +1269,20 @@ public class ChessBoard {
 
         final Field startField = fieldMap.get(from);
         final Field endField = fieldMap.get(to);
-        final Piece pieceOnEnd = endField.piece;
         final Piece piece = getPieceForUndo(endField, lastMovement);
 
         endField.removeFigure();
         startField.addFigure(piece);
 
-        Pair<Piece, Coordinate> capturedPieceAt = null;
         final boolean isCapture = lastMovement.isCapture();
-        if (isCapture) capturedPieceAt = revertCapture(endField, piece);
+        if (isCapture) revertCapture(endField, piece);
 
         this.countOfHalfMoves--;
         if (!isPureChess && !isCapture && !(piece instanceof Pawn) && ruleOf50Moves != 0) this.ruleOf50Moves--;
-        enPassantStack.pollLast();
         if (piece instanceof King king) changedKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(piece);
-        final boolean isCastlingChanged = piece instanceof Rook || piece instanceof King;
-        updateZobristHashOnUndoMove(piece, startField.coordinate, pieceOnEnd, endField.coordinate, capturedPieceAt, isCastlingChanged);
+        enPassantStack.pollLast();
+        zobristHashKeys.removeLast();
         switchFiguresTurn();
         return true;
     }
@@ -1336,7 +1323,7 @@ public class ChessBoard {
         enPassantStack.removeLast();
         changedKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(king);
-        updateZobristHashOnUndoCastling(castle, figuresTurn);
+        zobristHashKeys.removeLast();
         switchFiguresTurn();
     }
 
@@ -1392,42 +1379,40 @@ public class ChessBoard {
         startField.addFigure(rook);
     }
 
-    private Pair<Piece, Coordinate> revertCapture(final Field endedField, final Piece piece) {
-        Pair<Piece, Coordinate> isRevertedPassage = revertPotentialCaptureOnPassage(endedField, piece);
-        if (isRevertedPassage != null) return isRevertedPassage;
+    private void revertCapture(final Field endedField, final Piece piece) {
+        if (revertPotentialCaptureOnPassage(endedField, piece)) return;
 
         if (figuresTurn.equals(BLACK)) {
             Piece capturedPiece = capturedBlackPieces.removeLast();
             endedField.addFigure(capturedPiece);
             materialAdvantageOfBlack += materialAdvantageOfFigure(capturedPiece);
-            return Pair.of(capturedPiece, endedField.coordinate);
+            return;
         }
 
         Piece capturedPiece = capturedWhitePieces.removeLast();
         endedField.addFigure(capturedPiece);
         materialAdvantageOfWhite += materialAdvantageOfFigure(capturedPiece);
-        return Pair.of(capturedPiece, endedField.coordinate);
     }
 
-    private Pair<Piece, Coordinate> revertPotentialCaptureOnPassage(final Field endedField, final Piece piece) {
-        if (!(piece instanceof Pawn)) return null;
-        if (countOfHalfMoves < 5 && initType != InitType.FEN) return null;
-        if (enPassantStack.size() < 2) return null;
+    private boolean revertPotentialCaptureOnPassage(final Field endedField, final Piece piece) {
+        if (!(piece instanceof Pawn)) return false;
+        if (countOfHalfMoves < 5 && initType != InitType.FEN) return false;
+        if (enPassantStack.size() < 2) return false;
 
         Coordinate tempEnPassaunt_currentState = enPassantStack.removeLast();
         Coordinate penultimateEnPassaunt = enPassantStack.peekLast();
 
         if (penultimateEnPassaunt == null) {
             enPassantStack.addLast(tempEnPassaunt_currentState);
-            return null;
+            return false;
         }
         if (tempEnPassaunt_currentState != null) {
             enPassantStack.addLast(tempEnPassaunt_currentState);
-            return null;
+            return false;
         }
         if (penultimateEnPassaunt != endedField.coordinate()) {
             enPassantStack.addLast(tempEnPassaunt_currentState);
-            return null;
+            return false;
         }
         enPassantStack.addLast(tempEnPassaunt_currentState);
 
@@ -1438,13 +1423,13 @@ public class ChessBoard {
             Piece capturedPawn = capturedBlackPieces.removeLast();
             fieldMap.get(required).addFigure(capturedPawn);
             materialAdvantageOfBlack++;
-            return Pair.of(capturedPawn, required);
+            return true;
         }
 
         Piece capturedPawn = capturedWhitePieces.removeLast();
         fieldMap.get(required).addFigure(capturedPawn);
         materialAdvantageOfWhite++;
-        return Pair.of(capturedPawn, required);
+        return true;
     }
 
     private void logErrorMove(Coordinate from, Coordinate to) {

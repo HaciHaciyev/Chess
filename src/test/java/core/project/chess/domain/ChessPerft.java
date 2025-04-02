@@ -4,14 +4,9 @@ import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
 import core.project.chess.domain.chess.entities.ChessBoard;
-import core.project.chess.domain.chess.entities.ChessGame;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
-import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.PersonalData;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import org.jetbrains.annotations.NotNull;
@@ -19,8 +14,10 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
-import java.util.function.Supplier;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,15 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ChessPerft {
     public static final int DEPTH = 6;
     private final Board board = new Board();
-    private final ChessGame chessGame = chessGameSupplier().get();
-    private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername();
-    private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
+    private final ChessBoard chessGame = ChessBoard.pureChess();
     private final PerftValues perftValues = PerftValues.newInstance();
     private final PerftValues secondPerftValues = PerftValues.newInstance();
 
     @Test
     void performanceTest() {
-        System.out.printf("Current FEN -> %s \n", chessGame.getChessBoard().actualRepresentationOfChessBoard());
+        //System.out.printf("Current FEN -> %s \n", chessGame.actualRepresentationOfChessBoard());
         long v = perft(DEPTH);
         switch (DEPTH) {
             case 1 -> assertPerftDepth1();
@@ -134,13 +129,12 @@ class ChessPerft {
         List<Move> validMoves = this.board.legalMoves();
 
         for (Move move : validMoves) {
-            String activePlayerUsername = getActivePlayerUsername();
             Coordinate from = from(move);
             Coordinate to = to(move);
             Piece inCaseOfPromotion = getInCaseOfPromotion(move);
 
             board.doMove(move);
-            chessGame.makeMovement(activePlayerUsername, from, to, inCaseOfPromotion);
+            chessGame.reposition(from, to, inCaseOfPromotion);
 
             long newNodes = perft(depth - 1);
             nodes += newNodes;
@@ -149,12 +143,11 @@ class ChessPerft {
             verifyPerft(move, from, to, inCaseOfPromotion);
 
             if (depth == DEPTH) {
-                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.getChessBoard().actualRepresentationOfChessBoard());
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.actualRepresentationOfChessBoard());
             }
 
             board.undoMove();
-            chessGame.returnMovement(usernameOfPlayerForWhites);
-            chessGame.returnMovement(usernameOfPlayerForBlacks);
+            chessGame.returnOfTheMovement();
         }
 
         return nodes;
@@ -166,7 +159,7 @@ class ChessPerft {
         }
 
         Log.errorf("Perft failed. On move: from - %s, to - %s, inCaseOfPromotion - %s", from, to, inCaseOfPromotion);
-        Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", chessGame.getChessBoard().toString(), chessGame.getChessBoard().pgn());
+        Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", chessGame.toString(), chessGame.pgn());
         System.out.println();
         board.undoMove();
         String[] fen = new String[2];
@@ -217,10 +210,6 @@ class ChessPerft {
 
     private static @NotNull Coordinate from(Move move) {
         return Coordinate.valueOf(move.getFrom().toString().toLowerCase());
-    }
-
-    private String getActivePlayerUsername() {
-        return chessGame.getPlayersTurn().equals(Color.BLACK) ? usernameOfPlayerForBlacks : usernameOfPlayerForWhites;
     }
 
     private void calculateSecondPerftValues(long nodes, Move move) {
@@ -285,8 +274,8 @@ class ChessPerft {
     private void calculatePerftValues(long nodes) {
         perftValues.nodes = nodes;
 
-        List<String> listOfAlgebraicNotations = chessGame.getChessBoard().listOfAlgebraicNotations();
-        Optional<AlgebraicNotation> notation = chessGame.getChessBoard().lastAlgebraicNotation();
+        List<String> listOfAlgebraicNotations = chessGame.listOfAlgebraicNotations();
+        Optional<AlgebraicNotation> notation = chessGame.lastAlgebraicNotation();
 
         if (notation.isEmpty()) return;
 
@@ -438,43 +427,5 @@ class ChessPerft {
             if (checks != secondPerftValues.checks) return false;
             return checkMates == secondPerftValues.checkMates;
         }
-    }
-
-    static Supplier<ChessGame> chessGameSupplier(String fen) {
-        final ChessBoard chessBoard = ChessBoard.pureChessFromPosition(fen);
-
-        return () -> ChessGame.of(
-                UUID.randomUUID(),
-                chessBoard,
-                userAccountSupplier("firstPlayer", "firstplayer@domai.com").get(),
-                userAccountSupplier("secondPlayer", "secondplayer@domai.com").get(),
-                SessionEvents.defaultEvents(),
-                ChessGame.Time.DEFAULT,
-                false
-        );
-    }
-
-    static Supplier<ChessGame> chessGameSupplier() {
-        final ChessBoard chessBoard = ChessBoard.pureChess();
-
-        return () -> ChessGame.of(
-                UUID.randomUUID(),
-                chessBoard,
-                userAccountSupplier("firstPlayer", "firstplayer@domai.com").get(),
-                userAccountSupplier("secondPlayer", "secondplayer@domai.com").get(),
-                SessionEvents.defaultEvents(),
-                ChessGame.Time.DEFAULT,
-                false
-        );
-    }
-
-    static Supplier<UserAccount> userAccountSupplier(String username, String email) {
-        return () -> UserAccount.of(new PersonalData(
-                "generateFirstname",
-                "generateSurname",
-                username,
-                email,
-                "password"
-        ));
     }
 }

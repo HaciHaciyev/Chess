@@ -238,7 +238,7 @@ public class ChessGame {
 
         resetAgreements();
 
-        if (!chessBoard.isPureChess() && isGameOverMessage(message)) {
+        if (isGameOverMessage(message)) {
             whiteTimer.stop();
             blackTimer.stop();
 

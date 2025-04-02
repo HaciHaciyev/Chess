@@ -19,6 +19,22 @@ public enum Coordinate {
 
     private static final Coordinate[][] COORDINATE_CACHE = new Coordinate[8][8];
 
+    public static final Coordinate WHITE_KING_START = Coordinate.e1;
+    public static final Coordinate WHITE_KING_SHORT_CASTLE = Coordinate.g1;
+    public static final Coordinate WHITE_KING_LONG_CASTLE = Coordinate.c1;
+    public static final Coordinate WHITE_ROOK_SHORT_CASTLE_START = Coordinate.h1;
+    public static final Coordinate WHITE_ROOK_SHORT_CASTLE_END = Coordinate.f1;
+    public static final Coordinate WHITE_ROOK_LONG_CASTLE_START = Coordinate.a1;
+    public static final Coordinate WHITE_ROOK_LONG_CASTLE_END = Coordinate.d1;
+
+    public static final Coordinate BLACK_KING_START = Coordinate.e8;
+    public static final Coordinate BLACK_KING_SHORT_CASTLE = Coordinate.g8;
+    public static final Coordinate BLACK_KING_LONG_CASTLE = Coordinate.c8;
+    public static final Coordinate BLACK_ROOK_SHORT_CASTLE_START = Coordinate.h8;
+    public static final Coordinate BLACK_ROOK_SHORT_CASTLE_END = Coordinate.f8;
+    public static final Coordinate BLACK_ROOK_LONG_CASTLE_START = Coordinate.a8;
+    public static final Coordinate BLACK_ROOK_LONG_CASTLE_END = Coordinate.d8;
+
     static {
         for (Coordinate c : Coordinate.values()) {
             int row = c.row() - 1;
