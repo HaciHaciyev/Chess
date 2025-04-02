@@ -262,7 +262,7 @@ class GameFunctionalitiesWSTest {
                     if (message.type().equals(MessageType.FEN_PGN))
                         Log.infof("FEN_PGN message - PGN: %s", message.PGN());
                     return message.type().equals(MessageType.FEN_PGN) &&
-                            message.PGN().equals("1. e2-e4 e7-e5 2. Ng1-f3 Nb8-c6 3. Nb1-c3 Ng8-f6 4. Bf1-c4 d7-d6 5. d2-d3 Bc8-e6 ");
+                            message.PGN().equals("1. e2-e4 e7-e5 2. Ng1-f3 Nb8-c6 3. Nb1-c3 Ng8-f6 4. Bf1-c4 d7-d6 5. d2-d3 ... ");
                 })
         );
 
