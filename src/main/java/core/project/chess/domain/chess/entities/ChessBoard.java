@@ -10,6 +10,7 @@ import core.project.chess.domain.chess.util.ZobristHashKeys;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.CastlingAbility;
 import core.project.chess.domain.chess.value_objects.FromFEN;
+import core.project.chess.domain.chess.value_objects.KingStatus;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
@@ -24,11 +25,11 @@ import static java.util.Objects.nonNull;
 
 /**
  * The `ChessBoard` class represents the central entity of the Chess Aggregate. It encapsulates the state and behavior of a chess board,
- * serving as the entry point for all chess-related operations within the domain.
+ * serving as the entry point for all chess-related status within the domain.
  * <p>
  * The `ChessBoard` is responsible for managing the placement and movement of chess pieces, enforcing the rules of the game,
  * and tracking the history of moves made on the board. It provides a well-defined API for interacting with the chess board,
- * ensuring that all operations are performed in a consistent and valid manner.
+ * ensuring that all status are performed in a consistent and valid manner.
  * <p>
  * The `ChessBoard` is the root entity of the Chess Aggregate, meaning that it owns and is responsible for the lifecycle of all
  * other entities and value objects within the aggregate, such as `Piece`, `Coordinate`, and `AlgebraicNotation`. This ensures
@@ -37,7 +38,7 @@ import static java.util.Objects.nonNull;
  * The `ChessBoard` class encapsulates the following key responsibilities:
  * <p>
  * 1. **Piece Placement and Movement**: The `reposition()` method allows for the movement of pieces on the board, handling
- *    various operations such as capturing, promotion, and castling, while ensuring the validity of each move,
+ *    various status such as capturing, promotion, and castling, while ensuring the validity of each move,
  *    also allow to revert last made move by using 'returnOfTheMovement()'.
  * <p>
  * 2. **Castling Management**: The `castling()` method handles the specific logic for castling moves, including the movement of the rook
@@ -121,6 +122,11 @@ public class ChessBoard {
      * Stack of moves recorded in algebraic notation for game replay and analysis.
      */
     private final Deque<AlgebraicNotation> algebraicNotations = new ArrayDeque<>();
+
+    /**
+     * King status
+     */
+    private final Deque<KingStatus> kingStatuses = new ArrayDeque<>();
 
     /**
      * History of castling abilities for every position
@@ -494,6 +500,10 @@ public class ChessBoard {
         return zobristHashKeys.peekLast();
     }
 
+    public @Nullable KingStatus kingStatus() {
+        return kingStatuses.peekLast();
+    }
+
     /**
      * Checks whether the threefold repetition rule is active.
      * <p>
@@ -605,13 +615,15 @@ public class ChessBoard {
         final King whiteKing = theKing(WHITE);
         final King blackKing = theKing(BLACK);
 
-        final Operations checkOrMateForWhite = whiteKing.kingStatus(this);
-        if (checkOrMateForWhite.equals(CHECKMATE) || !activeColor.equals(WHITE) && checkOrMateForWhite.equals(CHECK)) {
+        final KingStatus checkOrMateForWhite = whiteKing.kingStatus(this);
+        if (checkOrMateForWhite.status().equals(CHECKMATE) ||
+                !activeColor.equals(WHITE) && checkOrMateForWhite.status().equals(CHECK)) {
             throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
         }
 
-        final Operations checkOrMateForBlack = blackKing.kingStatus(this);
-        if (checkOrMateForBlack.equals(CHECKMATE) || !activeColor.equals(BLACK) && checkOrMateForBlack.equals(CHECK)) {
+        final KingStatus checkOrMateForBlack = blackKing.kingStatus(this);
+        if (checkOrMateForBlack.status().equals(CHECKMATE) ||
+                !activeColor.equals(BLACK) && checkOrMateForBlack.status().equals(CHECK)) {
             throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
         }
 
@@ -893,14 +905,14 @@ public class ChessBoard {
     }
 
     /**
-     * Updates the count of moves for the 50-move rule based on the current piece and operations performed.
+     * Updates the count of moves for the 50-move rule based on the current piece and status performed.
      * <p>
      * The 50-move rule states that a player can claim a draw if no pawn has been moved and no capture has been made
-     * in the last 50 full moves. This method checks the current piece and the operations performed during the turn to
+     * in the last 50 full moves. This method checks the current piece and the status performed during the turn to
      * determine whether to increment the move counters.
      *
      * @param piece The piece that is currently being moved. This is used to check if the piece is a pawn.
-     * @param operations A set of operations that were performed during the turn. This is used to check if a capture
+     * @param operations A set of status that were performed during the turn. This is used to check if a capture
      *                   occurred.
      * </p>
      */
@@ -1013,7 +1025,7 @@ public class ChessBoard {
      * @param from                  The coordinate the piece is moving from.
      * @param to                    The coordinate the piece is moving to.
      * @param inCaseOfPromotion     The piece to promote to in case of a pawn promotion, or null if no promotion.
-     * @return The operations performed during the repositioning.
+     * @return The status performed during the repositioning.
      * @throws IllegalArgumentException If the move is invalid.
      */
     public final GameResultMessage reposition(final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion) {
@@ -1034,7 +1046,7 @@ public class ChessBoard {
         final Field endField = fieldMap.get(to);
         final Piece piece = startField.piece();
 
-        /** Delegate the operation to another method if necessary.*/
+        /** Delegate the status to another method if necessary.*/
         if (isCastling(piece, from, to)) return castling(from, to);
 
         /** Validation.*/
@@ -1055,7 +1067,7 @@ public class ChessBoard {
             }
         }
 
-        /** Process operations from StatusPair. All validation need to be processed before that.*/
+        /** Process status from StatusPair. All validation need to be processed before that.*/
         this.countOfHalfMoves++;
         startField.removeFigure();
         Pair<Piece, Coordinate> capturedAt = null;
@@ -1069,10 +1081,17 @@ public class ChessBoard {
 
         /** Check for Checkmate, Stalemate, Check after move executed...*/
         final King opponentKing = theKing(piece.color() == WHITE ? BLACK : WHITE);
-        Operations opponentKingStatus = opponentKing.kingStatus(this);
+        KingStatus opponentKingStatusAndEnemies = opponentKing.kingStatus(this);
+        kingStatuses.addLast(opponentKingStatusAndEnemies);
+        Operations opponentKingStatus = opponentKingStatusAndEnemies.status();
         operations.add(opponentKingStatus);
 
-        final boolean isStalemate = countOfHalfMoves() + 1 >= 10 && opponentKingStatus == CONTINUE && opponentKing.stalemate(this);
+        final boolean isRequiredTOCheckStalemate = countOfHalfMoves() + 1 >= 10 || initType == InitType.FEN;
+
+        final boolean isStalemate = isRequiredTOCheckStalemate &&
+                opponentKingStatus == CONTINUE &&
+                opponentKing.stalemate(this);
+
         if (isStalemate) operations.add(STALEMATE);
 
         /** Monitor opportunities for castling, switch players.*/
@@ -1133,7 +1152,7 @@ public class ChessBoard {
      *
      * @param from The coordinate the king is moving from.
      * @param to   The coordinate the king is moving to.
-     * @return The operations performed during the castling.
+     * @return The status performed during the castling.
      * @throws IllegalArgumentException If the castling move is invalid.
      * @throws IllegalStateException    If the method is used incorrectly.
      */
@@ -1161,7 +1180,7 @@ public class ChessBoard {
             throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
 
-        /**Process operations from StatusPair. All validation need to be processed before that.*/
+        /**Process status from StatusPair. All validation need to be processed before that.*/
         this.countOfHalfMoves++;
         kingStartedField.removeFigure();
         kingEndField.addFigure(king);
@@ -1171,7 +1190,9 @@ public class ChessBoard {
 
         /** Check for Checkmate, Stalemate, Check after move executed...*/
         final King opponentKing = theKing(piece.color() == WHITE ? BLACK : WHITE);
-        Operations opponentKingStatus = opponentKing.kingStatus(this);
+        KingStatus opponentKingStatusAndEnemies = opponentKing.kingStatus(this);
+        kingStatuses.addLast(opponentKingStatusAndEnemies);
+        Operations opponentKingStatus = opponentKingStatusAndEnemies.status();
         operations.add(opponentKingStatus);
         final boolean isStalemate = countOfHalfMoves() + 1 >= 10 && opponentKing.stalemate(this);
         if (isStalemate) operations.add(STALEMATE);
@@ -1283,6 +1304,7 @@ public class ChessBoard {
         changeOfCastlingAbilityInRevertMove(piece);
         enPassantStack.pollLast();
         zobristHashKeys.removeLast();
+        kingStatuses.removeLast();
         switchFiguresTurn();
         return true;
     }
@@ -1319,11 +1341,13 @@ public class ChessBoard {
         else revertRookInLongCastling(to);
 
         this.ruleOf50Moves--;
+        this.countOfHalfMoves--;
         algebraicNotations.removeLast();
         enPassantStack.removeLast();
         changedKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(king);
         zobristHashKeys.removeLast();
+        kingStatuses.removeLast();
         switchFiguresTurn();
     }
 
@@ -1444,8 +1468,8 @@ public class ChessBoard {
     }
 
     /**
-     * Represents the different operations that can be performed during a chess move,
-     * such as capture, promotion, check, checkmate, and stalemate or empty if operation not exists.
+     * Represents the different status that can be performed during a chess move,
+     * such as capture, promotion, check, checkmate, and stalemate or empty if status not exists.
      */
     public enum Operations {
         PROMOTION("="),

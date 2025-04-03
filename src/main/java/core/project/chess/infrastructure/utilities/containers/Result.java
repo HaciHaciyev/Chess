@@ -6,10 +6,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Result type is used to encapsulate a result of operation or Exception if something goes wrong
+ * Result type is used to encapsulate a result of status or Exception if something goes wrong
  * Used as better alternative for Optionals which can't tell you about what went wrong
  *
- * @param <V>  result of an operation
+ * @param <V>  result of an status
  * @param <E>  Exception that tells what went wrong
  * @param success  allows to pass null at value and throwable
  */
@@ -18,14 +18,14 @@ public record Result<V, E extends Throwable>(V value,
                                              boolean success) {
 
     /**
-     * @return returns new Result encapsulating result of an operation
+     * @return returns new Result encapsulating result of an status
      */
     public static <V, E extends Throwable> Result<V, E> success(V value) {
         return new Result<>(value, null, true);
     }
 
     /**
-     * @return returns new Result encapsulating Exception that is thrown by an operation
+     * @return returns new Result encapsulating Exception that is thrown by an status
      */
     public static <V, E extends Throwable> Result<V, E> failure(E throwable) {
         return new Result<>(null, throwable, false);

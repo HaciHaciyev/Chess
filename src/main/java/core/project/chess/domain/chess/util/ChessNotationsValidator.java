@@ -187,7 +187,7 @@ public class ChessNotationsValidator {
             return;
         }
 
-        throw new IllegalArgumentException("Invalid pawn capture operation.");
+        throw new IllegalArgumentException("Invalid pawn capture status.");
     }
 
     public static void validatePromotion(final String algebraicNotation) {

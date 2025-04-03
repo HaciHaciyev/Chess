@@ -569,7 +569,7 @@ class CustomChessTests {
                 () -> chessGame.makeMovement(firstPlayerUsername, c2, c3, null)
         );
 
-        // INVALID. Invalid pawn capture operation, nothing to capture and it is not a capture on passage.
+        // INVALID. Invalid pawn capture status, nothing to capture and it is not a capture on passage.
         assertThrows(
                 IllegalArgumentException.class,
                 () -> chessGame.makeMovement(firstPlayerUsername, c2, d3, null)

@@ -5,7 +5,6 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 
 import java.util.EnumSet;
-import java.util.Objects;
 import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
@@ -38,12 +37,6 @@ public final class Knight implements Piece {
 
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Objects.requireNonNull(chessBoard);
-        Objects.requireNonNull(from);
-        Objects.requireNonNull(to);
-
-        if (from.equals(to)) return null;
-
         Piece startField = chessBoard.piece(from);
         Piece endField = chessBoard.piece(to);
 

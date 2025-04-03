@@ -18,7 +18,7 @@ public sealed interface Piece
 
     /**
      * Fully validates the move, and also returns
-     * a list of operations that the given operation need to perform.
+     * a list of status that the given status need to perform.
      * Or returns null if move is invalid.
      */
     @Nullable Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);

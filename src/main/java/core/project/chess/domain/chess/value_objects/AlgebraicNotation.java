@@ -18,7 +18,7 @@ import java.util.Set;
  * coordinate, and the moves are described using these coordinates.
  * <p>
  * This class provides a set of static methods that take in various parameters related to a chess move, such as the piece
- * being moved, the set of operations performed during the move (e.g., capture, promotion), the starting and ending
+ * being moved, the set of status performed during the move (e.g., capture, promotion), the starting and ending
  * coordinates of the move, and the piece being promoted to (if applicable), and generates the corresponding algebraic
  * notation representation.
  * <p>
@@ -46,8 +46,8 @@ public class AlgebraicNotation {
 
     /**
      * Represents a simple pawn movement, where the pawn moves forward without capturing any piece.
-     * The last symbol of the notation indicates an operation related to the enemy king or the end of the game as a whole, like
-     * check ('+'), checkmate ('#'), stalemate ('.'), or just an empty string if not operation with opponent king ('').
+     * The last symbol of the notation indicates an status related to the enemy king or the end of the game as a whole, like
+     * check ('+'), checkmate ('#'), stalemate ('.'), or just an empty string if not status with opponent king ('').
      * Examples:
      * "e2-e4"
      * "e2-e4+"
@@ -63,7 +63,7 @@ public class AlgebraicNotation {
     public static final String SIMPLE_FIGURE_MOVEMENT_FORMAT = "%s%s-%s%s";
 
     /**
-     * Represents a pawn capture operation, where a pawn captures an opponent's piece.
+     * Represents a pawn capture status, where a pawn captures an opponent's piece.
      * Examples:
      * "e2xd3"
      * "e2xd3."
@@ -71,7 +71,7 @@ public class AlgebraicNotation {
     public static final String PAWN_CAPTURE_OPERATION_FORMAT = "%s%s%s%s";
 
     /**
-     * Represents a capture operation by a chess piece (other than a pawn), where the piece captures an opponent's piece.
+     * Represents a capture status by a chess piece (other than a pawn), where the piece captures an opponent's piece.
      * Examples:
      * "Nf3xd4"
      * "Nf3xd4+"
@@ -95,7 +95,7 @@ public class AlgebraicNotation {
     public static final String PROMOTION_FORMAT = "%s-%s=%s%s";
 
     /**
-     * Represents a pawn promotion that also includes a capture operation.
+     * Represents a pawn promotion that also includes a capture status.
      * Examples:
      * "a7xb8=Q"
      * "a7xb8=Q#"
@@ -117,7 +117,7 @@ public class AlgebraicNotation {
      * Generates the algebraic notation representation of a chess move. Able to using only in Domain.
      *
      * @param piece The piece being moved.
-     * @param operationsSet The set of operations performed during the move (e.g., capture, promotion, check, checkmate, stalemate).
+     * @param operationsSet The set of status performed during the move (e.g., capture, promotion, check, checkmate, stalemate).
      * @param from The starting coordinate of the move.
      * @param to The ending coordinate of the move.
      * @param inCaseOfPromotion The piece that the pawn is being promoted to (if applicable).
@@ -147,7 +147,7 @@ public class AlgebraicNotation {
     /**
      * Generates the algebraic notation representation of a castling move.
      *
-     * @param operationsSet The set of operations performed during the move.
+     * @param operationsSet The set of status performed during the move.
      * @param finalCoordinate The ending coordinate of the castling move.
      * @return An `AlgebraicNotation` object representing the algebraic notation of the castling move.
      */
@@ -163,12 +163,12 @@ public class AlgebraicNotation {
     }
 
     /**
-     * Generates the algebraic notation representation of a pawn capture operation.
+     * Generates the algebraic notation representation of a pawn capture status.
      *
-     * @param operationsSet The set of operations performed during the move.
+     * @param operationsSet The set of status performed during the move.
      * @param from The starting coordinate of the move.
      * @param to The ending coordinate of the move.
-     * @return An `AlgebraicNotation` object representing the algebraic notation of the pawn capture operation.
+     * @return An `AlgebraicNotation` object representing the algebraic notation of the pawn capture status.
      */
     private static AlgebraicNotation pawnCaptureRecording(Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
@@ -186,13 +186,13 @@ public class AlgebraicNotation {
     }
 
     /**
-     * Generates the algebraic notation representation of a capture operation by a chess piece (other than a pawn).
+     * Generates the algebraic notation representation of a capture status by a chess piece (other than a pawn).
      *
      * @param piece The piece being moved.
-     * @param operationsSet The set of operations performed during the move.
+     * @param operationsSet The set of status performed during the move.
      * @param from The starting coordinate of the move.
      * @param to The ending coordinate of the move.
-     * @return An `AlgebraicNotation` object representing the algebraic notation of the figure capture operation.
+     * @return An `AlgebraicNotation` object representing the algebraic notation of the figure capture status.
      */
     private static AlgebraicNotation figureCaptureRecording(
             PieceTYPE piece, Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to
@@ -217,7 +217,7 @@ public class AlgebraicNotation {
      * Generates the algebraic notation representation of a simple movement of a chess piece, where the piece moves without capturing any piece.
      *
      * @param piece The piece being moved.
-     * @param operationsSet The set of operations performed during the move.
+     * @param operationsSet The set of status performed during the move.
      * @param from The starting coordinate of the move.
      * @param to The ending coordinate of the move.
      * @return An `AlgebraicNotation` object representing the algebraic notation of the simple movement.
@@ -256,7 +256,7 @@ public class AlgebraicNotation {
     /**
      * Generates the algebraic notation representation of a pawn promotion, where a pawn is promoted to a different piece (e.g., queen, rook, bishop, or knight).
      *
-     * @param operationsSet The set of operations performed during the move.
+     * @param operationsSet The set of status performed during the move.
      * @param from The starting coordinate of the move.
      * @param to The ending coordinate of the move.
      * @param inCaseOfPromotion The piece that the pawn is being promoted to.
@@ -299,15 +299,15 @@ public class AlgebraicNotation {
     }
 
     /**
-     * Determines the status of the opponent's king based on the given set of chess board operations.
+     * Determines the status of the opponent's king based on the given set of chess board status.
      *
-     * @param operationsSet a set of chess board operations performed during a move
+     * @param operationsSet a set of chess board status performed during a move
      * @return the status of the opponent's king, which can be one of the following:
      *         - {@link ChessBoard.Operations#STALEMATE} if the opponent's king is in stalemate
      *         - {@link ChessBoard.Operations#CHECKMATE} if the opponent's king is in checkmate
      *         - {@link ChessBoard.Operations#CHECK} if the opponent's king is in check
      *         - {@link ChessBoard.Operations#CONTINUE} if none of the above conditions are met
-     * @throws IllegalArgumentException if the set of operations contains more than one operation involving the opponent's king or stalemate
+     * @throws IllegalArgumentException if the set of status contains more than one status involving the opponent's king or stalemate
      */
     public static ChessBoard.Operations opponentKingStatus(final Set<ChessBoard.Operations> operationsSet) {
         if (operationsSet.contains(ChessBoard.Operations.STALEMATE)) return ChessBoard.Operations.STALEMATE;
@@ -413,7 +413,7 @@ public class AlgebraicNotation {
 
     /**
      * This function can only be used to predetermine the user's intention to make castling,
-     * However, this is by no means a final validation of this operation.
+     * However, this is by no means a final validation of this status.
      */
     public static boolean isCastling(final PieceTYPE piece, final Coordinate from, final Coordinate to) {
         final boolean isKing = piece.equals(PieceTYPE.K);

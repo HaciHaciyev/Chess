@@ -69,14 +69,14 @@ public record ChessBoardNavigator(ChessBoard board) {
         int row = pivot.row();
         int column = pivot.column();
 
-        List<Coordinate> list = new ArrayList<>();
+        List<Coordinate> result = new ArrayList<>();
 
         for (int[] direction : SURROUNDING_DIRECTIONS) {
             Coordinate possibleCoordinate = Coordinate.of(row + direction[0], column + direction[1]);
-            if (possibleCoordinate != null) list.add(possibleCoordinate);
+            if (possibleCoordinate != null) result.add(possibleCoordinate);
         }
 
-        return list;
+        return result;
     }
 
     public List<Coordinate> surroundingFields(Coordinate pivot, Predicate<Coordinate> predicate) {
@@ -256,15 +256,15 @@ public record ChessBoardNavigator(ChessBoard board) {
         return fields;
     }
 
-    private Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot) {
+    public Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot) {
         return occupiedFieldInDirection(direction, pivot, coordinate -> false, coordinate -> false, field -> true);
     }
 
-    private Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot, Predicate<Coordinate> predicate) {
+    public Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot, Predicate<Coordinate> predicate) {
         return occupiedFieldInDirection(direction, pivot, coordinate -> false, coordinate -> false, predicate);
     }
 
-    private Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot,
+    public Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot,
                                                Predicate<Coordinate> skipPredicate,
                                                Predicate<Coordinate> stopPredicate,
                                                Predicate<Coordinate> occupiedPredicate) {
@@ -349,24 +349,6 @@ public record ChessBoardNavigator(ChessBoard board) {
             result.add(bottomBottom);
         }
         return result;
-    }
-
-    public List<Coordinate> fieldsForKingMovement(Coordinate from, Color color) {
-        List<Coordinate> listOfFields = surroundingFields(from);
-
-        if (color == Color.WHITE && from == Coordinate.e1) {
-            listOfFields.add(Coordinate.g1);
-            listOfFields.add(Coordinate.c1);
-            return listOfFields;
-        }
-
-        if (color == Color.BLACK && from == Coordinate.e8) {
-            listOfFields.add(Coordinate.g8);
-            listOfFields.add(Coordinate.c8);
-            return listOfFields;
-        }
-
-        return listOfFields;
     }
 
     /**

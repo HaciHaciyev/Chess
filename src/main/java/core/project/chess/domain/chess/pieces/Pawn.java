@@ -6,7 +6,10 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
@@ -63,8 +66,8 @@ public final class Pawn implements Piece {
      * @param from The starting coordinate of the Pawn's move. This coordinate represents the current position of the Pawn.
      * @param to   The target coordinate to which the Pawn is attempting to move. This coordinate represents the desired position.
      *
-     * @return A {@link StatusPair} containing a set of operations and a boolean status indicating whether the move is valid.
-     *         If the move is valid, the status will be <code>true</code> and the set will contain the operations related to the move.
+     * @return A {@link StatusPair} containing a set of status and a boolean status indicating whether the move is valid.
+     *         If the move is valid, the status will be <code>true</code> and the set will contain the status related to the move.
      *         If the move is invalid, the status will be <code>false</code> and the set will be empty.
      *
      * @throws NullPointerException if any of the parameters (<code>chessBoard</code>, <code>from</code>, or <code>to</code>) are <code>null</code>.
@@ -72,13 +75,6 @@ public final class Pawn implements Piece {
      */
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Objects.requireNonNull(chessBoard);
-        Objects.requireNonNull(from);
-        Objects.requireNonNull(to);
-        if (from.equals(to)) {
-            return null;
-        }
-
         Piece startField = chessBoard.piece(from);
         Piece endField = chessBoard.piece(to);
 
@@ -101,12 +97,6 @@ public final class Pawn implements Piece {
     }
 
     public boolean isPawnOnStalemate(final ChessBoardNavigator navigator, final Coordinate pivot) {
-        Objects.requireNonNull(navigator);
-        Objects.requireNonNull(pivot);
-        if (!navigator.board().piece(pivot).equals(this)) {
-            throw new IllegalArgumentException("This object (pawn) must be located at the specified by 'pivot' coordinate.");
-        }
-
         final ChessBoard chessBoard = navigator.board();
         final List<Coordinate> fieldsForPawnMovement = navigator.fieldsForPawnMovement(pivot, color);
         final King king = chessBoard.theKing(color);
