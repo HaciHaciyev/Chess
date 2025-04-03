@@ -236,8 +236,12 @@ public final class King implements Piece {
 
         if (!boardNavigator.board().ableToCastling(color, castle)) return false;
 
+        KingStatus kingStatus = boardNavigator.board().kingStatus();
+        if (kingStatus.status() != Operations.CONTINUE) return false;
+
         List<Coordinate> fieldsToCastle = boardNavigator.castlingFields(castle, color);
         for (Coordinate field : fieldsToCastle) {
+            if (field.column() == 5) continue;
             if (!processCastling(boardNavigator, field)) return false;
         }
 
