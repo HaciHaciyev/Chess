@@ -17,59 +17,38 @@ public record ChessBoardNavigator(ChessBoard board) {
             {1, -1}, {1, 1}, {-1, -1}, {-1, 1}  // upper-left, upper-right, down-left, down-right
     };
 
-    public static final int[][] KNIGHT_ATTACKS = new int[][]{
+    private static final int[][] KNIGHT_ATTACKS = new int[][]{
             {1, -2}, {2, -1},   // top-left
             {2, 1}, {1, 2},     // top-right
             {-1, 2}, {-2, 1},   // bottom-right
             {-2, -1}, {-1, -2}  // bottom-left
     };
 
-    public Coordinate kingCoordinate(Color color) {
-        Objects.requireNonNull(color);
+    private static final Coordinate[] coordinates = Coordinate.values();
 
+    public Coordinate kingCoordinate(Color color) {
         if (color == Color.WHITE) {
             return board.currentWhiteKingPosition();
-        } else {
-            return board.currentBlackKingPosition();
         }
+
+        return board.currentBlackKingPosition();
     }
 
-    public List<Coordinate> allFriendlyFields(Color color) {
-        Objects.requireNonNull(color);
-
-        final Coordinate[] coordinates = Coordinate.values();
-
+    public List<Coordinate> allFriendlyFieldsExceptKing(Color color, Coordinate kingCoordinate) {
         List<Coordinate> friendlyFields = new ArrayList<>();
         for (Coordinate coordinate : coordinates) {
             Piece piece = board.piece(coordinate);
-            if (piece != null && piece.color() == color) friendlyFields.add(coordinate);
-        }
-
-        return friendlyFields;
-    }
-
-    public List<Coordinate> allFriendlyFields(Color color, Predicate<Coordinate> predicate) {
-        Objects.requireNonNull(color);
-        Objects.requireNonNull(predicate);
-
-        final Coordinate[] coordinates = Coordinate.values();
-
-        List<Coordinate> friendlyFields = new ArrayList<>();
-        for (Coordinate coordinate : coordinates) {
-            Piece piece = board.piece(coordinate);
-            if (piece != null && piece.color() == color && predicate.test(coordinate)) friendlyFields.add(coordinate);
+            if (piece != null && piece.color() == color && coordinate != kingCoordinate) friendlyFields.add(coordinate);
         }
 
         return friendlyFields;
     }
 
     public List<Coordinate> surroundingFields(Coordinate pivot) {
-        Objects.requireNonNull(pivot);
-
         int row = pivot.row();
         int column = pivot.column();
 
-        List<Coordinate> result = new ArrayList<>();
+        List<Coordinate> result = new ArrayList<>(8);
 
         for (int[] direction : SURROUNDING_DIRECTIONS) {
             Coordinate possibleCoordinate = Coordinate.of(row + direction[0], column + direction[1]);
@@ -79,21 +58,19 @@ public record ChessBoardNavigator(ChessBoard board) {
         return result;
     }
 
-    public List<Coordinate> surroundingFields(Coordinate pivot, Predicate<Coordinate> predicate) {
-        Objects.requireNonNull(pivot);
-        Objects.requireNonNull(predicate);
-
+    public boolean findKingOpposition(Coordinate pivot, Color oppositeKingColor) {
         int row = pivot.row();
         int column = pivot.column();
 
-        List<Coordinate> list = new ArrayList<>();
-
         for (int[] direction : SURROUNDING_DIRECTIONS) {
             Coordinate possibleCoordinate = Coordinate.of(row + direction[0], column + direction[1]);
-            if (possibleCoordinate != null && predicate.test(possibleCoordinate)) list.add(possibleCoordinate);
+            if (possibleCoordinate != null) {
+                Piece piece = board.piece(possibleCoordinate);
+                if (piece != null && piece.color() == oppositeKingColor && piece instanceof King) return true;
+            }
         }
 
-        return list;
+        return false;
     }
 
     public List<Coordinate> pawnsThreateningTheCoordinateOf(Coordinate pivot, Color colorOfRequiredPawns) {
@@ -193,6 +170,18 @@ public record ChessBoardNavigator(ChessBoard board) {
         for (Direction direction : directions) {
             Coordinate possibleField = occupiedFieldInDirection(direction, pivot);
             if (possibleField != null) list.add(possibleField);
+        }
+        return list;
+    }
+
+    public List<Coordinate> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot, int requiredEnemiesCount) {
+        List<Coordinate> list = new ArrayList<>();
+        for (Direction direction : directions) {
+            Coordinate possibleField = occupiedFieldInDirection(direction, pivot);
+            if (possibleField != null) {
+                list.add(possibleField);
+                if (requiredEnemiesCount == list.size()) return list;
+            }
         }
         return list;
     }

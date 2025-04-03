@@ -76,7 +76,7 @@ public final class King implements Piece {
         return checkOrMate(chessBoard.navigator());
     }
 
-    public boolean stalemate(ChessBoard chessBoard) {
+    public boolean stalemate(final ChessBoard chessBoard) {
         ChessBoardNavigator navigator = chessBoard.navigator();
         Coordinate kingCoordinate = navigator.kingCoordinate(color);
 
@@ -93,7 +93,7 @@ public final class King implements Piece {
                 .allMatch(coordinate -> isFieldDangerousOrBlockedForKing(navigator, coordinate, color));
         if (!isSurrounded) return false;
 
-        List<Coordinate> ourFields = navigator.allFriendlyFields(color, coordinate -> coordinate != kingCoordinate);
+        List<Coordinate> ourFields = navigator.allFriendlyFieldsExceptKing(color, kingCoordinate);
         for (Coordinate ourField : ourFields) {
             final boolean stalemate = processStalemate(navigator, ourField);
             if (!stalemate) return false;
@@ -759,14 +759,8 @@ public final class King implements Piece {
             if (piece.color() != kingColor && piece instanceof Knight) return true;
         }
 
-        final boolean kingOppositionNotExists = boardNavigator
-                .surroundingFields(pivot, coordinate -> {
-                    Piece piece = board.piece(coordinate);
-                    return piece != null && piece.color() != kingColor && piece instanceof King;
-                })
-                .isEmpty();
-
-        if (!kingOppositionNotExists) return true;
+        final boolean isKingOpposition = boardNavigator.findKingOpposition(pivot, this.color == WHITE ? BLACK : WHITE);
+        if (isKingOpposition) return true;
 
         List<Coordinate> diagonalFields = boardNavigator
                 .occupiedFieldsInDirections(Direction.diagonalDirections(),
@@ -802,6 +796,7 @@ public final class King implements Piece {
         List<Coordinate> enemies = new ArrayList<>();
 
         List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), kingCoordinate);
+
         for (Coordinate diagonalField : diagonalFields) {
             Piece piece = boardNavigator.board().piece(diagonalField);
             if (piece.color() == oppositeColor && (piece instanceof Bishop || piece instanceof Queen)) {
@@ -810,8 +805,12 @@ public final class King implements Piece {
             }
         }
 
-        List<Coordinate> horizontalVerticalFields = boardNavigator
-                .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), kingCoordinate);
+        requiredEnemiesCount -= enemies.size();
+
+        List<Coordinate> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(
+                Direction.horizontalVerticalDirections(),
+                kingCoordinate
+        );
 
         for (Coordinate horizontalVerticalField : horizontalVerticalFields) {
             Piece piece = boardNavigator.board().piece(horizontalVerticalField);
