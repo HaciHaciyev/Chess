@@ -74,9 +74,6 @@ public record ChessBoardNavigator(ChessBoard board) {
     }
 
     public List<Coordinate> pawnsThreateningTheCoordinateOf(Coordinate pivot, Color colorOfRequiredPawns) {
-        Objects.requireNonNull(pivot);
-        Objects.requireNonNull(colorOfRequiredPawns);
-
         final List<Coordinate> possibleCoordinates = new ArrayList<>(2);
         if (colorOfRequiredPawns == Color.WHITE) {
             Coordinate first = Coordinate.of(pivot.row() - 1, pivot.column() - 1);
@@ -109,8 +106,6 @@ public record ChessBoardNavigator(ChessBoard board) {
     }
 
     public List<Coordinate> knightAttackPositions(Coordinate pivot) {
-        Objects.requireNonNull(pivot);
-
         int row = pivot.row();
         int col = pivot.column();
 
@@ -124,10 +119,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         return fields;
     }
 
-    public List<Coordinate> knightAttackPositions(Coordinate pivot, Predicate<Piece> predicate) {
-        Objects.requireNonNull(pivot);
-        Objects.requireNonNull(predicate);
-
+    public List<Coordinate> knightAttackPositionsNonNull(Coordinate pivot) {
         int row = pivot.row();
         int col = pivot.column();
 
@@ -138,7 +130,7 @@ public record ChessBoardNavigator(ChessBoard board) {
 
             if (possibleCoordinate != null) {
                 Piece field = board.piece(possibleCoordinate);
-                if (predicate.test(field)) fields.add(possibleCoordinate);
+                if (field != null) fields.add(possibleCoordinate);
             }
         }
 
@@ -146,26 +138,20 @@ public record ChessBoardNavigator(ChessBoard board) {
     }
 
     public List<Coordinate> castlingFields(AlgebraicNotation.Castle castle, Color color) {
-        Objects.requireNonNull(castle);
-        Objects.requireNonNull(color);
+        if (color == Color.WHITE) {
+            if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
+                return List.of(Coordinate.e1, Coordinate.f1, Coordinate.g1);
+            }
+            return List.of(Coordinate.e1, Coordinate.d1, Coordinate.c1);
+        }
 
-        return switch (color) {
-            case WHITE -> {
-                if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
-                    yield List.of(Coordinate.e1, Coordinate.f1, Coordinate.g1);
-                }
-                yield List.of(Coordinate.e1, Coordinate.d1, Coordinate.c1);
-            }
-            case BLACK -> {
-                if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
-                    yield List.of(Coordinate.e8, Coordinate.f8, Coordinate.g8);
-                }
-                yield List.of(Coordinate.e8, Coordinate.d8, Coordinate.c8);
-            }
-        };
+        if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
+            return List.of(Coordinate.e8, Coordinate.f8, Coordinate.g8);
+        }
+        return List.of(Coordinate.e8, Coordinate.d8, Coordinate.c8);
     }
 
-    public List<Coordinate> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot) {
+    public List<Coordinate> occupiedFieldsInDirections(Direction[] directions, Coordinate pivot) {
         List<Coordinate> list = new ArrayList<>();
         for (Direction direction : directions) {
             Coordinate possibleField = occupiedFieldInDirection(direction, pivot);
@@ -186,7 +172,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         return list;
     }
 
-    public List<Coordinate> occupiedFieldsInDirections(List<Direction> directions,
+    public List<Coordinate> occupiedFieldsInDirections(Direction[] directions,
                                                        Coordinate pivot,
                                                        Predicate<Coordinate> occupiedPredicate) {
         List<Coordinate> list = new ArrayList<>();
@@ -197,7 +183,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         return list;
     }
 
-    public List<Coordinate> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot,
+    public List<Coordinate> occupiedFieldsInDirections(Direction[] directions, Coordinate pivot,
                                                        Predicate<Coordinate> skipPredicate,
                                                        Predicate<Coordinate> stopPredicate) {
         List<Coordinate> list = new ArrayList<>();
@@ -208,7 +194,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         return list;
     }
 
-    public List<Coordinate> fieldsInDirections(List<Direction> directions, Coordinate pivot) {
+    public List<Coordinate> fieldsInDirections(Direction[] directions, Coordinate pivot) {
         List<Coordinate> list = new ArrayList<>();
         for (Direction direction : directions) list.addAll(fieldsInDirection(direction, pivot));
         return list;

@@ -23,28 +23,23 @@ class QuickTests {
 
     @Test
     void perft() {
-        // 1. a2-a4 a7-a6 2. a4-a5 b7-b5 3. b2-b3 ...
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a2, Coordinate.a4, null);
+        // 1. a2-a3 a7-a5 2. f2-f3 e7-e5 3. g2-g4 Qd8-h4+
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a2, Coordinate.a3, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.a7, Coordinate.a6, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.a7, Coordinate.a5, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a4, Coordinate.a5, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.f2, Coordinate.f3, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.b7, Coordinate.b5, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e7, Coordinate.e5, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a5, Coordinate.b6, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.g2, Coordinate.g4, null);
         Log.info(navigator.prettyToString());
 
-        returnMove();
-
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.b2, Coordinate.b3, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.b5, Coordinate.b4, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.d8, Coordinate.h4, null);
         Log.info(navigator.prettyToString());
     }
 

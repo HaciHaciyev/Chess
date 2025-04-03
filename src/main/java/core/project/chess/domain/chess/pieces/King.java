@@ -9,7 +9,10 @@ import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.domain.chess.value_objects.KingStatus;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
@@ -174,7 +177,7 @@ public final class King implements Piece {
         if (!pawns.isEmpty()) enemies.addAll(pawns);
         if (enemies.size() == 2) return enemies;
 
-        List<Coordinate> knights = boardNavigator.knightAttackPositions(kingCoordinate, Objects::nonNull);
+        List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(kingCoordinate);
         for (Coordinate possibleKnight : knights) {
             Piece piece = boardNavigator.board().piece(possibleKnight);
             if (piece instanceof Knight && piece.color() == oppositeColor) {
@@ -260,7 +263,7 @@ public final class King implements Piece {
             if (pawn.color() != this.color) return false;
         }
 
-        List<Coordinate> knights = boardNavigator.knightAttackPositions(pivot, Objects::nonNull);
+        List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(pivot);
         for (Coordinate coordinate : knights) {
             Piece knight = boardNavigator.board().piece(coordinate);
             if (knight instanceof Knight && knight.color() != this.color) return false;
@@ -294,7 +297,7 @@ public final class King implements Piece {
         List<Coordinate> pawns = boardNavigator.pawnsThreateningTheCoordinateOf(futureKing, oppositeColor);
         if (!pawns.isEmpty()) return false;
 
-        List<Coordinate> knights = boardNavigator.knightAttackPositions(futureKing, Objects::nonNull);
+        List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(futureKing);
         for (Coordinate possibleKnight : knights) {
             final Piece knight = board.piece(possibleKnight);
             if (knight instanceof Knight && knight.color() != color) return false;
@@ -425,7 +428,7 @@ public final class King implements Piece {
             if (!isPawnEaten(to, possiblePawn, boardNavigator)) return false;
         }
 
-        List<Coordinate> potentialKnightAttackPositions = boardNavigator.knightAttackPositions(kingPosition, Objects::nonNull);
+        List<Coordinate> potentialKnightAttackPositions = boardNavigator.knightAttackPositionsNonNull(kingPosition);
         for (Coordinate potentialKnightAttackPosition : potentialKnightAttackPositions) {
             Piece piece = board.piece(potentialKnightAttackPosition);
 
@@ -614,7 +617,7 @@ public final class King implements Piece {
             if (safeForKing(boardNavigator.board(), possiblePawn, enemyField)) return true;
         }
 
-        List<Coordinate> knightsThatPotentiallyCanEatEnemyPiece = boardNavigator.knightAttackPositions(enemyField, Objects::nonNull);
+        List<Coordinate> knightsThatPotentiallyCanEatEnemyPiece = boardNavigator.knightAttackPositionsNonNull(enemyField);
         for (Coordinate knight : knightsThatPotentiallyCanEatEnemyPiece) {
             Piece piece = boardNavigator.board().piece(knight);
 
@@ -664,7 +667,7 @@ public final class King implements Piece {
         for (Coordinate field : path) {
             if (!vertical && pawnCanBlock(boardNavigator, field)) return true;
 
-            List<Coordinate> knights = boardNavigator.knightAttackPositions(field, Objects::nonNull);
+            List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(field);
             for (Coordinate knight : knights) {
                 Piece piece = boardNavigator.board().piece(knight);
 
@@ -753,7 +756,7 @@ public final class King implements Piece {
         List<Coordinate> pawns = boardNavigator.pawnsThreateningTheCoordinateOf(pivot, oppositeColor);
         if (!pawns.isEmpty()) return true;
 
-        List<Coordinate> knights = boardNavigator.knightAttackPositions(pivot, Objects::nonNull);
+        List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(pivot);
         for (Coordinate possibleKnight : knights) {
             Piece piece = board.piece(possibleKnight);
             if (piece.color() != kingColor && piece instanceof Knight) return true;
