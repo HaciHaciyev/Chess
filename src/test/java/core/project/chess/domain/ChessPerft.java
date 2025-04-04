@@ -335,9 +335,10 @@ class ChessPerft {
 
         if (notation.isEmpty()) return;
 
+        AlgebraicNotation algebraicNotation = notation.get();
         var lastMove = notation.get().algebraicNotation();
 
-        if (lastMove.contains("x")) {
+        if (algebraicNotation.isCapture()) {
             perftValues.captures++;
         }
 

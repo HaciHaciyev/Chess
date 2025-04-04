@@ -171,14 +171,12 @@ public final class King implements Piece {
         Coordinate kingCoordinate = boardNavigator.kingCoordinate(color);
         Color oppositeColor = color == WHITE ? BLACK : WHITE;
 
-        List<Coordinate> enemies = new ArrayList<>();
+        List<Coordinate> enemies = new ArrayList<>(2);
 
-        List<Coordinate> pawns = boardNavigator.pawnsThreateningTheCoordinateOf(kingCoordinate, oppositeColor);
-        if (!pawns.isEmpty()) enemies.addAll(pawns);
+        enemies.addAll(boardNavigator.pawnsThreateningTheCoordinateOf(kingCoordinate, oppositeColor));
         if (enemies.size() == 2) return enemies;
 
-        List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(kingCoordinate);
-        for (Coordinate possibleKnight : knights) {
+        for (Coordinate possibleKnight : boardNavigator.knightAttackPositionsNonNull(kingCoordinate)) {
             Piece piece = boardNavigator.board().piece(possibleKnight);
             if (piece instanceof Knight && piece.color() == oppositeColor) {
                 enemies.add(possibleKnight);
@@ -186,11 +184,7 @@ public final class King implements Piece {
             }
         }
 
-        int countOfPotentiallyNotFounded = enemies.isEmpty() ? 2 : 1;
-
-        List<Coordinate> enemiesFromAllDirections =
-                enemiesFromAllDirections(boardNavigator, kingCoordinate, oppositeColor, countOfPotentiallyNotFounded);
-        enemies.addAll(enemiesFromAllDirections);
+        enemiesFromAllDirections(boardNavigator, kingCoordinate, oppositeColor, enemies);
         return enemies;
     }
 
@@ -780,37 +774,26 @@ public final class King implements Piece {
         return false;
     }
 
-    private List<Coordinate> enemiesFromAllDirections(ChessBoardNavigator boardNavigator,
-                                                      Coordinate kingCoordinate,
-                                                      Color oppositeColor,
-                                                      int requiredEnemiesCount)  {
-        List<Coordinate> enemies = new ArrayList<>();
+    private void enemiesFromAllDirections(ChessBoardNavigator navigator,
+                                          Coordinate kingCoordinate,
+                                          Color oppositeColor,
+                                          List<Coordinate> enemies) {
+        for (Coordinate field : navigator.occupiedFieldsInDirections(Direction.allDirections(), kingCoordinate)) {
+            Piece piece = navigator.board().piece(field);
+            if (piece.color() != oppositeColor) continue;
 
-        List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), kingCoordinate);
-
-        for (Coordinate diagonalField : diagonalFields) {
-            Piece piece = boardNavigator.board().piece(diagonalField);
-            if (piece.color() == oppositeColor && (piece instanceof Bishop || piece instanceof Queen)) {
-                enemies.add(diagonalField);
-                if (enemies.size() == requiredEnemiesCount) return enemies;
+            final boolean diagonal = Math.abs(kingCoordinate.row() - field.row()) == Math.abs(kingCoordinate.column() - field.column());
+            if (diagonal) {
+                if (piece instanceof Bishop || piece instanceof Queen) {
+                    enemies.add(field);
+                    if (enemies.size() == 2) return;
+                }
+            } else {
+                if (piece instanceof Rook || piece instanceof Queen) {
+                    enemies.add(field);
+                    if (enemies.size() == 2) return;
+                }
             }
         }
-
-        requiredEnemiesCount -= enemies.size();
-
-        List<Coordinate> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(
-                Direction.horizontalVerticalDirections(),
-                kingCoordinate
-        );
-
-        for (Coordinate horizontalVerticalField : horizontalVerticalFields) {
-            Piece piece = boardNavigator.board().piece(horizontalVerticalField);
-            if (piece.color() == oppositeColor && (piece instanceof Rook || piece instanceof Queen)) {
-                enemies.add(horizontalVerticalField);
-                if (enemies.size() == requiredEnemiesCount) return enemies;
-            }
-        }
-
-        return enemies;
     }
 }
