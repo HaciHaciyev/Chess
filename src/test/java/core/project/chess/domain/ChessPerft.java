@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Disabled("Only for separate run.")
 class ChessPerft {
+    private long nodes = 0;
     public static final int DEPTH = 6;
     private final Board board = new Board();
     private final ChessBoard chessGame = ChessBoard.pureChess();
@@ -31,8 +32,18 @@ class ChessPerft {
     private final PerftValues secondPerftValues = PerftValues.newInstance();
 
     @Test
+    void clearPerft() {
+        onlyNodesPerft(DEPTH);
+        asserCustomEquals(119_060_324L);
+    }
+
+    private void asserCustomEquals(long l) {
+        assertEquals(nodes, l);
+        Log.info("Count of nodes: " + nodes);
+    }
+
+    @Test
     void performanceTest() {
-        //System.out.printf("Current FEN -> %s \n", chessGame.actualRepresentationOfChessBoard());
         long v = perft(DEPTH);
         switch (DEPTH) {
             case 1 -> assertPerftDepth1();
@@ -44,6 +55,7 @@ class ChessPerft {
             case 7 -> assertPerftDepth7();
             case 8 -> assertPerftDepth8();
             case 9 -> assertPerftDepth9();
+            default -> logValues();
         }
 
         System.out.println("Total nodes -> " + v);
@@ -153,6 +165,34 @@ class ChessPerft {
         return nodes;
     }
 
+    long onlyNodesPerft(int depth) {
+        long nodes = 0L;
+
+        if (depth == 0) {
+            return 1L;
+        }
+
+        List<Move> validMoves = this.board.legalMoves();
+
+        for (Move move : validMoves) {
+            Coordinate from = from(move);
+            Coordinate to = to(move);
+            Piece inCaseOfPromotion = getInCaseOfPromotion(move);
+
+            board.doMove(move);
+            chessGame.reposition(from, to, inCaseOfPromotion);
+
+            long newNodes = onlyNodesPerft(depth - 1);
+            nodes += newNodes;
+            this.nodes = nodes;
+
+            board.undoMove();
+            chessGame.returnOfTheMovement();
+        }
+
+        return nodes;
+    }
+
     private void verifyPerft(Move move, Coordinate from, Coordinate to, Piece inCaseOfPromotion) {
         if (perftValues.verify(secondPerftValues)) {
             return;
@@ -200,16 +240,32 @@ class ChessPerft {
         throw new IllegalStateException("Invalid perft values.");
     }
 
-    private static @Nullable Piece getInCaseOfPromotion(Move move) {
-        return move.getPromotion().getFenSymbol().equals(".") ? null : AlgebraicNotation.fromSymbol(move.getPromotion().getFenSymbol());
+    private static @NotNull Coordinate from(Move move) {
+        String from = move.getFrom().toString();
+        int column = columnToInt(from.charAt(0));
+        int row = from.charAt(1) - '0';
+
+        return Coordinate.of(row, column);
     }
 
     private static @NotNull Coordinate to(Move move) {
-        return Coordinate.valueOf(move.getTo().toString().toLowerCase());
+        String to = move.getTo().toString();
+        int column = columnToInt(to.charAt(0));
+        int row = to.charAt(1) - '0';
+
+        return Coordinate.of(row, column);
     }
 
-    private static @NotNull Coordinate from(Move move) {
-        return Coordinate.valueOf(move.getFrom().toString().toLowerCase());
+    private static @Nullable Piece getInCaseOfPromotion(Move move) {
+        return move.getPromotion() == com.github.bhlangonijr.chesslib.Piece.NONE ? null :
+                AlgebraicNotation.fromSymbol(move.getPromotion().getFenSymbol());
+    }
+
+    public static int columnToInt(char c) {
+        if (c >= 'A' && c <= 'H') {
+            return c - 'A' + 1;
+        }
+        throw new IllegalStateException("Unexpected value: " + c);
     }
 
     private void calculateSecondPerftValues(long nodes, Move move) {
