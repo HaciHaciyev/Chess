@@ -303,9 +303,8 @@ public final class King implements Piece {
             if (knight instanceof Knight && knight.color() != color) return false;
         }
 
-        List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(
-                Direction.diagonalDirections(), futureKing, field -> field != previousKing
-        );
+        List<Coordinate> diagonalFields = boardNavigator
+                .occupiedFieldsInDirections(Direction.diagonalDirections(), futureKing, previousKing);
 
         for (Coordinate field : diagonalFields) {
             final Piece piece = board.piece(field);
@@ -322,9 +321,8 @@ public final class King implements Piece {
             if (isOppositionOfKing) return false;
         }
 
-        List<Coordinate> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(
-                Direction.horizontalVerticalDirections(), futureKing, field -> field != previousKing
-        );
+        List<Coordinate> horizontalVerticalFields = boardNavigator
+                .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), futureKing, previousKing);
 
         for (Coordinate field : horizontalVerticalFields) {
             final Piece piece = board.piece(field);
@@ -442,8 +440,8 @@ public final class King implements Piece {
         List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(
                 Direction.diagonalDirections(),
                 kingPosition,
-                coordinate -> coordinate.equals(from),
-                coordinate -> coordinate.equals(to)
+                from,
+                to
         );
 
         for (Coordinate field : diagonalFields) {
@@ -459,8 +457,8 @@ public final class King implements Piece {
         List<Coordinate> horizontalVertical = boardNavigator.occupiedFieldsInDirections(
                 Direction.horizontalVerticalDirections(),
                 kingPosition,
-                coordinate -> coordinate.equals(from),
-                coordinate -> coordinate.equals(to)
+                from,
+                to
         );
 
         for (Coordinate field : horizontalVertical) {
@@ -500,9 +498,8 @@ public final class King implements Piece {
                     Coordinate occupiedCoordinate = boardNavigator.occupiedFieldInDirection(
                             direction1,
                             kingPosition,
-                            coordinate -> from == coordinate,
-                            coordinate -> to == coordinate,
-                            coordinate -> false
+                            from,
+                            to
                     );
 
                     if (occupiedCoordinate == null) yield true;
@@ -522,9 +519,8 @@ public final class King implements Piece {
                 Coordinate occupiedCoordinate = boardNavigator.occupiedFieldInDirection(
                         direction1,
                         kingPosition,
-                        coordinate -> from == coordinate,
-                        coordinate -> to == coordinate,
-                        coordinate -> true
+                        from,
+                        to
                 );
 
                 if (occupiedCoordinate == null) yield true;
@@ -544,9 +540,8 @@ public final class King implements Piece {
                 Coordinate occupiedCoordinate = boardNavigator.occupiedFieldInDirection(
                         direction1,
                         kingPosition,
-                        coordinate -> from == coordinate,
-                        coordinate -> to == coordinate,
-                        coordinate -> true
+                        from,
+                        to
                 );
 
                 if (occupiedCoordinate == null) yield true;
@@ -566,9 +561,8 @@ public final class King implements Piece {
                 Coordinate occupiedCoordinate = boardNavigator.occupiedFieldInDirection(
                         direction1,
                         kingPosition,
-                        coordinate -> from == coordinate,
-                        coordinate -> to == coordinate,
-                        coordinate -> true
+                        from,
+                        to
                 );
 
                 if (occupiedCoordinate == null) yield true;
@@ -765,24 +759,18 @@ public final class King implements Piece {
         final boolean isKingOpposition = boardNavigator.findKingOpposition(pivot, this.color == WHITE ? BLACK : WHITE);
         if (isKingOpposition) return true;
 
-        List<Coordinate> diagonalFields = boardNavigator
-                .occupiedFieldsInDirections(Direction.diagonalDirections(),
-                        pivot,
-                        coordinate -> coordinate == kingCoordinate,
-                        coordinate -> false
-                );
+        List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(),
+                pivot, kingCoordinate
+        );
 
         for (Coordinate coordinate : diagonalFields) {
             Piece piece = board.piece(coordinate);
             if (piece.color() != kingColor && (piece instanceof Bishop || piece instanceof Queen)) return true;
         }
 
-        List<Coordinate> horizontalVerticalFields = boardNavigator
-                .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(),
-                        pivot,
-                        coordinate -> coordinate == kingCoordinate,
-                        coordinate -> false
-                );
+        List<Coordinate> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(Direction.horizontalVerticalDirections(),
+                pivot, kingCoordinate
+        );
 
         for (Coordinate coordinate : horizontalVerticalFields) {
             Piece piece = board.piece(coordinate);
