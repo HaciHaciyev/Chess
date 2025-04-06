@@ -8,6 +8,8 @@ import core.project.chess.domain.chess.enumerations.SimpleDirection;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.domain.chess.value_objects.KingStatus;
+import core.project.chess.domain.chess.value_objects.PlayerMove;
+import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -75,11 +77,11 @@ public final class King implements Piece {
         return validatePieceMovementForKingSafety(boardNavigator, kingPosition, from, to);
     }
 
-    public KingStatus kingStatus(final ChessBoard chessBoard) {
-        return checkOrMate(chessBoard.navigator());
+    public KingStatus kingStatus(final ChessBoard chessBoard, @Nullable final PlayerMove lastMove) {
+        return checkOrMate(chessBoard.navigator(), lastMove);
     }
 
-    public boolean stalemate(final ChessBoard chessBoard) {
+    public boolean stalemate(final ChessBoard chessBoard, @Nullable final PlayerMove lastMove) {
         ChessBoardNavigator navigator = chessBoard.navigator();
         Coordinate kingCoordinate = navigator.kingCoordinate(color);
 
@@ -87,7 +89,7 @@ public final class King implements Piece {
         if (kingStatus != null && (kingStatus.status() == Operations.CHECK ||
                 kingStatus.status() == Operations.CHECKMATE)) return false;
 
-        List<Coordinate> enemies = kingStatus != null ? kingStatus.enemiesAttackingTheKing() : check(navigator);
+        List<Coordinate> enemies = kingStatus != null ? kingStatus.enemiesAttackingTheKing() : check(navigator, lastMove);
         if (!enemies.isEmpty()) return false;
 
         List<Coordinate> surroundingFieldsOfKing = navigator.surroundingFields(kingCoordinate);
@@ -167,11 +169,23 @@ public final class King implements Piece {
         };
     }
 
-    private List<Coordinate> check(ChessBoardNavigator boardNavigator) {
+    private List<Coordinate> check(ChessBoardNavigator boardNavigator, PlayerMove lastMove) {
         Coordinate kingCoordinate = boardNavigator.kingCoordinate(color);
         Color oppositeColor = color == WHITE ? BLACK : WHITE;
 
         List<Coordinate> enemies = new ArrayList<>(2);
+
+        if (lastMove != null) {
+            Coordinate from = lastMove.from();
+            Coordinate to = lastMove.to();
+
+            Coordinate possibleCheckDirection = isThereAThreateningFigureInThisDirection(boardNavigator, kingCoordinate, to);
+            if (possibleCheckDirection != null) enemies.add(possibleCheckDirection);
+
+            Coordinate secondPossibleCheckDirection = isThereAThreateningFigureInThisDirection(boardNavigator, kingCoordinate, from);
+            if (secondPossibleCheckDirection != null) enemies.add(secondPossibleCheckDirection);
+            return enemies;
+        }
 
         enemies.addAll(boardNavigator.pawnsThreateningTheCoordinateOf(kingCoordinate, oppositeColor));
         if (enemies.size() == 2) return enemies;
@@ -188,8 +202,8 @@ public final class King implements Piece {
         return enemies;
     }
 
-    private KingStatus checkOrMate(ChessBoardNavigator boardNavigator) {
-        List<Coordinate> enemies = check(boardNavigator);
+    private KingStatus checkOrMate(ChessBoardNavigator boardNavigator, PlayerMove lastMove) {
+        List<Coordinate> enemies = check(boardNavigator, lastMove);
         if (enemies.isEmpty()) return new KingStatus(Operations.CONTINUE, enemies);
 
         Coordinate kingCoordinate = boardNavigator.kingCoordinate(color);
@@ -795,5 +809,67 @@ public final class King implements Piece {
                 }
             }
         }
+    }
+
+    private @Nullable Coordinate isThereAThreateningFigureInThisDirection(ChessBoardNavigator navigator, Coordinate pivot, Coordinate to) {
+        int differenceOfRow = Math.abs(pivot.row() - to.row());
+        int differenceOfColumn = Math.abs(pivot.column() - to.column());
+        Piece piece = navigator.board().piece(to);
+
+        if (piece != null) {
+            if (piece.color() == color) return null;
+
+            final boolean isKnightAttackPosition = (differenceOfRow == 2 && differenceOfColumn == 1) ||
+                    (differenceOfRow == 1 && differenceOfColumn == 2);
+            if (isKnightAttackPosition) {
+                if (piece instanceof Knight) return to;
+                return null;
+            }
+
+            SimpleDirection direction = SimpleDirection.directionOf(pivot, to);
+            if (direction == null) return null;
+
+            final boolean isSurrounded = differenceOfRow == 1 && differenceOfColumn == 1;
+
+            if (direction == SimpleDirection.VERTICAL || direction == SimpleDirection.HORIZONTAL) {
+                if (isSurrounded) {
+                    if (piece instanceof Bishop || piece instanceof Queen) return to;
+                    return null;
+                }
+
+                if (!clearPath(navigator.board(), pivot, to)) return null;
+                if (piece instanceof Rook || piece instanceof Queen) return to;
+                return null;
+            }
+
+            if (isSurrounded) {
+                if (piece instanceof  Pawn || piece instanceof Bishop || piece instanceof Queen) return to;
+                return null;
+            }
+
+            if (!clearPath(navigator.board(), pivot, to)) return null;
+            if (piece instanceof Bishop || piece instanceof Queen) return to;
+            return null;
+        }
+
+        SimpleDirection direction = SimpleDirection.directionOf(pivot, to);
+        if (direction == null) return null;
+
+        Direction deepDirection = Direction.directionOf(pivot, to);
+        Coordinate occupiedFieldInDirection = navigator.occupiedFieldInDirection(deepDirection, pivot);
+        if (occupiedFieldInDirection == null) return null;
+
+        Piece opponentPiece = navigator.board().piece(occupiedFieldInDirection);
+        if (opponentPiece.color() == color) return null;
+
+        if (direction == SimpleDirection.VERTICAL || direction == SimpleDirection.HORIZONTAL) {
+            if (!clearPath(navigator.board(), pivot, to)) return null;
+            if (opponentPiece instanceof Rook || opponentPiece instanceof Queen) return to;
+            return null;
+        }
+
+        if (!clearPath(navigator.board(), pivot, to)) return null;
+        if (opponentPiece instanceof Bishop || opponentPiece instanceof Queen) return to;
+        return null;
     }
 }

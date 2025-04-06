@@ -144,8 +144,8 @@ public record ChessBoardNavigator(ChessBoard board) {
         return BLONG_CASTLING_COORDINATES;
     }
 
-    public List<Coordinate> occupiedFieldsInDirections(Direction[] directions, Coordinate pivot) {
-        List<Coordinate> list = new ArrayList<>(directions.length);
+    public List<Coordinate> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot) {
+        List<Coordinate> list = new ArrayList<>(directions.size());
         for (Direction direction : directions) {
             Coordinate possibleField = occupiedFieldInDirection(direction, pivot);
             if (possibleField != null) list.add(possibleField);
@@ -153,10 +153,10 @@ public record ChessBoardNavigator(ChessBoard board) {
         return list;
     }
 
-    public List<Coordinate> occupiedFieldsInDirections(Direction[] directions,
+    public List<Coordinate> occupiedFieldsInDirections(List<Direction> directions,
                                                        Coordinate pivot,
                                                        Coordinate ignorCoordinate) {
-        List<Coordinate> list = new ArrayList<>(directions.length);
+        List<Coordinate> list = new ArrayList<>(directions.size());
         for (Direction direction : directions) {
             Coordinate optionalField = occupiedFieldInDirection(direction, pivot, ignorCoordinate);
             if (optionalField != null && board.piece(optionalField) != null) list.add(optionalField);
@@ -164,10 +164,10 @@ public record ChessBoardNavigator(ChessBoard board) {
         return list;
     }
 
-    public List<Coordinate> occupiedFieldsInDirections(Direction[] directions, Coordinate pivot,
+    public List<Coordinate> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot,
                                                        Coordinate skipPredicate,
                                                        Coordinate stopPredicate) {
-        List<Coordinate> list = new ArrayList<>(directions.length);
+        List<Coordinate> list = new ArrayList<>(directions.size());
         for (Direction direction : directions) {
             Coordinate coordinate = occupiedFieldInDirection(direction, pivot, skipPredicate, stopPredicate);
             if (coordinate != null && board.piece(coordinate) != null) list.add(coordinate);
@@ -175,7 +175,7 @@ public record ChessBoardNavigator(ChessBoard board) {
         return list;
     }
 
-    private Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot) {
+    public Coordinate occupiedFieldInDirection(Direction direction, Coordinate pivot) {
         for (Coordinate field : new CoordinateIterable(direction, pivot)) {
             Piece piece = board.piece(field);
             if (piece != null) return field;
@@ -206,8 +206,8 @@ public record ChessBoardNavigator(ChessBoard board) {
         return null;
     }
 
-    public List<Coordinate> fieldsInDirections(Direction[] directions, Coordinate pivot) {
-        List<Coordinate> list = new ArrayList<>(directions.length);
+    public List<Coordinate> fieldsInDirections(List<Direction> directions, Coordinate pivot) {
+        List<Coordinate> list = new ArrayList<>(directions.size());
         for (Direction direction : directions) list.addAll(fieldsInDirection(direction, pivot));
         return list;
     }
