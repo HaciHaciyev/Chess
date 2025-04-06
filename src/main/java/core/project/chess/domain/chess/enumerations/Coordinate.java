@@ -121,8 +121,12 @@ public enum Coordinate {
         return column;
     }
 
-    public byte[] bytes() {
-        return bytes;
+    public byte columnBytes() {
+        return bytes[0];
+    }
+
+    public byte rowBytes() {
+        return bytes[1];
     }
 
     public char columnChar() {

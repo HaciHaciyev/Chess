@@ -1509,8 +1509,8 @@ public class ChessBoard {
             return algebraicNotation;
         }
 
-        public byte[] bytes() {
-            return bytes;
+        public byte bytes() {
+            return bytes[0];
         }
     }
 
