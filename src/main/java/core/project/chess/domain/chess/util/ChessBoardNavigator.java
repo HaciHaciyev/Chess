@@ -15,8 +15,8 @@ import java.util.NoSuchElementException;
 public record ChessBoardNavigator(ChessBoard board) {
 
     private static final int[][] SURROUNDING_DIRECTIONS = new int[][]{
-            {1, 0}, {-1, 0}, {0, -1}, {0, 1},   // up, down, left, right
-            {1, -1}, {1, 1}, {-1, -1}, {-1, 1}  // upper-left, upper-right, down-left, down-right
+            {1, 0}, {1, 1}, {0, 1}, {-1, 1},   // up, upper-left, right, bottom-right,
+            {-1, 0}, {-1, -1}, {0, -1}, {1, -1}  // bottom, bottom-left, left, upper-left
     };
 
     private static final int[][] KNIGHT_ATTACKS = new int[][]{

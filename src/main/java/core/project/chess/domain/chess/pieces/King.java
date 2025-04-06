@@ -214,8 +214,7 @@ public final class King implements Piece {
             if (canEat(boardNavigator, fieldWithEnemy)) return new KingStatus(Operations.CHECK, enemies);
             if (canBlock(boardNavigator, kingCoordinate, fieldWithEnemy)) return new KingStatus(Operations.CHECK, enemies);
 
-            List<Coordinate> surroundings = boardNavigator.surroundingFields(kingCoordinate);
-            Operations operation = isHaveSafetyField(surroundings, boardNavigator) ? Operations.CHECK : Operations.CHECKMATE;
+            Operations operation = isHaveSafetySurroundingField(boardNavigator, kingCoordinate) ? Operations.CHECK : Operations.CHECKMATE;
             return new KingStatus(operation, enemies);
         }
 
@@ -227,12 +226,12 @@ public final class King implements Piece {
                 !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getLast(), color))
             return new KingStatus(Operations.CHECK, enemies);
 
-        List<Coordinate> surroundings = boardNavigator.surroundingFields(kingCoordinate);
-        Operations operation = isHaveSafetyField(surroundings, boardNavigator) ? Operations.CHECK : Operations.CHECKMATE;
+        Operations operation = isHaveSafetySurroundingField(boardNavigator, kingCoordinate) ? Operations.CHECK : Operations.CHECKMATE;
         return new KingStatus(operation, enemies);
     }
 
-    private boolean isHaveSafetyField(List<Coordinate> fields, ChessBoardNavigator boardNavigator) {
+    private boolean isHaveSafetySurroundingField(ChessBoardNavigator boardNavigator, Coordinate kingCoordinate) {
+        List<Coordinate> fields = boardNavigator.surroundingFields(kingCoordinate);
         for (Coordinate field : fields) {
             if (!isFieldDangerousOrBlockedForKing(boardNavigator, field, color)) return true;
         }
