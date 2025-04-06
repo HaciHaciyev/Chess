@@ -1205,7 +1205,7 @@ public class ChessBoard {
         ruleOf50MovesAbility(piece, operations);
 
         /** Recording the move made in algebraic notation and Zobrist hashing.*/
-        algebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(piece), operations, from, to, null));
+        algebraicNotations.add(AlgebraicNotation.castlingOf(castle, operations));
         updateZobristHashForCastling(castle, piece.color());
 
         /** Retrieve message about move result.*/
@@ -1472,21 +1472,28 @@ public class ChessBoard {
      * such as capture, promotion, check, checkmate, and stalemate or empty if status not exists.
      */
     public enum Operations {
-        PROMOTION("="),
-        CAPTURE("x"),
-        CHECK("+"),
-        STALEMATE("."),
-        CHECKMATE("#"),
-        CONTINUE("");
+        PROMOTION("=", new byte[]{61}),     // '='
+        CAPTURE("x", new byte[]{120}),      // 'x'
+        CHECK("+", new byte[]{43}),         // '+'
+        STALEMATE(".", new byte[]{46}),     // '.'
+        CHECKMATE("#", new byte[]{35}),     // '#'
+        CONTINUE("", new byte[]{});        // no operation
 
         private final String algebraicNotation;
 
-        Operations(String algebraicNotation) {
+        private final byte[] bytes;
+
+        Operations(String algebraicNotation, byte[] bytes) {
             this.algebraicNotation = algebraicNotation;
+            this.bytes = bytes;
         }
 
         public String getAlgebraicNotation() {
             return algebraicNotation;
+        }
+
+        public byte[] bytes() {
+            return bytes;
         }
     }
 

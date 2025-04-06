@@ -9,6 +9,8 @@ import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 
@@ -29,10 +31,14 @@ import java.util.Set;
  */
 public class AlgebraicNotation {
 
-    private final String algebraicNotation;
+    private final byte[] algebraicNotation;
 
     public String algebraicNotation() {
-        return algebraicNotation;
+        return new String(algebraicNotation, StandardCharsets.US_ASCII);
+    }
+
+    public byte[] bytes() {
+        return Arrays.copyOf(algebraicNotation, algebraicNotation.length);
     }
 
     @Override
@@ -40,13 +46,13 @@ public class AlgebraicNotation {
         return algebraicNotation();
     }
 
-    private AlgebraicNotation(String algebraicNotation) {
+    private AlgebraicNotation(byte[] algebraicNotation) {
         this.algebraicNotation = algebraicNotation;
     }
 
     /**
      * Represents a simple pawn movement, where the pawn moves forward without capturing any piece.
-     * The last symbol of the notation indicates an status related to the enemy king or the end of the game as a whole, like
+     * The last symbol of the notation indicates a status related to the enemy king or the end of the game as a whole, like
      * check ('+'), checkmate ('#'), stalemate ('.'), or just an empty string if not status with opponent king ('').
      * Examples:
      * "e2-e4"
@@ -102,6 +108,10 @@ public class AlgebraicNotation {
      */
     public static final String PROMOTION_PLUS_CAPTURE_OPERATION_FORMAT = "%s%s%s=%s%s";
 
+    private static final byte dash = 45;
+
+    private static final byte equals = 61;
+
     public static AlgebraicNotation of(final String algebraicNotation) {
         Objects.requireNonNull(algebraicNotation);
         if (algebraicNotation.isBlank()) {
@@ -110,7 +120,7 @@ public class AlgebraicNotation {
 
         ChessNotationsValidator.validateAlgebraicNotation(algebraicNotation);
 
-        return new AlgebraicNotation(algebraicNotation);
+        return new AlgebraicNotation(algebraicNotation.getBytes(StandardCharsets.US_ASCII));
     }
 
     /**
@@ -128,10 +138,6 @@ public class AlgebraicNotation {
             final PieceTYPE piece, final Set<ChessBoard.Operations> operationsSet,
             final Coordinate from, final Coordinate to, final @Nullable PieceTYPE inCaseOfPromotion
     ) {
-
-        final boolean castle = isCastling(piece, from, to);
-        if (castle) return castlingRecording(operationsSet, to);
-
         final boolean promotion = operationsSet.contains(ChessBoard.Operations.PROMOTION);
         if (promotion) return promotionRecording(operationsSet, from, to, inCaseOfPromotion);
 
@@ -144,22 +150,27 @@ public class AlgebraicNotation {
         return simpleMovementRecording(piece, operationsSet,from, to);
     }
 
+    public static AlgebraicNotation castlingOf(final Castle castle, final Set<ChessBoard.Operations> operations) {
+        return castlingRecording(operations, castle);
+    }
+
     /**
      * Generates the algebraic notation representation of a castling move.
      *
      * @param operationsSet The set of status performed during the move.
-     * @param finalCoordinate The ending coordinate of the castling move.
+     * @param castle Determines Short or Long Castle.
      * @return An `AlgebraicNotation` object representing the algebraic notation of the castling move.
      */
-    private static AlgebraicNotation castlingRecording(Set<ChessBoard.Operations> operationsSet, Coordinate finalCoordinate) {
+    private static AlgebraicNotation castlingRecording(Set<ChessBoard.Operations> operationsSet, Castle castle) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
 
-        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(castle(finalCoordinate)
-                .getAlgebraicNotation());
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(castle.bytes());
 
-        return new AlgebraicNotation(new StringBuilder(castle(finalCoordinate).getAlgebraicNotation())
-                .append(opponentKingStatus.getAlgebraicNotation())
-                .toString());
+        int length = castle.bytes().length + 1;
+        byte[] bytes = new byte[length];
+        System.arraycopy(castle.bytes(), 0, bytes, 0, bytes.length - 2);
+        bytes[bytes.length - 1] = opponentKingStatus.bytes()[0];
+        return new AlgebraicNotation(bytes);
     }
 
     /**
@@ -173,16 +184,28 @@ public class AlgebraicNotation {
     private static AlgebraicNotation pawnCaptureRecording(Set<ChessBoard.Operations> operationsSet, Coordinate from, Coordinate to) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
 
-        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(from.toString())
-                .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
-                .append(to.toString())
-                .toString());
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) {
+            byte[] bytes = {
+                    from.bytes()[0],
+                    from.bytes()[1],
+                    ChessBoard.Operations.CAPTURE.bytes()[0],
+                    to.bytes()[0],
+                    to.bytes()[1]
+            };
 
-        return new AlgebraicNotation(new StringBuilder(from.toString())
-                .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
-                .append(to.toString())
-                .append(opponentKingStatus.getAlgebraicNotation())
-                .toString());
+            return new AlgebraicNotation(bytes);
+        }
+
+        byte[] bytes = {
+                from.bytes()[0],
+                from.bytes()[1],
+                ChessBoard.Operations.CAPTURE.bytes()[0],
+                to.bytes()[0],
+                to.bytes()[1],
+                opponentKingStatus.bytes()[0]
+        };
+
+        return new AlgebraicNotation(bytes);
     }
 
     /**
@@ -199,18 +222,30 @@ public class AlgebraicNotation {
     ) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
 
-        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(piece.getPieceType())
-                .append(from.toString())
-                .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
-                .append(to.toString())
-                .toString());
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) {
+            byte[] bytes = {
+                    piece.bytes()[0],
+                    from.bytes()[0],
+                    from.bytes()[1],
+                    ChessBoard.Operations.CAPTURE.bytes()[0],
+                    to.bytes()[0],
+                    to.bytes()[1]
+            };
 
-        return new AlgebraicNotation(new StringBuilder(piece.getPieceType())
-                .append(from.toString())
-                .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
-                .append(to.toString())
-                .append(opponentKingStatus.getAlgebraicNotation())
-                .toString());
+            return new AlgebraicNotation(bytes);
+        }
+
+        byte[] bytes = {
+                piece.bytes()[0],
+                from.bytes()[0],
+                from.bytes()[1],
+                ChessBoard.Operations.CAPTURE.bytes()[0],
+                to.bytes()[0],
+                to.bytes()[1],
+                opponentKingStatus.bytes()[0]
+        };
+
+        return new AlgebraicNotation(bytes);
     }
 
     /**
@@ -227,30 +262,54 @@ public class AlgebraicNotation {
     ) {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
         if (piece == PieceTYPE.P) {
-            if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(from.toString())
-                    .append("-")
-                    .append(to.toString())
-                    .toString());
+            if (opponentKingStatus == ChessBoard.Operations.CONTINUE) {
+                byte[] bytes = {
+                        from.bytes()[0],
+                        from.bytes()[1],
+                        dash,
+                        to.bytes()[0],
+                        to.bytes()[1]
+                };
 
-            return new AlgebraicNotation(new StringBuilder(from.toString())
-                    .append("-")
-                    .append(to.toString())
-                    .append(opponentKingStatus.getAlgebraicNotation())
-                    .toString());
+                return new AlgebraicNotation(bytes);
+            }
+
+            byte[] bytes = {
+                    from.bytes()[0],
+                    from.bytes()[1],
+                    dash,
+                    to.bytes()[0],
+                    to.bytes()[1],
+                    opponentKingStatus.bytes()[0]
+            };
+
+            return new AlgebraicNotation(bytes);
         }
 
-        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(piece.getPieceType())
-                .append(from.toString())
-                .append("-")
-                .append(to.toString())
-                .toString());
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) {
+            byte[] bytes = {
+                    piece.bytes()[0],
+                    from.bytes()[0],
+                    from.bytes()[1],
+                    dash,
+                    to.bytes()[0],
+                    to.bytes()[1]
+            };
 
-        return new AlgebraicNotation(new StringBuilder(piece.getPieceType())
-                .append(from.toString())
-                .append("-")
-                .append(to.toString())
-                .append(opponentKingStatus.getAlgebraicNotation())
-                .toString());
+            return new AlgebraicNotation(bytes);
+        }
+
+        byte[] bytes = {
+                piece.bytes()[0],
+                from.bytes()[0],
+                from.bytes()[1],
+                dash,
+                to.bytes()[0],
+                to.bytes()[1],
+                opponentKingStatus.bytes()[0]
+        };
+
+        return new AlgebraicNotation(bytes);
     }
 
     /**
@@ -268,34 +327,58 @@ public class AlgebraicNotation {
         final ChessBoard.Operations opponentKingStatus = opponentKingStatus(operationsSet);
 
         if (operationsSet.contains(ChessBoard.Operations.CAPTURE)) {
-            if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(from.toString())
-                    .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
-                    .append(to.toString())
-                    .append("=")
-                    .append(inCaseOfPromotion.getPieceType())
-                    .toString());
+            if (opponentKingStatus == ChessBoard.Operations.CONTINUE) {
+                byte[] bytes = {
+                        from.bytes()[0],
+                        from.bytes()[1],
+                        ChessBoard.Operations.CAPTURE.bytes()[0],
+                        to.bytes()[0],
+                        to.bytes()[1],
+                        equals,
+                        inCaseOfPromotion.bytes()[0]
+                };
 
-            return new AlgebraicNotation(new StringBuilder(from.toString())
-                    .append(ChessBoard.Operations.CAPTURE.getAlgebraicNotation())
-                    .append(to.toString())
-                    .append("=")
-                    .append(inCaseOfPromotion.getPieceType())
-                    .append(opponentKingStatus.getAlgebraicNotation())
-                    .toString());
+                return new AlgebraicNotation(bytes);
+            }
+
+            byte[] bytes = {
+                    from.bytes()[0],
+                    from.bytes()[1],
+                    ChessBoard.Operations.CAPTURE.bytes()[0],
+                    to.bytes()[0],
+                    to.bytes()[1],
+                    equals,
+                    inCaseOfPromotion.bytes()[0],
+                    opponentKingStatus.bytes()[0]
+            };
+
+            return new AlgebraicNotation(bytes);
         }
 
-        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) return new AlgebraicNotation(new StringBuilder(from.toString())
-                .append(to.toString())
-                .append("=")
-                .append(inCaseOfPromotion.getPieceType())
-                .toString());
+        if (opponentKingStatus == ChessBoard.Operations.CONTINUE) {
+            byte[] bytes = {
+                    from.bytes()[0],
+                    from.bytes()[1],
+                    to.bytes()[0],
+                    to.bytes()[1],
+                    equals,
+                    inCaseOfPromotion.bytes()[0]
+            };
 
-        return new AlgebraicNotation(new StringBuilder(from.toString())
-                .append(to.toString())
-                .append("=")
-                .append(inCaseOfPromotion.getPieceType())
-                .append(opponentKingStatus.getAlgebraicNotation())
-                .toString());
+            return new AlgebraicNotation(bytes);
+        }
+
+        byte[] bytes = {
+                from.bytes()[0],
+                from.bytes()[1],
+                to.bytes()[0],
+                to.bytes()[1],
+                equals,
+                inCaseOfPromotion.bytes()[0],
+                opponentKingStatus.bytes()[0]
+        };
+
+        return new AlgebraicNotation(bytes);
     }
 
     /**
@@ -412,36 +495,20 @@ public class AlgebraicNotation {
     }
 
     /**
-     * This function can only be used to predetermine the user's intention to make castling,
-     * However, this is by no means a final validation of this status.
-     */
-    public static boolean isCastling(final PieceTYPE piece, final Coordinate from, final Coordinate to) {
-        final boolean isKing = piece.equals(PieceTYPE.K);
-        if (!isKing) return false;
-
-        final boolean isValidKingPosition = from.equals(Coordinate.e1) || from.equals(Coordinate.e8);
-        if (!isValidKingPosition) return false;
-
-        return to.equals(Coordinate.c1) || to.equals(Coordinate.g1) ||
-                to.equals(Coordinate.c8) || to.equals(Coordinate.g8);
-    }
-
-    /**
      * Determines the type of promotion for a chess move in algebraic notation.
      *
      * @return a PieceType or null.
      * @throws IllegalStateException if the promotion type is unexpected.
      */
     public @Nullable PieceTYPE promotionType() {
-        if (ChessNotationsValidator.isPromotion(this.algebraicNotation) ||
-                ChessNotationsValidator.isPromotionPlusOperation(this.algebraicNotation)) {
-            final char promotionType = this.algebraicNotation.charAt(6);
+        if (isPromotion()) {
+            final byte promotionType = this.algebraicNotation[6];
 
             return switch (promotionType) {
-                case 'Q' -> PieceTYPE.Q;
-                case 'R' -> PieceTYPE.R;
-                case 'B' -> PieceTYPE.B;
-                case 'N' -> PieceTYPE.N;
+                case 81 -> PieceTYPE.Q;
+                case 66 -> PieceTYPE.B;
+                case 78 -> PieceTYPE.N;
+                case 82 -> PieceTYPE.R;
                 default -> throw new IllegalStateException("Unexpected value: " + promotionType);
             };
         }
@@ -463,27 +530,31 @@ public class AlgebraicNotation {
         final Coordinate from;
         final Coordinate to;
 
-        final boolean startsFromFigureType = Character.isLetter(algebraicNotation.charAt(0)) &&
-                Character.isLetter(algebraicNotation.charAt(1));
+        final boolean startsFromFigureType = isUppercaseLetter(algebraicNotation[0]);
 
         if (startsFromFigureType) {
-            from = Coordinate.of(algebraicNotation.charAt(2) - '0', Coordinate.columnToInt(algebraicNotation.charAt(1)));
-            to = Coordinate.of(algebraicNotation.charAt(5) - '0', Coordinate.columnToInt(algebraicNotation.charAt(4)));
+            from = Coordinate.fromBytes(algebraicNotation[1], algebraicNotation[2]);
+            to = Coordinate.fromBytes(algebraicNotation[4], algebraicNotation[5]);
             return Pair.of(from, to);
         }
 
-        from = Coordinate.of(algebraicNotation.charAt(1) - '0', Coordinate.columnToInt(algebraicNotation.charAt(0)));
-        to = Coordinate.of(algebraicNotation.charAt(4) - '0', Coordinate.columnToInt(algebraicNotation.charAt(3)));
+        from = Coordinate.fromBytes(algebraicNotation[0], algebraicNotation[1]);
+        to = Coordinate.fromBytes(algebraicNotation[3], algebraicNotation[4]);
         return Pair.of(from, to);
     }
 
+    private static boolean isUppercaseLetter(byte b) {
+        return (b >= 'A' && b <= 'Z');
+    }
+
     public boolean isPromotion() {
-        int length = this.algebraicNotation.length();
-        return this.algebraicNotation.charAt(length - 2) == '=' || this.algebraicNotation.charAt(length - 3) == '=';
+        int length = this.algebraicNotation.length;
+        return this.algebraicNotation[length - 2] == equals || this.algebraicNotation[length - 3] == equals;
     }
 
     public boolean isCapture() {
-        return algebraicNotation.charAt(2) == 'x' || algebraicNotation.charAt(3) == 'x';
+        byte aByte = ChessBoard.Operations.CAPTURE.bytes()[0];
+        return algebraicNotation[2] == aByte || algebraicNotation[3] == aByte;
     }
 
     /**
@@ -505,32 +576,40 @@ public class AlgebraicNotation {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AlgebraicNotation that)) return false;
-
-        return algebraicNotation.equals(that.algebraicNotation);
+        if (o == null || getClass() != o.getClass()) return false;
+        AlgebraicNotation that = (AlgebraicNotation) o;
+        return Objects.deepEquals(algebraicNotation, that.algebraicNotation);
     }
 
     @Override
     public int hashCode() {
-        return algebraicNotation.hashCode();
+        return Arrays.hashCode(algebraicNotation);
     }
 
     /**
      * Represents the two types of castling moves: short castling and long castling.
      */
     public enum Castle {
-        SHORT_CASTLING("O-O"), LONG_CASTLING("O-O-O");
+        SHORT_CASTLING("O-O", new byte[]{79,45,79}),
+        LONG_CASTLING("O-O-O", new byte[]{79,45,79,45,79});
 
         private final String algebraicNotation;
 
-        Castle(String algebraicNotation) {
+        private final byte[] notationInBytes;
+
+        Castle(String algebraicNotation, byte[] notationInBytes) {
             this.algebraicNotation = algebraicNotation;
+            this.notationInBytes = notationInBytes;
         }
 
         public String getAlgebraicNotation() {
             return algebraicNotation;
+        }
+
+        public byte[] bytes() {
+            return notationInBytes;
         }
     }
 
@@ -538,16 +617,28 @@ public class AlgebraicNotation {
      * Represents the different types of chess pieces.
      */
     public enum PieceTYPE {
-        K("K"), Q("Q"), B("B"), N("N"), R("R"), P("");
+        K("K", new byte[]{75}),
+        Q("Q", new byte[]{81}),
+        B("B", new byte[]{66}),
+        N("N", new byte[]{78}),
+        R("R", new byte[]{82}),
+        P("", new byte[]{});
 
         private final String pieceType;
 
-        PieceTYPE(String pieceType) {
+        private final byte[] pieceTypeInBytes;
+
+        PieceTYPE(String pieceType, byte[] pieceTypeInBytes) {
             this.pieceType = pieceType;
+            this.pieceTypeInBytes = pieceTypeInBytes;
         }
 
         public String getPieceType() {
             return pieceType;
+        }
+
+        public byte[] bytes() {
+            return pieceTypeInBytes;
         }
     }
 }
