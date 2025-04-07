@@ -150,8 +150,8 @@ public enum Coordinate {
     }
 
     public static @Nullable Coordinate fromBytes(byte file, byte rank) {
-        int column = file - 'a' + 1;
-        int row = rank - '1' + 1;
+        int column = file - 97 + 1;
+        int row = rank - 49 + 1;
 
         return of(row, column);
     }
