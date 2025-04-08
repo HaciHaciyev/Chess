@@ -3,8 +3,11 @@ package core.project.chess.domain.chess.pieces;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.value_objects.Move;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
@@ -15,6 +18,10 @@ public final class Rook implements Piece {
 
     private static final Rook WHITE_ROOK = new Rook(Color.WHITE, 3);
     private static final Rook BLACK_ROOK = new Rook(Color.BLACK, 9);
+    static final long[] ROOK_MOVES_CACHE = new long[64];
+    static {
+        for (int square = 0; square < 64; square++) ROOK_MOVES_CACHE[square] = generatePseudoValidRookMoves(square);
+    }
 
     public static Rook of(Color color) {
         return color == Color.WHITE ? WHITE_ROOK : BLACK_ROOK;
@@ -55,44 +62,50 @@ public final class Rook implements Piece {
         return setOfOperations;
     }
 
-    /**
-     * Validates whether a move from the start field to the end field on a chessboard is a valid move for a Rook.
-     * <p>
-     * This method checks if the move is either vertical or horizontal. If the move is valid in either direction,
-     * it further checks if the path between the start and end fields is clear of any pieces.
-     *
-     * <p>
-     * Preconditions:
-     * <ul>
-     *     <li>The caller must ensure that the method <code>safeForKing(...)</code> has been called prior to invoking this method.
-     *         This is to confirm that the move does not place the king in check.</li>
-     *     <li>The caller must check that neither <code>startField</code> nor <code>endField</code> is <code>null</code>.</li>
-     *     <li>The caller must verify that the <code>endField</code> is not occupied by a piece of the same color as the piece being moved.
-     *         This is to ensure that the move does not violate the rules of chess regarding capturing pieces.</li>
-     * </ul>
-     * </p>
-     *
-     * @param chessBoard The chessboard on which the move is being validated. This object contains the current state of the board,
-     *                   including the positions of all pieces.
-     * @param startField The field from which the piece is moving. This field should contain the piece that is being moved.
-     * @param endField   The field to which the piece is moving. This field is the target location for the move.
-     *
-     * @return <code>true</code> if the move is valid (vertical or horizontal) and the path is clear; <code>false</code> otherwise.
-     *
-     * @throws IllegalArgumentException if any of the preconditions are not met (e.g., if <code>startField</code> or <code>endField</code> is <code>null</code>).
-     */
     boolean rookMove(final ChessBoard chessBoard, final Coordinate startField, final Coordinate endField) {
-        final int startColumn = startField.column();
-        final int endColumn = endField.column();
-        final int startRow = startField.row();
-        final int endRow = endField.row();
+        int startSquare = startField.ordinal();
+        int endSquare = endField.ordinal();
+        long validMoves = ROOK_MOVES_CACHE[startSquare] & ~chessBoard.pieces(color);
+        if ((validMoves & (1L << endSquare)) == 0) return false;
+        return clearPath(chessBoard, startField, endField);
+    }
 
-        final boolean verticalMove = startColumn == endColumn && startRow != endRow;
-        if (verticalMove) return clearPath(chessBoard, startField, endField);
+    public List<Move> allValidMoves(final ChessBoard chessBoard) {
+        List<Move> validMoves = new ArrayList<>();
 
-        final boolean horizontalMove = startColumn != endColumn && startRow == endRow;
-        if (horizontalMove) return clearPath(chessBoard, startField, endField);
+        long rookBitboard = chessBoard.bitboard(this);
+        long ownPieces = chessBoard.pieces(color);
 
-        return false;
+        while (rookBitboard != 0) {
+            int fromIndex = Long.numberOfTrailingZeros(rookBitboard);
+            rookBitboard &= rookBitboard - 1;
+
+            long moves = ROOK_MOVES_CACHE[fromIndex] & ~ownPieces;
+            while (moves != 0) {
+                int toIndex = Long.numberOfTrailingZeros(moves);
+                moves &= moves - 1;
+
+                Coordinate from = Coordinate.byOrdinal(fromIndex);
+                Coordinate to = Coordinate.byOrdinal(toIndex);
+
+                if (clearPath(chessBoard, from, to) &&
+                        chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
+            }
+        }
+
+        return validMoves;
+    }
+
+    private static long generatePseudoValidRookMoves(int square) {
+        long moves = 0L;
+        int row = square / 8;
+        int col = square % 8;
+
+        for (int i = col - 1; i >= 0; i--) moves |= 1L << (row * 8 + i); // left
+        for (int i = col + 1; i < 8; i++) moves |= 1L << (row * 8 + i); // right
+
+        for (int i = row - 1; i >= 0; i--) moves |= 1L << (i * 8 + col); // bottom
+        for (int i = row + 1; i < 8; i++) moves |= 1L << (i * 8 + col); // top
+        return moves;
     }
 }
