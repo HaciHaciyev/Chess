@@ -3,8 +3,11 @@ package core.project.chess.domain.chess.pieces;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.value_objects.Move;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
@@ -15,6 +18,10 @@ public final class Bishop implements Piece {
 
     private static final Bishop WHITE_BISHOP = new Bishop(Color.WHITE, 2);
     private static final Bishop BLACK_BISHOP = new Bishop(Color.BLACK, 8);
+    static final long[] BISHOP_MOVES_CACHE = new long[64];
+    static {
+        for (int square = 0; square < 64; square++) BISHOP_MOVES_CACHE[square] = generatePseudoLegalBishopMoves(square);
+    }
 
     public static Bishop of(Color color) {
         return color == Color.WHITE ? WHITE_BISHOP : BLACK_BISHOP;
@@ -37,59 +44,72 @@ public final class Bishop implements Piece {
 
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Piece startField = chessBoard.piece(from);
         Piece endField = chessBoard.piece(to);
-
-        if (startField == null) return null;
-        final boolean endFieldOccupiedBySameColorPiece = endField != null && endField.color().equals(color);
-        if (endFieldOccupiedBySameColorPiece) return null;
         if (!bishopMove(chessBoard, from, to)) return null;
         if (!chessBoard.safeForKing(from, to)) return null;
 
         Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
 
         final Color opponentPieceColor = color == Color.WHITE ? Color.BLACK : Color.WHITE;
-        final boolean opponentPieceInEndField = endField != null && endField.color().equals(opponentPieceColor);
+        final boolean opponentPieceInEndField = endField != null && endField.color() == opponentPieceColor;
         if (opponentPieceInEndField) setOfOperations.add(Operations.CAPTURE);
 
         return setOfOperations;
     }
 
-    /**
-     * Validates whether a move from the start field to the end field on a chessboard is a valid diagonal move.
-     * <p>
-     * This method checks if the move is diagonal by comparing the row and column coordinates of the start and end fields.
-     * If the move is diagonal, it further checks if the path between the start and end fields is clear of any pieces.
-     *
-     * <p>
-     * Preconditions:
-     * <ul>
-     *     <li>The caller must ensure that the method <code>safeForKing(...)</code> has been called prior to invoking this method.
-     *         This is to confirm that the move does not place the king in check.</li>
-     *     <li>The caller must check that neither <code>chessBoard</code> nor <code>startField</code> nor <code>endField</code> is <code>null</code>.</li>
-     *     <li>The caller must verify that the <code>endField</code> is not occupied by a piece of the same color as the piece being moved.
-     *         This is to ensure that the move does not violate the rules of chess regarding capturing pieces.</li>
-     * </ul>
-     * </p>
-     *
-     * @param chessBoard The chessboard on which the move is being validated. This object contains the current state of the board,
-     *                   including the positions of all pieces.
-     * @param startField The field from which the piece is moving. This field should contain the piece that is being moved.
-     * @param endField   The field to which the piece is moving. This field is the target location for the move.
-     *
-     * @return <code>true</code> if the move is a valid diagonal move and the path is clear; <code>false</code> otherwise.
-     *
-     * @throws IllegalArgumentException if any of the preconditions are not met (e.g., if <code>startField</code> or <code>endField</code> is <code>null</code>).
-     */
     boolean bishopMove(final ChessBoard chessBoard, final Coordinate startField, final Coordinate endField) {
-        final int startColumn = startField.column();
-        final int endColumn = endField.column();
-        final int startRow = startField.row();
-        final int endRow = endField.row();
+        int startSquare = startField.ordinal();
+        int endSquare = endField.ordinal();
+        long validMoves = BISHOP_MOVES_CACHE[startSquare] & ~chessBoard.pieces(color);
+        if ((validMoves & (1L << endSquare)) == 0) return false;
+        return clearPath(chessBoard, startField, endField);
+    }
 
-        final boolean diagonalMove = Math.abs(startRow - endRow) == Math.abs(startColumn - endColumn);
-        if (diagonalMove) return clearPath(chessBoard, startField, endField);
+    public List<Move> allValidMoves(final ChessBoard chessBoard) {
+        List<Move> validMoves = new ArrayList<>();
 
-        return false;
+        long bishopBitboard = chessBoard.bitboard(this);
+        long ownPieces = chessBoard.pieces(color);
+
+        while (bishopBitboard != 0) {
+            int fromIndex = Long.numberOfTrailingZeros(bishopBitboard);
+            bishopBitboard &= bishopBitboard - 1;
+
+            long moves = BISHOP_MOVES_CACHE[fromIndex] & ~ownPieces;
+            while (moves != 0) {
+                int toIndex = Long.numberOfTrailingZeros(moves);
+                moves &= moves - 1;
+
+                Coordinate from = Coordinate.byOrdinal(fromIndex);
+                Coordinate to = Coordinate.byOrdinal(toIndex);
+
+                if (clearPath(chessBoard, from, to) &&
+                        chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
+            }
+        }
+
+        return validMoves;
+    }
+
+    private static long generatePseudoLegalBishopMoves(int square) {
+        long moves = 0L;
+        int row = square / 8;
+        int col = square % 8;
+
+        int[] rowOffsets = {-1, 1, 1, -1};
+        int[] colOffsets = {1, -1, 1, -1};
+
+        for (int i = 0; i < 4; i++) {
+            int r = row + rowOffsets[i];
+            int c = col + colOffsets[i];
+            while (r >= 0 && r < 8 && c >= 0 && c < 8) {
+                int newSquare = r * 8 + c;
+                moves |= 1L << newSquare;
+                r += rowOffsets[i];
+                c += colOffsets[i];
+            }
+        }
+
+        return moves;
     }
 }

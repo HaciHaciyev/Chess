@@ -18,7 +18,7 @@ public final class Knight implements Piece {
 
     private static final Knight WHITE_KNIGHT = new Knight(Color.WHITE, 1);
     private static final Knight BLACK_KNIGHT = new Knight(Color.BLACK, 7);
-    private static final long[] KNIGHT_MOVES_CACHE = new long[64];
+    static final long[] KNIGHT_MOVES_CACHE = new long[64];
     static {
         for (int square = 0; square < 64; square++) KNIGHT_MOVES_CACHE[square] = generatePseudoLegalKnightMoves(square);
     }
@@ -96,8 +96,8 @@ public final class Knight implements Piece {
     private static long generatePseudoLegalKnightMoves(int square) {
         long moves = 0L;
 
-        int row = square / 8;         // 0 = a8, 7 = a1
-        int col = square % 8;         // 0 = a*, 7 = h*
+        int row = square / 8;
+        int col = square % 8;
 
         int[] dRows = {-2, -1, 1, 2, 2, 1, -1, -2};
         int[] dCols = {1, 2, 2, 1, -1, -2, -2, -1};

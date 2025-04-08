@@ -1,5 +1,6 @@
 package core.project.chess.domain;
 
+import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
@@ -234,6 +235,14 @@ class CustomChessTests {
         chessGame.makeMovement(firstPlayerUsername, c8, e6, null);
 
         assertEquals(GameResult.DRAW, chessGame.gameResult().orElseThrow());
+    }
+
+    @Test
+    void isPathClearTest() {
+        ChessBoard chessBoard = ChessBoard.pureChess();
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(c1, e3));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(c1, d2));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(e1, e5));
     }
 
     @Test
