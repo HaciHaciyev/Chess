@@ -44,12 +44,7 @@ public final class Rook implements Piece {
 
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Piece startField = chessBoard.piece(from);
         Piece endField = chessBoard.piece(to);
-
-        if (startField == null) return null;
-        final boolean endFieldOccupiedBySameColorPiece = endField != null && endField.color().equals(color);
-        if (endFieldOccupiedBySameColorPiece) return null;
         if (!rookMove(chessBoard, from, to)) return null;
         if (!chessBoard.safeForKing(from, to)) return null;
 
