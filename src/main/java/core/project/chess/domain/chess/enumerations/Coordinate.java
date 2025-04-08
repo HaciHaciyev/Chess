@@ -81,6 +81,7 @@ public enum Coordinate {
 
     private final byte[] bytes;
 
+    private static final Coordinate[] COORDINATES = Coordinate.values();
     private static final Coordinate[][] COORDINATE_CACHE = new Coordinate[8][8];
 
     public static final Coordinate WHITE_KING_START = Coordinate.e1;
@@ -154,5 +155,10 @@ public enum Coordinate {
         int row = rank - 49 + 1;
 
         return of(row, column);
+    }
+
+    public static Coordinate byOrdinal(int ordinalIndex) {
+        if (ordinalIndex < 0 || ordinalIndex >= COORDINATES.length) return null;
+        return COORDINATES[ordinalIndex];
     }
 }

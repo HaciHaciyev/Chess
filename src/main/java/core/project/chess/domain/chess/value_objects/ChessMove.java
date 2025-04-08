@@ -1,4 +1,4 @@
 package core.project.chess.domain.chess.value_objects;
 
-public record ChessMove(PlayerMove white, PlayerMove black) {
+public record ChessMove(Move white, Move black) {
 }

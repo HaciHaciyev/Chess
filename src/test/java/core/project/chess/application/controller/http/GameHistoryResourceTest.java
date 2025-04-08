@@ -11,7 +11,7 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChessMove;
-import core.project.chess.domain.chess.value_objects.PlayerMove;
+import core.project.chess.domain.chess.value_objects.Move;
 import io.quarkus.logging.Log;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.common.http.TestHTTPResource;
@@ -202,7 +202,7 @@ class GameHistoryResourceTest {
 
     private void proceedFullMove(String username, Session playerChess,
                                  String opponentUsername, Session opponentChess,
-                                 String gameID, PlayerMove whiteMoves, PlayerMove blackMoves) {
+                                 String gameID, Move whiteMoves, Move blackMoves) {
         String inCaseOfPromotion = whiteMoves.promotion() == null ? null : AlgebraicNotation.pieceToType(whiteMoves.promotion()).getPieceType();
         sendMessage(playerChess, username, Message.builder(MessageType.MOVE)
                 .gameID(gameID)
@@ -236,7 +236,7 @@ class GameHistoryResourceTest {
         });
     }
 
-    private static boolean validateMove(PlayerMove move, Message message) {
+    private static boolean validateMove(Move move, Message message) {
         if (message.type().equals(MessageType.GAME_ENDED)) {
             return true;
         }

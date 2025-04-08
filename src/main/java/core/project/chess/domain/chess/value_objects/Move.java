@@ -6,9 +6,9 @@ import jakarta.annotation.Nullable;
 
 import java.util.Objects;
 
-public record PlayerMove(Coordinate from, Coordinate to, @Nullable Piece promotion) implements Comparable<PlayerMove> {
+public record Move(Coordinate from, Coordinate to, @Nullable Piece promotion) implements Comparable<Move> {
 
-    public PlayerMove {
+    public Move {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
     }
@@ -19,7 +19,7 @@ public record PlayerMove(Coordinate from, Coordinate to, @Nullable Piece promoti
     }
 
     @Override
-    public int compareTo(PlayerMove m) {
+    public int compareTo(Move m) {
         int ourColFrom = from.column();
         int ourColTo = to.column();
         int ourRowFrom = from.row();

@@ -8,7 +8,7 @@ import core.project.chess.domain.chess.enumerations.SimpleDirection;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.domain.chess.value_objects.KingStatus;
-import core.project.chess.domain.chess.value_objects.PlayerMove;
+import core.project.chess.domain.chess.value_objects.Move;
 import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -77,11 +77,11 @@ public final class King implements Piece {
         return validatePieceMovementForKingSafety(boardNavigator, kingPosition, from, to);
     }
 
-    public KingStatus kingStatus(final ChessBoard chessBoard, @Nullable final PlayerMove lastMove) {
+    public KingStatus kingStatus(final ChessBoard chessBoard, @Nullable final Move lastMove) {
         return checkOrMate(chessBoard.navigator(), lastMove);
     }
 
-    public boolean stalemate(final ChessBoard chessBoard, @Nullable final PlayerMove lastMove) {
+    public boolean stalemate(final ChessBoard chessBoard, @Nullable final Move lastMove) {
         ChessBoardNavigator navigator = chessBoard.navigator();
         Coordinate kingCoordinate = navigator.kingCoordinate(color);
 
@@ -130,7 +130,7 @@ public final class King implements Piece {
                 for (Coordinate endCoordinate : coords) {
                     Piece endPosition = board.piece(endCoordinate);
                     if (endPosition != null && endPosition.color() == color) continue;
-                    if (knight.knightMove(pivot, endCoordinate) && safeForKing(board, pivot, endCoordinate)) yield false;
+                    if (knight.knightMove(board, pivot, endCoordinate) && safeForKing(board, pivot, endCoordinate)) yield false;
                 }
 
                 yield true;
@@ -169,7 +169,7 @@ public final class King implements Piece {
         };
     }
 
-    private List<Coordinate> check(ChessBoardNavigator boardNavigator, PlayerMove lastMove) {
+    private List<Coordinate> check(ChessBoardNavigator boardNavigator, Move lastMove) {
         Coordinate kingCoordinate = boardNavigator.kingCoordinate(color);
         Color oppositeColor = color == WHITE ? BLACK : WHITE;
 
@@ -202,7 +202,7 @@ public final class King implements Piece {
         return enemies;
     }
 
-    private KingStatus checkOrMate(ChessBoardNavigator boardNavigator, PlayerMove lastMove) {
+    private KingStatus checkOrMate(ChessBoardNavigator boardNavigator, Move lastMove) {
         List<Coordinate> enemies = check(boardNavigator, lastMove);
         if (enemies.isEmpty()) return new KingStatus(Operations.CONTINUE, enemies);
 

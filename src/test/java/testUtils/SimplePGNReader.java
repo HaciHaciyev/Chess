@@ -4,7 +4,7 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.value_objects.ChessMove;
-import core.project.chess.domain.chess.value_objects.PlayerMove;
+import core.project.chess.domain.chess.value_objects.Move;
 
 import java.io.*;
 import java.util.*;
@@ -108,7 +108,7 @@ public class SimplePGNReader {
         return tags.get(tag.toLowerCase());
     }
 
-    private PlayerMove mapToPlayerMove(String s, Color color) {
+    private Move mapToPlayerMove(String s, Color color) {
         String promotion = Character.isUpperCase(s.charAt(s.length() - 1)) ? String.valueOf(s.charAt(s.length() - 1)) : null;
         Piece promotionPiece = null;
         if (promotion != null) {
@@ -129,7 +129,7 @@ public class SimplePGNReader {
         Coordinate start = Coordinate.valueOf(strStart);
         Coordinate end = Coordinate.valueOf(strEnd);
 
-        return new PlayerMove(start, end, promotionPiece);
+        return new Move(start, end, promotionPiece);
     }
 
     public ChessMove read(int i) {
@@ -138,9 +138,9 @@ public class SimplePGNReader {
 
         String[] splitMove = move.split(" ");
 
-        PlayerMove white = splitMove[0].transform(s -> mapToPlayerMove(s, Color.WHITE));
+        Move white = splitMove[0].transform(s -> mapToPlayerMove(s, Color.WHITE));
 
-        PlayerMove black = null;
+        Move black = null;
 
         if (splitMove.length > 1) {
             black = splitMove[1].transform(s -> mapToPlayerMove(s, Color.BLACK));

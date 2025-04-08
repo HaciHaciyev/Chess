@@ -414,6 +414,14 @@ public class ChessBoard {
         return blackPieces;
     }
 
+    public long pieces(final Color color) {
+        return color == WHITE ? whitePieces : blackPieces;
+    }
+
+    public long bitboard(final Piece piece) {
+        return bitboard[piece.index()];
+    }
+
     public ChessBoardNavigator navigator() {
         return navigator;
     }
@@ -1086,14 +1094,20 @@ public class ChessBoard {
     }
 
     private void addFigure(Coordinate coordinate, Piece piece) {
-        bitboard[piece.index()] |= coordinate.bitMask();
+        long squareMask = coordinate.bitMask();
+        bitboard[piece.index()] |= squareMask;
         occupation[coordinate.ordinal()] = piece;
+        if (piece.color() == WHITE) whitePieces |= squareMask;
+        else blackPieces |= squareMask;
     }
 
     private Piece removeFigure(Coordinate coordinate, Piece piece) {
-        bitboard[piece.index()] &= ~coordinate.bitMask();
+        long squareMask = coordinate.bitMask();
+        bitboard[piece.index()] &= ~squareMask;
         Piece removedPiece = occupation[coordinate.ordinal()];
         occupation[coordinate.ordinal()] = null;
+        if (piece.color() == WHITE) whitePieces &= ~squareMask;
+        else blackPieces &= ~squareMask;
         return removedPiece;
     }
 
@@ -1164,7 +1178,7 @@ public class ChessBoard {
 
         /** Check for Checkmate, Stalemate, Check after move executed...*/
         final King opponentKing = theKing(startField.color() == WHITE ? BLACK : WHITE);
-        PlayerMove lastMove = new PlayerMove(from, to, null);
+        Move lastMove = new Move(from, to, null);
 
         final boolean isCheckPossible = countOfHalfMoves() >= 3 || initType == InitType.FEN;
 
@@ -1282,7 +1296,7 @@ public class ChessBoard {
 
         /** Check for Checkmate, Stalemate, Check after move executed...*/
         final King opponentKing = theKing(king.color() == WHITE ? BLACK : WHITE);
-        PlayerMove lastMove = new PlayerMove(from, to, null);
+        Move lastMove = new Move(from, to, null);
 
         final boolean isCheckPossible = countOfHalfMoves() + 1 >= 3 || initType == InitType.FEN;
 
