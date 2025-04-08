@@ -100,9 +100,11 @@ public class ChessBoard {
      * Bitboard representing chess board by using 64 bits integers
      */
     private final long[] bitboard;
+    private long whitePieces;
+    private long blackPieces;
     private final Piece[] occupation;
 
-    static final Piece[] defaultOccupation = new Piece[64];
+    private static final Piece[] defaultOccupation = new Piece[64];
     static {
         defaultOccupation[Coordinate.a1.ordinal()] = Rook.of(WHITE);
         defaultOccupation[Coordinate.b1.ordinal()] = Knight.of(WHITE);
@@ -211,6 +213,8 @@ public class ChessBoard {
                     validBlackLongCasting));
 
             this.bitboard = new long[12];
+            this.whitePieces = 0xFFFF000000000000L;
+            this.blackPieces = 0x000000000000FFFFL;
             this.occupation = defaultOccupation.clone();
             initialize();
             this.zobrist = new ZobristHashKeys();
@@ -400,6 +404,14 @@ public class ChessBoard {
 
     public Color turn() {
         return figuresTurn;
+    }
+
+    public long whitePieces() {
+        return whitePieces;
+    }
+
+    public long blackPieces() {
+        return blackPieces;
     }
 
     public ChessBoardNavigator navigator() {
@@ -1050,8 +1062,10 @@ public class ChessBoard {
 
             if (Character.isLetter(c)) {
                 Piece piece = AlgebraicNotation.fromSymbol(String.valueOf(c));
-                bitboard[piece.index()] |= squareMask(coordinate);
+                bitboard[piece.index()] |= coordinate.bitMask();
                 occupation[coordinate.ordinal()] = piece;
+                if (piece.color() == WHITE) whitePieces |= coordinate.bitMask();
+                if (piece.color() == BLACK) blackPieces |= coordinate.bitMask();
                 pos++;
                 continue;
             }
@@ -1072,20 +1086,15 @@ public class ChessBoard {
     }
 
     private void addFigure(Coordinate coordinate, Piece piece) {
-        bitboard[piece.index()] |= squareMask(coordinate);
+        bitboard[piece.index()] |= coordinate.bitMask();
         occupation[coordinate.ordinal()] = piece;
     }
 
     private Piece removeFigure(Coordinate coordinate, Piece piece) {
-        bitboard[piece.index()] &= ~squareMask(coordinate);
+        bitboard[piece.index()] &= ~coordinate.bitMask();
         Piece removedPiece = occupation[coordinate.ordinal()];
         occupation[coordinate.ordinal()] = null;
         return removedPiece;
-    }
-
-    private static long squareMask(Coordinate coordinate) {
-        int squareIndex = coordinate.ordinal();
-        return 1L << squareIndex;
     }
 
     public void reposition(final Coordinate from, final Coordinate to) {

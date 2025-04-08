@@ -129,8 +129,8 @@ public enum Coordinate {
         return bytes[1];
     }
 
-    public char columnChar() {
-        return intToColumn(column);
+    public long bitMask() {
+        return 1L << this.ordinal();
     }
 
     /**
@@ -154,33 +154,5 @@ public enum Coordinate {
         int row = rank - 49 + 1;
 
         return of(row, column);
-    }
-
-    /**
-     * Converts a column letter (a-h) to the corresponding column number (1-8).
-     *
-     * @param c the column letter (a-h)
-     * @return the corresponding column number (1-8)
-     * @throws IllegalStateException if the character is not between 'a' and 'h'
-     */
-    public static int columnToInt(char c) {
-        if (c >= 'a' && c <= 'h') {
-            return c - 'a' + 1;
-        }
-        throw new IllegalStateException("Unexpected value: " + c);
-    }
-
-    /**
-     * Converts a column number (1-8) to the corresponding column letter (a-h).
-     *
-     * @param columnNumber the column number (1-8)
-     * @return the corresponding column letter (a-h)
-     * @throws IllegalStateException if the columnNumber is not between 1 and 8 (inclusive)
-     */
-    public static char intToColumn(int columnNumber) {
-        if (columnNumber >= 1 && columnNumber <= 8) {
-            return (char) ('a' + columnNumber - 1);
-        }
-        throw new IllegalStateException("Unexpected value: " + columnNumber);
     }
 }
