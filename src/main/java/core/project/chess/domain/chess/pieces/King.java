@@ -383,79 +383,83 @@ public final class King implements Piece {
         Color oppositeColor = color.equals(WHITE) ? BLACK : WHITE;
 
         KingStatus kingStatus = board.kingStatus();
-        if (kingStatus != null) {
-            List<Coordinate> enemies = kingStatus.enemiesAttackingTheKing();
-            if (enemies.size() == 2) return false;
+        if (kingStatus == null) return validateKingSafetyWithoutPrecomputedEnemies(boardNavigator, kingPosition, from, to, oppositeColor);
 
-            SimpleDirection direction = getSimpleDirection(kingPosition, from);
-            if (enemies.isEmpty() && direction == null) return true;
-            if (enemies.isEmpty()) return checkIfTheAttackIsNotOpen(boardNavigator, kingPosition, from, to, direction);
-            if (direction != null && !checkIfTheAttackIsNotOpen(boardNavigator, kingPosition, from, to, direction)) return false;
+        List<Coordinate> enemies = kingStatus.enemiesAttackingTheKing();
+        if (enemies.size() == 2) return false;
 
-            Coordinate enemyField = enemies.getFirst();
-            Piece enemy = board.piece(enemyField);
+        SimpleDirection direction = getSimpleDirection(kingPosition, from);
+        if (enemies.isEmpty() && direction == null) return true;
+        if (enemies.isEmpty()) return checkIfTheAttackIsNotOpen(boardNavigator, kingPosition, from, to, direction);
+        if (direction != null && !checkIfTheAttackIsNotOpen(boardNavigator, kingPosition, from, to, direction)) return false;
 
-            if (enemy instanceof Pawn) return isPawnEaten(to, enemyField, boardNavigator);
-            if (enemy instanceof Knight) return to == enemyField;
-            final boolean surround = Math.abs(kingPosition.row() - enemyField.row()) <= 1 &&
-                    Math.abs(kingPosition.column() - enemyField.column()) <= 1;
-            if (surround) return to == enemyField;
-            final boolean isEaten = to == enemyField;
-            if (isEaten) return true;
+        Coordinate enemyField = enemies.getFirst();
+        Piece enemy = board.piece(enemyField);
 
-            // Сan block from vertical
-            final boolean vertical = kingPosition.row() != enemyField.row() && kingPosition.column() == enemyField.column();
-            if (vertical) {
-                if (to.column() != kingPosition.column()) return false;
+        if (enemy instanceof Pawn) return isPawnEaten(to, enemyField, boardNavigator);
+        if (enemy instanceof Knight) return to == enemyField;
+        final boolean surround = Math.abs(kingPosition.row() - enemyField.row()) <= 1 &&
+                Math.abs(kingPosition.column() - enemyField.column()) <= 1;
+        if (surround) return to == enemyField;
+        final boolean isEaten = to == enemyField;
+        if (isEaten) return true;
 
-                return kingPosition.row() < enemyField.row() ?
-                        to.row() > kingPosition.row() && to.row() < enemyField.row() :
-                        to.row() < kingPosition.row() && to.row() > enemyField.row();
-            }
+        // Сan block from vertical
+        final boolean vertical = kingPosition.row() != enemyField.row() && kingPosition.column() == enemyField.column();
+        if (vertical) {
+            if (to.column() != kingPosition.column()) return false;
 
-            // Сan block from horizontal
-            final boolean horizontal = kingPosition.row() == enemyField.row() && kingPosition.column() != enemyField.column();
-            if (horizontal) {
-                if (to.row() != kingPosition.row()) return false;
+            return kingPosition.row() < enemyField.row() ?
+                    to.row() > kingPosition.row() && to.row() < enemyField.row() :
+                    to.row() < kingPosition.row() && to.row() > enemyField.row();
+        }
 
-                return kingPosition.column() < enemyField.column() ?
-                        to.column() > kingPosition.column() && to.column() < enemyField.column() :
-                        to.column() < kingPosition.column() && to.column() > enemyField.column();
-            }
+        // Сan block from horizontal
+        final boolean horizontal = kingPosition.row() == enemyField.row() && kingPosition.column() != enemyField.column();
+        if (horizontal) {
+            if (to.row() != kingPosition.row()) return false;
 
-            // Сan block from diagonal
-            if (Math.abs(to.row() - kingPosition.row()) != Math.abs(to.column() - kingPosition.column())) return false;
+            return kingPosition.column() < enemyField.column() ?
+                    to.column() > kingPosition.column() && to.column() < enemyField.column() :
+                    to.column() < kingPosition.column() && to.column() > enemyField.column();
+        }
 
-            final boolean isFromTop = kingPosition.row() < enemyField.row();
-            if (isFromTop) {
-                final boolean isFromRight = kingPosition.column() < enemyField.column();
-                if (isFromRight) {
-                    return kingPosition.row() < to.row() &&
-                            to.row() < enemyField.row() &&
-                            kingPosition.column() < to.column() &&
-                            to.column() < enemyField.column();
-                }
+        // Сan block from diagonal
+        if (Math.abs(to.row() - kingPosition.row()) != Math.abs(to.column() - kingPosition.column())) return false;
 
-                return kingPosition.row() < to.row() &&
-                        to.row() < enemyField.row() &&
-                        kingPosition.column() > to.column() &&
-                        to.column() > enemyField.column();
-            }
-
+        final boolean isFromTop = kingPosition.row() < enemyField.row();
+        if (isFromTop) {
             final boolean isFromRight = kingPosition.column() < enemyField.column();
             if (isFromRight) {
-                return kingPosition.row() > to.row() &&
-                        to.row() > enemyField.row() &&
+                return kingPosition.row() < to.row() &&
+                        to.row() < enemyField.row() &&
                         kingPosition.column() < to.column() &&
                         to.column() < enemyField.column();
             }
 
-            return kingPosition.row() > to.row() &&
-                    to.row() > enemyField.row() &&
+            return kingPosition.row() < to.row() &&
+                    to.row() < enemyField.row() &&
                     kingPosition.column() > to.column() &&
                     to.column() > enemyField.column();
         }
 
+        final boolean isFromRight = kingPosition.column() < enemyField.column();
+        if (isFromRight) {
+            return kingPosition.row() > to.row() &&
+                    to.row() > enemyField.row() &&
+                    kingPosition.column() < to.column() &&
+                    to.column() < enemyField.column();
+        }
+
+        return kingPosition.row() > to.row() &&
+                to.row() > enemyField.row() &&
+                kingPosition.column() > to.column() &&
+                to.column() > enemyField.column();
+    }
+
+    private boolean validateKingSafetyWithoutPrecomputedEnemies(ChessBoardNavigator boardNavigator, Coordinate kingPosition,
+                                                                Coordinate from, Coordinate to, Color oppositeColor) {
+        ChessBoard board = boardNavigator.board();
         List<Coordinate> pawnsThreateningCoordinates = boardNavigator.pawnsThreateningTheCoordinateOf(kingPosition, oppositeColor);
         for (Coordinate possiblePawn : pawnsThreateningCoordinates) {
             if (!isPawnEaten(to, possiblePawn, boardNavigator)) return false;

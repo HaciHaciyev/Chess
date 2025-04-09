@@ -1259,10 +1259,7 @@ public class ChessBoard {
      */
     private GameResultMessage castling(final Coordinate from, final Coordinate to) {
         /** Preparation of necessary data and validation.*/
-        final Piece kingStartedField = piece(from);
-        if (!(kingStartedField instanceof King king)) {
-            throw new IllegalStateException("Invalid method usage, check the documentation.");
-        }
+        final King king = (King) piece(from);
 
         final Color color = king.color();
         AlgebraicNotation.Castle castle = AlgebraicNotation.castle(to);
