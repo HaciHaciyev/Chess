@@ -3,11 +3,11 @@ package core.project.chess.domain.chess.pieces;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.domain.chess.util.ChessBoardNavigator;
+import core.project.chess.domain.chess.value_objects.Move;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +21,14 @@ public final class Pawn implements Piece {
 
     private static final Pawn WHITE_PAWN = new Pawn(WHITE, 0);
     private static final Pawn BLACK_PAWN = new Pawn(BLACK, 6);
+    static final long[] WHITE_PAWN_MOVES_CACHE = new long[64];
+    static final long[] BLACK_PAWN_MOVES_CACHE = new long[64];
+    static {
+        for (int square = 0; square < 64; square++) {
+            WHITE_PAWN_MOVES_CACHE[square] = generatePseudoValidPawnMoves(square, Color.WHITE);
+            BLACK_PAWN_MOVES_CACHE[square] = generatePseudoValidPawnMoves(square, Color.BLACK);
+        }
+    }
 
     public static Pawn of(Color color) {
         return color == WHITE ? WHITE_PAWN : BLACK_PAWN;
@@ -75,14 +83,7 @@ public final class Pawn implements Piece {
      */
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Piece startField = chessBoard.piece(from);
-        Piece endField = chessBoard.piece(to);
-
-        if (startField == null) return null;
-        final boolean endFieldOccupiedBySameColorPiece = endField != null && endField.color().equals(color);
-        if (endFieldOccupiedBySameColorPiece) return null;
-
-        final Set<Operations> setOfOperations = pawnMove(chessBoard, from, to, endField);
+        final Set<Operations> setOfOperations = pawnMove(chessBoard, from, to);
         if (setOfOperations == null) return null;
         if (!chessBoard.safeForKing(from, to)) return null;
 
@@ -91,134 +92,132 @@ public final class Pawn implements Piece {
 
     public boolean isValidPromotion(final Pawn pawnForPromotion, final Piece inCaseOfPromotion) {
         if (pawnForPromotion == null || inCaseOfPromotion == null) return false;
-
         if (inCaseOfPromotion instanceof King || inCaseOfPromotion instanceof Pawn) return false;
         return pawnForPromotion.color() == inCaseOfPromotion.color();
     }
 
-    public boolean isPawnOnStalemate(final ChessBoardNavigator navigator, final Coordinate pivot) {
-        final ChessBoard chessBoard = navigator.board();
-        final List<Coordinate> fieldsForPawnMovement = navigator.fieldsForPawnMovement(pivot, color);
-        final King king = chessBoard.theKing(color);
-        final int startColumn = pivot.column();
-        final int startRow = pivot.row();
-
-        for (final Coordinate endCoordinate : fieldsForPawnMovement) {
-            final Piece endField = chessBoard.piece(endCoordinate);
-            final boolean endFieldOccupied = endField != null;
-
-            final boolean endFieldOccupiedByAllies = endFieldOccupied && endField.color() == color;
-            if (endFieldOccupiedByAllies) continue;
-
-            final int endColumn = endCoordinate.column();
-            final int endRow = endCoordinate.row();
-
-            final boolean straightMove = startColumn == endColumn && Math.abs(startRow - endRow) == 1;
-            if (straightMove && !endFieldOccupied && king.safeForKing(chessBoard, pivot, endCoordinate)) return false;
-
-            final boolean diagonalCapture = Math.abs(startColumn - endColumn) == 1 && Math.abs(startRow - endRow) == 1;
-            if (diagonalCapture && endFieldOccupied &&
-                    !endFieldOccupiedByAllies && king.safeForKing(chessBoard, pivot, endCoordinate)) return false;
-
-            final boolean isPassage = isPassage(pivot, endCoordinate);
-            if (isPassage && !endFieldOccupied && king.safeForKing(chessBoard, pivot, endCoordinate)) {
-                final int passageIntermediateRow = startRow < endRow ? startRow + 1 : startRow - 1;
-                final Coordinate passageIntermediateCoord = Coordinate.of(passageIntermediateRow, startColumn);
-
-                final boolean isPassageIntermediateFieldNotOccupied = chessBoard.piece(passageIntermediateCoord) == null;
-                if (isPassageIntermediateFieldNotOccupied) return false;
-            }
-
-            if (captureOnPassage(chessBoard, endColumn, endRow) && king.safeForKing(chessBoard, pivot, endCoordinate)) return false;
-        }
-
-        return true;
+    public boolean isPawnsOnStalemate(final ChessBoard chessBoard) {
+        long pawnsBitboard = chessBoard.bitboard(this);
+        if (pawnsBitboard == 0) return true;
+        return allValidMoves(chessBoard).isEmpty();
     }
 
-    private Set<Operations> pawnMove(ChessBoard chessBoard, Coordinate startField, Coordinate endField, Piece endFieldPiece) {
+    Set<Operations> pawnMove(ChessBoard chessBoard, Coordinate startField, Coordinate endField) {
         final int startColumn = startField.column();
         final int endColumn = endField.column();
         final int startRow = startField.row();
         final int endRow = endField.row();
+        long targetBit = endField.bitMask();
+        int fromIndex = startField.ordinal();
 
-        final boolean isRightPawnMovingWay = (color == WHITE && startRow < endRow) || (color == BLACK && startRow > endRow);
-        if (!isRightPawnMovingWay) return null;
+        long pseudoMoves = (color == Color.WHITE ? WHITE_PAWN_MOVES_CACHE : BLACK_PAWN_MOVES_CACHE)[fromIndex];
+        if ((pseudoMoves & targetBit) == 0) return null;
+
+        long ownPieces = chessBoard.pieces(color);
+        if ((targetBit & ownPieces) != 0) return null;
+
+        long opponentPieces = color == WHITE ? chessBoard.blackPieces() : chessBoard.whitePieces();
+        long occupied = ownPieces | opponentPieces;
 
         final boolean straightMove = endColumn == startColumn;
-        if (straightMove) return straightMove(chessBoard, startColumn, startRow, endRow, endFieldPiece);
-
-        final boolean diagonalCapture = Math.abs(startRow - endRow) == 1 && Math.abs(startColumn - endColumn) == 1;
-        if (diagonalCapture) return diagonalCapture(chessBoard, endColumn, endRow, endFieldPiece);
-
-        return null;
-    }
-
-    private Set<Operations> straightMove(ChessBoard chessBoard, int column, int startRow, int endRow, Piece endField) {
-        if (endField != null) return null;
-
-        final boolean passage = (startRow == 7 && endRow == 5) || (startRow == 2 && endRow == 4);
-        if (passage) return isPassageValid(chessBoard, column, startRow, endRow);
-
-        Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
-        final boolean validMoveDistance = Math.abs(startRow - endRow) == 1;
-        final boolean fieldForPromotion = endRow == 1 || endRow == 8;
-
-        if (fieldForPromotion && validMoveDistance) {
-            setOfOperations.add(Operations.PROMOTION);
+        if (straightMove) {
+            if ((occupied & targetBit) != 0) return null;
+            int delta = Math.abs(startRow - endRow);
+            if (delta == 2) {
+                int middleRow = (startRow + endRow) / 2;
+                Coordinate middle = Coordinate.of(middleRow, startColumn);
+                if (chessBoard.piece(middle) != null) return null;
+            }
+            Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
+            if (endRow == 8 || endRow == 1) setOfOperations.add(Operations.PROMOTION);
             return setOfOperations;
         }
 
-        return validMoveDistance ? setOfOperations : null;
-    }
-
-    private Set<Operations> isPassageValid(ChessBoard chessBoard, int column, int startRow, int endRow) {
-        int intermediateRow;
-        if (startRow < endRow) intermediateRow = endRow - 1;
-        else intermediateRow = endRow + 1;
-
-        final Coordinate intermediateCoordinate = Coordinate.of(intermediateRow, column);
-        Piece intermediateField = chessBoard.piece(intermediateCoordinate);
-        if (intermediateField != null) return null;
-
-        return new HashSet<>();
-    }
-
-    private Set<Operations> diagonalCapture(ChessBoard chessBoard, int endColumn, int endRow, Piece endField) {
-        if (captureOnPassage(chessBoard, endColumn, endRow)) {
-            Set<Operations> setOfOperations = new HashSet<>();
-            setOfOperations.add(Operations.CAPTURE);
-            return setOfOperations;
-        }
-
-        if (endField == null) return null;
-
-        Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
-        if (endRow == 1 || endRow == 8) setOfOperations.add(Operations.PROMOTION);
-
-        setOfOperations.add(Operations.CAPTURE);
+        final boolean capture = (targetBit & opponentPieces) != 0 || endField == chessBoard.enPassant();
+        if (!capture) return null;
+        Set<Operations> setOfOperations = EnumSet.of(Operations.CAPTURE);
+        if (endRow == 8 || endRow == 1) setOfOperations.add(Operations.PROMOTION);
         return setOfOperations;
     }
 
-    private boolean captureOnPassage(ChessBoard chessBoard, int endColumn, int endRow) {
-        Coordinate enPassaunt = chessBoard.enPassaunt();
-        if (enPassaunt == null) return false;
-        if (enPassaunt.column() != endColumn) return false;
-        return enPassaunt.row() == endRow;
+    public List<Move> allValidMoves(final ChessBoard chessBoard) {
+        List<Move> validMoves = new ArrayList<>();
+
+        long queenBitboard = chessBoard.bitboard(this);
+        long ownPieces = chessBoard.pieces(color);
+
+        while (queenBitboard != 0) {
+            int fromIndex = Long.numberOfTrailingZeros(queenBitboard);
+            queenBitboard &= queenBitboard - 1;
+
+            long moves = color == WHITE ?
+                    WHITE_PAWN_MOVES_CACHE[fromIndex] & ~ownPieces :
+                    BLACK_PAWN_MOVES_CACHE[fromIndex] & ~ownPieces;
+
+            while (moves != 0) {
+                int toIndex = Long.numberOfTrailingZeros(moves);
+                moves &= moves - 1;
+
+                Coordinate from = Coordinate.byOrdinal(fromIndex);
+                Coordinate to = Coordinate.byOrdinal(toIndex);
+
+                final int startColumn = from.column();
+                final int endColumn = to.column();
+                final int startRow = from.row();
+                final int endRow = to.row();
+                long targetBit = to.bitMask();
+
+                if ((targetBit & ownPieces) != 0) continue;
+                long opponentPieces = color == WHITE ? chessBoard.blackPieces() : chessBoard.whitePieces();
+                long occupied = ownPieces | opponentPieces;
+
+                final boolean straightMove = endColumn == startColumn;
+                if (straightMove) {
+                    if ((occupied & targetBit) != 0) continue;
+                    int delta = Math.abs(startRow - endRow);
+                    if (delta == 2) {
+                        int middleRow = (startRow + endRow) / 2;
+                        Coordinate middle = Coordinate.of(middleRow, startColumn);
+                        if (chessBoard.piece(middle) != null) continue;
+                    }
+                    addMove(chessBoard, from, to, validMoves);
+                }
+
+                final boolean capture = (targetBit & opponentPieces) != 0 || to == chessBoard.enPassant();
+                if (!capture) continue;
+                addMove(chessBoard, from, to, validMoves);
+            }
+        }
+
+        return validMoves;
     }
 
-    private boolean isPassage(final Coordinate from, final Coordinate to) {
-        final int startColumn = from.column();
-        final int startRow = from.row();
-        final int endColumn = to.column();
-        final int endRow = to.row();
-
-        if (startColumn != endColumn) return false;
-        if (Math.abs(startRow - endRow) != 2) return false;
-        if (color == WHITE) {
-            if (startRow != 2) return false;
-            return endRow == 4;
+    private void addMove(ChessBoard chessBoard, Coordinate from, Coordinate to, List<Move> validMoves) {
+        if (chessBoard.safeForKing(from, to)) {
+            if (to.row() == 0 || to.row() == 8) {
+                validMoves.add(new Move(from, to, Queen.of(color)));
+                validMoves.add(new Move(from, to, Rook.of(color)));
+                validMoves.add(new Move(from, to, Bishop.of(color)));
+                validMoves.add(new Move(from, to, Knight.of(color)));
+            }
+            else validMoves.add(new Move(from, to, null));
         }
-        if (startRow != 7) return false;
-        return endRow == 5;
+    }
+
+    private static long generatePseudoValidPawnMoves(int square, Color color) {
+        long moves = 0L;
+        int direction = (color == Color.WHITE) ? -1 : 1; // Направление движения: вверх для белых, вниз для черных
+        int row = square / 8;
+        int col = square % 8;
+        if (isValidSquare(row + direction, col)) moves |= (1L << (square + direction * 8));
+        if (color == Color.WHITE && row == 6 && isValidSquare(row + direction * 2, col)) moves |= (1L << (square + direction * 16));
+        if (color == Color.BLACK && row == 1 && isValidSquare(row + direction * 2, col)) moves |= (1L << (square + direction * 16));
+        if (isValidSquare(row + direction, col - 1)) moves |= (1L << (square + direction * 8 - 1));
+        if (isValidSquare(row + direction, col + 1)) moves |= (1L << (square + direction * 8 + 1));
+        return moves;
+    }
+
+    private static boolean isValidSquare(int row, int col) {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
     }
 }

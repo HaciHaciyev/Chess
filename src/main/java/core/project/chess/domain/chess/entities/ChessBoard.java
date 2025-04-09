@@ -398,7 +398,7 @@ public class ChessBoard {
         return isPureChess;
     }
 
-    public Coordinate enPassaunt() {
+    public Coordinate enPassant() {
         return enPassantStack.peekLast();
     }
 
@@ -1011,12 +1011,11 @@ public class ChessBoard {
      * @return true if at least one pawn is present on the board, false otherwise.
      */
     private boolean isAtLeastOnePawnOnBoard() {
-        for (final Coordinate coordinate : Coordinate.values()) {
-            Piece piece = piece(coordinate);
-            if (piece instanceof Pawn) return true;
-        }
+        long whitePawnsBitboard = bitboard(Pawn.of(WHITE));
+        if (whitePawnsBitboard != 0) return true;
 
-        return false;
+        long blackPawnsBitboard = bitboard(Pawn.of(BLACK));
+        return blackPawnsBitboard != 0;
     }
 
     /**

@@ -98,9 +98,13 @@ public final class King implements Piece {
                 .allMatch(coordinate -> isFieldDangerousOrBlockedForKing(navigator, coordinate, color));
         if (!isSurrounded) return false;
 
+        final boolean pawnsOnStalemate = Pawn.of(color).isPawnsOnStalemate(navigator.board());
+        if (!pawnsOnStalemate) return false;
+
         List<Coordinate> ourFields = navigator.allFriendlyFieldsExceptKing(color, kingCoordinate);
         for (Coordinate ourField : ourFields) {
-            final boolean stalemate = processStalemate(navigator, ourField);
+            if (chessBoard.piece(ourField) instanceof Pawn) continue;
+            final boolean stalemate = pieceCanNotMove(navigator, ourField);
             if (!stalemate) return false;
         }
 
@@ -119,12 +123,11 @@ public final class King implements Piece {
         return chessBoard.isCastling(this, startField, endField);
     }
 
-    private boolean processStalemate(ChessBoardNavigator navigator, Coordinate pivot) {
+    private boolean pieceCanNotMove(ChessBoardNavigator navigator, Coordinate pivot) {
         Piece piece = navigator.board().piece(pivot);
         ChessBoard board = navigator.board();
 
         return switch (piece) {
-            case Pawn pawn -> pawn.isPawnOnStalemate(navigator, pivot);
             case Knight knight -> {
                 List<Coordinate> coords = navigator.knightAttackPositions(pivot);
                 for (Coordinate endCoordinate : coords) {
@@ -586,7 +589,7 @@ public final class King implements Piece {
     }
 
     private static boolean isPawnEaten(Coordinate to, Coordinate opponentPawn, ChessBoardNavigator boardNavigator) {
-        Coordinate enPassaunt = boardNavigator.board().enPassaunt();
+        Coordinate enPassaunt = boardNavigator.board().enPassant();
         if (enPassaunt != null && enPassaunt == to) {
             if (opponentPawn.equals(to)) return true;
 
@@ -604,7 +607,7 @@ public final class King implements Piece {
 
     private boolean canEat(ChessBoardNavigator boardNavigator, Coordinate enemyField) {
         Piece enemyPiece = boardNavigator.board().piece(enemyField);
-        Coordinate enPassaunt = boardNavigator.board().enPassaunt();
+        Coordinate enPassaunt = boardNavigator.board().enPassant();
 
         if (enemyPiece instanceof Pawn && enPassaunt != null) {
             List<Coordinate> surroundedByEnPassauntPawns = boardNavigator.pawnsThreateningTheCoordinateOf(enPassaunt, color);
