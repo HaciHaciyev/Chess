@@ -26,6 +26,14 @@ public final class King implements Piece {
 
     private static final King WHITE_KING = new King(WHITE, 5);
     private static final King BLACK_KING = new King(BLACK, 11);
+    static final long[] WHITE_KING_MOVES_CACHE = new long[64];
+    static final long[] BLACK_KING_MOVES_CACHE = new long[64];
+    static {
+        for (int square = 0; square < 64; square++) {
+            WHITE_KING_MOVES_CACHE[square] = generatePseudoValidKingMoves(square, WHITE);
+            BLACK_KING_MOVES_CACHE[square] = generatePseudoValidKingMoves(square, BLACK);
+        }
+    }
 
     public static King of(Color color) {
         return color == WHITE ? WHITE_KING : BLACK_KING;
@@ -48,20 +56,13 @@ public final class King implements Piece {
 
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Piece startField = chessBoard.piece(from);
         Piece endField = chessBoard.piece(to);
-
-        if (startField == null) return null;
-        final boolean endFieldOccupiedBySameColorPiece = endField != null && endField.color() == color;
-        if (endFieldOccupiedBySameColorPiece) return null;
         if (!isValidKingMovementCoordinates(chessBoard, from, to)) return null;
         if (!chessBoard.safeForKing(from, to)) return null;
 
         Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
-
         final boolean opponentPieceInEndField = endField != null;
         if (opponentPieceInEndField) setOfOperations.add(Operations.CAPTURE);
-
         return setOfOperations;
     }
 
@@ -112,15 +113,11 @@ public final class King implements Piece {
     }
 
     private boolean isValidKingMovementCoordinates(ChessBoard chessBoard, Coordinate startField, Coordinate endField) {
-        final int startColumn = startField.column();
-        final int endColumn = endField.column();
-        final int startRow = startField.row();
-        final int endRow = endField.row();
-
-        final boolean surroundField = Math.abs(startColumn - endColumn) <= 1 && Math.abs(startRow - endRow) <= 1;
-        if (surroundField) return true;
-
-        return chessBoard.isCastling(this, startField, endField);
+        long ownPieces = chessBoard.pieces(color);
+        long validMoves = color == WHITE ?
+                WHITE_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces :
+                BLACK_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces;
+        return (validMoves & endField.bitMask()) != 0;
     }
 
     private boolean pieceCanNotMove(ChessBoardNavigator navigator, Coordinate pivot) {
@@ -873,5 +870,33 @@ public final class King implements Piece {
         if (!clearPath(navigator.board(), pivot, to)) return null;
         if (opponentPiece instanceof Bishop || opponentPiece instanceof Queen) return to;
         return null;
+    }
+
+    private static long generatePseudoValidKingMoves(int square, Color color) {
+        long moves = 0L;
+        int row = square / 8;
+        int col = square % 8;
+
+        for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+                if (dr == 0 && dc == 0) continue;
+                int r = row + dr;
+                int c = col + dc;
+                if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+                    int newSquare = r * 8 + c;
+                    moves |= 1L << newSquare;
+                }
+            }
+        }
+
+        if (color == WHITE && square == 60) {
+            moves |= 1L << 62;
+            moves |= 1L << 58;
+        }
+        if (color == BLACK && square == 4) {
+            moves |= 1L << 6;
+            moves |= 1L << 2;
+        }
+        return moves;
     }
 }

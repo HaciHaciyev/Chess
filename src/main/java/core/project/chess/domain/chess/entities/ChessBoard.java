@@ -1162,16 +1162,13 @@ public class ChessBoard {
 
         /** Process status from StatusPair. All validation need to be processed before that.*/
         this.countOfHalfMoves++;
-        //startField.removeFigure();
         removeFigure(from, startField);
         Pair<Piece, Coordinate> capturedAt = null;
         if (operations.contains(CAPTURE)) capturedAt = inCaseOfCapture(startField, to, endField);
         if (operations.contains(PROMOTION)) {
             changeInMaterialAdvantageInCaseOfPromotion(inCaseOfPromotion);
-            //endField.addFigure(inCaseOfPromotion);
             addFigure(to, inCaseOfPromotion);
         } else {
-            //endField.addFigure(piece);
             addFigure(to, startField);
         }
 
@@ -1236,7 +1233,6 @@ public class ChessBoard {
             if (isCapturedPieceBlack) capturedBlackPieces.add(field);
 
             changeInMaterialAdvantage(field);
-            //Piece capturedPiece = field.removeFigure();
             Piece capturedPiece = removeFigure(fieldCoordinate, field);
             return Pair.of(capturedPiece, fieldCoordinate);
         }
@@ -1248,7 +1244,6 @@ public class ChessBoard {
         if (isCapturedPieceBlack) capturedBlackPieces.add(endField);
 
         changeInMaterialAdvantage(endField);
-        //Piece capturedPiece = endField.removeFigure();
         Piece capturedPiece = removeFigure(to, endField);
         return Pair.of(capturedPiece, to);
     }
@@ -1285,9 +1280,7 @@ public class ChessBoard {
 
         /**Process status from StatusPair. All validation need to be processed before that.*/
         this.countOfHalfMoves++;
-        //kingStartedField.removeFigure();
         removeFigure(from, king);
-        //kingEndField.addFigure(king);
         addFigure(to, king);
         final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING == castle;
         if (shortCasting) moveRookInShortCastling(to);
@@ -1344,19 +1337,13 @@ public class ChessBoard {
 
         if (isWhiteCastling) {
             final Piece rook = piece(Coordinate.WHITE_ROOK_SHORT_CASTLE_START);
-
-            //startField.removeFigure();
             removeFigure(Coordinate.WHITE_ROOK_SHORT_CASTLE_START, rook);
-            //endField.addFigure(rook);
             addFigure(Coordinate.WHITE_ROOK_SHORT_CASTLE_END, rook);
             return;
         }
 
         final Piece rook = piece(Coordinate.BLACK_ROOK_SHORT_CASTLE_START);
-
-        //startField.removeFigure();
         removeFigure(Coordinate.BLACK_ROOK_SHORT_CASTLE_START, rook);
-        //endField.addFigure(rook);
         addFigure(Coordinate.BLACK_ROOK_SHORT_CASTLE_END, rook);
     }
 
@@ -1370,19 +1357,13 @@ public class ChessBoard {
 
         if (isWhiteCastling) {
             final Piece rook = piece(Coordinate.WHITE_ROOK_LONG_CASTLE_START);
-
-            //startField.removeFigure();
             removeFigure(Coordinate.WHITE_ROOK_LONG_CASTLE_START, rook);
-            //endField.addFigure(rook);
             addFigure(Coordinate.WHITE_ROOK_LONG_CASTLE_END, rook);
             return;
         }
 
         final Piece rook = piece(Coordinate.BLACK_ROOK_LONG_CASTLE_START);
-
-        //startField.removeFigure();
         removeFigure(Coordinate.BLACK_ROOK_LONG_CASTLE_START, rook);
-        //endField.addFigure(rook);
         addFigure(Coordinate.BLACK_ROOK_LONG_CASTLE_END, rook);
     }
 
@@ -1409,9 +1390,7 @@ public class ChessBoard {
         final Piece endField = piece(to);
         final Piece pieceForUndo = getPieceForUndo(endField, movementPair, lastMovement);
 
-        //endField.removeFigure();
         removeFigure(to, endField);
-        //startField.addFigure(piece);
         addFigure(from, pieceForUndo);
 
         final boolean isCapture = lastMovement.isCapture();
@@ -1450,9 +1429,7 @@ public class ChessBoard {
 
         final Piece kingEndedField = piece(to);
 
-        //kingEndedField.removeFigure();
         removeFigure(to, kingEndedField);
-        //kingStartedField.addFigure(king);
         addFigure(from, kingEndedField);
 
         final boolean shortCasting = AlgebraicNotation.Castle.SHORT_CASTLING.equals(castle);
@@ -1480,19 +1457,13 @@ public class ChessBoard {
 
         if (isWhiteCastling) {
             final Piece endField = piece(Coordinate.WHITE_ROOK_SHORT_CASTLE_END);
-
-            //endField.removeFigure();
             removeFigure(Coordinate.WHITE_ROOK_SHORT_CASTLE_END, endField);
-            //startField.addFigure(rook);
             addFigure(Coordinate.WHITE_ROOK_SHORT_CASTLE_START, endField);
             return;
         }
 
         final Piece endField = piece(Coordinate.BLACK_ROOK_SHORT_CASTLE_END);
-
-        //endField.removeFigure();
         removeFigure(Coordinate.BLACK_ROOK_SHORT_CASTLE_END, endField);
-        //startField.addFigure(rook);
         addFigure(Coordinate.BLACK_ROOK_SHORT_CASTLE_START, endField);
     }
 
@@ -1506,19 +1477,13 @@ public class ChessBoard {
 
         if (isWhiteCastling) {
             final Piece endField = piece(Coordinate.WHITE_ROOK_LONG_CASTLE_END);
-
-            //endField.removeFigure();
             removeFigure(Coordinate.WHITE_ROOK_LONG_CASTLE_END, endField);
-            //startField.addFigure(rook);
             addFigure(Coordinate.WHITE_ROOK_LONG_CASTLE_START, endField);
             return;
         }
 
         final Piece endField = piece(Coordinate.BLACK_ROOK_LONG_CASTLE_END);
-
-        //endField.removeFigure();
         removeFigure(Coordinate.BLACK_ROOK_LONG_CASTLE_END, endField);
-        //startField.addFigure(rook);
         addFigure(Coordinate.BLACK_ROOK_LONG_CASTLE_START, endField);
     }
 
@@ -1527,14 +1492,12 @@ public class ChessBoard {
 
         if (figuresTurn.equals(BLACK)) {
             Piece capturedPiece = capturedBlackPieces.removeLast();
-            //endedField.addFigure(capturedPiece);
             addFigure(endFieldCoordinate, capturedPiece);
             materialAdvantageOfBlack += materialAdvantageOfFigure(capturedPiece);
             return;
         }
 
         Piece capturedPiece = capturedWhitePieces.removeLast();
-        //endedField.addFigure(capturedPiece);
         addFigure(endFieldCoordinate, capturedPiece);
         materialAdvantageOfWhite += materialAdvantageOfFigure(capturedPiece);
     }
@@ -1566,14 +1529,12 @@ public class ChessBoard {
 
         if (piece.color() == WHITE) {
             Piece capturedPawn = capturedBlackPieces.removeLast();
-            //fieldMap.get(required).addFigure(capturedPawn);
             addFigure(required, capturedPawn);
             materialAdvantageOfBlack++;
             return true;
         }
 
         Piece capturedPawn = capturedWhitePieces.removeLast();
-        //fieldMap.get(required).addFigure(capturedPawn);
         addFigure(required, capturedPawn);
         materialAdvantageOfWhite++;
         return true;
