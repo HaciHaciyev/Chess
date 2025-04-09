@@ -6,6 +6,7 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.Direction;
 import core.project.chess.domain.chess.enumerations.SimpleDirection;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
+import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.domain.chess.value_objects.KingStatus;
 import core.project.chess.domain.chess.value_objects.Move;
@@ -71,7 +72,7 @@ public final class King implements Piece {
         Coordinate kingPosition = color.equals(WHITE) ? chessBoard.currentWhiteKingPosition() : chessBoard.currentBlackKingPosition();
 
         if (kingPosition.equals(from)) {
-            if (chessBoard.isCastling(chessBoard.theKing(color), from, to)) return safeToCastle(boardNavigator, from, to);
+            if (chessBoard.isCastling(this, from, to)) return safeToCastle(boardNavigator, from, to);
             return validateKingMovementForSafety(boardNavigator, from, to);
         }
 
@@ -110,6 +111,33 @@ public final class King implements Piece {
         }
 
         return true;
+    }
+
+    public List<Move> allValidMoves(final ChessBoard chessBoard) {
+        List<Move> validMoves = new ArrayList<>();
+
+        long kingBitboard = chessBoard.bitboard(this);
+        long ownPieces = chessBoard.pieces(color);
+
+        int fromIndex = Long.numberOfTrailingZeros(kingBitboard);
+        long moves = color == WHITE ?
+                WHITE_KING_MOVES_CACHE[fromIndex] & ~ownPieces :
+                BLACK_KING_MOVES_CACHE[fromIndex] & ~ownPieces;
+        while (moves != 0) {
+            int toIndex = Long.numberOfTrailingZeros(moves);
+            moves &= moves - 1;
+
+            Coordinate from = Coordinate.byOrdinal(fromIndex);
+            Coordinate to = Coordinate.byOrdinal(toIndex);
+            if (chessBoard.isCastling(this, from, to)) {
+                Castle castle = AlgebraicNotation.castle(to);
+                if (!chessBoard.ableToCastling(color, castle)) continue;
+                if (chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
+            }
+            if (chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
+        }
+
+        return validMoves;
     }
 
     private boolean isValidKingMovementCoordinates(ChessBoard chessBoard, Coordinate startField, Coordinate endField) {
