@@ -1186,7 +1186,7 @@ public class ChessBoard {
         Operations opponentKingStatus = opponentKingStatusAndEnemies.status();
         operations.add(opponentKingStatus);
 
-        final boolean isRequiredTOCheckStalemate = countOfHalfMoves() + 1 >= 10 || initType == InitType.FEN;
+        final boolean isRequiredTOCheckStalemate = countOfHalfMoves() >= 19 || initType == InitType.FEN;
 
         final boolean isStalemate = isRequiredTOCheckStalemate &&
                 opponentKingStatus == CONTINUE &&
@@ -1297,7 +1297,7 @@ public class ChessBoard {
         Operations opponentKingStatus = opponentKingStatusAndEnemies.status();
         operations.add(opponentKingStatus);
 
-        final boolean isRequiredTOCheckStalemate = countOfHalfMoves() + 1 >= 10 || initType == InitType.FEN;
+        final boolean isRequiredTOCheckStalemate = countOfHalfMoves() >= 19 || initType == InitType.FEN;
 
         final boolean isStalemate = isRequiredTOCheckStalemate &&
                 opponentKingStatus == CONTINUE &&

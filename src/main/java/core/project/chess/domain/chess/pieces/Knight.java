@@ -68,6 +68,29 @@ public final class Knight implements Piece {
         return !targetOccupiedByOwn;
     }
 
+    public boolean isAtLeastOneMove(final ChessBoard chessBoard) {
+        long knightBitboard = chessBoard.bitboard(this);
+        long ownPieces = chessBoard.pieces(color);
+
+        while (knightBitboard != 0) {
+            int fromIndex = Long.numberOfTrailingZeros(knightBitboard);
+            knightBitboard &= knightBitboard - 1;
+
+            long moves = KNIGHT_MOVES_CACHE[fromIndex] & ~ownPieces;
+            while (moves != 0) {
+                int toIndex = Long.numberOfTrailingZeros(moves);
+                moves &= moves - 1;
+
+                Coordinate from = Coordinate.byOrdinal(fromIndex);
+                Coordinate to = Coordinate.byOrdinal(toIndex);
+
+                if (chessBoard.safeForKing(from, to)) return true;
+            }
+        }
+
+        return false;
+    }
+
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         List<Move> validMoves = new ArrayList<>();
 

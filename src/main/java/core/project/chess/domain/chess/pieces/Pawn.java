@@ -96,12 +96,6 @@ public final class Pawn implements Piece {
         return pawnForPromotion.color() == inCaseOfPromotion.color();
     }
 
-    public boolean isPawnsOnStalemate(final ChessBoard chessBoard) {
-        long pawnsBitboard = chessBoard.bitboard(this);
-        if (pawnsBitboard == 0) return true;
-        return allValidMoves(chessBoard).isEmpty();
-    }
-
     Set<Operations> pawnMove(ChessBoard chessBoard, Coordinate startField, Coordinate endField) {
         final int startColumn = startField.column();
         final int endColumn = endField.column();
@@ -140,15 +134,65 @@ public final class Pawn implements Piece {
         return setOfOperations;
     }
 
+    public boolean isAtLeastOneMove(final ChessBoard chessBoard) {
+        long pawnBitboard = chessBoard.bitboard(this);
+        long ownPieces = chessBoard.pieces(color);
+
+        while (pawnBitboard != 0) {
+            int fromIndex = Long.numberOfTrailingZeros(pawnBitboard);
+            pawnBitboard &= pawnBitboard - 1;
+
+            long moves = color == WHITE ?
+                    WHITE_PAWN_MOVES_CACHE[fromIndex] & ~ownPieces :
+                    BLACK_PAWN_MOVES_CACHE[fromIndex] & ~ownPieces;
+
+            while (moves != 0) {
+                int toIndex = Long.numberOfTrailingZeros(moves);
+                moves &= moves - 1;
+
+                Coordinate from = Coordinate.byOrdinal(fromIndex);
+                Coordinate to = Coordinate.byOrdinal(toIndex);
+
+                final int startColumn = from.column();
+                final int endColumn = to.column();
+                final int startRow = from.row();
+                final int endRow = to.row();
+                long targetBit = to.bitMask();
+
+                if ((targetBit & ownPieces) != 0) continue;
+                long opponentPieces = color == WHITE ? chessBoard.blackPieces() : chessBoard.whitePieces();
+                long occupied = ownPieces | opponentPieces;
+
+                final boolean straightMove = endColumn == startColumn;
+                if (straightMove) {
+                    if ((occupied & targetBit) != 0) continue;
+                    int delta = Math.abs(startRow - endRow);
+                    if (delta == 2) {
+                        int middleRow = (startRow + endRow) / 2;
+                        Coordinate middle = Coordinate.of(middleRow, startColumn);
+                        if (chessBoard.piece(middle) != null) continue;
+                    }
+                    return chessBoard.safeForKing(from, to);
+                }
+
+                final boolean capture = (targetBit & opponentPieces) != 0 || to == chessBoard.enPassant();
+                if (!capture) continue;
+                return chessBoard.safeForKing(from, to);
+            }
+        }
+
+        return false;
+    }
+
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         List<Move> validMoves = new ArrayList<>();
 
-        long queenBitboard = chessBoard.bitboard(this);
+        long pawnBitboard = chessBoard.bitboard(this);
         long ownPieces = chessBoard.pieces(color);
 
-        while (queenBitboard != 0) {
-            int fromIndex = Long.numberOfTrailingZeros(queenBitboard);
-            queenBitboard &= queenBitboard - 1;
+        while (pawnBitboard != 0) {
+            int fromIndex = Long.numberOfTrailingZeros(pawnBitboard);
+            pawnBitboard &= pawnBitboard - 1;
 
             long moves = color == WHITE ?
                     WHITE_PAWN_MOVES_CACHE[fromIndex] & ~ownPieces :

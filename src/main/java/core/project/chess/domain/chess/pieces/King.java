@@ -79,37 +79,44 @@ public final class King implements Piece {
         return validatePieceMovementForKingSafety(boardNavigator, kingPosition, from, to);
     }
 
-    public KingStatus kingStatus(final ChessBoard chessBoard, @Nullable final Move lastMove) {
+    public KingStatus kingStatus(final ChessBoard chessBoard, final @Nullable Move lastMove) {
         return checkOrMate(chessBoard.navigator(), lastMove);
     }
 
-    public boolean stalemate(final ChessBoard chessBoard, @Nullable final Move lastMove) {
+    public boolean stalemate(final ChessBoard chessBoard, final @Nullable Move lastMove) {
         ChessBoardNavigator navigator = chessBoard.navigator();
         Coordinate kingCoordinate = navigator.kingCoordinate(color);
 
         KingStatus kingStatus = chessBoard.kingStatus();
         if (kingStatus != null && (kingStatus.status() == Operations.CHECK ||
                 kingStatus.status() == Operations.CHECKMATE)) return false;
-
         List<Coordinate> enemies = kingStatus != null ? kingStatus.enemiesAttackingTheKing() : check(navigator, lastMove);
         if (!enemies.isEmpty()) return false;
 
         List<Coordinate> surroundingFieldsOfKing = navigator.surroundingFields(kingCoordinate);
-
         final boolean isSurrounded = surroundingFieldsOfKing.stream()
                 .allMatch(coordinate -> isFieldDangerousOrBlockedForKing(navigator, coordinate, color));
         if (!isSurrounded) return false;
 
-        final boolean pawnsOnStalemate = Pawn.of(color).isPawnsOnStalemate(navigator.board());
-        if (!pawnsOnStalemate) return false;
+        Pawn pawn = Pawn.of(color);
+        long pawnBitboard = chessBoard.bitboard(pawn);
+        if (pawnBitboard != 0) return !pawn.isAtLeastOneMove(navigator.board());
 
-        List<Coordinate> ourFields = navigator.allFriendlyFieldsExceptKing(color, kingCoordinate);
-        for (Coordinate ourField : ourFields) {
-            if (chessBoard.piece(ourField) instanceof Pawn) continue;
-            final boolean stalemate = pieceCanNotMove(navigator, ourField);
-            if (!stalemate) return false;
-        }
+        Knight knight = Knight.of(color);
+        long knightBitboard = chessBoard.bitboard(knight);
+        if (knightBitboard != 0) return !knight.isAtLeastOneMove(navigator.board());
 
+        Bishop bishop = Bishop.of(color);
+        long bishopBitboard = chessBoard.bitboard(bishop);
+        if (bishopBitboard != 0) return !bishop.isAtLeastOneMove(navigator.board());
+
+        Rook rook = Rook.of(color);
+        long rookBitboard = chessBoard.bitboard(rook);
+        if (rookBitboard != 0) return !rook.isAtLeastOneMove(navigator.board());
+
+        Queen queen = Queen.of(color);
+        long queenBitboard = chessBoard.bitboard(queen);
+        if (queenBitboard != 0) return !queen.isAtLeastOneMove(navigator.board());
         return true;
     }
 
@@ -146,55 +153,6 @@ public final class King implements Piece {
                 WHITE_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces :
                 BLACK_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces;
         return (validMoves & endField.bitMask()) != 0;
-    }
-
-    private boolean pieceCanNotMove(ChessBoardNavigator navigator, Coordinate pivot) {
-        Piece piece = navigator.board().piece(pivot);
-        ChessBoard board = navigator.board();
-
-        return switch (piece) {
-            case Knight knight -> {
-                List<Coordinate> coords = navigator.knightAttackPositions(pivot);
-                for (Coordinate endCoordinate : coords) {
-                    Piece endPosition = board.piece(endCoordinate);
-                    if (endPosition != null && endPosition.color() == color) continue;
-                    if (knight.knightMove(board, pivot, endCoordinate) && safeForKing(board, pivot, endCoordinate)) yield false;
-                }
-
-                yield true;
-            }
-            case Bishop bishop -> {
-                List<Coordinate> coords = navigator.fieldsInDirections(Direction.diagonalDirections(), pivot);
-                for (Coordinate endCoordinate : coords) {
-                    Piece endPosition = board.piece(endCoordinate);
-                    if (endPosition != null && endPosition.color() == color) continue;
-                    if (bishop.bishopMove(board, pivot, endCoordinate) && safeForKing(board, pivot, endCoordinate)) yield false;
-                }
-
-                yield true;
-            }
-            case Rook rook -> {
-                List<Coordinate> coords = navigator.fieldsInDirections(Direction.horizontalVerticalDirections(), pivot);
-                for (Coordinate endCoordinate : coords) {
-                    Piece endPosition = board.piece(endCoordinate);
-                    if (endPosition != null && endPosition.color() == color) continue;
-                    if (rook.rookMove(board, pivot, endCoordinate) && safeForKing(board, pivot, endCoordinate)) yield false;
-                }
-
-                yield true;
-            }
-            case Queen queen -> {
-                List<Coordinate> coords = navigator.fieldsInDirections(Direction.allDirections(), pivot);
-                for (Coordinate endCoordinate : coords) {
-                    Piece endPosition = board.piece(endCoordinate);
-                    if (endPosition != null && endPosition.color() == color) continue;
-                    if (queen.queenMove(board, pivot, endCoordinate) && safeForKing(board, pivot, endCoordinate)) yield false;
-                }
-
-                yield true;
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + piece);
-        };
     }
 
     private List<Coordinate> check(ChessBoardNavigator boardNavigator, Move lastMove) {
@@ -807,7 +765,8 @@ public final class King implements Piece {
             if (piece.color() != kingColor && (piece instanceof Bishop || piece instanceof Queen)) return true;
         }
 
-        List<Coordinate> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(Direction.horizontalVerticalDirections(),
+        List<Coordinate> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(
+                Direction.horizontalVerticalDirections(),
                 pivot, kingCoordinate
         );
 
@@ -842,7 +801,8 @@ public final class King implements Piece {
         }
     }
 
-    private @Nullable Coordinate isThereAThreateningFigureInThisDirection(ChessBoardNavigator navigator, Coordinate pivot, Coordinate to) {
+    private @Nullable Coordinate isThereAThreateningFigureInThisDirection(ChessBoardNavigator navigator,
+                                                                          Coordinate pivot, Coordinate to) {
         int differenceOfRow = Math.abs(pivot.row() - to.row());
         int differenceOfColumn = Math.abs(pivot.column() - to.column());
         Piece piece = navigator.board().piece(to);

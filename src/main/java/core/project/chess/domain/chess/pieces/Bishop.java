@@ -65,6 +65,28 @@ public final class Bishop implements Piece {
         return clearPath(chessBoard, startField, endField);
     }
 
+    public boolean isAtLeastOneMove(final ChessBoard chessBoard) {
+        long bishopBitboard = chessBoard.bitboard(this);
+        long ownPieces = chessBoard.pieces(color);
+
+        while (bishopBitboard != 0) {
+            int fromIndex = Long.numberOfTrailingZeros(bishopBitboard);
+            bishopBitboard &= bishopBitboard - 1;
+
+            long moves = BISHOP_MOVES_CACHE[fromIndex] & ~ownPieces;
+            while (moves != 0) {
+                int toIndex = Long.numberOfTrailingZeros(moves);
+                moves &= moves - 1;
+
+                Coordinate from = Coordinate.byOrdinal(fromIndex);
+                Coordinate to = Coordinate.byOrdinal(toIndex);
+                if (clearPath(chessBoard, from, to) && chessBoard.safeForKing(from, to)) return true;
+            }
+        }
+
+        return false;
+    }
+
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         List<Move> validMoves = new ArrayList<>();
 

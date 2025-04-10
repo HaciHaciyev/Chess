@@ -65,6 +65,28 @@ public final class Queen implements Piece {
         return clearPath(chessBoard, startField, endField);
     }
 
+    public boolean isAtLeastOneMove(final ChessBoard chessBoard) {
+        long queenBitboard = chessBoard.bitboard(this);
+        long ownPieces = chessBoard.pieces(color);
+
+        while (queenBitboard != 0) {
+            int fromIndex = Long.numberOfTrailingZeros(queenBitboard);
+            queenBitboard &= queenBitboard - 1;
+
+            long moves = QUEEN_MOVES_CACHE[fromIndex] & ~ownPieces;
+            while (moves != 0) {
+                int toIndex = Long.numberOfTrailingZeros(moves);
+                moves &= moves - 1;
+
+                Coordinate from = Coordinate.byOrdinal(fromIndex);
+                Coordinate to = Coordinate.byOrdinal(toIndex);
+                if (clearPath(chessBoard, from, to) && chessBoard.safeForKing(from, to)) return true;
+            }
+        }
+
+        return false;
+    }
+
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         List<Move> validMoves = new ArrayList<>();
 
