@@ -91,9 +91,15 @@ public final class Knight implements Piece {
         return false;
     }
 
-    public List<Move> allValidMoves(final ChessBoard chessBoard) {
-        List<Move> validMoves = new ArrayList<>();
+    public void fillWithValidMoves(final ChessBoard chessBoard, final List<Move> moves) {
+        allValidMoves(chessBoard, moves);
+    }
 
+    public List<Move> allValidMoves(final ChessBoard chessBoard) {
+        return allValidMoves(chessBoard, new ArrayList<>());
+    }
+
+    private List<Move> allValidMoves(final ChessBoard chessBoard, final List<Move> validMoves) {
         long knightBitboard = chessBoard.bitboard(this);
         long ownPieces = chessBoard.pieces(color);
 

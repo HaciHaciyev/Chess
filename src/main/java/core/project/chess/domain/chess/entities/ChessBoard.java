@@ -14,6 +14,10 @@ import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations.*;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
@@ -170,6 +174,9 @@ public class ChessBoard {
     /** History of captured pieces for every color*/
     private final Deque<Piece> capturedWhitePieces = new ArrayDeque<>();
     private final Deque<Piece> capturedBlackPieces = new ArrayDeque<>();
+
+    /** Executor service for parallel moves generation*/
+    private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     /**
      * Utility classes for navigating chess board
@@ -1108,6 +1115,26 @@ public class ChessBoard {
         if (piece.color() == WHITE) whitePieces &= ~squareMask;
         else blackPieces &= ~squareMask;
         return removedPiece;
+    }
+
+    public List<Move> generateAllValidMoves() {
+        CompletableFuture<List<Move>> pawnMoves = CompletableFuture.supplyAsync(
+                () -> Pawn.of(figuresTurn).allValidMoves(this), executorService);
+        CompletableFuture<List<Move>> knightMoves = CompletableFuture.supplyAsync(
+                () -> Knight.of(figuresTurn).allValidMoves(this), executorService);
+        CompletableFuture<List<Move>> bishopMoves = CompletableFuture.supplyAsync(
+                () -> Bishop.of(figuresTurn).allValidMoves(this), executorService);
+        CompletableFuture<List<Move>> rookMoves = CompletableFuture.supplyAsync(
+                () -> Rook.of(figuresTurn).allValidMoves(this), executorService);
+        CompletableFuture<List<Move>> queenMoves = CompletableFuture.supplyAsync(
+                () -> Queen.of(figuresTurn).allValidMoves(this), executorService);
+        CompletableFuture<List<Move>> kingMoves = CompletableFuture.supplyAsync(
+                () -> King.of(figuresTurn).allValidMoves(this), executorService);
+
+        return Stream.of(pawnMoves, knightMoves, bishopMoves, rookMoves, queenMoves, kingMoves)
+                .map(CompletableFuture::join)
+                .flatMap(List::stream)
+                .toList();
     }
 
     public void reposition(final Coordinate from, final Coordinate to) {
