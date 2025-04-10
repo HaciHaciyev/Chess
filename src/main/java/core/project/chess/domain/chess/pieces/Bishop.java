@@ -87,10 +87,6 @@ public final class Bishop implements Piece {
         return false;
     }
 
-    public void fillWithValidMoves(final ChessBoard chessBoard, final List<Move> moves) {
-        allValidMoves(chessBoard, moves);
-    }
-
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         return allValidMoves(chessBoard, new ArrayList<>());
     }

@@ -184,10 +184,6 @@ public final class Pawn implements Piece {
         return false;
     }
 
-    public void fillWithValidMoves(final ChessBoard chessBoard, final List<Move> moves) {
-        allValidMoves(chessBoard, moves);
-    }
-
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         return allValidMoves(chessBoard, new ArrayList<>());
     }
@@ -244,7 +240,7 @@ public final class Pawn implements Piece {
 
     private void addMove(ChessBoard chessBoard, Coordinate from, Coordinate to, List<Move> validMoves) {
         if (chessBoard.safeForKing(from, to)) {
-            if (to.row() == 0 || to.row() == 8) {
+            if (to.row() == 1 || to.row() == 8) {
                 validMoves.add(new Move(from, to, Queen.of(color)));
                 validMoves.add(new Move(from, to, Rook.of(color)));
                 validMoves.add(new Move(from, to, Bishop.of(color)));

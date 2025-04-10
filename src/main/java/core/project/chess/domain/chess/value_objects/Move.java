@@ -15,6 +15,7 @@ public record Move(Coordinate from, Coordinate to, @Nullable Piece promotion) im
 
     @Override
     public String toString() {
+        if (promotion != null) return from.toString() + to.toString() + "=" + promotion;
         return from.toString() + to.toString();
     }
 
