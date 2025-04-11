@@ -120,11 +120,11 @@ public final class Rook implements Piece {
         int row = square / 8;
         int col = square % 8;
 
-        for (int i = col - 1; i >= 0; i--) moves |= 1L << (row * 8 + i); // left
-        for (int i = col + 1; i < 8; i++) moves |= 1L << (row * 8 + i); // right
+        for (int i = col - 1; i >= 0; i--) moves |= 1L << (row * 8 + i);
+        for (int i = col + 1; i < 8; i++) moves |= 1L << (row * 8 + i);
 
-        for (int i = row - 1; i >= 0; i--) moves |= 1L << (i * 8 + col); // bottom
-        for (int i = row + 1; i < 8; i++) moves |= 1L << (i * 8 + col); // top
+        for (int i = row - 1; i >= 0; i--) moves |= 1L << (i * 8 + col);
+        for (int i = row + 1; i < 8; i++) moves |= 1L << (i * 8 + col);
         return moves;
     }
 }

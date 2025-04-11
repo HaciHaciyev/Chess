@@ -123,7 +123,7 @@ public final class Queen implements Piece {
         int[] rowOffsets = {-1, 1, 1, -1};
         int[] colOffsets = {1, -1, 1, -1};
 
-        for (int i = 0; i < 4; i++) {                                     // all diagonals
+        for (int i = 0; i < 4; i++) {
             int r = row + rowOffsets[i];
             int c = col + colOffsets[i];
             while (r >= 0 && r < 8 && c >= 0 && c < 8) {
@@ -134,11 +134,11 @@ public final class Queen implements Piece {
             }
         }
 
-        for (int i = col - 1; i >= 0; i--) moves |= 1L << (row * 8 + i);  // left
-        for (int i = col + 1; i < 8; i++) moves |= 1L << (row * 8 + i);   // right
+        for (int i = col - 1; i >= 0; i--) moves |= 1L << (row * 8 + i);
+        for (int i = col + 1; i < 8; i++) moves |= 1L << (row * 8 + i);
 
-        for (int i = row - 1; i >= 0; i--) moves |= 1L << (i * 8 + col);  // bottom
-        for (int i = row + 1; i < 8; i++) moves |= 1L << (i * 8 + col);   // top
+        for (int i = row - 1; i >= 0; i--) moves |= 1L << (i * 8 + col);
+        for (int i = row + 1; i < 8; i++) moves |= 1L << (i * 8 + col);
         return moves;
     }
 }
