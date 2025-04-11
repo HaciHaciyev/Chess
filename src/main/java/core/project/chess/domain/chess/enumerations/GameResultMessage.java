@@ -1,7 +1,6 @@
 package core.project.chess.domain.chess.enumerations;
 
 public enum GameResultMessage {
-
     Checkmate,
     Stalemate,
     RuleOf50Moves,

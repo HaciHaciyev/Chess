@@ -40,16 +40,6 @@ public record ChessBoardNavigator(ChessBoard board) {
         return board.currentBlackKingPosition();
     }
 
-    public List<Coordinate> allFriendlyFieldsExceptKing(Color color, Coordinate kingCoordinate) {
-        List<Coordinate> friendlyFields = new ArrayList<>(15);
-        for (Coordinate coordinate : coordinates) {
-            Piece piece = board.piece(coordinate);
-            if (piece != null && piece.color() == color && coordinate != kingCoordinate) friendlyFields.add(coordinate);
-        }
-
-        return friendlyFields;
-    }
-
     public List<Coordinate> surroundingFields(Coordinate pivot) {
         int row = pivot.row();
         int column = pivot.column();
@@ -100,20 +90,6 @@ public record ChessBoardNavigator(ChessBoard board) {
 
     private boolean isPawnExists(Color colorOfRequiredPawns, Coordinate coordinate) {
         return coordinate != null && board.piece(coordinate) instanceof Pawn pawn && pawn.color() == colorOfRequiredPawns;
-    }
-
-    public List<Coordinate> knightAttackPositions(Coordinate pivot) {
-        int row = pivot.row();
-        int col = pivot.column();
-
-        List<Coordinate> fields = new ArrayList<>(8);
-
-        for (int[] move : KNIGHT_ATTACKS) {
-            Coordinate possibleCoordinate = Coordinate.of(row + move[0], col + move[1]);
-            if (possibleCoordinate != null) fields.add(possibleCoordinate);
-        }
-
-        return fields;
     }
 
     public List<Coordinate> knightAttackPositionsNonNull(Coordinate pivot) {
@@ -206,28 +182,6 @@ public record ChessBoardNavigator(ChessBoard board) {
         return null;
     }
 
-    public List<Coordinate> fieldsInDirections(List<Direction> directions, Coordinate pivot) {
-        List<Coordinate> list = new ArrayList<>(directions.size());
-        for (Direction direction : directions) list.addAll(fieldsInDirection(direction, pivot));
-        return list;
-    }
-
-    private List<Coordinate> fieldsInDirection(Direction direction, Coordinate pivot) {
-        List<Coordinate> listOfFields = new ArrayList<>();
-
-        for (Coordinate coordinate : new CoordinateIterable(direction, pivot)) {
-            Piece piece = board.piece(coordinate);
-            if (piece != null) {
-                listOfFields.add(coordinate);
-                return listOfFields;
-            }
-
-            listOfFields.add(coordinate);
-        }
-
-        return listOfFields;
-    }
-
     public List<Coordinate> fieldsInPath(Coordinate start, Coordinate end, boolean inclusive) {
         Direction direction = Direction.ofPath(start, end);
         List<Coordinate> fields = new ArrayList<>();
@@ -250,39 +204,6 @@ public record ChessBoardNavigator(ChessBoard board) {
         }
 
         return fields;
-    }
-
-    public List<Coordinate> fieldsForPawnMovement(Coordinate pivot, Color color) {
-        final int column = pivot.column();
-        final int row = pivot.row();
-
-        List<Coordinate> result = new ArrayList<>(4);
-
-        if (color == Color.WHITE) {
-            Coordinate top = Coordinate.of(row + 1, column);
-            Coordinate topLeft = Coordinate.of(row + 1, column - 1);
-            Coordinate topRight = Coordinate.of(row + 1, column + 1);
-            Coordinate topTop = null;
-            if (row == 2) topTop = Coordinate.of(row + 2, column);
-
-            if (top != null) result.add(top);
-            if (topLeft != null) result.add(topLeft);
-            if (topRight != null) result.add(topRight);
-            if (topTop != null) result.add(topTop);
-            return result;
-        }
-
-        Coordinate bottom = Coordinate.of(row - 1, column);
-        Coordinate bottomLeft = Coordinate.of(row - 1, column - 1);
-        Coordinate bottomRight = Coordinate.of(row - 1, column + 1);
-        Coordinate bottomBottom = null;
-        if (row == 7) bottomBottom = Coordinate.of(row - 2, column);
-
-        if (bottom != null) result.add(bottom);
-        if (bottomLeft != null) result.add(bottomLeft);
-        if (bottomRight != null) result.add(bottomRight);
-        if (bottomBottom != null) result.add(bottomBottom);
-        return result;
     }
 
     /**

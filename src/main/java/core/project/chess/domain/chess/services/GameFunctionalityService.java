@@ -37,34 +37,28 @@ public class GameFunctionalityService {
         this.outboundChessRepository = outboundChessRepository;
     }
 
-    public boolean validateOpponentEligibility(final UserAccount player, final GameParameters gameParameters,
-                                               final UserAccount opponent, final GameParameters opponentGameParameters,
-                                               final boolean isPartnershipGame) {
+    public boolean validateOpponentEligibility(
+            final UserAccount player,
+            final GameParameters gameParameters,
+            final UserAccount opponent,
+            final GameParameters opponentGameParameters,
+            final boolean isPartnershipGame) {
+
         final boolean sameUser = player.getId().equals(opponent.getId());
-        if (sameUser) {
-            return false;
-        }
+        if (sameUser) return false;
 
         final boolean sameTimeControlling = gameParameters.time().equals(opponentGameParameters.time());
-        if (!sameTimeControlling) {
-            return false;
-        }
+        if (!sameTimeControlling) return false;
 
         if (!isPartnershipGame) {
             final boolean validRatingDiff = Math.abs(player.getRating().rating() - opponent.getRating().rating()) <= 1500;
-            if (!validRatingDiff) {
-                return false;
-            }
+            if (!validRatingDiff) return false;
         }
 
-        if (isPartnershipGame && !(gameParameters.isCasualGame().equals(opponentGameParameters.isCasualGame()))) {
-            return false;
-        }
+        if (isPartnershipGame && !(gameParameters.isCasualGame().equals(opponentGameParameters.isCasualGame()))) return false;
 
         final boolean colorNotSpecified = gameParameters.color() == null || opponentGameParameters.color() == null;
-        if (colorNotSpecified) {
-            return true;
-        }
+        if (colorNotSpecified) return true;
 
         final boolean sameColor = gameParameters.color().equals(opponentGameParameters.color());
         return !sameColor;

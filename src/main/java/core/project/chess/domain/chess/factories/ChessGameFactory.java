@@ -1,11 +1,11 @@
 package core.project.chess.domain.chess.factories;
 
 import com.esotericsoftware.minlog.Log;
-import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.events.SessionEvents;
+import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import core.project.chess.infrastructure.utilities.containers.StatusPair;
@@ -17,9 +17,13 @@ import java.util.UUID;
 @ApplicationScoped
 public class ChessGameFactory {
 
-    public ChessGame createChessGameInstance(final UserAccount firstPlayer, final GameParameters gameParameters,
-                                              final UserAccount secondPlayer, final GameParameters secondGameParameters,
-                                              final boolean isPartnershipGame) {
+    public ChessGame createChessGameInstance(
+            final UserAccount firstPlayer,
+            final GameParameters gameParameters,
+            final UserAccount secondPlayer,
+            final GameParameters secondGameParameters,
+            final boolean isPartnershipGame) {
+
         ChessBoard chessBoard;
         boolean isCasualGame;
         try {
@@ -59,8 +63,11 @@ public class ChessGameFactory {
         );
     }
 
-    private static Pair<ChessBoard, Boolean> createChessBoardInstance(GameParameters gameParameters, GameParameters secondGameParameters,
-                                                                      boolean isPartnershipGame) {
+    private static Pair<ChessBoard, Boolean> createChessBoardInstance(
+            GameParameters gameParameters,
+            GameParameters secondGameParameters,
+            boolean isPartnershipGame) {
+
         if (!isPartnershipGame) {
             return Pair.of(ChessBoard.starndardChessBoard(), false);
         }
@@ -78,7 +85,10 @@ public class ChessGameFactory {
         return Pair.of(ChessBoard.fromPosition(chessNotations.orElseThrow().getSecond()), gameParameters.isCasualGame());
     }
 
-    private static StatusPair<Pair<String, String>> chessNotations(GameParameters gameParameters, GameParameters secondGameParameters) {
+    private static StatusPair<Pair<String, String>> chessNotations(
+            GameParameters gameParameters,
+            GameParameters secondGameParameters) {
+
         if (gameParameters.PGN() != null) {
             return StatusPair.ofTrue(Pair.of("PGN", gameParameters.PGN()));
         }

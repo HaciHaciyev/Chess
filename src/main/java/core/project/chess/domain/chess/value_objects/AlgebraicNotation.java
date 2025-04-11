@@ -500,7 +500,8 @@ public class AlgebraicNotation {
      * @return a PieceType or null.
      * @throws IllegalStateException if the promotion type is unexpected.
      */
-    public @Nullable PieceTYPE promotionType() {
+    @Nullable
+    public PieceTYPE promotionType() {
         if (isPromotion()) {
             final byte promotionType = this.algebraicNotation[6];
 

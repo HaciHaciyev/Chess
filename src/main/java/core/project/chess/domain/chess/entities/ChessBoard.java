@@ -144,7 +144,8 @@ public class ChessBoard {
      * Necessary for counting identical positions on the board. Especially for ThreeFold rule.
      * Unnecessary in 'pureChess' mode, where ThreeFold rule is disabled.
      */
-    private final @Nullable Map<Long, Integer> zobristHash;
+    @Nullable
+    private final Map<Long, Integer> zobristHash;
 
     /**
      * Zobrist hash history
@@ -167,7 +168,7 @@ public class ChessBoard {
     private final Deque<CastlingAbility> castlingAbilities = new ArrayDeque<>();
 
     /**
-     * EnPassaunt History
+     * EnPassant History
      */
     private final Deque<Coordinate> enPassantStack = new LinkedList<>();
 
@@ -244,7 +245,7 @@ public class ChessBoard {
         String FEN = inCaseOfInitFromFEN.fen();
 
         this.initType = InitType.FEN;
-        this.enPassantStack.addLast(getEnPassaunt(inCaseOfInitFromFEN));
+        this.enPassantStack.addLast(getEnPassant(inCaseOfInitFromFEN));
 
         this.figuresTurn = inCaseOfInitFromFEN.figuresTurn();
         this.currentWhiteKingPosition = inCaseOfInitFromFEN.whiteKing();
@@ -274,7 +275,7 @@ public class ChessBoard {
         else this.zobristHash = null;
     }
 
-    private Coordinate getEnPassaunt(FromFEN inCaseOfInitFromFEN) {
+    private Coordinate getEnPassant(FromFEN inCaseOfInitFromFEN) {
         Optional<Pair<Coordinate, Coordinate>> lastMovement = inCaseOfInitFromFEN.isLastMovementWasPassage();
         if (lastMovement.isEmpty()) {
             return null;
@@ -541,7 +542,8 @@ public class ChessBoard {
         return zobristHashKeys.peekLast();
     }
 
-    public @Nullable KingStatus kingStatus() {
+    @Nullable
+    public KingStatus kingStatus() {
         return kingStatuses.peekLast();
     }
 
@@ -1099,7 +1101,8 @@ public class ChessBoard {
      * @param coordinate The coordinate of the field where piece is placed to retrieve.
      * @return A `Piece` object or null if piece not exists on field.
      */
-    public @Nullable Piece piece(Coordinate coordinate) {
+    @Nullable
+    public Piece piece(Coordinate coordinate) {
         return occupation[coordinate.ordinal()];
     }
 

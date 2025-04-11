@@ -5,7 +5,6 @@ import jakarta.annotation.Nullable;
 import java.util.List;
 
 public enum Direction {
-
     LEFT(0, -1),
     RIGHT(0, 1),
     TOP(1, 0),
