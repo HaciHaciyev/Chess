@@ -242,34 +242,6 @@ class CustomChessTests {
 
     @Test
     void isPathClearTest() {
-        /**
-         * All valid moves (default position) [a2a4, a2a3, b2b4, b2b3, c2c4, c2c3, d2d4, d2d3, e2e4, e2e3, f2f4, f2f3,
-         * g2g4, g2g3, h2h4, h2h3, b8d7, b8a6, b8c6, g8e7, g8f6, g8h6, c8b7, c8d7, f8e7, f8g7, d8c8
-         * , d8e8, d8c7, d8d7, d8e7, e8d8, e8f8, e8d7, e8e7, e8f7]
-         * <p>
-         * White pawn moves (default position) [a2a4, a2a3, b2b4, b2b3, c2c4, c2c3, d2d4, d2d3, e2e4,
-         * e2e3, f2f4, f2f3, g2g4, g2g3, h2h4, h2h3]
-         * White knight moves (default position) [b8d7, b8a6, b8c6, g8e7, g8f6, g8h6]
-         * White bishop moves (default position) [c8b7, c8d7, f8e7, f8g7]
-         * White rook moves (default position) []
-         * White queen moves (default position) [d8c8, d8e8, d8c7, d8d7, d8e7]
-         * White king moves (default position) [e8d8, e8f8, e8d7, e8e7, e8f7]
-         * <p>
-         *
-         * All valid moves (default position + a2-a3) [a7a6, a7a5, b7b6, b7b5, c7c6, c7c5, d7d6, d7d5, e7e6,
-         * e7e5, f7f6, f7f5, g7g6, g7g5, h7h6, h7h5, b7d6, b7a5, b7c5, g7e6, g7f5, g7h5, c7b6, c7d6, c7a5, c7e5,
-         * c7f4, c7g3, c7h2, f7e6, f7g6, f7d5, f7h5, f7c4, f7b3, f7a2, d7c6, d7d6, d7e6, d7b5, d7d5, d7f5, d7a4, d7d4,
-         * d7g4, d7d3, d7h3, d7d2, e7d6, e7e6, e7f6]
-         * <p>
-         * Black pawn moves (default position + a2-a3) [a7a6, a7a5, b7b6, b7b5, c7c6, c7c5, d7d6, d7d5, e7e6,
-         * e7e5, f7f6, f7f5, g7g6, g7g5, h7h6, h7h5]
-         * Black knight moves (default position + a2-a3) [b7d6, b7a5, b7c5, g7e6, g7f5, g7h5]
-         * Black bishop moves (default position + a2-a3) [c7b6, c7d6, c7a5, c7e5, c7f4, c7g3, c7h2, f7e6, f7g6,
-         * f7d5, f7h5, f7c4, f7b3, f7a2]
-         * Black rook moves (default position + a2-a3) []
-         * Black queen moves (default position + a2-a3) [d7c6, d7d6, d7e6, d7b5, d7d5, d7f5, d7a4, d7d4, d7g4, d7d3, d7h3, d7d2]
-         * Black king moves (default position + a2-a3) [e7d6, e7e6, e7f6]
-         */
         ChessBoard chessBoard = ChessBoard.pureChess();
         assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(c1, e3));
         assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(c1, d2));
