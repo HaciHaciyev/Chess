@@ -176,34 +176,72 @@ public final class King implements Piece {
 
     private List<Coordinate> check(ChessBoardNavigator boardNavigator, Move lastMove) {
         Coordinate kingCoordinate = boardNavigator.kingCoordinate(color);
-        Color oppositeColor = color == WHITE ? BLACK : WHITE;
+        int kingSquare = kingCoordinate.ordinal();
+        Color oppositeColor;
+        long[][] checkersTable;
+        if (color == WHITE) {
+            oppositeColor = BLACK;
+            checkersTable = CHECKERS_BITBOARD_FOR_WHITE;
+        } else {
+            oppositeColor = WHITE;
+            checkersTable = CHECKERS_BITBOARD_FOR_BLACK;
+        }
 
         List<Coordinate> enemies = new ArrayList<>(2);
-
         if (lastMove != null) {
             Coordinate from = lastMove.from();
             Coordinate to = lastMove.to();
 
-            Coordinate possibleCheckDirection = isThereAThreateningFigureInThisDirection(boardNavigator, kingCoordinate, to);
+            Coordinate possibleCheckDirection = checkDirection(boardNavigator, kingCoordinate, to);
             if (possibleCheckDirection != null) enemies.add(possibleCheckDirection);
 
-            Coordinate secondPossibleCheckDirection = isThereAThreateningFigureInThisDirection(boardNavigator, kingCoordinate, from);
+            Coordinate secondPossibleCheckDirection = checkDirection(boardNavigator, kingCoordinate, from);
             if (secondPossibleCheckDirection != null) enemies.add(secondPossibleCheckDirection);
             return enemies;
         }
+        return checkWithoutLastMoveDetermination(boardNavigator, oppositeColor, checkersTable, kingSquare, kingCoordinate, enemies);
+    }
 
-        enemies.addAll(boardNavigator.pawnsThreateningTheCoordinateOf(kingCoordinate, oppositeColor));
-        if (enemies.size() == 2) return enemies;
+    private List<Coordinate> checkWithoutLastMoveDetermination(
+            ChessBoardNavigator boardNavigator,
+            Color oppositeColor,
+            long[][] checkersTable,
+            int kingSquare,
+            Coordinate kingCoordinate,
+            List<Coordinate> enemies) {
 
-        for (Coordinate possibleKnight : boardNavigator.knightAttackPositionsNonNull(kingCoordinate)) {
-            Piece piece = boardNavigator.board().piece(possibleKnight);
-            if (piece instanceof Knight && piece.color() == oppositeColor) {
-                enemies.add(possibleKnight);
-                if (enemies.size() == 2) return enemies;
+        long[] enemyPieces = {
+                boardNavigator.board().bitboard(Pawn.of(oppositeColor)),
+                boardNavigator.board().bitboard(Knight.of(oppositeColor)),
+                boardNavigator.board().bitboard(Bishop.of(oppositeColor)),
+                boardNavigator.board().bitboard(Rook.of(oppositeColor)),
+                boardNavigator.board().bitboard(Queen.of(oppositeColor))
+        };
+        long checkersBitboard = 0L;
+        checkersBitboard |= checkersTable[Checkers.PAWNS.ordinal()][kingSquare] & enemyPieces[0];
+        checkersBitboard |= checkersTable[Checkers.KNIGHTS.ordinal()][kingSquare] & enemyPieces[1];
+        checkersBitboard |= checkersTable[Checkers.DIAGONALS.ordinal()][kingSquare] & (enemyPieces[2] | enemyPieces[4]);
+        checkersBitboard |= checkersTable[Checkers.ORTHOGONALS.ordinal()][kingSquare] & (enemyPieces[3] | enemyPieces[4]);
+
+        while (checkersBitboard != 0L) {
+            int attackerSquare = Long.numberOfTrailingZeros(checkersBitboard);
+            checkersBitboard &= checkersBitboard - 1;
+            Coordinate attacker = Coordinate.byOrdinal(attackerSquare);
+            Piece piece = boardNavigator.board().piece(attacker);
+            switch (piece) {
+                case Bishop b -> {
+                    if (!clearPath(boardNavigator.board(), kingCoordinate, attacker)) continue;
+                }
+                case Queen q -> {
+                    if (!clearPath(boardNavigator.board(), kingCoordinate, attacker)) continue;
+                }
+                case Rook r -> {
+                    if (!clearPath(boardNavigator.board(), kingCoordinate, attacker)) continue;
+                }
+                default -> enemies.add(attacker);
             }
+            if (enemies.size() == 2) break;
         }
-
-        enemiesFromAllDirections(boardNavigator, kingCoordinate, oppositeColor, enemies);
         return enemies;
     }
 
@@ -365,7 +403,7 @@ public final class King implements Piece {
         List<Coordinate> enemies = kingStatus.enemiesAttackingTheKing();
         if (enemies.size() == 2) return false;
 
-        SimpleDirection direction = getSimpleDirection(kingPosition, from);
+        SimpleDirection direction = SimpleDirection.directionOf(kingPosition, from);
         if (enemies.isEmpty() && direction == null) return true;
         if (enemies.isEmpty()) return checkIfTheAttackIsNotOpen(boardNavigator, kingPosition, from, to, direction);
         if (direction != null && !checkIfTheAttackIsNotOpen(boardNavigator, kingPosition, from, to, direction)) return false;
@@ -488,17 +526,6 @@ public final class King implements Piece {
         }
 
         return true;
-    }
-
-    private static SimpleDirection getSimpleDirection(Coordinate start, Coordinate end) {
-        SimpleDirection direction = null;
-        if (start.column() == end.column() && start.row() != end.row()) direction =
-                SimpleDirection.VERTICAL;
-        if (start.column() != end.column() && start.row() == end.row()) direction =
-                SimpleDirection.HORIZONTAL;
-        if (Math.abs(start.row() - end.row()) == Math.abs(start.column() - end.column()))
-            direction = SimpleDirection.DIAGONAL;
-        return direction;
     }
 
     private boolean checkIfTheAttackIsNotOpen(ChessBoardNavigator boardNavigator, Coordinate kingPosition,
@@ -797,76 +824,23 @@ public final class King implements Piece {
         return false;
     }
 
-    private void enemiesFromAllDirections(ChessBoardNavigator navigator,
-                                          Coordinate kingCoordinate,
-                                          Color oppositeColor,
-                                          List<Coordinate> enemies) {
-        for (Coordinate field : navigator.occupiedFieldsInDirections(Direction.allDirections(), kingCoordinate)) {
-            Piece piece = navigator.board().piece(field);
-            if (piece.color() != oppositeColor) continue;
+    @Nullable
+    private Coordinate checkDirection(
+            ChessBoardNavigator navigator,
+            Coordinate pivot,
+            Coordinate to) {
 
-            final boolean diagonal = Math.abs(kingCoordinate.row() - field.row()) == Math.abs(kingCoordinate.column() - field.column());
-            if (diagonal) {
-                if (piece instanceof Bishop || piece instanceof Queen) {
-                    enemies.add(field);
-                    if (enemies.size() == 2) return;
-                }
-            } else {
-                if (piece instanceof Rook || piece instanceof Queen) {
-                    enemies.add(field);
-                    if (enemies.size() == 2) return;
-                }
-            }
-        }
-    }
-
-    private @Nullable Coordinate isThereAThreateningFigureInThisDirection(ChessBoardNavigator navigator,
-                                                                          Coordinate pivot, Coordinate to) {
-        int differenceOfRow = Math.abs(pivot.row() - to.row());
-        int differenceOfColumn = Math.abs(pivot.column() - to.column());
         Piece piece = navigator.board().piece(to);
-
         if (piece != null) {
             if (piece.color() == color) return null;
-
-            final boolean isKnightAttackPosition = (differenceOfRow == 2 && differenceOfColumn == 1) ||
-                    (differenceOfRow == 1 && differenceOfColumn == 2);
-            if (isKnightAttackPosition) {
-                if (piece instanceof Knight) return to;
-                return null;
-            }
-
-            SimpleDirection direction = SimpleDirection.directionOf(pivot, to);
-            if (direction == null) return null;
-
-            final boolean isSurrounded = differenceOfRow == 1 && differenceOfColumn == 1;
-
-            if (direction == SimpleDirection.VERTICAL || direction == SimpleDirection.HORIZONTAL) {
-                if (isSurrounded) {
-                    if (piece instanceof Bishop || piece instanceof Queen) return to;
-                    return null;
-                }
-
-                if (!clearPath(navigator.board(), pivot, to)) return null;
-                if (piece instanceof Rook || piece instanceof Queen) return to;
-                return null;
-            }
-
-            if (isSurrounded) {
-                if (piece instanceof  Pawn || piece instanceof Bishop || piece instanceof Queen) return to;
-                return null;
-            }
-
-            if (!clearPath(navigator.board(), pivot, to)) return null;
-            if (piece instanceof Bishop || piece instanceof Queen) return to;
-            return null;
+            return checkEnemyInDirection(navigator, pivot, to, piece);
         }
 
         SimpleDirection direction = SimpleDirection.directionOf(pivot, to);
         if (direction == null) return null;
-
         Direction deepDirection = Direction.directionOf(pivot, to);
-        Coordinate occupiedFieldInDirection = navigator.occupiedFieldInDirection(deepDirection, pivot);
+
+        Coordinate occupiedFieldInDirection = occupiedFieldInDirection(navigator.board(), deepDirection, pivot);
         if (occupiedFieldInDirection == null) return null;
 
         Piece opponentPiece = navigator.board().piece(occupiedFieldInDirection);
@@ -880,6 +854,47 @@ public final class King implements Piece {
 
         if (!clearPath(navigator.board(), pivot, to)) return null;
         if (opponentPiece instanceof Bishop || opponentPiece instanceof Queen) return to;
+        return null;
+    }
+
+    @Nullable
+    private Coordinate checkEnemyInDirection(
+            ChessBoardNavigator navigator,
+            Coordinate pivot,
+            Coordinate to,
+            Piece piece) {
+
+        int differenceOfRow = Math.abs(pivot.row() - to.row());
+        int differenceOfColumn = Math.abs(pivot.column() - to.column());
+
+        final boolean isKnightAttackPosition = (differenceOfRow == 2 && differenceOfColumn == 1) ||
+                (differenceOfRow == 1 && differenceOfColumn == 2);
+        if (isKnightAttackPosition) {
+            if (piece instanceof Knight) return to;
+            return null;
+        }
+
+        SimpleDirection direction = SimpleDirection.directionOf(pivot, to);
+        if (direction == null) return null;
+
+        final boolean isSurrounded = differenceOfRow == 1 && differenceOfColumn == 1;
+
+        if (direction == SimpleDirection.VERTICAL || direction == SimpleDirection.HORIZONTAL) {
+            if (isSurrounded) {
+                if (piece instanceof Bishop || piece instanceof Queen) return to;
+                return null;
+            }
+            if (!clearPath(navigator.board(), pivot, to)) return null;
+            if (piece instanceof Rook || piece instanceof Queen) return to;
+            return null;
+        }
+
+        if (isSurrounded) {
+            if (piece instanceof  Pawn || piece instanceof Bishop || piece instanceof Queen) return to;
+            return null;
+        }
+        if (!clearPath(navigator.board(), pivot, to)) return null;
+        if (piece instanceof Bishop || piece instanceof Queen) return to;
         return null;
     }
 

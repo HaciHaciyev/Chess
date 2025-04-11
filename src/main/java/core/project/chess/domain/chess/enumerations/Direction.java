@@ -29,6 +29,14 @@ public enum Direction {
         this.colDelta = colDelta;
     }
 
+    public int rowDelta() {
+        return rowDelta;
+    }
+
+    public int colDelta() {
+        return colDelta;
+    }
+
     public static List<Direction> allDirections() {
         return directions;
     }
@@ -54,7 +62,8 @@ public enum Direction {
         throw new IllegalArgumentException("No matching direction");
     }
 
-    public static @Nullable Direction directionOf(Coordinate pivot, Coordinate to) {
+    @Nullable
+    public static Direction directionOf(Coordinate pivot, Coordinate to) {
         int rowOffset = Integer.compare(to.row(), pivot.row());
         int colOffset = Integer.compare(to.column(), pivot.column());
 
@@ -67,5 +76,12 @@ public enum Direction {
 
     public Coordinate apply(Coordinate coordinate) {
         return Coordinate.of(coordinate.row() + rowDelta, coordinate.column() + colDelta);
+    }
+
+    public boolean isTowardsLowBits() {
+        return switch (this) {
+            case LEFT, BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT -> true;
+            default -> false;
+        };
     }
 }

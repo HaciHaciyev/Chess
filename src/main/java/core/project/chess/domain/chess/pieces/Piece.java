@@ -3,6 +3,8 @@ package core.project.chess.domain.chess.pieces;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.enumerations.Direction;
+import core.project.chess.domain.chess.util.BitboardUtils;
 import jakarta.annotation.Nullable;
 
 import java.util.Set;
@@ -21,7 +23,8 @@ public sealed interface Piece
      * a list of status that the given status need to perform.
      * Or returns null if move is invalid.
      */
-    @Nullable Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
+    @Nullable
+    Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to);
 
     /**
      * Checks if the path between the given 'start' and 'end' coordinates on the chess board is clear.
@@ -78,6 +81,26 @@ public sealed interface Piece
     default int compareDirection(final int startPosition, final int endPosition) {
         if (startPosition == endPosition) return 0;
         return startPosition < endPosition ? 1 : -1;
+    }
+
+    @Nullable
+    default Coordinate occupiedFieldInDirection(ChessBoard chessBoard, Direction direction, Coordinate pivot) {
+        long occupied = chessBoard.whitePieces() | chessBoard.blackPieces();
+        int fromIndex = pivot.ordinal();
+
+        long ray = BitboardUtils.rayMask(direction, fromIndex);
+        long rayOccupied = ray & occupied;
+
+        if (rayOccupied == 0) return null;
+
+        int index;
+        if (direction.isTowardsLowBits()) {
+            index = Long.numberOfTrailingZeros(rayOccupied);
+        } else {
+            index = 63 - Long.numberOfLeadingZeros(rayOccupied);
+        }
+
+        return Coordinate.byOrdinal(index);
     }
 }
 
