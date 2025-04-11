@@ -220,8 +220,6 @@ public class ChessBoard {
                     validBlackLongCasting));
 
             this.bitboard = new long[12];
-            this.whitePieces = 0xFFFF000000000000L;
-            this.blackPieces = 0x000000000000FFFFL;
             this.occupation = defaultOccupation.clone();
             initialize();
             this.zobrist = new ZobristHashKeys();
@@ -1051,17 +1049,21 @@ public class ChessBoard {
     }
 
     private void initialize() {
-        bitboard[Pawn.of(WHITE).index()] = 0x00FF000000000000L;
-        bitboard[Knight.of(WHITE).index()] = 0x0000000000000042L;
-        bitboard[Bishop.of(WHITE).index()] = 0x0000000000000024L;
-        bitboard[Queen.of(WHITE).index()] = 0x0000000000000008L;
-        bitboard[King.of(WHITE).index()] = 0x0000000000000010L;
+        whitePieces = -281474976710656L;
+        bitboard[Pawn.of(WHITE).index()] = 71776119061217280L;
+        bitboard[Knight.of(WHITE).index()] = 4755801206503243776L;
+        bitboard[Bishop.of(WHITE).index()] = 2594073385365405696L;
+        bitboard[Rook.of(WHITE).index()] = -9151314442816847872L;
+        bitboard[Queen.of(WHITE).index()] = 576460752303423488L;
+        bitboard[King.of(WHITE).index()] = 1152921504606846976L;
 
-        bitboard[Pawn.of(BLACK).index()] = 0x000000000000FF00L;
-        bitboard[Knight.of(BLACK).index()] = 0x0000000000004200L;
-        bitboard[Bishop.of(BLACK).index()] = 0x0000000000002400L;
-        bitboard[Queen.of(BLACK).index()] = 0x0000000000000800L;
-        bitboard[King.of(BLACK).index()] = 0x0000000000001000L;
+        blackPieces = 65535L;
+        bitboard[Pawn.of(BLACK).index()] = 65280L;
+        bitboard[Knight.of(BLACK).index()] = 66L;
+        bitboard[Bishop.of(BLACK).index()] = 36L;
+        bitboard[Rook.of(BLACK).index()] = 129L;
+        bitboard[Queen.of(BLACK).index()] = 8L;
+        bitboard[King.of(BLACK).index()] = 16L;
     }
 
     private void initializeFromFEN(String fen) {
@@ -1118,18 +1120,12 @@ public class ChessBoard {
     }
 
     public List<Move> generateAllValidMoves() {
-        CompletableFuture<List<Move>> pawnMoves = CompletableFuture.supplyAsync(
-                () -> Pawn.of(figuresTurn).allValidMoves(this), executorService);
-        CompletableFuture<List<Move>> knightMoves = CompletableFuture.supplyAsync(
-                () -> Knight.of(figuresTurn).allValidMoves(this), executorService);
-        CompletableFuture<List<Move>> bishopMoves = CompletableFuture.supplyAsync(
-                () -> Bishop.of(figuresTurn).allValidMoves(this), executorService);
-        CompletableFuture<List<Move>> rookMoves = CompletableFuture.supplyAsync(
-                () -> Rook.of(figuresTurn).allValidMoves(this), executorService);
-        CompletableFuture<List<Move>> queenMoves = CompletableFuture.supplyAsync(
-                () -> Queen.of(figuresTurn).allValidMoves(this), executorService);
-        CompletableFuture<List<Move>> kingMoves = CompletableFuture.supplyAsync(
-                () -> King.of(figuresTurn).allValidMoves(this), executorService);
+        var pawnMoves = CompletableFuture.supplyAsync(() -> Pawn.of(figuresTurn).allValidMoves(this), executorService);
+        var knightMoves = CompletableFuture.supplyAsync(() -> Knight.of(figuresTurn).allValidMoves(this), executorService);
+        var bishopMoves = CompletableFuture.supplyAsync(() -> Bishop.of(figuresTurn).allValidMoves(this), executorService);
+        var rookMoves = CompletableFuture.supplyAsync(() -> Rook.of(figuresTurn).allValidMoves(this), executorService);
+        var queenMoves = CompletableFuture.supplyAsync(() -> Queen.of(figuresTurn).allValidMoves(this), executorService);
+        var kingMoves = CompletableFuture.supplyAsync(() -> King.of(figuresTurn).allValidMoves(this), executorService);
 
         return Stream.of(pawnMoves, knightMoves, bishopMoves, rookMoves, queenMoves, kingMoves)
                 .map(CompletableFuture::join)

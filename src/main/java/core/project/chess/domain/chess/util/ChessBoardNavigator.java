@@ -591,4 +591,34 @@ public record ChessBoardNavigator(ChessBoard board) {
 
         return prettyPiece;
     }
+
+    public static String prettyBitBoard(long bitboard) {
+        String bits = Long.toBinaryString(bitboard);
+        StringBuilder builder = new StringBuilder();
+
+        if (bits.length() < 64) {
+            int numZeros = 64 - bits.length();
+            builder.append("0".repeat(numZeros));
+            builder.append(bits);
+        } else {
+            builder.append(bits);
+        }
+
+        char[] bitsArray = builder.toString().toCharArray();
+        builder.setLength(0);
+
+        builder.append("\n");
+        for (int row = 56; row >= 0; row -= 8) {
+            builder.append("[");
+            for (int col = 7; col >= 0; col--) {
+                builder.append(bitsArray[row + col]);
+                if (col != 0) {
+                    builder.append(", ");
+                }
+            }
+            builder.append("]");
+            builder.append("\n");
+        }
+        return builder.toString();
+    }
 }
