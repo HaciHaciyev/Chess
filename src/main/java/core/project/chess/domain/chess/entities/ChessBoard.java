@@ -176,7 +176,10 @@ public class ChessBoard {
     private final Deque<Piece> capturedBlackPieces = new ArrayDeque<>();
 
     /** Executor service for parallel moves generation*/
-    private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ExecutorService executorService = Executors
+            .newFixedThreadPool(Runtime
+            .getRuntime()
+            .availableProcessors());
 
     /**
      * Utility classes for navigating chess board
@@ -214,10 +217,7 @@ public class ChessBoard {
             this.validWhiteLongCasting = true;
             this.validBlackShortCasting = true;
             this.validBlackLongCasting = true;
-            castlingAbilities.addLast(new CastlingAbility(validWhiteShortCasting,
-                    validWhiteLongCasting,
-                    validBlackShortCasting,
-                    validBlackLongCasting));
+            addCastlingAbility();
 
             this.bitboard = new long[12];
             this.occupation = defaultOccupation.clone();
@@ -257,10 +257,7 @@ public class ChessBoard {
         this.validWhiteLongCasting = inCaseOfInitFromFEN.validWhiteLongCasting();
         this.validBlackShortCasting = inCaseOfInitFromFEN.validBlackShortCasting();
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
-        castlingAbilities.addLast(new CastlingAbility(validWhiteShortCasting,
-                validWhiteLongCasting,
-                validBlackShortCasting,
-                validBlackLongCasting));
+        addCastlingAbility();
 
         this.bitboard = new long[12];
         this.occupation = new Piece[64];
@@ -843,45 +840,50 @@ public class ChessBoard {
             if (piece instanceof King) {
                 this.validWhiteShortCasting = false;
                 this.validWhiteLongCasting = false;
+                addCastlingAbility();
                 return true;
             }
             if (from.equals(Coordinate.a1)) {
                 validWhiteLongCasting = false;
+                addCastlingAbility();
                 return true;
             }
             if (from.equals(Coordinate.h1)) {
                 validWhiteShortCasting = false;
+                addCastlingAbility();
                 return true;
             }
-            castlingAbilities.addLast(new CastlingAbility(
-                    validWhiteShortCasting,
-                    validWhiteLongCasting,
-                    validBlackShortCasting,
-                    validBlackLongCasting
-            ));
+            addCastlingAbility();
             return false;
         }
 
         if (piece instanceof King) {
             this.validBlackShortCasting = false;
             this.validBlackLongCasting = false;
+            addCastlingAbility();
             return true;
         }
         if (from.equals(Coordinate.a8)) {
             validBlackLongCasting = false;
+            addCastlingAbility();
             return true;
         }
         if (from.equals(Coordinate.h8)) {
             validBlackShortCasting = false;
+            addCastlingAbility();
             return true;
         }
+        addCastlingAbility();
+        return false;
+    }
+
+    private void addCastlingAbility() {
         castlingAbilities.addLast(new CastlingAbility(
                 validWhiteShortCasting,
                 validWhiteLongCasting,
                 validBlackShortCasting,
                 validBlackLongCasting
         ));
-        return false;
     }
 
     /**
