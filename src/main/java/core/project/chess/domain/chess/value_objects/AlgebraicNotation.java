@@ -6,7 +6,6 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
 import core.project.chess.infrastructure.utilities.containers.Pair;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
 
 import java.nio.charset.StandardCharsets;
@@ -469,29 +468,27 @@ public class AlgebraicNotation {
 
     /**
      * Checks if the given algebraic notation represents a castling move.
-     *
-     * @param algebraicNotation the algebraic notation to be checked
-     * @return a {@link StatusPair} containing a boolean value indicating whether the
-     *         given algebraic notation represents a castling move, and if so, the
-     *         corresponding {@link Castle} instance (either {@link Castle#SHORT_CASTLING}
-     *         or {@link Castle#LONG_CASTLING}).
+     * returns enum Castle or null
      */
-    public static StatusPair<Castle> isCastling(final AlgebraicNotation algebraicNotation) {
-        final String algebraicNotationSTR = algebraicNotation.algebraicNotation();
+    public static Castle isCastling(final AlgebraicNotation algebraicNotation) {
+        final byte[] input = algebraicNotation.algebraicNotation;
 
-        final boolean shortCasting = algebraicNotationSTR
-                .equals(Castle.SHORT_CASTLING.getAlgebraicNotation())
-                || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
-                .equals(Castle.SHORT_CASTLING.getAlgebraicNotation());
-        if (shortCasting) return StatusPair.ofTrue(Castle.SHORT_CASTLING);
+        final byte[] shortBytes = Castle.SHORT_CASTLING.bytes();
+        if (input.length <= 4 &&
+                input[0] == shortBytes[0] &&
+                input[1] == shortBytes[1] &&
+                input[2] == shortBytes[2])
+            return Castle.SHORT_CASTLING;
 
-        final boolean longCasting = algebraicNotationSTR
-                .equals(Castle.LONG_CASTLING.getAlgebraicNotation())
-                || algebraicNotationSTR.substring(0, algebraicNotationSTR.length() - 1)
-                .equals(Castle.LONG_CASTLING.getAlgebraicNotation());
-        if (longCasting) return StatusPair.ofTrue(Castle.LONG_CASTLING);
+        final byte[] longBytes = Castle.LONG_CASTLING.bytes();
+        if (input[0] == longBytes[0] &&
+                input[1] == longBytes[1]
+                && input[2] == longBytes[2] &&
+                input[3] == longBytes[3] &&
+                input[4] == longBytes[4])
+            return Castle.LONG_CASTLING;
 
-        return StatusPair.ofFalse();
+        return null;
     }
 
     /**
@@ -521,13 +518,9 @@ public class AlgebraicNotation {
      * Extracts the "from" and "to" coordinates from the algebraic notation of a chess move. Use isCastling(...) function before.
      *
      * @return a {@link Pair} containing the "from" and "to" coordinates of the move.
-     * @throws IllegalStateException if the algebraic notation represents a castling move, as the coordinates cannot be extracted in the same way.
+     * !!!CHECK if the algebraic notation represents a castling move, as the coordinates cannot be extracted in the same way.
      */
     public Pair<Coordinate, Coordinate> coordinates() {
-        if (AlgebraicNotation.isCastling(this).status()) {
-            throw new IllegalStateException("Invalid method usage, check the documentation.");
-        }
-
         final Coordinate from;
         final Coordinate to;
 

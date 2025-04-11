@@ -625,9 +625,8 @@ public class ChessBoard {
 
         AlgebraicNotation algebraicNotation = algebraicNotations.peekLast();
 
-        StatusPair<AlgebraicNotation.Castle> statusPair = AlgebraicNotation.isCastling(algebraicNotation);
-        if (statusPair.status()) return Optional.of(algebraicNotation
-                .castlingCoordinates(statusPair.orElseThrow(), figuresTurn));
+        AlgebraicNotation.Castle castle = AlgebraicNotation.isCastling(algebraicNotation);
+        if (castle != null) return Optional.of(algebraicNotation.castlingCoordinates(castle, figuresTurn));
         return Optional.of(algebraicNotation.coordinates());
     }
 
@@ -708,20 +707,13 @@ public class ChessBoard {
     }
 
     Pair<Coordinate, Coordinate> coordinates(AlgebraicNotation algebraicNotation) {
-        Pair<Coordinate, Coordinate> coordinates;
-
-        final StatusPair<AlgebraicNotation.Castle> isCastling = AlgebraicNotation.isCastling(algebraicNotation);
-        if (isCastling.status()) {
-            coordinates = algebraicNotation.castlingCoordinates(isCastling.orElseThrow(), figuresTurn);
-        } else {
-            coordinates = algebraicNotation.coordinates();
-        }
-        return coordinates;
+        final AlgebraicNotation.Castle isCastling = AlgebraicNotation.isCastling(algebraicNotation);
+        if (isCastling != null) return algebraicNotation.castlingCoordinates(isCastling, figuresTurn);
+        return algebraicNotation.coordinates();
     }
 
     Piece getInCaseOfPromotion(AlgebraicNotation algebraicNotation) {
         AlgebraicNotation.PieceTYPE promotion = algebraicNotation.promotionType();
-
         Piece inCaseOfPromotion = null;
         if (promotion != null) inCaseOfPromotion = AlgebraicNotation.fromSymbol(promotion, figuresTurn);
         return inCaseOfPromotion;
@@ -1401,10 +1393,10 @@ public class ChessBoard {
         if (algebraicNotations.isEmpty()) return false;
 
         final AlgebraicNotation lastMovement = algebraicNotations.removeLast();
-        final StatusPair<AlgebraicNotation.Castle> isCastling = AlgebraicNotation.isCastling(lastMovement);
+        final AlgebraicNotation.Castle isCastling = AlgebraicNotation.isCastling(lastMovement);
 
-        if (isCastling.status()) {
-            revertCastling(isCastling.orElseThrow());
+        if (isCastling != null) {
+            revertCastling(isCastling);
             return true;
         }
 
