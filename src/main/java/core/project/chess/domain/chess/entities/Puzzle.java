@@ -84,7 +84,7 @@ public class Puzzle {
 
         int requiredMoveReturns = (algebraicNotations.length - 1) - startPositionOfPuzzle;
         while (requiredMoveReturns != 0) {
-            chessBoard.returnOfTheMovement();
+            chessBoard.undoMove();
             requiredMoveReturns--;
         }
 
@@ -172,7 +172,7 @@ public class Puzzle {
 
         final String representationAfterPlayerMove;
         try {
-            chessBoard.reposition(from, to, inCaseOfPromotion);
+            chessBoard.doMove(from, to, inCaseOfPromotion);
             representationAfterPlayerMove = chessBoard.actualRepresentationOfChessBoard();
 
             final boolean isLastMove = currentPosition == algebraicNotations.length - 1;
@@ -185,7 +185,7 @@ public class Puzzle {
             final Pair<Coordinate, Coordinate> coordinates = chessBoard.coordinates(algebraicNotation);
             final Piece requiredPromotion = chessBoard.getInCaseOfPromotion(algebraicNotation);
 
-            chessBoard.reposition(coordinates.getFirst(), coordinates.getSecond(), requiredPromotion);
+            chessBoard.doMove(coordinates.getFirst(), coordinates.getSecond(), requiredPromotion);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unexpected exception. Make sure the pgn for initializing the chess problem is valid.");
         }

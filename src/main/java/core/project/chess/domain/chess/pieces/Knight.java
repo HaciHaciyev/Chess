@@ -91,6 +91,10 @@ public final class Knight implements Piece {
         return false;
     }
 
+    public long knightAttacks(int square) {
+        return generatePseudoLegalKnightMoves(square);
+    }
+
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         return allValidMoves(chessBoard, new ArrayList<>());
     }

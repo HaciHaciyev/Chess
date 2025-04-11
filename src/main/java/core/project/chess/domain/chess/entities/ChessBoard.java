@@ -38,9 +38,9 @@ import static java.util.Objects.nonNull;
  * <p>
  * The `ChessBoard` class encapsulates the following key responsibilities:
  * <p>
- * 1. **Piece Placement and Movement**: The `reposition()` method allows for the movement of pieces on the board, handling
+ * 1. **Piece Placement and Movement**: The `doMove()` method allows for the movement of pieces on the board, handling
  *    various status such as capturing, promotion, and castling, while ensuring the validity of each move,
- *    also allow to revert last made move by using 'returnOfTheMovement()'.
+ *    also allow to revert last made move by using 'undoMove()'.
  * <p>
  * 2. **Castling Management**: The `castling()` method handles the specific logic for castling moves, including the movement of the rook
  *    also allow to revert last made move by using 'revertCastling()'.
@@ -689,7 +689,7 @@ public class ChessBoard {
 
             GameResultMessage message;
             try {
-                message = reposition(from, to, inCaseOfPromotion);
+                message = doMove(from, to, inCaseOfPromotion);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Invalid PGN.");
             }
@@ -1135,8 +1135,8 @@ public class ChessBoard {
                 .toList();
     }
 
-    public void reposition(final Coordinate from, final Coordinate to) {
-        reposition(from, to, null);
+    public void doMove(final Coordinate from, final Coordinate to) {
+        doMove(from, to, null);
     }
 
     /**
@@ -1148,7 +1148,7 @@ public class ChessBoard {
      * @return The status performed during the repositioning.
      * @throws IllegalArgumentException If the move is invalid.
      */
-    public final GameResultMessage reposition(final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion) {
+    public final GameResultMessage doMove(final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion) {
         /** Preparation of necessary data and validation.*/
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
@@ -1394,7 +1394,7 @@ public class ChessBoard {
      *
      * @return `true` if the last move was successfully reverted, `false` otherwise.
      */
-    public final boolean returnOfTheMovement() {
+    public final boolean undoMove() {
         if (algebraicNotations.isEmpty()) return false;
 
         final AlgebraicNotation lastMovement = algebraicNotations.removeLast();

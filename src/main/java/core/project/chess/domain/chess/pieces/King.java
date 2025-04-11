@@ -1,10 +1,7 @@
 package core.project.chess.domain.chess.pieces;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
-import core.project.chess.domain.chess.enumerations.Color;
-import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.domain.chess.enumerations.Direction;
-import core.project.chess.domain.chess.enumerations.SimpleDirection;
+import core.project.chess.domain.chess.enumerations.*;
 import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
@@ -33,6 +30,26 @@ public final class King implements Piece {
         for (int square = 0; square < 64; square++) {
             WHITE_KING_MOVES_CACHE[square] = generatePseudoValidKingMoves(square, WHITE);
             BLACK_KING_MOVES_CACHE[square] = generatePseudoValidKingMoves(square, BLACK);
+        }
+    }
+    static final long[][] CHECKERS_BITBOARD_FOR_WHITE = new long[Checkers.values().length][64];
+    static final long[][] CHECKERS_BITBOARD_FOR_BLACK = new long[Checkers.values().length][64];
+    static {
+        for (int square = 0; square < 64; square++) {
+            CHECKERS_BITBOARD_FOR_WHITE[Checkers.PAWNS.ordinal()][square] = Pawn.of(BLACK).pawnsAttacks(square);
+            CHECKERS_BITBOARD_FOR_BLACK[Checkers.PAWNS.ordinal()][square] = Pawn.of(WHITE).pawnsAttacks(square);
+
+            long knightAttacks = Knight.of(WHITE).knightAttacks(square);
+            CHECKERS_BITBOARD_FOR_WHITE[Checkers.KNIGHTS.ordinal()][square] = knightAttacks;
+            CHECKERS_BITBOARD_FOR_BLACK[Checkers.KNIGHTS.ordinal()][square] = knightAttacks;
+
+            long diagonalAttacks = Bishop.of(WHITE).bishopAttacks(square);
+            CHECKERS_BITBOARD_FOR_WHITE[Checkers.DIAGONALS.ordinal()][square] = diagonalAttacks;
+            CHECKERS_BITBOARD_FOR_BLACK[Checkers.DIAGONALS.ordinal()][square] = diagonalAttacks;
+
+            long orthogonalAttacks = Rook.of(WHITE).rookAttacks(square);
+            CHECKERS_BITBOARD_FOR_WHITE[Checkers.ORTHOGONALS.ordinal()][square] = orthogonalAttacks;
+            CHECKERS_BITBOARD_FOR_BLACK[Checkers.ORTHOGONALS.ordinal()][square] = orthogonalAttacks;
         }
     }
 

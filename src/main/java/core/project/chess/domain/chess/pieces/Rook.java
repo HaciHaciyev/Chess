@@ -87,6 +87,10 @@ public final class Rook implements Piece {
         return false;
     }
 
+    public long rookAttacks(int square) {
+        return generatePseudoValidRookMoves(square);
+    }
+
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         return allValidMoves(chessBoard, new ArrayList<>());
     }

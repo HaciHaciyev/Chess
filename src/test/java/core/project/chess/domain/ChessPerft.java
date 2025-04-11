@@ -146,7 +146,7 @@ class ChessPerft {
             Piece inCaseOfPromotion = getInCaseOfPromotion(move);
 
             board.doMove(move);
-            chessGame.reposition(from, to, inCaseOfPromotion);
+            chessGame.doMove(from, to, inCaseOfPromotion);
 
             long newNodes = perft(depth - 1);
             nodes += newNodes;
@@ -159,7 +159,7 @@ class ChessPerft {
             }
 
             board.undoMove();
-            chessGame.returnOfTheMovement();
+            chessGame.undoMove();
         }
 
         return nodes;
@@ -180,14 +180,14 @@ class ChessPerft {
             Piece inCaseOfPromotion = getInCaseOfPromotion(move);
 
             board.doMove(move);
-            chessGame.reposition(from, to, inCaseOfPromotion);
+            chessGame.doMove(from, to, inCaseOfPromotion);
 
             long newNodes = onlyNodesPerft(depth - 1);
             nodes += newNodes;
             this.nodes = nodes;
 
             board.undoMove();
-            chessGame.returnOfTheMovement();
+            chessGame.undoMove();
         }
 
         return nodes;

@@ -243,20 +243,20 @@ class CustomChessTests {
     @Test
     void isPathClearTest() {
         ChessBoard chessBoard = ChessBoard.pureChess();
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(c1, e3));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(c1, d2));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(e1, e5));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(d1, c1));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(d1, d2));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(d1, d5));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(d1, b3));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(d1, c2));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(e1, e2));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(e1, d1));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(a1, b1));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(a1, h1));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(a1, a2));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(a1, a5));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(c1, e3));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(c1, d2));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(e1, e5));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(d1, c1));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(d1, d2));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(d1, d5));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(d1, b3));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(d1, c2));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(e1, e2));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(e1, d1));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(a1, b1));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(a1, h1));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(a1, a2));
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(a1, a5));
 
     }
 
@@ -273,7 +273,7 @@ class CustomChessTests {
         System.out.println("White king moves (default position) " + King.of(Color.WHITE).allValidMoves(chessBoard));
 
         System.out.println();
-        chessBoard.reposition(Coordinate.a2, Coordinate.a3);
+        chessBoard.doMove(Coordinate.a2, Coordinate.a3);
         System.out.println("All valid moves (default position + a2-a3) " + chessBoard.generateAllValidMoves().toString());
         List<Move> blackPawnMoves = Pawn.of(Color.BLACK).allValidMoves(chessBoard);
         System.out.println("Black pawn moves (default position + a2-a3) " + blackPawnMoves);
@@ -283,45 +283,45 @@ class CustomChessTests {
         System.out.println("Black queen moves (default position + a2-a3) " + Queen.of(Color.BLACK).allValidMoves(chessBoard));
         System.out.println("Black king moves (default position + a2-a3) " + King.of(Color.BLACK).allValidMoves(chessBoard));
 
-        chessBoard.reposition(b7, b5);
-        chessBoard.reposition(a3, a4);
+        chessBoard.doMove(b7, b5);
+        chessBoard.doMove(a3, a4);
         System.out.println();
         System.out.println(Pawn.of(Color.BLACK).allValidMoves(chessBoard));
-        chessBoard.reposition(b5, b4);
+        chessBoard.doMove(b5, b4);
 
         System.out.println();
         System.out.println(Pawn.of(Color.WHITE).allValidMoves(chessBoard));
-        assertThrows(IllegalArgumentException.class, () -> chessBoard.reposition(b2, b4));
-        chessBoard.reposition(b2, b3);
+        assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(b2, b4));
+        chessBoard.doMove(b2, b3);
 
         System.out.println(chessBoard.navigator().prettyToString());
-        chessBoard.reposition(a7, a5);
-        chessBoard.reposition(c2, c4);
+        chessBoard.doMove(a7, a5);
+        chessBoard.doMove(c2, c4);
 
         System.out.println();
         System.out.println(Pawn.of(Color.BLACK).allValidMoves(chessBoard));
-        chessBoard.reposition(b4, c3);
+        chessBoard.doMove(b4, c3);
 
         System.out.println(chessBoard.navigator().prettyToString());
-        chessBoard.reposition(b3, b4);
+        chessBoard.doMove(b3, b4);
 
         System.out.println(chessBoard.navigator().prettyToString());
-        chessBoard.reposition(c3, d2);
+        chessBoard.doMove(c3, d2);
 
         System.out.println(chessBoard.navigator().prettyToString());
-        chessBoard.returnOfTheMovement();
+        chessBoard.undoMove();
 
         System.out.println(chessBoard.navigator().prettyToString());
 
-        chessBoard.reposition(c3, c2);
+        chessBoard.doMove(c3, c2);
         System.out.println(chessBoard.navigator().prettyToString());
 
-        chessBoard.reposition(b4, b5);
+        chessBoard.doMove(b4, b5);
         System.out.println(chessBoard.navigator().prettyToString());
 
         System.out.println();
         System.out.println(Pawn.of(Color.BLACK).allValidMoves(chessBoard));
-        chessBoard.reposition(c2, b1, Queen.of(Color.BLACK));
+        chessBoard.doMove(c2, b1, Queen.of(Color.BLACK));
         System.out.println(chessBoard.navigator().prettyToString());
     }
 

@@ -184,6 +184,26 @@ public final class Pawn implements Piece {
         return false;
     }
 
+    public long pawnsAttacks(int square) {
+        long attacks = 0L;
+        int row = square / 8;
+        int col = square % 8;
+
+        if (color == WHITE) {
+            if (row < 7) {
+                if (col > 0) attacks |= 1L << ((row + 1) * 8 + (col - 1));
+                if (col < 7) attacks |= 1L << ((row + 1) * 8 + (col + 1));
+            }
+            return attacks;
+        }
+
+        if (row > 0) {
+            if (col > 0) attacks |= 1L << ((row - 1) * 8 + (col - 1));
+            if (col < 7) attacks |= 1L << ((row - 1) * 8 + (col + 1));
+        }
+        return attacks;
+    }
+
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         return allValidMoves(chessBoard, new ArrayList<>());
     }

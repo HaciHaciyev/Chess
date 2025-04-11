@@ -16,10 +16,10 @@ class ZobristHashKeysTest {
         ChessBoard chessBoard1 = ChessBoard.starndardChessBoard();
         assertEqualsAndLog(chessBoard, chessBoard1);
 
-        chessBoard1.reposition(Coordinate.e2, Coordinate.e4);
+        chessBoard1.doMove(Coordinate.e2, Coordinate.e4);
         assertNonEqualsAndLog(chessBoard, chessBoard1);
 
-        chessBoard1.returnOfTheMovement();
+        chessBoard1.undoMove();
         assertEqualsAndLog(chessBoard, chessBoard1);
 
         ChessBoard chessBoard2 = ChessBoard.fromPosition("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
@@ -95,8 +95,8 @@ class ZobristHashKeysTest {
     }
 
     private static void moveAndAssertEquals(Coordinate from, Coordinate to, ChessBoard chessBoard, ChessBoard chessBoard1) {
-        chessBoard.reposition(from, to);
-        chessBoard1.reposition(from, to);
+        chessBoard.doMove(from, to);
+        chessBoard1.doMove(from, to);
         assertEqualsAndLog(chessBoard, chessBoard1);
     }
 

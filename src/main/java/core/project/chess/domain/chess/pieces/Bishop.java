@@ -87,6 +87,10 @@ public final class Bishop implements Piece {
         return false;
     }
 
+    public long bishopAttacks(int square) {
+        return generatePseudoLegalBishopMoves(square);
+    }
+
     public List<Move> allValidMoves(final ChessBoard chessBoard) {
         return allValidMoves(chessBoard, new ArrayList<>());
     }

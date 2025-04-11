@@ -232,7 +232,7 @@ public class ChessGame {
         Color color = validateUsername(username);
         validateMovesTurn(color);
 
-        final GameResultMessage message = chessBoard.reposition(from, to, inCaseOfPromotion);
+        final GameResultMessage message = chessBoard.doMove(from, to, inCaseOfPromotion);
 
         this.isThreeFoldActive = message.equals(GameResultMessage.RuleOf3EqualsPositions);
 
@@ -268,7 +268,7 @@ public class ChessGame {
         if (attemptToUndoMovement(color)) {
             this.returnOfMovement = new AgreementPair(null, null);
 
-            if (!chessBoard.returnOfTheMovement()) {
+            if (!chessBoard.undoMove()) {
                 return UndoMoveResult.FAILED_UNDO;
             }
 
