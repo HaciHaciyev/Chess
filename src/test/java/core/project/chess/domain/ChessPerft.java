@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Disabled("For separate run.")
 class ChessPerft {
     private long nodes = 0;
-    public static final int DEPTH = 2;
+    public static final int DEPTH = 6;
     private ChessBoard our_board;
     private Board their_board;
     private final PerftValues perftValues = PerftValues.newInstance();
@@ -64,6 +64,8 @@ class ChessPerft {
 
     @Test
     void performanceTest() {
+        our_board = ChessBoard.pureChess();
+        their_board = new Board();
         long v = perft(DEPTH);
         switch (DEPTH) {
             case 1 -> assertPerftDepth1();
