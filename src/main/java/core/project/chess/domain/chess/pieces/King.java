@@ -290,7 +290,8 @@ public final class King implements Piece {
         if (!navigator.board().ableToCastling(color, castle)) return false;
 
         KingStatus kingStatus = navigator.board().kingStatus();
-        if (kingStatus.status() != Operations.CONTINUE) return false;
+        List<Coordinate> attackers = kingStatus != null ? kingStatus.enemiesAttackingTheKing() : check(navigator, null);
+        if (!attackers.isEmpty()) return false;
 
         List<Coordinate> fieldsToCastle = navigator.castlingFields(castle, color);
         for (Coordinate field : fieldsToCastle) {
