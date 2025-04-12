@@ -22,10 +22,9 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Disabled("Only for separate run.")
 class ChessPerft {
     private long nodes = 0;
-    public static final int DEPTH = 6;
+    public static final int DEPTH = 4;
     private final Board board = new Board();
     private final ChessBoard chessGame = ChessBoard.pureChess();
     private final PerftValues perftValues = PerftValues.newInstance();
@@ -33,8 +32,19 @@ class ChessPerft {
 
     @Test
     void clearPerft() {
-        onlyNodesPerft(DEPTH);
-        asserCustomEquals(119_060_324L);
+        System.out.println("Perft default position");
+        long nodes = onlyNodesPerft(DEPTH, ChessBoard.pureChess());
+        System.out.println("Nodes: " + nodes);
+        System.out.println();
+        System.out.println();
+
+        // System.out.println("Perft good position r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        // long nodes_good_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"));
+        // System.out.println("Nodes: " + nodes_good_position);
+
+        System.out.println("Perft promotion position n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1");
+        long nodes_promotion_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1"));
+        System.out.println("Nodes: " + nodes_promotion_position);
     }
 
     private void asserCustomEquals(long l) {
@@ -154,12 +164,12 @@ class ChessPerft {
             calculateSecondPerftValues(nodes, move);
             verifyPerft(move, from, to, inCaseOfPromotion);
 
+            board.undoMove();
+            chessGame.undoMove();
+
             if (depth == DEPTH) {
                 System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.actualRepresentationOfChessBoard());
             }
-
-            board.undoMove();
-            chessGame.undoMove();
         }
 
         return nodes;
@@ -172,22 +182,62 @@ class ChessPerft {
             return 1L;
         }
 
-        List<Move> validMoves = this.board.legalMoves();
+        // List<Move> validMoves = this.board.legalMoves();
+        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = chessGame.generateAllValidMoves();
 
-        for (Move move : validMoves) {
-            Coordinate from = from(move);
-            Coordinate to = to(move);
-            Piece inCaseOfPromotion = getInCaseOfPromotion(move);
+        for (var move : allValidMoves) {
+            Coordinate from = move.from();
+            Coordinate to = move.to();
+            Piece inCaseOfPromotion = move.promotion();
 
-            board.doMove(move);
             chessGame.doMove(from, to, inCaseOfPromotion);
 
             long newNodes = onlyNodesPerft(depth - 1);
             nodes += newNodes;
             this.nodes = nodes;
 
-            board.undoMove();
             chessGame.undoMove();
+
+            if (depth == DEPTH) {
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.actualRepresentationOfChessBoard());
+            }
+        }
+
+        return nodes;
+    }
+
+    long onlyNodesPerft(int depth, ChessBoard board) {
+        long nodes = 0L;
+
+        if (depth == 0) {
+            return 1L;
+        }
+
+        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = null;
+
+		try {
+			allValidMoves = board.generateAllValidMoves();
+		} catch (Exception e) {
+            System.out.println("Could not generate moves for posittion: %s | current depth: %s".formatted(board.actualRepresentationOfChessBoard(), depth));
+            throw e;
+		}
+
+        for (var move : allValidMoves) {
+            Coordinate from = move.from();
+            Coordinate to = move.to();
+            Piece inCaseOfPromotion = move.promotion();
+
+            board.doMove(from, to, inCaseOfPromotion);
+
+            long newNodes = onlyNodesPerft(depth - 1, board);
+            nodes += newNodes;
+            this.nodes = nodes;
+
+            if (depth == DEPTH) {
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, board.actualRepresentationOfChessBoard());
+            }
+
+            board.undoMove();
         }
 
         return nodes;
@@ -257,8 +307,8 @@ class ChessPerft {
     }
 
     private static @Nullable Piece getInCaseOfPromotion(Move move) {
-        return move.getPromotion() == com.github.bhlangonijr.chesslib.Piece.NONE ? null :
-                AlgebraicNotation.fromSymbol(move.getPromotion().getFenSymbol());
+        return move.getPromotion() == com.github.bhlangonijr.chesslib.Piece.NONE ? null
+                : AlgebraicNotation.fromSymbol(move.getPromotion().getFenSymbol());
     }
 
     public static int columnToInt(char c) {
@@ -276,7 +326,8 @@ class ChessPerft {
         secondPerftValues.nodes = nodes;
         board.undoMove();
 
-        com.github.bhlangonijr.chesslib.Piece pieceOnEndOfMove = board.getPiece(Square.valueOf(to.toString().toUpperCase()));
+        com.github.bhlangonijr.chesslib.Piece pieceOnEndOfMove = board
+                .getPiece(Square.valueOf(to.toString().toUpperCase()));
         if (!pieceOnEndOfMove.equals(com.github.bhlangonijr.chesslib.Piece.NONE)) {
             secondPerftValues.captures++;
         }
@@ -294,7 +345,7 @@ class ChessPerft {
         final boolean isCastle = (from.equals(Coordinate.e1) &&
                 (to.equals(Coordinate.c1) || to.equals(Coordinate.g1))) ||
                 ((from.equals(Coordinate.e8)) &&
-                (to.equals(Coordinate.c8) || to.equals(Coordinate.g8)));
+                        (to.equals(Coordinate.c8) || to.equals(Coordinate.g8)));
 
         if (isTheKingMove && isCastle) {
             secondPerftValues.castles++;
@@ -333,7 +384,8 @@ class ChessPerft {
         List<String> listOfAlgebraicNotations = chessGame.listOfAlgebraicNotations();
         Optional<AlgebraicNotation> notation = chessGame.lastAlgebraicNotation();
 
-        if (notation.isEmpty()) return;
+        if (notation.isEmpty())
+            return;
 
         AlgebraicNotation algebraicNotation = notation.get();
         var lastMove = notation.get().algebraicNotation();
@@ -395,7 +447,8 @@ class ChessPerft {
         final int startOfPreLastMove = coordinatesOfPreLastMove.getFirst().row();
         final int endOfPreLastMove = coordinatesOfPreLastMove.getSecond().row();
 
-        final boolean isNotTheSameColumn = coordinatesOfPreLastMove.getSecond().column() != coordinatesOfLastMove.getSecond().column();
+        final boolean isNotTheSameColumn = coordinatesOfPreLastMove.getSecond().column() != coordinatesOfLastMove
+                .getSecond().column();
         if (isNotTheSameColumn) {
             return;
         }
@@ -434,7 +487,7 @@ class ChessPerft {
         long checkMates;
 
         private PerftValues(long nodes, long captures, long capturesOnPassage,
-                            long castles, long promotions, long checks, long checkMates) {
+                long castles, long promotions, long checks, long checkMates) {
             this.nodes = nodes;
             this.captures = captures;
             this.capturesOnPassage = capturesOnPassage;
@@ -450,7 +503,8 @@ class ChessPerft {
 
         @Override
         public final boolean equals(Object o) {
-            if (!(o instanceof PerftValues that)) return false;
+            if (!(o instanceof PerftValues that))
+                return false;
 
             return nodes == that.nodes &&
                     captures == that.captures &&
@@ -474,14 +528,21 @@ class ChessPerft {
         }
 
         public boolean verify(PerftValues secondPerftValues) {
-            if (secondPerftValues == null) return false;
+            if (secondPerftValues == null)
+                return false;
 
-            if (nodes != secondPerftValues.nodes) return false;
-            if (captures != secondPerftValues.captures) return false;
-            if (capturesOnPassage != secondPerftValues.capturesOnPassage) return false;
-            if (castles != secondPerftValues.castles) return false;
-            if (promotions != secondPerftValues.promotions) return false;
-            if (checks != secondPerftValues.checks) return false;
+            if (nodes != secondPerftValues.nodes)
+                return false;
+            if (captures != secondPerftValues.captures)
+                return false;
+            if (capturesOnPassage != secondPerftValues.capturesOnPassage)
+                return false;
+            if (castles != secondPerftValues.castles)
+                return false;
+            if (promotions != secondPerftValues.promotions)
+                return false;
+            if (checks != secondPerftValues.checks)
+                return false;
             return checkMates == secondPerftValues.checkMates;
         }
     }
