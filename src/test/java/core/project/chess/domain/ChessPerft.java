@@ -25,9 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Disabled("For separate run.")
 class ChessPerft {
     private long nodes = 0;
-    public static final int DEPTH = 4;
-    private final Board board = new Board();
-    private final ChessBoard chessGame = ChessBoard.pureChess();
+    public static final int DEPTH = 2;
+    private ChessBoard our_board;
+    private Board their_board;
     private final PerftValues perftValues = PerftValues.newInstance();
     private final PerftValues secondPerftValues = PerftValues.newInstance();
 
@@ -35,9 +35,13 @@ class ChessPerft {
     void customPositions() {
         String firstPosition = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
         System.out.println("Start with first position: " + firstPosition);
-        ChessBoard boardFromFEN = ChessBoard.pureChessFromPosition(firstPosition);
-        System.out.println(boardFromFEN.generateAllValidMoves());
-        long nodes_good_position = onlyNodesPerft(1, boardFromFEN);
+
+        our_board = ChessBoard.pureChessFromPosition(firstPosition);
+
+        their_board = new Board();
+        their_board.loadFromFen(firstPosition);
+
+        long nodes_good_position = perft(DEPTH);
         System.out.println("Nodes: " + nodes_good_position);
     }
 
@@ -205,15 +209,23 @@ class ChessPerft {
             return 1L;
         }
 
-        List<Move> validMoves = this.board.legalMoves();
+        List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = our_board.generateAllValidMoves();
+        List<Move> their_valid_moves = their_board.legalMoves();
 
-        for (Move move : validMoves) {
+        if  (our_valid_moves.size() != their_valid_moves.size()) {
+            System.out.println("Our moves:  " + our_valid_moves);
+            System.out.println("Their moves:  " + their_valid_moves);
+
+            throw new RuntimeException("Move generation mismatch");
+        }
+
+        for (Move move : their_valid_moves) {
             Coordinate from = from(move);
             Coordinate to = to(move);
             Piece inCaseOfPromotion = getInCaseOfPromotion(move);
 
-            board.doMove(move);
-            chessGame.doMove(from, to, inCaseOfPromotion);
+            their_board.doMove(move);
+            our_board.doMove(from, to, inCaseOfPromotion);
 
             long newNodes = perft(depth - 1);
             nodes += newNodes;
@@ -221,11 +233,53 @@ class ChessPerft {
             calculateSecondPerftValues(nodes, move);
             verifyPerft(move, from, to, inCaseOfPromotion);
 
-            board.undoMove();
-            chessGame.undoMove();
+            their_board.undoMove();
+            our_board.undoMove();
 
             if (depth == DEPTH) {
-                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.actualRepresentationOfChessBoard());
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, our_board.actualRepresentationOfChessBoard());
+            }
+        }
+
+        return nodes;
+    }
+
+    long perft(int depth, ChessBoard our_board, Board their_board) {
+        long nodes = 0L;
+
+        if (depth == 0) {
+            return 1L;
+        }
+
+        List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = our_board.generateAllValidMoves();
+        List<Move> their_valid_moves = their_board.legalMoves();
+
+        if  (our_valid_moves.size() != their_valid_moves.size()) {
+            System.out.println("Our moves:  " + our_valid_moves);
+            System.out.println("Their moves:  " + their_valid_moves);
+
+            throw new RuntimeException("Move generation mismatch");
+        }
+
+        for (var move : their_valid_moves) {
+            Coordinate from = from(move);
+            Coordinate to = to(move);
+            Piece inCaseOfPromotion = getInCaseOfPromotion(move);
+
+            our_board.doMove(from, to, inCaseOfPromotion);
+            their_board.doMove(move);
+
+            long newNodes = perft(depth - 1);
+            nodes += newNodes;
+            calculatePerftValues(nodes);
+            calculateSecondPerftValues(nodes, move);
+            verifyPerft(move, from, to, inCaseOfPromotion);
+
+            our_board.undoMove();
+            their_board.undoMove();
+
+            if (depth == DEPTH) {
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, this.our_board.actualRepresentationOfChessBoard());
             }
         }
 
@@ -240,23 +294,23 @@ class ChessPerft {
         }
 
         // List<Move> validMoves = this.board.legalMoves();
-        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = chessGame.generateAllValidMoves();
+        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = our_board.generateAllValidMoves();
 
         for (var move : allValidMoves) {
             Coordinate from = move.from();
             Coordinate to = move.to();
             Piece inCaseOfPromotion = move.promotion();
 
-            chessGame.doMove(from, to, inCaseOfPromotion);
+            our_board.doMove(from, to, inCaseOfPromotion);
 
             long newNodes = onlyNodesPerft(depth - 1);
             nodes += newNodes;
             this.nodes = nodes;
 
-            chessGame.undoMove();
+            our_board.undoMove();
 
             if (depth == DEPTH) {
-                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, chessGame.actualRepresentationOfChessBoard());
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, our_board.actualRepresentationOfChessBoard());
             }
         }
 
@@ -311,13 +365,13 @@ class ChessPerft {
         }
 
         Log.errorf("Perft failed. On move: from - %s, to - %s, inCaseOfPromotion - %s", from, to, inCaseOfPromotion);
-        Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", chessGame.toString(), chessGame.pgn());
+        Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", our_board.toString(), our_board.pgn());
         System.out.println();
-        board.undoMove();
+        their_board.undoMove();
         String[] fen = new String[2];
-        fen[0] = board.getFen();
-        board.doMove(move);
-        fen[1] = board.getFen();
+        fen[0] = their_board.getFen();
+        their_board.doMove(move);
+        fen[1] = their_board.getFen();
         Log.errorf("External Board: FEN: %s", Arrays.toString(fen));
         System.out.println();
 
@@ -386,21 +440,21 @@ class ChessPerft {
         Piece inCaseOfPromotion = getInCaseOfPromotion(move);
 
         secondPerftValues.nodes = nodes;
-        board.undoMove();
+        their_board.undoMove();
 
-        com.github.bhlangonijr.chesslib.Piece pieceOnEndOfMove = board
+        com.github.bhlangonijr.chesslib.Piece pieceOnEndOfMove = their_board
                 .getPiece(Square.valueOf(to.toString().toUpperCase()));
         if (!pieceOnEndOfMove.equals(com.github.bhlangonijr.chesslib.Piece.NONE)) {
             secondPerftValues.captures++;
         }
 
-        Square enPassant = board.getEnPassant();
+        Square enPassant = their_board.getEnPassant();
         if (!enPassant.equals(Square.NONE) && isCaptureOnPassage(from, to, enPassant)) {
             secondPerftValues.capturesOnPassage++;
             secondPerftValues.captures++;
         }
 
-        com.github.bhlangonijr.chesslib.Piece piece = board.getPiece(Square.valueOf(from.toString().toUpperCase()));
+        com.github.bhlangonijr.chesslib.Piece piece = their_board.getPiece(Square.valueOf(from.toString().toUpperCase()));
         final boolean isTheKingMove = piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_KING) ||
                 piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_KING);
 
@@ -417,14 +471,14 @@ class ChessPerft {
             secondPerftValues.promotions++;
         }
 
-        board.doMove(move);
+        their_board.doMove(move);
 
-        final boolean isCheck = board.isKingAttacked() && !board.isMated();
+        final boolean isCheck = their_board.isKingAttacked() && !their_board.isMated();
         if (isCheck) {
             secondPerftValues.checks++;
         }
 
-        if (board.isMated()) {
+        if (their_board.isMated()) {
             secondPerftValues.checkMates++;
         }
     }
@@ -435,7 +489,7 @@ class ChessPerft {
             return false;
         }
 
-        com.github.bhlangonijr.chesslib.Piece piece = board.getPiece(Square.valueOf(from.toString().toUpperCase()));
+        com.github.bhlangonijr.chesslib.Piece piece = their_board.getPiece(Square.valueOf(from.toString().toUpperCase()));
         return piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_PAWN) ||
                 piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_PAWN);
     }
@@ -443,8 +497,8 @@ class ChessPerft {
     private void calculatePerftValues(long nodes) {
         perftValues.nodes = nodes;
 
-        List<String> listOfAlgebraicNotations = chessGame.listOfAlgebraicNotations();
-        Optional<AlgebraicNotation> notation = chessGame.lastAlgebraicNotation();
+        List<String> listOfAlgebraicNotations = our_board.listOfAlgebraicNotations();
+        Optional<AlgebraicNotation> notation = our_board.lastAlgebraicNotation();
 
         if (notation.isEmpty())
             return;
