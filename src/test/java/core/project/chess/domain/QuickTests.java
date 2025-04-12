@@ -22,21 +22,22 @@ class QuickTests {
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
 
     @Test
-    void perft() {
-        // PGN: 1. a2-a3 b7-b5 2. e2-e3 Bc8-a6 3. Ke1-e2 b5-b4
+    void test() {
+        // 1. a2-a3 a7-a5 2. c2-c3 b7-b5 3. Qd1-a4 ...
+
         chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a2, Coordinate.a3, null);
+        Log.info(navigator.prettyToString());
+
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.a7, Coordinate.a5, null);
+        Log.info(navigator.prettyToString());
+
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.c2, Coordinate.c3, null);
         Log.info(navigator.prettyToString());
 
         chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.b7, Coordinate.b5, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e2, Coordinate.e3, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.c8, Coordinate.a6, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e1, Coordinate.e2, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.d1, Coordinate.a4, null);
         Log.info(navigator.prettyToString());
 
         chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.b5, Coordinate.b4, null);

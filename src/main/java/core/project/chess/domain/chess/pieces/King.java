@@ -75,7 +75,7 @@ public final class King implements Piece {
     @Override
     public Set<Operations> isValidMove(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         Piece endField = chessBoard.piece(to);
-        if (!isValidKingMovementCoordinates(chessBoard, from, to)) return null;
+        if (!kingMove(chessBoard, from, to)) return null;
         if (!chessBoard.safeForKing(from, to)) return null;
 
         Set<Operations> setOfOperations = EnumSet.noneOf(Operations.class);
@@ -84,11 +84,19 @@ public final class King implements Piece {
         return setOfOperations;
     }
 
+    boolean kingMove(ChessBoard chessBoard, Coordinate startField, Coordinate endField) {
+        long ownPieces = chessBoard.pieces(color);
+        long validMoves = color == WHITE ?
+                WHITE_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces :
+                BLACK_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces;
+        return (validMoves & endField.bitMask()) != 0;
+    }
+
     public boolean safeForKing(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
         ChessBoardNavigator boardNavigator = chessBoard.navigator();
         Coordinate kingPosition = color.equals(WHITE) ? chessBoard.currentWhiteKingPosition() : chessBoard.currentBlackKingPosition();
 
-        if (kingPosition.equals(from)) {
+        if (kingPosition == from) {
             if (chessBoard.isCastling(this, from, to)) return safeToCastle(boardNavigator, from, to);
             return validateKingMovementForSafety(boardNavigator, from, to);
         }
@@ -164,14 +172,6 @@ public final class King implements Piece {
         }
 
         return validMoves;
-    }
-
-    private boolean isValidKingMovementCoordinates(ChessBoard chessBoard, Coordinate startField, Coordinate endField) {
-        long ownPieces = chessBoard.pieces(color);
-        long validMoves = color == WHITE ?
-                WHITE_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces :
-                BLACK_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces;
-        return (validMoves & endField.bitMask()) != 0;
     }
 
     private List<Coordinate> check(ChessBoardNavigator boardNavigator, Move lastMove) {
@@ -261,11 +261,11 @@ public final class King implements Piece {
             return new KingStatus(operation, enemies);
         }
 
-        if (isValidKingMovementCoordinates(boardNavigator.board(), kingCoordinate, enemies.getFirst()) &&
+        if (kingMove(boardNavigator.board(), kingCoordinate, enemies.getFirst()) &&
                 !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getFirst(), color))
             return new KingStatus(Operations.CHECK, enemies);
 
-        if (isValidKingMovementCoordinates(boardNavigator.board(), kingCoordinate, enemies.getLast()) &&
+        if (kingMove(boardNavigator.board(), kingCoordinate, enemies.getLast()) &&
                 !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getLast(), color))
             return new KingStatus(Operations.CHECK, enemies);
 
@@ -282,20 +282,20 @@ public final class King implements Piece {
         return false;
     }
 
-    private boolean safeToCastle(ChessBoardNavigator boardNavigator, Coordinate presentKingPosition, Coordinate futureKingPosition) {
+    private boolean safeToCastle(ChessBoardNavigator navigator, Coordinate presentKingPosition, Coordinate futureKingPosition) {
         Castle castle;
         if (presentKingPosition.column() < futureKingPosition.column()) castle = Castle.SHORT_CASTLING;
         else castle = Castle.LONG_CASTLING;
 
-        if (!boardNavigator.board().ableToCastling(color, castle)) return false;
+        if (!navigator.board().ableToCastling(color, castle)) return false;
 
-        KingStatus kingStatus = boardNavigator.board().kingStatus();
+        KingStatus kingStatus = navigator.board().kingStatus();
         if (kingStatus.status() != Operations.CONTINUE) return false;
 
-        List<Coordinate> fieldsToCastle = boardNavigator.castlingFields(castle, color);
+        List<Coordinate> fieldsToCastle = navigator.castlingFields(castle, color);
         for (Coordinate field : fieldsToCastle) {
             if (field.column() == 5) continue;
-            if (!processCastling(boardNavigator, field)) return false;
+            if (!processCastling(navigator, field)) return false;
         }
 
         return true;
@@ -340,20 +340,20 @@ public final class King implements Piece {
         return true;
     }
 
-    private boolean validateKingMovementForSafety(ChessBoardNavigator boardNavigator, Coordinate previousKing, Coordinate futureKing) {
-        ChessBoard board = boardNavigator.board();
+    private boolean validateKingMovementForSafety(ChessBoardNavigator navigator, Coordinate previousKing, Coordinate futureKing) {
+        ChessBoard board = navigator.board();
         Color oppositeColor = color.equals(WHITE) ? BLACK : WHITE;
 
-        List<Coordinate> pawns = boardNavigator.pawnsThreateningTheCoordinateOf(futureKing, oppositeColor);
+        List<Coordinate> pawns = navigator.pawnsThreateningTheCoordinateOf(futureKing, oppositeColor);
         if (!pawns.isEmpty()) return false;
 
-        List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(futureKing);
+        List<Coordinate> knights = navigator.knightAttackPositionsNonNull(futureKing);
         for (Coordinate possibleKnight : knights) {
             final Piece knight = board.piece(possibleKnight);
             if (knight instanceof Knight && knight.color() != color) return false;
         }
 
-        List<Coordinate> diagonalFields = boardNavigator
+        List<Coordinate> diagonalFields = navigator
                 .occupiedFieldsInDirections(Direction.diagonalDirections(), futureKing, previousKing);
 
         for (Coordinate field : diagonalFields) {
@@ -371,7 +371,7 @@ public final class King implements Piece {
             if (isOppositionOfKing) return false;
         }
 
-        List<Coordinate> horizontalVerticalFields = boardNavigator
+        List<Coordinate> horizontalVerticalFields = navigator
                 .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), futureKing, previousKing);
 
         for (Coordinate field : horizontalVerticalFields) {
@@ -392,88 +392,106 @@ public final class King implements Piece {
         return true;
     }
 
-    private boolean validatePieceMovementForKingSafety(ChessBoardNavigator boardNavigator, Coordinate kingPosition,
-                                                       Coordinate from, Coordinate to) {
+    private boolean validatePieceMovementForKingSafety(
+            ChessBoardNavigator boardNavigator,
+            Coordinate kingPosition,
+            Coordinate from,
+            Coordinate to) {
+
         ChessBoard board = boardNavigator.board();
-        Color oppositeColor = color.equals(WHITE) ? BLACK : WHITE;
-
+        Color oppositeColor = color.opposite();
         KingStatus kingStatus = board.kingStatus();
-        if (kingStatus == null) return validateKingSafetyWithoutPrecomputedEnemies(boardNavigator, kingPosition, from, to, oppositeColor);
 
-        List<Coordinate> enemies = kingStatus.enemiesAttackingTheKing();
-        if (enemies.size() == 2) return false;
+        if (kingStatus == null)
+            return validateKingSafetyWithoutPrecomputedEnemies(boardNavigator, kingPosition, from, to, oppositeColor);
 
-        SimpleDirection direction = SimpleDirection.directionOf(kingPosition, from);
-        if (enemies.isEmpty() && direction == null) return true;
-        if (enemies.isEmpty()) return checkIfTheAttackIsNotOpen(boardNavigator, kingPosition, from, to, direction);
-        if (direction != null && !checkIfTheAttackIsNotOpen(boardNavigator, kingPosition, from, to, direction)) return false;
+        List<Coordinate> attackers = kingStatus.enemiesAttackingTheKing();
+        if (attackers.size() == 2) return false;
 
-        Coordinate enemyField = enemies.getFirst();
-        Piece enemy = board.piece(enemyField);
+        long fromBitmask = from.bitMask();
+        long toBitmask = to.bitMask();
+        long simulatedBitboard = board.whitePieces() | board.blackPieces();
+        simulatedBitboard &= ~fromBitmask;
+        simulatedBitboard |= toBitmask;
+        long simulatedOpponentBitboard = simulateOpponentBitboard(board, to, toBitmask);
 
-        if (enemy instanceof Pawn) return isPawnEaten(to, enemyField, boardNavigator);
-        if (enemy instanceof Knight) return to == enemyField;
-        final boolean surround = Math.abs(kingPosition.row() - enemyField.row()) <= 1 &&
-                Math.abs(kingPosition.column() - enemyField.column()) <= 1;
-        if (surround) return to == enemyField;
-        final boolean isEaten = to == enemyField;
-        if (isEaten) return true;
+        Direction openedDirection = Direction.directionOf(kingPosition, from);
+        Coordinate openedAttacker = openedDirection == null ? null : findXRayAttackerInDirection(
+                openedDirection, kingPosition, from, simulatedBitboard, simulatedOpponentBitboard
+        );
+        if (openedAttacker != null) {
+            Piece attackerPiece = board.piece(openedAttacker);
+            if (openedDirection.isDiagonal()) {
+                if (attackerPiece instanceof Bishop || attackerPiece instanceof Queen) return false;
+            }
+            else {
+                if (attackerPiece instanceof Rook || attackerPiece instanceof Queen) return false;
+            }
+        }
 
-        // Сan block from vertical
-        final boolean vertical = kingPosition.row() != enemyField.row() && kingPosition.column() == enemyField.column();
-        if (vertical) {
+        if (attackers.isEmpty()) return true;
+
+        Coordinate opponentField = attackers.getFirst();
+        Piece attacker = board.piece(opponentField);
+        if (attacker instanceof Pawn) return isPawnEaten(to, opponentField, boardNavigator);
+        if (attacker instanceof Knight) return to == opponentField;
+        final boolean surround = Math.abs(kingPosition.row() - opponentField.row()) <= 1 &&
+                Math.abs(kingPosition.column() - opponentField.column()) <= 1;
+        if (surround) return to == opponentField;
+        if (to == opponentField) return true;
+
+        /** Check for attack blocking ability.*/
+        Direction direction = Direction.directionOf(kingPosition, opponentField);
+
+        if (direction.isVertical()) {
             if (to.column() != kingPosition.column()) return false;
-
-            return kingPosition.row() < enemyField.row() ?
-                    to.row() > kingPosition.row() && to.row() < enemyField.row() :
-                    to.row() < kingPosition.row() && to.row() > enemyField.row();
+            return kingPosition.row() < opponentField.row() ?
+                    to.row() > kingPosition.row() && to.row() < opponentField.row() :
+                    to.row() < kingPosition.row() && to.row() > opponentField.row();
         }
 
-        // Сan block from horizontal
-        final boolean horizontal = kingPosition.row() == enemyField.row() && kingPosition.column() != enemyField.column();
-        if (horizontal) {
+        if (direction.isHorizontal()) {
             if (to.row() != kingPosition.row()) return false;
-
-            return kingPosition.column() < enemyField.column() ?
-                    to.column() > kingPosition.column() && to.column() < enemyField.column() :
-                    to.column() < kingPosition.column() && to.column() > enemyField.column();
+            return kingPosition.column() < opponentField.column() ?
+                    to.column() > kingPosition.column() && to.column() < opponentField.column() :
+                    to.column() < kingPosition.column() && to.column() > opponentField.column();
         }
 
-        // Сan block from diagonal
         if (Math.abs(to.row() - kingPosition.row()) != Math.abs(to.column() - kingPosition.column())) return false;
 
-        final boolean isFromTop = kingPosition.row() < enemyField.row();
+        final boolean isFromTop = kingPosition.row() < opponentField.row();
         if (isFromTop) {
-            final boolean isFromRight = kingPosition.column() < enemyField.column();
-            if (isFromRight) {
-                return kingPosition.row() < to.row() &&
-                        to.row() < enemyField.row() &&
-                        kingPosition.column() < to.column() &&
-                        to.column() < enemyField.column();
-            }
+            final boolean isFromTopRight = kingPosition.column() < opponentField.column();
+            if (isFromTopRight) return kingPosition.row() < to.row() &&
+                    to.row() < opponentField.row() &&
+                    kingPosition.column() < to.column() &&
+                    to.column() < opponentField.column();
 
             return kingPosition.row() < to.row() &&
-                    to.row() < enemyField.row() &&
+                    to.row() < opponentField.row() &&
                     kingPosition.column() > to.column() &&
-                    to.column() > enemyField.column();
+                    to.column() > opponentField.column();
         }
 
-        final boolean isFromRight = kingPosition.column() < enemyField.column();
-        if (isFromRight) {
-            return kingPosition.row() > to.row() &&
-                    to.row() > enemyField.row() &&
-                    kingPosition.column() < to.column() &&
-                    to.column() < enemyField.column();
-        }
+        final boolean isFromRight = kingPosition.column() < opponentField.column();
+        if (isFromRight) return kingPosition.row() > to.row() &&
+                to.row() > opponentField.row() &&
+                kingPosition.column() < to.column() &&
+                to.column() < opponentField.column();
 
         return kingPosition.row() > to.row() &&
-                to.row() > enemyField.row() &&
+                to.row() > opponentField.row() &&
                 kingPosition.column() > to.column() &&
-                to.column() > enemyField.column();
+                to.column() > opponentField.column();
     }
 
-    private boolean validateKingSafetyWithoutPrecomputedEnemies(ChessBoardNavigator boardNavigator, Coordinate kingPosition,
-                                                                Coordinate from, Coordinate to, Color oppositeColor) {
+    private boolean validateKingSafetyWithoutPrecomputedEnemies(
+            ChessBoardNavigator boardNavigator,
+            Coordinate kingPosition,
+            Coordinate from,
+            Coordinate to,
+            Color oppositeColor) {
+
         ChessBoard board = boardNavigator.board();
         List<Coordinate> pawnsThreateningCoordinates = boardNavigator.pawnsThreateningTheCoordinateOf(kingPosition, oppositeColor);
         for (Coordinate possiblePawn : pawnsThreateningCoordinates) {
@@ -528,110 +546,21 @@ public final class King implements Piece {
         return true;
     }
 
-    private boolean checkIfTheAttackIsNotOpen(ChessBoardNavigator boardNavigator, Coordinate kingPosition,
-                                              Coordinate from, Coordinate to,
-                                              SimpleDirection direction) {
-        return switch (direction) {
-            case DIAGONAL -> {
-                final boolean isFromTop = kingPosition.row() < from.row();
-                if (isFromTop) {
-                    final boolean isTopRight = kingPosition.column() < from.column();
-                    final Direction direction1 = isTopRight ? Direction.TOP_RIGHT : Direction.TOP_LEFT;
-
-                    Coordinate occupiedCoordinate = boardNavigator.occupiedFieldInDirection(
-                            direction1,
-                            kingPosition,
-                            from,
-                            to
-                    );
-
-                    if (occupiedCoordinate == null) yield true;
-
-                    Piece pieceOnOccupiedField = boardNavigator.board().piece(occupiedCoordinate);
-
-                    final boolean isEnemy = pieceOnOccupiedField.color() != color;
-                    if (!isEnemy) yield  true;
-
-                    if (pieceOnOccupiedField instanceof Bishop) yield false;
-                    yield  !(pieceOnOccupiedField instanceof Queen);
-                }
-
-                final boolean isBottomRight = kingPosition.column() < from.column();
-                final Direction direction1 = isBottomRight ? Direction.BOTTOM_RIGHT : Direction.BOTTOM_LEFT;
-
-                Coordinate occupiedCoordinate = boardNavigator.occupiedFieldInDirection(
-                        direction1,
-                        kingPosition,
-                        from,
-                        to
-                );
-
-                if (occupiedCoordinate == null) yield true;
-
-                Piece pieceOnOccupiedField = boardNavigator.board().piece(occupiedCoordinate);
-
-                final boolean isEnemy = pieceOnOccupiedField.color() != color;
-                if (!isEnemy) yield  true;
-
-                if (pieceOnOccupiedField instanceof Bishop) yield false;
-                yield  !(pieceOnOccupiedField instanceof Queen);
-            }
-            case VERTICAL -> {
-                final boolean isFromTop = kingPosition.row() < from.row();
-                final Direction direction1 = isFromTop ? Direction.TOP : Direction.BOTTOM;
-
-                Coordinate occupiedCoordinate = boardNavigator.occupiedFieldInDirection(
-                        direction1,
-                        kingPosition,
-                        from,
-                        to
-                );
-
-                if (occupiedCoordinate == null) yield true;
-
-                Piece pieceOnOccupiedField = boardNavigator.board().piece(occupiedCoordinate);
-
-                final boolean isEnemy = pieceOnOccupiedField.color() != color;
-                if (!isEnemy) yield  true;
-
-                if (pieceOnOccupiedField instanceof Rook) yield false;
-                yield  !(pieceOnOccupiedField instanceof Queen);
-            }
-            case HORIZONTAL -> {
-                final boolean isFromRight = kingPosition.column() < from.column();
-                final Direction direction1 = isFromRight ? Direction.RIGHT : Direction.LEFT;
-
-                Coordinate occupiedCoordinate = boardNavigator.occupiedFieldInDirection(
-                        direction1,
-                        kingPosition,
-                        from,
-                        to
-                );
-
-                if (occupiedCoordinate == null) yield true;
-
-                Piece pieceOnOccupiedField = boardNavigator.board().piece(occupiedCoordinate);
-
-                final boolean isEnemy = pieceOnOccupiedField.color() != color;
-                if (!isEnemy) yield  true;
-
-                if (pieceOnOccupiedField instanceof Rook) yield false;
-                yield  !(pieceOnOccupiedField instanceof Queen);
-            }
-        };
+    private long simulateOpponentBitboard(ChessBoard board, Coordinate to, long toBitmask) {
+        long opponentPieces = board.pieces(color.opposite());
+        if (to == board.enPassant()) return opponentPieces ^ board.enPassant().bitMask();
+        return opponentPieces ^ toBitmask;
     }
 
     private static boolean isPawnEaten(Coordinate to, Coordinate opponentPawn, ChessBoardNavigator boardNavigator) {
         Coordinate enPassaunt = boardNavigator.board().enPassant();
         if (enPassaunt != null && enPassaunt == to) {
-            if (opponentPawn.equals(to)) return true;
-
+            if (opponentPawn == to) return true;
             if (opponentPawn.column() != to.column()) return false;
 
             int row = to.row();
             int opponentRow = opponentPawn.row();
             if (boardNavigator.board().piece(opponentPawn).color() == BLACK) return row - opponentRow == 1;
-
             return row - opponentRow == -1;
         }
 

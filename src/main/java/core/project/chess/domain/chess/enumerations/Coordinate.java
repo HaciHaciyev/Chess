@@ -142,7 +142,8 @@ public enum Coordinate {
      * @return a Coordinate containing the Coordinate object if the row and column are valid,
      * or a null with a false status if the row or column is out of bounds
      */
-    public static @Nullable Coordinate of(int row, int column) {
+    @Nullable
+    public static Coordinate of(int row, int column) {
         if (row > 8 || column > 8 || row < 1 || column < 1) {
             return null;
         }
@@ -150,7 +151,8 @@ public enum Coordinate {
         return COORDINATE_CACHE[row - 1][column - 1];
     }
 
-    public static @Nullable Coordinate fromBytes(byte file, byte rank) {
+    @Nullable
+    public static Coordinate fromBytes(byte file, byte rank) {
         int column = file - 97 + 1;
         int row = rank - 49 + 1;
 

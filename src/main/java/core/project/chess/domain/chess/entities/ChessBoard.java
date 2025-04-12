@@ -692,6 +692,7 @@ public class ChessBoard {
             try {
                 message = doMove(from, to, inCaseOfPromotion);
             } catch (IllegalArgumentException e) {
+                logErrorMove(from, to);
                 throw new IllegalArgumentException("Invalid PGN.");
             }
 

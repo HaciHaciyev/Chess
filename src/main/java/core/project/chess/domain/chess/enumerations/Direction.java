@@ -63,11 +63,31 @@ public enum Direction {
 
     @Nullable
     public static Direction directionOf(Coordinate pivot, Coordinate to) {
-        int rowOffset = Integer.compare(to.row(), pivot.row());
-        int colOffset = Integer.compare(to.column(), pivot.column());
+        int rowDiff = Math.abs(pivot.row() - to.row());
+        int colDiff = Math.abs(pivot.column() - to.column());
 
-        for (Direction direction : directions) {
-            if (direction.rowDelta == rowOffset && direction.colDelta == colOffset) return direction;
+        final boolean diagonal = rowDiff == colDiff;
+        if (diagonal) {
+            final boolean upper = pivot.row() < to.row();
+            if (upper) {
+                if (pivot.column() < to.column()) return TOP_RIGHT;
+                return TOP_LEFT;
+            }
+
+            if (pivot.column() < to.column()) return BOTTOM_RIGHT;
+            return BOTTOM_LEFT;
+        }
+
+        final boolean vertical = rowDiff != 0 && colDiff == 0;
+        if (vertical) {
+            if (pivot.row() < to.row()) return TOP;
+            return BOTTOM;
+        }
+
+        final boolean horizontal = rowDiff == 0 && colDiff != 0;
+        if (horizontal) {
+            if (pivot.column() < to.column()) return RIGHT;
+            return LEFT;
         }
 
         return null;
@@ -80,6 +100,27 @@ public enum Direction {
     public boolean isTowardsLowBits() {
         return switch (this) {
             case LEFT, BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isDiagonal() {
+        return switch (this) {
+            case TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isVertical() {
+        return switch (this) {
+            case TOP, BOTTOM -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isHorizontal() {
+        return switch (this) {
+            case LEFT, RIGHT -> true;
             default -> false;
         };
     }

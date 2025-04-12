@@ -102,5 +102,26 @@ public sealed interface Piece
 
         return Coordinate.byOrdinal(index);
     }
+
+    @Nullable
+    default Coordinate findXRayAttackerInDirection(
+            Direction direction,
+            Coordinate pivot,
+            Coordinate from,
+            long simulatedBitboard,
+            long simulatedOpponentBitboard) {
+
+        Coordinate current = pivot;
+        while (true) {
+            current = direction.apply(current);
+            if (current == null) return null;
+
+            long bit = current.bitMask();
+            if ((simulatedBitboard & bit) != 0) {
+                if ((simulatedOpponentBitboard & bit) != 0) return current;
+                return null;
+            }
+        }
+    }
 }
 
