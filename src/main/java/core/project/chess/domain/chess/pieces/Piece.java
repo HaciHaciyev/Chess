@@ -4,9 +4,10 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.Direction;
-import core.project.chess.domain.chess.util.BitboardUtils;
 import jakarta.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
@@ -135,7 +136,7 @@ public sealed interface Piece
         long occupied = chessBoard.whitePieces() | chessBoard.blackPieces();
         int fromIndex = pivot.ordinal();
 
-        long ray = BitboardUtils.rayMask(direction, fromIndex);
+        long ray = rayMask(direction, fromIndex);
         long rayOccupied = ray & occupied;
 
         if (rayOccupied == 0) return null;
@@ -169,6 +170,55 @@ public sealed interface Piece
                 return null;
             }
         }
+    }
+
+    default List<Coordinate> surroundingFields(Coordinate pivot) {
+        long surroundingsBitboard = surroundingFieldBitboard(pivot);
+
+        List<Coordinate> surroundings = new ArrayList<>(8);
+        while (surroundingsBitboard != 0) {
+            int coordinateIndex = Long.numberOfTrailingZeros(surroundingsBitboard);
+            surroundingsBitboard &= surroundingsBitboard - 1;
+            surroundings.add(Coordinate.byOrdinal(coordinateIndex));
+        }
+
+        return surroundings;
+    }
+
+    private static long surroundingFieldBitboard(Coordinate pivot) {
+        int square = pivot.ordinal();
+        long moves = King.WHITE_KING_MOVES_CACHE[square];
+        if (square == 60) {
+            moves &= ~(1L << 62);
+            moves &= ~(1L << 58);
+        }
+        if (square == 4) {
+            moves &= ~(1L << 6);
+            moves &= ~(1L << 2);
+        }
+        return moves;
+    }
+
+    default long rayMask(Direction direction, int fromSquare) {
+        long ray = 0L;
+        int row = fromSquare / 8;
+        int col = fromSquare % 8;
+
+        int rowStep = -direction.rowDelta();
+        int colStep = direction.colDelta();
+
+        row += rowStep;
+        col += colStep;
+
+        while (row >= 0 && row < 8 && col >= 0 && col < 8) {
+            int index = row * 8 + col;
+            ray |= (1L << index);
+
+            row += rowStep;
+            col += colStep;
+        }
+
+        return ray;
     }
 }
 

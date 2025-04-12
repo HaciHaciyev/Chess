@@ -118,7 +118,7 @@ public final class King implements Piece {
         List<Coordinate> enemies = kingStatus != null ? kingStatus.enemiesAttackingTheKing() : check(navigator, lastMove);
         if (!enemies.isEmpty()) return false;
 
-        List<Coordinate> surroundingFieldsOfKing = navigator.surroundingFields(kingCoordinate);
+        List<Coordinate> surroundingFieldsOfKing = surroundingFields(kingCoordinate);
         final boolean isSurrounded = isSurrounded(surroundingFieldsOfKing, navigator, kingCoordinate);
         if (!isSurrounded) return false;
 
@@ -141,16 +141,6 @@ public final class King implements Piece {
         Queen queen = Queen.of(color);
         long queenBitboard = chessBoard.bitboard(queen);
         if (queenBitboard != 0) return !queen.isAtLeastOneMove(navigator.board());
-        return true;
-    }
-
-    private boolean isSurrounded(
-            List<Coordinate> surroundingFieldsOfKing,
-            ChessBoardNavigator navigator,
-            Coordinate kingCoordinate) {
-        for (Coordinate coordinate : surroundingFieldsOfKing) {
-            if (!isFieldDangerousOrBlocked(navigator, coordinate, kingCoordinate)) return false;
-        }
         return true;
     }
 
@@ -288,16 +278,6 @@ public final class King implements Piece {
         return enemies;
     }
 
-    private static long[] allEnemyPieces(ChessBoardNavigator navigator, Color oppositeColor) {
-        return new long[]{
-                navigator.board().bitboard(Pawn.of(oppositeColor)),
-                navigator.board().bitboard(Knight.of(oppositeColor)),
-                navigator.board().bitboard(Bishop.of(oppositeColor)),
-                navigator.board().bitboard(Rook.of(oppositeColor)),
-                navigator.board().bitboard(Queen.of(oppositeColor))
-        };
-    }
-
     private KingStatus checkOrMate(ChessBoardNavigator boardNavigator, Move lastMove) {
         List<Coordinate> enemies = check(boardNavigator, lastMove);
         if (enemies.isEmpty()) return new KingStatus(Operations.CONTINUE, enemies);
@@ -326,8 +306,28 @@ public final class King implements Piece {
         return new KingStatus(operation, enemies);
     }
 
+    private static long[] allEnemyPieces(ChessBoardNavigator navigator, Color oppositeColor) {
+        return new long[]{
+                navigator.board().bitboard(Pawn.of(oppositeColor)),
+                navigator.board().bitboard(Knight.of(oppositeColor)),
+                navigator.board().bitboard(Bishop.of(oppositeColor)),
+                navigator.board().bitboard(Rook.of(oppositeColor)),
+                navigator.board().bitboard(Queen.of(oppositeColor))
+        };
+    }
+
+    private boolean isSurrounded(
+            List<Coordinate> surroundingFieldsOfKing,
+            ChessBoardNavigator navigator,
+            Coordinate kingCoordinate) {
+        for (Coordinate coordinate : surroundingFieldsOfKing) {
+            if (!isFieldDangerousOrBlocked(navigator, coordinate, kingCoordinate)) return false;
+        }
+        return true;
+    }
+
     private boolean isHaveSafetySurroundingField(ChessBoardNavigator boardNavigator, Coordinate kingCoordinate) {
-        List<Coordinate> fields = boardNavigator.surroundingFields(kingCoordinate);
+        List<Coordinate> fields = surroundingFields(kingCoordinate);
         for (Coordinate field : fields) {
             if (!isFieldDangerousOrBlockedForKing(boardNavigator, field, color)) return true;
         }
@@ -385,7 +385,7 @@ public final class King implements Piece {
             if ((piece instanceof Rook || piece instanceof Queen) && pieceFromHV.color() != this.color) return false;
         }
 
-        List<Coordinate> surroundings = boardNavigator.surroundingFields(pivot);
+        List<Coordinate> surroundings = surroundingFields(pivot);
         for (Coordinate surroundingField : surroundings) {
             Piece surroundingPiece = boardNavigator.board().piece(surroundingField);
             if (surroundingPiece instanceof King && surroundingPiece.color() != this.color) return false;
