@@ -11,6 +11,7 @@ import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Disabled("For separate run.")
 class ChessPerft {
     private long nodes = 0;
     public static final int DEPTH = 4;
@@ -43,15 +45,15 @@ class ChessPerft {
     void clearPerft() {
         long nodes = onlyNodesPerft(DEPTH, ChessBoard.pureChess());
         switch (DEPTH) {
-            case 1 -> assertPerftDepth1();
-            case 2 -> assertPerftDepth2();
-            case 3 -> assertPerftDepth3();
-            case 4 -> assertPerftDepth4();
-            case 5 -> assertPerftDepth5();
-            case 6 -> assertPerftDepth6();
-            case 7 -> assertPerftDepth7();
-            case 8 -> assertPerftDepth8();
-            case 9 -> assertPerftDepth9();
+            case 1 -> assertPerftDepth1(nodes);
+            case 2 -> assertPerftDepth2(nodes);
+            case 3 -> assertPerftDepth3(nodes);
+            case 4 -> assertPerftDepth4(nodes);
+            case 5 -> assertPerftDepth5(nodes);
+            case 6 -> assertPerftDepth6(nodes);
+            case 7 -> assertPerftDepth7(nodes);
+            case 8 -> assertPerftDepth8(nodes);
+            case 9 -> assertPerftDepth9(nodes);
             default -> logValues();
         }
     }
@@ -132,6 +134,52 @@ class ChessPerft {
         logValues();
         assertEquals(2_439_530_234_167L, perftValues.nodes, "Nodes count mismatch");
     }
+
+    private void assertPerftDepth1(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(20L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth2(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(400L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth3(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(8_902L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth4(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(197_281L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth5(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(4_865_609L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth6(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(119_060_324L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth7(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(3_195_901_860L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth8(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(84_998_978_956L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth9(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(2_439_530_234_167L, nodes, "Nodes count mismatch");
+    }
+
 
     private void logValues() {
         Log.infof("Nodes count: %d", perftValues.nodes);
