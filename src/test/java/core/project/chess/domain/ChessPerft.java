@@ -38,13 +38,13 @@ class ChessPerft {
         System.out.println();
         System.out.println();
 
-        // System.out.println("Perft good position r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-        // long nodes_good_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"));
-        // System.out.println("Nodes: " + nodes_good_position);
+        System.out.println("Perft good position r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        long nodes_good_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"));
+        System.out.println("Nodes: " + nodes_good_position);
 
-        System.out.println("Perft promotion position n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1");
-        long nodes_promotion_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1"));
-        System.out.println("Nodes: " + nodes_promotion_position);
+        // System.out.println("Perft promotion position n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1");
+        // long nodes_promotion_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1"));
+        // System.out.println("Nodes: " + nodes_promotion_position);
     }
 
     private void asserCustomEquals(long l) {
@@ -227,7 +227,12 @@ class ChessPerft {
             Coordinate to = move.to();
             Piece inCaseOfPromotion = move.promotion();
 
-            board.doMove(from, to, inCaseOfPromotion);
+            try {
+				board.doMove(from, to, inCaseOfPromotion);
+			} catch (Exception e) {
+                System.out.println("Error making move: %s | position: %s | depth: %s".formatted(move, board.actualRepresentationOfChessBoard(), depth));
+                throw e;
+			}
 
             long newNodes = onlyNodesPerft(depth - 1, board);
             nodes += newNodes;
