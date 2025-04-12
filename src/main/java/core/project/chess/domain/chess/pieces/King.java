@@ -98,7 +98,7 @@ public final class King implements Piece {
 
         if (kingPosition == from) {
             if (chessBoard.isCastling(this, from, to)) return safeToCastle(boardNavigator, from, to);
-            return validateKingMovementForSafety(boardNavigator, from, to);
+            return !isFieldDangerousOrBlocked(boardNavigator, to, from);
         }
 
         return validatePieceMovementForKingSafety(boardNavigator, kingPosition, from, to);
@@ -394,58 +394,6 @@ public final class King implements Piece {
         return true;
     }
 
-    private boolean validateKingMovementForSafety(ChessBoardNavigator navigator, Coordinate previousKing, Coordinate futureKing) {
-        ChessBoard board = navigator.board();
-        Color oppositeColor = color.equals(WHITE) ? BLACK : WHITE;
-
-        List<Coordinate> pawns = navigator.pawnsThreateningTheCoordinateOf(futureKing, oppositeColor);
-        if (!pawns.isEmpty()) return false;
-
-        List<Coordinate> knights = navigator.knightAttackPositionsNonNull(futureKing);
-        for (Coordinate possibleKnight : knights) {
-            final Piece knight = board.piece(possibleKnight);
-            if (knight instanceof Knight && knight.color() != color) return false;
-        }
-
-        List<Coordinate> diagonalFields = navigator
-                .occupiedFieldsInDirections(Direction.diagonalDirections(), futureKing, previousKing);
-
-        for (Coordinate field : diagonalFields) {
-            final Piece piece = board.piece(field);
-
-            final int enemyRow = field.row();
-            final int enemyColumn = field.column();
-
-            final boolean isEnemy = piece.color() != this.color;
-            if (isEnemy && (piece instanceof Bishop || piece instanceof Queen)) return false;
-
-            final boolean surroundField = Math.abs(futureKing.row() - enemyRow) <= 1 && Math.abs(futureKing.column() - enemyColumn) <= 1;
-
-            final boolean isOppositionOfKing = surroundField && (piece instanceof King);
-            if (isOppositionOfKing) return false;
-        }
-
-        List<Coordinate> horizontalVerticalFields = navigator
-                .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), futureKing, previousKing);
-
-        for (Coordinate field : horizontalVerticalFields) {
-            final Piece piece = board.piece(field);
-
-            final int enemyRow = field.row();
-            final int enemyColumn = field.column();
-
-            final boolean isEnemy = piece.color() != this.color;
-            if (isEnemy && (piece instanceof Rook || piece instanceof Queen)) return false;
-
-            final boolean surroundField = Math.abs(futureKing.row() - enemyRow) <= 1 && Math.abs(futureKing.column() - enemyColumn) <= 1;
-
-            final boolean isOppositionOfKing = surroundField && (piece instanceof King);
-            if (isOppositionOfKing) return false;
-        }
-
-        return true;
-    }
-
     private boolean validatePieceMovementForKingSafety(
             ChessBoardNavigator boardNavigator,
             Coordinate kingPosition,
@@ -456,10 +404,10 @@ public final class King implements Piece {
         Color oppositeColor = color.opposite();
         KingStatus kingStatus = board.kingStatus();
 
-        if (kingStatus == null)
-            return validateKingSafetyWithoutPrecomputedEnemies(boardNavigator, kingPosition, from, to, oppositeColor);
+        List<Coordinate> attackers = kingStatus == null ?
+                check(boardNavigator, null) :
+                kingStatus.enemiesAttackingTheKing();
 
-        List<Coordinate> attackers = kingStatus.enemiesAttackingTheKing();
         if (attackers.size() == 2) return false;
 
         long fromBitmask = from.bitMask();
@@ -537,67 +485,6 @@ public final class King implements Piece {
                 to.row() > opponentField.row() &&
                 kingPosition.column() > to.column() &&
                 to.column() > opponentField.column();
-    }
-
-    private boolean validateKingSafetyWithoutPrecomputedEnemies(
-            ChessBoardNavigator boardNavigator,
-            Coordinate kingPosition,
-            Coordinate from,
-            Coordinate to,
-            Color oppositeColor) {
-
-        ChessBoard board = boardNavigator.board();
-        List<Coordinate> pawnsThreateningCoordinates = boardNavigator.pawnsThreateningTheCoordinateOf(kingPosition, oppositeColor);
-        for (Coordinate possiblePawn : pawnsThreateningCoordinates) {
-            if (!isPawnEaten(to, possiblePawn, boardNavigator)) return false;
-        }
-
-        List<Coordinate> potentialKnightAttackPositions = boardNavigator.knightAttackPositionsNonNull(kingPosition);
-        for (Coordinate potentialKnightAttackPosition : potentialKnightAttackPositions) {
-            Piece piece = board.piece(potentialKnightAttackPosition);
-
-            if (piece.color() == color) continue;
-
-            final boolean isEaten = potentialKnightAttackPosition.equals(to);
-            final boolean isEnemyKnight = piece instanceof Knight;
-            if (isEnemyKnight && !isEaten) return false;
-        }
-
-        List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(
-                Direction.diagonalDirections(),
-                kingPosition,
-                from,
-                to
-        );
-
-        for (Coordinate field : diagonalFields) {
-            Piece piece = board.piece(field);
-
-            if (piece.color() == color) continue;
-
-            final boolean isEaten = field.equals(to);
-            final boolean isEnemyBishopOrQueen = (piece instanceof Bishop || piece instanceof Queen);
-            if (!isEaten && isEnemyBishopOrQueen) return false;
-        }
-
-        List<Coordinate> horizontalVertical = boardNavigator.occupiedFieldsInDirections(
-                Direction.horizontalVerticalDirections(),
-                kingPosition,
-                from,
-                to
-        );
-
-        for (Coordinate field : horizontalVertical) {
-            Piece piece = board.piece(field);
-
-            if (piece.color() == color) continue;
-
-            final boolean isEaten = field.equals(to);
-            final boolean isEnemyRookOrQueen = (piece instanceof Rook || piece instanceof Queen);
-            if (!isEaten && isEnemyRookOrQueen) return false;
-        }
-
-        return true;
     }
 
     private long simulateOpponentBitboard(ChessBoard board, Coordinate to, long toBitmask) {

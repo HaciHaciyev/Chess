@@ -27,6 +27,7 @@ class ChessPerft {
     private long nodes = 0;
     public static final int DEPTH = 6;
     private ChessBoard our_board;
+    private ChessBoard pureChess = ChessBoard.pureChess();
     private Board their_board;
     private final PerftValues perftValues = PerftValues.newInstance();
     private final PerftValues secondPerftValues = PerftValues.newInstance();
@@ -47,7 +48,7 @@ class ChessPerft {
 
     @Test
     void clearPerft() {
-        long nodes = onlyNodesPerft(DEPTH, ChessBoard.pureChess());
+        long nodes = onlyNodesPerft(DEPTH);
         switch (DEPTH) {
             case 1 -> assertPerftDepth1(nodes);
             case 2 -> assertPerftDepth2(nodes);
@@ -289,25 +290,20 @@ class ChessPerft {
             return 1L;
         }
 
-        // List<Move> validMoves = this.board.legalMoves();
-        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = our_board.generateAllValidMoves();
+        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = pureChess.generateAllValidMoves();
 
         for (var move : allValidMoves) {
             Coordinate from = move.from();
             Coordinate to = move.to();
             Piece inCaseOfPromotion = move.promotion();
 
-            our_board.doMove(from, to, inCaseOfPromotion);
+            pureChess.doMove(from, to, inCaseOfPromotion);
 
             long newNodes = onlyNodesPerft(depth - 1);
             nodes += newNodes;
             this.nodes = nodes;
 
-            our_board.undoMove();
-
-            if (depth == DEPTH) {
-                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, our_board.actualRepresentationOfChessBoard());
-            }
+            pureChess.undoMove();
         }
 
         return nodes;
