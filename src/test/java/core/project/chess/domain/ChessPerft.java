@@ -33,7 +33,9 @@ class ChessPerft {
     void customPositions() {
         String firstPosition = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
         System.out.println("Start with first position: " + firstPosition);
-        long nodes_good_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition(firstPosition));
+        ChessBoard boardFromFEN = ChessBoard.pureChessFromPosition(firstPosition);
+        System.out.println(boardFromFEN.generateAllValidMoves());
+        long nodes_good_position = onlyNodesPerft(1, boardFromFEN);
         System.out.println("Nodes: " + nodes_good_position);
     }
 

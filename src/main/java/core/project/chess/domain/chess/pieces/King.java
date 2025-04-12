@@ -167,8 +167,9 @@ public final class King implements Piece {
                 Castle castle = AlgebraicNotation.castle(to);
                 if (!chessBoard.ableToCastling(color, castle)) continue;
                 if (chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
+            } else {
+                if (chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
             }
-            if (chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
         }
 
         return validMoves;
