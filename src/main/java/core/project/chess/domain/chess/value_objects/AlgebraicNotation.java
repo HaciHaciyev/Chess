@@ -547,6 +547,7 @@ public class AlgebraicNotation {
     }
 
     public boolean isCapture() {
+        if (algebraicNotation.length == 3) return false;
         byte aByte = ChessBoard.Operations.CAPTURE.bytes();
         return algebraicNotation[2] == aByte || algebraicNotation[3] == aByte;
     }

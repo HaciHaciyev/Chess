@@ -62,11 +62,6 @@ class ChessPerft {
         }
     }
 
-    private void asserCustomEquals(long l) {
-        assertEquals(nodes, l);
-        Log.info("Count of nodes: " + nodes);
-    }
-
     @Test
     void performanceTest() {
         long v = perft(DEPTH);
@@ -183,7 +178,6 @@ class ChessPerft {
         Log.infof("Count of nodes: %d.", nodes);
         assertEquals(2_439_530_234_167L, nodes, "Nodes count mismatch");
     }
-
 
     private void logValues() {
         Log.infof("Nodes count: %d", perftValues.nodes);
