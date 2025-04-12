@@ -892,15 +892,8 @@ public class ChessBoard {
             return;
         }
 
-        CastlingAbility castlingAbility = castlingAbilities.pollLast();
-        if (castlingAbility == null) {
-            this.validWhiteShortCasting = true;
-            this.validWhiteLongCasting = true;
-            this.validBlackShortCasting = true;
-            this.validBlackLongCasting = true;
-            return;
-        }
-
+        castlingAbilities.pollLast();
+        CastlingAbility castlingAbility = castlingAbilities.peekLast();
         this.validWhiteShortCasting = castlingAbility.whiteShortCastling();
         this.validWhiteLongCasting = castlingAbility.whiteLongCastling();
         this.validBlackShortCasting = castlingAbility.blackShortCastling();
@@ -1456,7 +1449,6 @@ public class ChessBoard {
 
         this.ruleOf50Moves--;
         this.countOfHalfMoves--;
-        algebraicNotations.removeLast();
         enPassantStack.removeLast();
         changedKingPosition((King) kingEndedField, from);
         changeOfCastlingAbilityInRevertMove(kingEndedField);

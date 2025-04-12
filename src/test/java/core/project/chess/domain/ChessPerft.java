@@ -11,7 +11,6 @@ import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -31,20 +30,28 @@ class ChessPerft {
     private final PerftValues secondPerftValues = PerftValues.newInstance();
 
     @Test
-    void clearPerft() {
-        System.out.println("Perft default position");
-        long nodes = onlyNodesPerft(DEPTH, ChessBoard.pureChess());
-        System.out.println("Nodes: " + nodes);
-        System.out.println();
-        System.out.println();
-
-        System.out.println("Perft good position r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-        long nodes_good_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"));
+    void customPositions() {
+        String firstPosition = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+        System.out.println("Start with first position: " + firstPosition);
+        long nodes_good_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition(firstPosition));
         System.out.println("Nodes: " + nodes_good_position);
+    }
 
-        // System.out.println("Perft promotion position n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1");
-        // long nodes_promotion_position = onlyNodesPerft(1, ChessBoard.pureChessFromPosition("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1"));
-        // System.out.println("Nodes: " + nodes_promotion_position);
+    @Test
+    void clearPerft() {
+        long nodes = onlyNodesPerft(DEPTH, ChessBoard.pureChess());
+        switch (DEPTH) {
+            case 1 -> assertPerftDepth1();
+            case 2 -> assertPerftDepth2();
+            case 3 -> assertPerftDepth3();
+            case 4 -> assertPerftDepth4();
+            case 5 -> assertPerftDepth5();
+            case 6 -> assertPerftDepth6();
+            case 7 -> assertPerftDepth7();
+            case 8 -> assertPerftDepth8();
+            case 9 -> assertPerftDepth9();
+            default -> logValues();
+        }
     }
 
     private void asserCustomEquals(long l) {
