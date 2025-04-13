@@ -492,48 +492,34 @@ public final class King implements Piece {
         long[][] table = color == WHITE ? CHECKERS_BITBOARD_FOR_BLACK : CHECKERS_BITBOARD_FOR_WHITE;
 
         if (pawnCanEat(target, board, table, ourPawns, square)) return true;
-        if (knightCanEat(target, table, square, ourKnights, board)) return true;
-        return slidersCanEat(target, table, square, ourBishopsQueens, board, ourRooksQueens);
+        if (knightCanTarget(target, table, square, ourKnights, board)) return true;
+        return slidersCanTarget(target, table, square, ourBishopsQueens, board, ourRooksQueens);
     }
 
-    private boolean canBlock(ChessBoardNavigator boardNavigator, Coordinate pivot, Coordinate enemyField) {
-        Piece opponentPiece = boardNavigator.board().piece(enemyField);
+    private boolean canBlock(ChessBoardNavigator navigator, Coordinate pivot, Coordinate enemyField) {
+        Piece opponentPiece = navigator.board().piece(enemyField);
         if (opponentPiece instanceof Knight) return false;
 
-        final boolean surround = Math.abs(pivot.row() - enemyField.row()) <= 1 && Math.abs(pivot.column() - enemyField.column()) <= 1;
+        final boolean surround = Math.abs(pivot.row() - enemyField.row()) <= 1 &&
+                Math.abs(pivot.column() - enemyField.column()) <= 1;
         if (surround) return false;
 
         final boolean vertical = pivot.column() == enemyField.column() && pivot.row() != enemyField.row();
-        List<Coordinate> path = boardNavigator.fieldsInPath(pivot, enemyField, false);
+        for (Coordinate target : fieldsInPath(pivot, enemyField)) {
+            if (!vertical && pawnCanBlock(navigator, target)) return true;
 
-        for (Coordinate field : path) {
-            if (!vertical && pawnCanBlock(boardNavigator, field)) return true;
+            ChessBoard board = navigator.board();
+            int square = target.ordinal();
+            long targetMask = target.bitMask();
 
-            List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(field);
-            for (Coordinate knight : knights) {
-                Piece piece = boardNavigator.board().piece(knight);
+            long ourKnights = board.bitboard(Knight.of(color));
+            long ourQueens = board.bitboard(Queen.of(color));
+            long ourBishopsQueens = board.bitboard(Bishop.of(color)) | ourQueens;
+            long ourRooksQueens = board.bitboard(Rook.of(color)) | ourQueens;
 
-                final boolean isOurKnight = piece.color() == color && piece instanceof Knight;
-                if (isOurKnight && safeForKing(boardNavigator.board(), knight, field)) return true;
-            }
-
-            List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), field);
-            for (Coordinate diagonalField : diagonalFields) {
-                Piece piece = boardNavigator.board().piece(diagonalField);
-
-                final boolean figureThatCanBlock = piece.color() == color && (piece instanceof Bishop || piece instanceof Queen);
-                if (figureThatCanBlock && safeForKing(boardNavigator.board(), diagonalField, field)) return true;
-            }
-
-            List<Coordinate> horizontalVertical = boardNavigator
-                    .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), field);
-
-            for (Coordinate horizontalVerticalField : horizontalVertical) {
-                Piece piece = boardNavigator.board().piece(horizontalVerticalField);
-
-                if (piece.color() == color &&  (piece instanceof Rook || piece instanceof Queen) &&
-                        safeForKing(boardNavigator.board(), horizontalVerticalField, field)) return true;
-            }
+            long[][] table = color == WHITE ? CHECKERS_BITBOARD_FOR_BLACK : CHECKERS_BITBOARD_FOR_WHITE;
+            if (knightCanTarget(target, table, square, ourKnights, board)) return true;
+            if (slidersCanTarget(target, table, square, ourBishopsQueens, board, ourRooksQueens)) return true;
         }
         return false;
     }
@@ -573,7 +559,7 @@ public final class King implements Piece {
         return false;
     }
 
-    private boolean knightCanEat(Coordinate target, long[][] table, int square, long ourKnights, ChessBoard board) {
+    private boolean knightCanTarget(Coordinate target, long[][] table, int square, long ourKnights, ChessBoard board) {
         long knightAttackers = table[Checkers.KNIGHTS.ordinal()][square] & ourKnights;
         while (knightAttackers != 0) {
             int fromMask = Long.numberOfTrailingZeros(knightAttackers);
@@ -583,7 +569,7 @@ public final class King implements Piece {
         return false;
     }
 
-    private boolean slidersCanEat(
+    private boolean slidersCanTarget(
             Coordinate target, long[][] table, int square,
             long ourBishopsQueens, ChessBoard board, long ourRooksQueens) {
 
@@ -608,32 +594,24 @@ public final class King implements Piece {
     }
 
     private boolean pawnCanBlock(ChessBoardNavigator boardNavigator, Coordinate field) {
-        Coordinate potentialPawnThatCanBlockAttackBySimpleMove;
-        if (color == WHITE) {
-            potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(field.row() - 1, field.column());
-        } else {
-            potentialPawnThatCanBlockAttackBySimpleMove = Coordinate.of(field.row() + 1, field.column());
-        }
-
-        if (potentialPawnThatCanBlockAttackBySimpleMove != null) {
-            Piece possiblePawn = boardNavigator.board().piece(potentialPawnThatCanBlockAttackBySimpleMove);
-
+        Coordinate canBlockByOnePush;
+        if (color == WHITE) canBlockByOnePush = Coordinate.of(field.row() - 1, field.column());
+        else canBlockByOnePush = Coordinate.of(field.row() + 1, field.column());
+        if (canBlockByOnePush != null) {
+            Piece possiblePawn = boardNavigator.board().piece(canBlockByOnePush);
             if (possiblePawn != null) {
                 final boolean pawnCanBlock = possiblePawn.color() == color &&
                         possiblePawn instanceof Pawn &&
-                        safeForKing(boardNavigator.board(), potentialPawnThatCanBlockAttackBySimpleMove, field);
-
+                        safeForKing(boardNavigator.board(), canBlockByOnePush, field);
                 if (pawnCanBlock) return true;
             }
         }
 
-        final boolean potentiallyCanBeBlockedByPawnPassage = field.row() == 5 && color == BLACK ||
+        final boolean canBlockByPassage = field.row() == 5 && color == BLACK ||
                 field.row() == 4 && color == WHITE;
-
-        if (potentiallyCanBeBlockedByPawnPassage) {
+        if (canBlockByPassage) {
             Coordinate potentialPawnCoordinate;
             Coordinate secondPassageCoordinate;
-
             if (color == WHITE) {
                 potentialPawnCoordinate = Coordinate.of(2, field.column());
                 secondPassageCoordinate = Coordinate.of(5, field.column());
@@ -643,11 +621,9 @@ public final class King implements Piece {
             }
 
             final Piece potentialPawn = boardNavigator.board().piece(potentialPawnCoordinate);
-
             final boolean isFriendlyPawnExists = potentialPawn != null &&
                     potentialPawn.color() == color &&
                     potentialPawn instanceof Pawn;
-
             return isFriendlyPawnExists &&
                     clearPath(boardNavigator.board(), potentialPawnCoordinate, secondPassageCoordinate) &&
                     safeForKing(boardNavigator.board(), potentialPawnCoordinate, secondPassageCoordinate);

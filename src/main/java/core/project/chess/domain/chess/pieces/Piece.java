@@ -220,5 +220,23 @@ public sealed interface Piece
 
         return ray;
     }
+
+    default List<Coordinate> fieldsInPath(Coordinate start, Coordinate end) {
+        Direction direction = Direction.ofPath(start, end);
+        List<Coordinate> fields = new ArrayList<>();
+
+        Coordinate current = start;
+        while (true) {
+            Coordinate next = direction.apply(current);
+            if (next == null) break;
+
+            current = next;
+
+            if (current.equals(end)) break;
+            fields.add(current);
+        }
+
+        return fields;
+    }
 }
 
