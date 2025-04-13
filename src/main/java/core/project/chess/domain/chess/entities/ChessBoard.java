@@ -622,17 +622,9 @@ public class ChessBoard {
      * @return True if the move is safe for the king, false otherwise.
      */
     public boolean safeForKing(final Coordinate from, final Coordinate to) {
-        Objects.requireNonNull(from);
-        Objects.requireNonNull(to);
-
         Piece piece = piece(from);
-        if (piece == null) {
-            throw new IllegalStateException("Unexpected");
-        }
-
         Color kingColor = piece.color();
         King king = theKing(kingColor);
-
         return king.safeForKing(this, from, to);
     }
 
@@ -712,9 +704,7 @@ public class ChessBoard {
      * @throws IllegalStateException If the king object cannot be found.
      */
     public King theKing(final Color kingColor) {
-        Objects.requireNonNull(kingColor);
         if (kingColor == WHITE) return (King) piece(currentWhiteKingPosition);
-
         return (King) piece(currentBlackKingPosition);
     }
 
@@ -728,11 +718,6 @@ public class ChessBoard {
      * Finally, validation of the question of who should walk can only be carried out in the controller.*/
     private boolean validateFiguresTurnAndPieceExisting(final Coordinate coordinate, final Coordinate to) {
         Piece piece = piece(coordinate);
-        if (piece == null) {
-            logErrorMove(coordinate, to);
-            throw new IllegalArgumentException("Invalid figure.");
-        }
-
         return piece.color() == figuresTurn;
     }
 
