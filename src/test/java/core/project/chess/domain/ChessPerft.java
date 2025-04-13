@@ -122,6 +122,9 @@ class ChessPerft {
         Log.infof("Checkmates count: %d", perftValues.checkMates);
     }
 
+    // normal perft. Data is collected and measured after every move and compared
+    //
+    // foreign move generation
     long perft(int depth) {
         long nodes = 0L;
 
@@ -156,6 +159,9 @@ class ChessPerft {
         return nodes;
     }
 
+    // more informative perft. In addition to normal perft, FEN and generated moves are compared.
+    //
+    // native and foreign move generation
     long robustPerft(int depth) {
         long nodes = 0L;
 
@@ -163,8 +169,16 @@ class ChessPerft {
             return 1L;
         }
 
-        List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = our_board.generateAllValidMoves();
+        List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = null;
         List<Move> their_valid_moves = their_board.legalMoves();
+
+        try {
+            our_valid_moves = our_board.generateAllValidMoves();
+        } catch (Exception e) {
+            System.out.println("Could not generate moves for position: %s | current depth: %s"
+                    .formatted(our_board.actualRepresentationOfChessBoard(), depth));
+            throw e;
+        }
 
         String our_fen = our_board.actualRepresentationOfChessBoard();
         String their_fen = their_board.getFen();
@@ -192,7 +206,14 @@ class ChessPerft {
             Piece inCaseOfPromotion = getInCaseOfPromotion(move);
 
             their_board.doMove(move);
-            our_board.doMove(from, to, inCaseOfPromotion);
+
+            try {
+                our_board.doMove(from, to, inCaseOfPromotion);
+            } catch (Exception e) {
+                System.out.println("Error making move: %s | position: %s | depth: %s".formatted(move,
+                        our_board.actualRepresentationOfChessBoard(), depth));
+                throw e;
+            }
 
             long newNodes = robustPerft(depth - 1);
             nodes += newNodes;
@@ -211,6 +232,9 @@ class ChessPerft {
         return nodes;
     }
 
+    // simple perft. Only nodes are counted
+    // 
+    // native move generation
     long onlyNodesPerft(int depth) {
         long nodes = 0L;
 
@@ -218,28 +242,14 @@ class ChessPerft {
             return 1L;
         }
 
-        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = null;
-
-        try {
-            allValidMoves = our_board.generateAllValidMoves();
-        } catch (Exception e) {
-            System.out.println("Could not generate moves for posittion: %s | current depth: %s"
-                    .formatted(our_board.actualRepresentationOfChessBoard(), depth));
-            throw e;
-        }
+        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = our_board.generateAllValidMoves();
 
         for (var move : allValidMoves) {
             Coordinate from = move.from();
             Coordinate to = move.to();
             Piece inCaseOfPromotion = move.promotion();
 
-            try {
-                our_board.doMove(from, to, inCaseOfPromotion);
-            } catch (Exception e) {
-                System.out.println("Error making move: %s | position: %s | depth: %s".formatted(move,
-                        our_board.actualRepresentationOfChessBoard(), depth));
-                throw e;
-            }
+            our_board.doMove(from, to, inCaseOfPromotion);
 
             long newNodes = onlyNodesPerft(depth - 1);
             nodes += newNodes;
