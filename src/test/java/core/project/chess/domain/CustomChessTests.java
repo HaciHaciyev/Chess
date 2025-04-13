@@ -6,7 +6,7 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.pieces.*;
-import core.project.chess.domain.chess.util.ChessBoardNavigator;
+import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.Move;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ class CustomChessTests {
     @Test
     void revertPromotion() {
         ChessGame game = chessGameSupplier().get();
-        ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
+        ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
 
         String whitePlayer = game.getPlayerForWhite().getUsername();
         String blackPlayer = game.getPlayerForBlack().getUsername();
@@ -74,7 +74,7 @@ class CustomChessTests {
     @Test
     void enPassaunOnCheck() {
         ChessGame chessGame = chessGameSupplier("8/1p3p1k/1P2b2p/2Q1P1pP/5K1n/8/5P2/4r3 w - g6 0 63").get();
-        ChessBoardNavigator navigator = new ChessBoardNavigator(chessGame.getChessBoard());
+        ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
         String firstPlayer = chessGame.getPlayerForWhite().getUsername();
         String secondPlayer = chessGame.getPlayerForBlack().getUsername();
 
@@ -101,7 +101,7 @@ class CustomChessTests {
     @Test
     void enPassaun() {
         ChessGame chessGame = chessGameSupplier("3b4/2p5/6b1/2pk2p1/1pP1N1P1/pP3P2/P7/3KB3 b - c3 0 32").get();
-        ChessBoardNavigator navigator = new ChessBoardNavigator(chessGame.getChessBoard());
+        ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
         String firstPlayer = chessGame.getPlayerForWhite().getUsername();
         String secondPlayer = chessGame.getPlayerForBlack().getUsername();
 
@@ -126,7 +126,7 @@ class CustomChessTests {
         String white = game.getPlayerForWhite().getUsername();
         String black = game.getPlayerForBlack().getUsername();
 
-        ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
+        ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
 
         game.makeMovement(white, e2, e4, null);
         System.out.println(navigator.prettyToString());
@@ -294,7 +294,9 @@ class CustomChessTests {
         assertThrows(IllegalArgumentException.class, () -> chessBoard.doMove(b2, b4));
         chessBoard.doMove(b2, b3);
 
-        System.out.println(chessBoard.navigator().prettyToString());
+        ToStringUtils toStringUtils = new ToStringUtils(chessBoard);
+
+        System.out.println(toStringUtils.prettyToString());
         chessBoard.doMove(a7, a5);
         chessBoard.doMove(c2, c4);
 
@@ -302,27 +304,27 @@ class CustomChessTests {
         System.out.println(Pawn.of(Color.BLACK).allValidMoves(chessBoard));
         chessBoard.doMove(b4, c3);
 
-        System.out.println(chessBoard.navigator().prettyToString());
+        System.out.println(toStringUtils.prettyToString());
         chessBoard.doMove(b3, b4);
 
-        System.out.println(chessBoard.navigator().prettyToString());
+        System.out.println(toStringUtils.prettyToString());
         chessBoard.doMove(c3, d2);
 
-        System.out.println(chessBoard.navigator().prettyToString());
+        System.out.println(toStringUtils.prettyToString());
         chessBoard.undoMove();
 
-        System.out.println(chessBoard.navigator().prettyToString());
+        System.out.println(toStringUtils.prettyToString());
 
         chessBoard.doMove(c3, c2);
-        System.out.println(chessBoard.navigator().prettyToString());
+        System.out.println(toStringUtils.prettyToString());
 
         chessBoard.doMove(b4, b5);
-        System.out.println(chessBoard.navigator().prettyToString());
+        System.out.println(toStringUtils.prettyToString());
 
         System.out.println();
         System.out.println(Pawn.of(Color.BLACK).allValidMoves(chessBoard));
         chessBoard.doMove(c2, b1, Queen.of(Color.BLACK));
-        System.out.println(chessBoard.navigator().prettyToString());
+        System.out.println(toStringUtils.prettyToString());
     }
 
     @Test

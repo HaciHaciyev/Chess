@@ -4,7 +4,6 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.chess.pieces.*;
-import core.project.chess.domain.chess.util.ChessBoardNavigator;
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
 import core.project.chess.domain.chess.util.ZobristHashKeys;
 import core.project.chess.domain.chess.value_objects.*;
@@ -14,9 +13,6 @@ import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
 
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations.*;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
@@ -174,17 +170,6 @@ public class ChessBoard {
     /** History of captured pieces for every color*/
     private final Deque<Piece> capturedWhitePieces = new ArrayDeque<>();
     private final Deque<Piece> capturedBlackPieces = new ArrayDeque<>();
-
-    /** Executor service for parallel moves generation*/
-    private static final ExecutorService executorService = Executors
-            .newFixedThreadPool(Runtime
-            .getRuntime()
-            .availableProcessors());
-
-    /**
-     * Utility classes for navigating chess board
-     */
-    private final ChessBoardNavigator navigator = new ChessBoardNavigator(this);
 
     /**
      * Constructs a new `ChessBoard` instance with the given parameters.
@@ -424,10 +409,6 @@ public class ChessBoard {
         return bitboard[piece.index()];
     }
 
-    public ChessBoardNavigator navigator() {
-        return navigator;
-    }
-
     public int castlingRights() {
         int rights = 0;
         if (validWhiteShortCasting) rights |= 1;
@@ -475,7 +456,7 @@ public class ChessBoard {
      * @return a new Coordinate object representing the current position of the white king
      */
     public Coordinate currentWhiteKingPosition() {
-        return Coordinate.valueOf(currentWhiteKingPosition.toString());
+        return currentWhiteKingPosition;
     }
 
     /**
@@ -484,7 +465,11 @@ public class ChessBoard {
      * @return a new Coordinate object representing the current position of the white king
      */
     public Coordinate currentBlackKingPosition() {
-        return Coordinate.valueOf(currentBlackKingPosition.toString());
+        return currentBlackKingPosition;
+    }
+
+    public Coordinate kingCoordinate(Color color) {
+        return color == WHITE ? currentWhiteKingPosition : currentBlackKingPosition;
     }
 
     /**
@@ -1125,44 +1110,6 @@ public class ChessBoard {
         allMoves.addAll(queenMoves);
         allMoves.addAll(kingMoves);
         return allMoves;
-    }
-
-    public List<Move> generateAllValidMovesParallelStream() {
-        return Stream.of(
-                    Pawn.of(figuresTurn).allValidMoves(this),
-                    Knight.of(figuresTurn).allValidMoves(this),
-                    Bishop.of(figuresTurn).allValidMoves(this),
-                    Rook.of(figuresTurn).allValidMoves(this),
-                    Queen.of(figuresTurn).allValidMoves(this),
-                    King.of(figuresTurn).allValidMoves(this)
-                )
-                .parallel()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-    }
-
-    public List<Move> generateAllValidMovesThreadPool() {
-        try {
-            List<Callable<List<Move>>> tasks = List.of(
-                    () -> Pawn.of(figuresTurn).allValidMoves(this),
-                    () -> Knight.of(figuresTurn).allValidMoves(this),
-                    () -> Bishop.of(figuresTurn).allValidMoves(this),
-                    () -> Rook.of(figuresTurn).allValidMoves(this),
-                    () -> Queen.of(figuresTurn).allValidMoves(this),
-                    () -> King.of(figuresTurn).allValidMoves(this)
-            );
-
-            List<Future<List<Move>>> futures = executorService.invokeAll(tasks);
-
-            List<Move> allMoves = new ArrayList<>();
-            for (Future<List<Move>> future : futures) {
-                allMoves.addAll(future.get());
-            }
-            return allMoves;
-
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error during move generation", e);
-        }
     }
 
     public void doMove(final Coordinate from, final Coordinate to) {

@@ -2,20 +2,11 @@ package core.project.chess.domain.chess.util;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
-import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.*;
 
 import java.util.List;
 
-public record ChessBoardNavigator(ChessBoard board) {
-
-    public Coordinate kingCoordinate(Color color) {
-        if (color == Color.WHITE) {
-            return board.currentWhiteKingPosition();
-        }
-
-        return board.currentBlackKingPosition();
-    }
+public record ToStringUtils(ChessBoard board) {
 
     public String prettyToString() {
         String fen = board.toString();

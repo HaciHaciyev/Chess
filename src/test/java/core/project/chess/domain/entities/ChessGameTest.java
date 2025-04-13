@@ -4,7 +4,7 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.events.SessionEvents;
-import core.project.chess.domain.chess.util.ChessBoardNavigator;
+import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.ChessMove;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.PersonalData;
@@ -236,7 +236,7 @@ public class ChessGameTest {
         String white = game.getPlayerForWhite().getUsername();
         String black = game.getPlayerForBlack().getUsername();
 
-        ChessBoardNavigator navigator = new ChessBoardNavigator(game.getChessBoard());
+        ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
 
         if (enableLogging) {
             Log.infof("Reading game#%s.", pgnNum);

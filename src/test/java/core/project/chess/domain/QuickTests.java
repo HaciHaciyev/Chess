@@ -4,7 +4,7 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.events.SessionEvents;
-import core.project.chess.domain.chess.util.ChessBoardNavigator;
+import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.PersonalData;
 import io.quarkus.logging.Log;
@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 @Disabled("Just utility")
 class QuickTests {
     private final ChessGame chessGame = chessGameSupplier().get();
-    private final ChessBoardNavigator navigator = new ChessBoardNavigator(chessGame.getChessBoard());
+    private final ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
 
