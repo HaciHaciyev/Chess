@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
+import static core.project.chess.domain.chess.pieces.Queen.RAY_BITBOARD;
 
 public sealed interface Piece
         permits Bishop, King, Knight, Pawn, Queen, Rook {
@@ -38,45 +39,12 @@ public sealed interface Piece
      * @return true if the path is clear (or if the end coordinate is a neighbor of the start coordinate), false otherwise
      */
     default boolean clearPath(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        final int startRow = from.row();
-        final int startColumn = from.column();
-
-        final int endRow = to.row();
-        final int endColumn = to.column();
-
-        final int rowDirection = compareDirection(startRow, endRow);
-        final int columnDirection = compareDirection(startColumn, endColumn);
-
-        final boolean isEndFieldSurround = Math.abs(startRow - endRow) <= 1 && Math.abs(startColumn - endColumn) <= 1;
+        final boolean isEndFieldSurround = isEndFieldSurround(from, to);
         if (isEndFieldSurround) return true;
 
-        int row = startRow + rowDirection;
-        int column = startColumn + columnDirection;
-
-        do {
-            final Coordinate coordinate = Coordinate.of(row, column);
-            final boolean fieldOccupied = chessBoard.piece(coordinate) != null;
-            if (fieldOccupied) return false;
-
-            row += rowDirection;
-            column += columnDirection;
-
-        } while (
-                switch (rowDirection) {
-                    case 0 -> true;
-                    case 1 -> row < endRow;
-                    case -1 -> row > endRow;
-                    default -> throw new IllegalStateException("Unexpected value: " + rowDirection);
-                } &&
-                switch (columnDirection) {
-                    case 0 -> true;
-                    case 1 -> column < endColumn;
-                    case -1 -> column > endColumn;
-                    default -> throw new IllegalStateException("Unexpected value: " + columnDirection);
-                }
-        );
-
-        return true;
+        long rayMask = rayMask(from, to);
+        long allOccupations = chessBoard.whitePieces() | chessBoard.blackPieces();
+        return (rayMask & allOccupations) == 0;
     }
 
     default boolean clearPath(
@@ -85,50 +53,21 @@ public sealed interface Piece
             final Coordinate to,
             final Coordinate ignore) {
 
-        final int startRow = from.row();
-        final int startColumn = from.column();
-
-        final int endRow = to.row();
-        final int endColumn = to.column();
-
-        final int rowDirection = compareDirection(startRow, endRow);
-        final int columnDirection = compareDirection(startColumn, endColumn);
-
-        final boolean isEndFieldSurround = Math.abs(startRow - endRow) <= 1 && Math.abs(startColumn - endColumn) <= 1;
+        final boolean isEndFieldSurround = isEndFieldSurround(from, to);
         if (isEndFieldSurround) return true;
 
-        int row = startRow + rowDirection;
-        int column = startColumn + columnDirection;
-
-        do {
-            final Coordinate coordinate = Coordinate.of(row, column);
-            final boolean fieldOccupied = chessBoard.piece(coordinate) != null;
-            if (fieldOccupied && coordinate != ignore) return false;
-
-            row += rowDirection;
-            column += columnDirection;
-
-        } while (
-                switch (rowDirection) {
-                    case 0 -> true;
-                    case 1 -> row < endRow;
-                    case -1 -> row > endRow;
-                    default -> throw new IllegalStateException("Unexpected value: " + rowDirection);
-                } &&
-                switch (columnDirection) {
-                    case 0 -> true;
-                    case 1 -> column < endColumn;
-                    case -1 -> column > endColumn;
-                    default -> throw new IllegalStateException("Unexpected value: " + columnDirection);
-                }
-        );
-
-        return true;
+        long rayMask = rayMask(from, to);
+        long allOccupations = chessBoard.whitePieces() | chessBoard.blackPieces();
+        allOccupations = allOccupations ^ ignore.bitMask();
+        return (rayMask & allOccupations) == 0;
     }
 
-    default int compareDirection(final int startPosition, final int endPosition) {
-        if (startPosition == endPosition) return 0;
-        return startPosition < endPosition ? 1 : -1;
+    private static boolean isEndFieldSurround(Coordinate from, Coordinate to) {
+        final int startRow = from.row();
+        final int startColumn = from.column();
+        final int endRow = to.row();
+        final int endColumn = to.column();
+        return Math.abs(startRow - endRow) <= 1 && Math.abs(startColumn - endColumn) <= 1;
     }
 
     @Nullable
@@ -197,6 +136,10 @@ public sealed interface Piece
             moves &= ~(1L << 2);
         }
         return moves;
+    }
+
+    default long rayMask(Coordinate from, Coordinate to) {
+        return RAY_BITBOARD[from.ordinal()][to.ordinal()];
     }
 
     default long rayMask(Direction direction, int fromSquare) {

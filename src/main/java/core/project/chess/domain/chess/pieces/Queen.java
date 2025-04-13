@@ -3,6 +3,7 @@ package core.project.chess.domain.chess.pieces;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.enumerations.Direction;
 import core.project.chess.domain.chess.value_objects.Move;
 
 import java.util.ArrayList;
@@ -21,6 +22,14 @@ public final class Queen implements Piece {
     static final long[] QUEEN_MOVES_CACHE = new long[64];
     static {
         for (int square = 0; square < 64; square++) QUEEN_MOVES_CACHE[square] = generatePseudoValidQueenMoves(square);
+    }
+    static final long[][] RAY_BITBOARD = new long[64][64];
+    static {
+        for (int fromSquare = 0; fromSquare < 64; fromSquare++) {
+            for (int toSquare = 0; toSquare < 64; toSquare++) {
+                if (fromSquare != toSquare) RAY_BITBOARD[fromSquare][toSquare] = computeRayMaskBetween(fromSquare, toSquare);
+            }
+        }
     }
 
     public static Queen of(Color color) {
@@ -140,5 +149,36 @@ public final class Queen implements Piece {
         for (int i = row - 1; i >= 0; i--) moves |= 1L << (i * 8 + col);
         for (int i = row + 1; i < 8; i++) moves |= 1L << (i * 8 + col);
         return moves;
+    }
+
+    /** Does not take into account the final coordinate itself (not inclusive)*/
+    private static long computeRayMaskBetween(int fromSquare, int toSquare) {
+        long ray = 0L;
+        int row = fromSquare / 8;
+        int col = fromSquare % 8;
+        int toRow = toSquare / 8;
+        int toCol = toSquare % 8;
+
+        Direction direction = Direction.directionOf(
+                Coordinate.byOrdinal(fromSquare),
+                Coordinate.byOrdinal(toSquare)
+        );
+        if (direction == null) return 0L;
+
+        int rowStep = -direction.rowDelta();
+        int colStep = direction.colDelta();
+
+        row += rowStep;
+        col += colStep;
+
+        while (row != toRow || col != toCol) {
+            int index = row * 8 + col;
+            ray |= (1L << index);
+
+            row += rowStep;
+            col += colStep;
+        }
+
+        return ray;
     }
 }

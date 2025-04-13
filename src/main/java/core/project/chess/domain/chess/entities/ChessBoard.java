@@ -1095,14 +1095,14 @@ public class ChessBoard {
     }
 
     public List<Move> generateAllValidMoves() {
-        List<Move> allMoves = new ArrayList<>();
-        Pawn.of(figuresTurn).allValidMoves(this, allMoves);
-        Knight.of(figuresTurn).allValidMoves(this, allMoves);
-        Bishop.of(figuresTurn).allValidMoves(this, allMoves);
-        Rook.of(figuresTurn).allValidMoves(this, allMoves);
-        Queen.of(figuresTurn).allValidMoves(this, allMoves);
-        King.of(figuresTurn).allValidMoves(this, allMoves);
-        return allMoves;
+        List<Move> allValidMoves = new ArrayList<>(40);
+        Pawn.of(figuresTurn).allValidMoves(this, allValidMoves);
+        Knight.of(figuresTurn).allValidMoves(this, allValidMoves);
+        Bishop.of(figuresTurn).allValidMoves(this, allValidMoves);
+        Rook.of(figuresTurn).allValidMoves(this, allValidMoves);
+        Queen.of(figuresTurn).allValidMoves(this, allValidMoves);
+        King.of(figuresTurn).allValidMoves(this, allValidMoves);
+        return allValidMoves;
     }
 
     public void doMove(final Coordinate from, final Coordinate to) {
