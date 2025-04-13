@@ -91,7 +91,7 @@ public final class Queen implements Piece {
         return allValidMoves(chessBoard, new ArrayList<>());
     }
 
-    private List<Move> allValidMoves(final ChessBoard chessBoard, List<Move> validMoves) {
+    public List<Move> allValidMoves(final ChessBoard chessBoard, List<Move> validMoves) {
         long queenBitboard = chessBoard.bitboard(this);
         long ownPieces = chessBoard.pieces(color);
 

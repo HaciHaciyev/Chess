@@ -95,7 +95,7 @@ public final class Rook implements Piece {
         return allValidMoves(chessBoard, new ArrayList<>());
     }
 
-    private List<Move> allValidMoves(final ChessBoard chessBoard, final List<Move> validMoves) {
+    public List<Move> allValidMoves(final ChessBoard chessBoard, final List<Move> validMoves) {
         long rookBitboard = chessBoard.bitboard(this);
         long ownPieces = chessBoard.pieces(color);
 

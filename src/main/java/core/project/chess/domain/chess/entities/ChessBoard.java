@@ -1095,20 +1095,13 @@ public class ChessBoard {
     }
 
     public List<Move> generateAllValidMoves() {
-        List<Move> pawnMoves = Pawn.of(figuresTurn).allValidMoves(this);
-        List<Move> knightMoves = Knight.of(figuresTurn).allValidMoves(this);
-        List<Move> bishopMoves = Bishop.of(figuresTurn).allValidMoves(this);
-        List<Move> rookMoves = Rook.of(figuresTurn).allValidMoves(this);
-        List<Move> queenMoves = Queen.of(figuresTurn).allValidMoves(this);
-        List<Move> kingMoves = King.of(figuresTurn).allValidMoves(this);
-
         List<Move> allMoves = new ArrayList<>();
-        allMoves.addAll(pawnMoves);
-        allMoves.addAll(knightMoves);
-        allMoves.addAll(bishopMoves);
-        allMoves.addAll(rookMoves);
-        allMoves.addAll(queenMoves);
-        allMoves.addAll(kingMoves);
+        Pawn.of(figuresTurn).allValidMoves(this, allMoves);
+        Knight.of(figuresTurn).allValidMoves(this, allMoves);
+        Bishop.of(figuresTurn).allValidMoves(this, allMoves);
+        Rook.of(figuresTurn).allValidMoves(this, allMoves);
+        Queen.of(figuresTurn).allValidMoves(this, allMoves);
+        King.of(figuresTurn).allValidMoves(this, allMoves);
         return allMoves;
     }
 

@@ -34,6 +34,38 @@ class ChessPerft {
     private PerftValues secondPerftValues;
 
     @Test
+    void moveGenerations() {
+        our_board = ChessBoard.pureChess();
+        their_board = new Board();
+
+        long start = 0L;
+        long end = 0L;
+
+        start = System.nanoTime();
+        for (int i = 0; i < 35_000_000; i++) {
+            our_board.generateAllValidMoves();
+        }
+        our_board.doMove(Coordinate.e2, Coordinate.e4);
+        for (int i = 0; i < 36_000_000; i++) {
+            our_board.generateAllValidMoves();
+        }
+        end = System.nanoTime();
+        System.out.println("Our moves generation time   : " + (end - start) / 1_000_000.0 + " ms");
+
+        start = System.nanoTime();
+        for (int i = 0; i < 35_000_000; i++) {
+            their_board.legalMoves();
+        }
+        their_board.doMove(new Move(Square.E2, Square.E4));
+        for (int i = 0; i < 36_000_000; i++) {
+            their_board.legalMoves();
+        }
+
+        end = System.nanoTime();
+        System.out.println("Their moves generation time : " + (end - start) / 1_000_000.0 + " ms");
+    }
+
+    @Test
     void customPositions() {
         {
             DEPTH = 4;
