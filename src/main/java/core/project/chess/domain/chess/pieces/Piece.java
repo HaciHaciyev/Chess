@@ -39,9 +39,6 @@ public sealed interface Piece
      * @return true if the path is clear (or if the end coordinate is a neighbor of the start coordinate), false otherwise
      */
     default boolean clearPath(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        final boolean isEndFieldSurround = isEndFieldSurround(from, to);
-        if (isEndFieldSurround) return true;
-
         long rayMask = rayMask(from, to);
         long allOccupations = chessBoard.whitePieces() | chessBoard.blackPieces();
         return (rayMask & allOccupations) == 0;
@@ -53,21 +50,10 @@ public sealed interface Piece
             final Coordinate to,
             final Coordinate ignore) {
 
-        final boolean isEndFieldSurround = isEndFieldSurround(from, to);
-        if (isEndFieldSurround) return true;
-
         long rayMask = rayMask(from, to);
         long allOccupations = chessBoard.whitePieces() | chessBoard.blackPieces();
         allOccupations = allOccupations ^ ignore.bitMask();
         return (rayMask & allOccupations) == 0;
-    }
-
-    private static boolean isEndFieldSurround(Coordinate from, Coordinate to) {
-        final int startRow = from.row();
-        final int startColumn = from.column();
-        final int endRow = to.row();
-        final int endColumn = to.column();
-        return Math.abs(startRow - endRow) <= 1 && Math.abs(startColumn - endColumn) <= 1;
     }
 
     @Nullable
@@ -182,4 +168,3 @@ public sealed interface Piece
         return fields;
     }
 }
-
