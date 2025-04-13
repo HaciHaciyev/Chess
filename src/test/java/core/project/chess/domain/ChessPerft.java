@@ -174,8 +174,8 @@ class ChessPerft {
         try {
             our_valid_moves = our_board.generateAllValidMoves();
         } catch (Exception e) {
-            System.out.println("Could not generate moves for position: %s | current depth: %s"
-                    .formatted(our_board.actualRepresentationOfChessBoard(), depth));
+            System.out.printf("Could not generate moves for position: %s | current depth: %s%n",
+                    our_board.actualRepresentationOfChessBoard(), depth);
             throw e;
         }
 
@@ -209,8 +209,8 @@ class ChessPerft {
             try {
                 our_board.doMove(from, to, inCaseOfPromotion);
             } catch (Exception e) {
-                System.out.println("Error making move: %s | position: %s | depth: %s".formatted(move,
-                        our_board.actualRepresentationOfChessBoard(), depth));
+                System.out.printf("Error making move: %s | position: %s | depth: %s%n", move,
+                        our_board.actualRepresentationOfChessBoard(), depth);
                 throw e;
             }
 
