@@ -9,47 +9,72 @@ import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
+import testUtils.PerftUtil;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// @Disabled("For separate run.")
+@Disabled("For separate run.")
 class ChessPerft {
-    private long nodes = 0;
-    public static final int DEPTH = 3;
+    public static int DEPTH = 4;
+
     private ChessBoard our_board;
-    private ChessBoard pureChess = ChessBoard.pureChess();
     private Board their_board;
-    private final PerftValues perftValues = PerftValues.newInstance();
-    private final PerftValues secondPerftValues = PerftValues.newInstance();
+
+    private PerftValues perftValues;
+    private PerftValues secondPerftValues;
 
     @Test
     void customPositions() {
-        String firstPosition = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-        System.out.println("Start with position: " + firstPosition);
+        {
+            DEPTH = 4;
+            perftValues = PerftValues.newInstance();
+            secondPerftValues = PerftValues.newInstance();
 
-        our_board = ChessBoard.pureChessFromPosition(firstPosition);
+            String position = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+            System.out.println("Position #1: " + position);
 
-        their_board = new Board();
-        their_board.loadFromFen(firstPosition);
+            our_board = ChessBoard.pureChessFromPosition(position);
 
-        long nodes_good_position = perft(DEPTH);
-        System.out.println("Nodes: " + nodes_good_position);
+            their_board = new Board();
+            their_board.loadFromFen(position);
+
+            long nodes_good_position = robustPerft(DEPTH);
+            System.out.println("Nodes: " + nodes_good_position);
+        }
+
+        {
+            DEPTH = 5;
+            perftValues = PerftValues.newInstance();
+            secondPerftValues = PerftValues.newInstance();
+
+            String position = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
+            System.out.println("Position #2: " + position);
+
+            our_board = ChessBoard.pureChessFromPosition(position);
+
+            their_board = new Board();
+            their_board.loadFromFen(position);
+
+            long nodes_good_position = robustPerft(DEPTH);
+            System.out.println("Nodes: " + nodes_good_position);
+        }
     }
 
     @Test
     void clearPerft() {
+        our_board = ChessBoard.pureChess();
+
         long nodes = onlyNodesPerft(DEPTH);
         switch (DEPTH) {
             case 1 -> assertPerftDepth1(nodes);
@@ -67,6 +92,9 @@ class ChessPerft {
 
     @Test
     void performanceTest() {
+        perftValues = PerftValues.newInstance();
+        secondPerftValues = PerftValues.newInstance();
+
         our_board = ChessBoard.pureChess();
         their_board = new Board();
         long v = perft(DEPTH);
@@ -94,113 +122,6 @@ class ChessPerft {
         Log.infof("Checkmates count: %d", perftValues.checkMates);
     }
 
-    private void assertPerftDepth1() {
-        logValues();
-        assertEquals(20L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth2() {
-        logValues();
-        assertEquals(400L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth3() {
-        logValues();
-        assertEquals(8_902L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth4() {
-        logValues();
-        assertEquals(197_281L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth5() {
-        logValues();
-        assertEquals(4_865_609L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth6() {
-        logValues();
-        assertEquals(119_060_324L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth7() {
-        logValues();
-        assertEquals(3_195_901_860L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth8() {
-        logValues();
-        assertEquals(84_998_978_956L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth9() {
-        logValues();
-        assertEquals(2_439_530_234_167L, perftValues.nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth1(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(20L, nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth2(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(400L, nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth3(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(8_902L, nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth4(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(197_281L, nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth5(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(4_865_609L, nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth6(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(119_060_324L, nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth7(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(3_195_901_860L, nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth8(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(84_998_978_956L, nodes, "Nodes count mismatch");
-    }
-
-    private void assertPerftDepth9(long nodes) {
-        Log.infof("Count of nodes: %d.", nodes);
-        assertEquals(2_439_530_234_167L, nodes, "Nodes count mismatch");
-    }
-
-    private void logValues() {
-        Log.infof("Nodes count: %d", perftValues.nodes);
-        Log.infof("Second nodes count: %d", secondPerftValues.nodes);
-        Log.infof("Captures count: %d", perftValues.captures);
-        Log.infof("Second captures count: %d", secondPerftValues.captures);
-        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
-        Log.infof("Second en passaunt count: %d", secondPerftValues.capturesOnPassage);
-        Log.infof("Castles count: %d", perftValues.castles);
-        Log.infof("Second castles count: %d", secondPerftValues.castles);
-        Log.infof("Promotions count: %d", perftValues.promotions);
-        Log.infof("Second promotions count: %d", secondPerftValues.promotions);
-        Log.infof("Checks count: %d", perftValues.checks);
-        Log.infof("Second checks count: %d", secondPerftValues.checks);
-        Log.infof("Checkmates count: %d", perftValues.checkMates);
-        Log.infof("Second checkmates count: %d", secondPerftValues.checkMates);
-    }
-
     long perft(int depth) {
         long nodes = 0L;
 
@@ -208,16 +129,7 @@ class ChessPerft {
             return 1L;
         }
 
-        List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = our_board.generateAllValidMoves();
         List<Move> their_valid_moves = their_board.legalMoves();
-
-        if (our_valid_moves.size() != their_valid_moves.size()) {
-            System.out.println();
-            System.out.println("OUR FEN: \t" + our_board.actualRepresentationOfChessBoard());
-            System.out.println("THEIR FEN: \t" + their_board.getFen());
-            print_mismatch(our_valid_moves, their_valid_moves);
-            throw new RuntimeException("Move generation mismatch");
-        }
 
         for (Move move : their_valid_moves) {
             Coordinate from = from(move);
@@ -244,106 +156,7 @@ class ChessPerft {
         return nodes;
     }
 
-    private void print_mismatch(List<core.project.chess.domain.chess.value_objects.Move> our_moves,
-            List<Move> their_moves) {
-
-        our_moves.sort(this::compareOurMoves);
-        their_moves.sort(this::compareTheirMoves);
-
-        var our_moves_str = our_moves.stream().map(Object::toString).collect(Collectors.toList());
-        var their_moves_str = their_moves.stream().map(Object::toString).collect(Collectors.toList());
-
-        List<String> outliers = new ArrayList<>();
-        boolean ourMovesLarger = our_moves.size() > their_moves.size();
-
-        // Determine which list has unique moves (outliers)
-        if (ourMovesLarger) {
-            our_moves_str.removeAll(their_moves_str);
-            outliers.addAll(our_moves_str);
-        } else {
-            their_moves_str.removeAll(our_moves_str);
-            outliers.addAll(their_moves_str);
-        }
-
-        int numColumns = 5;
-
-        System.out.println();
-        System.out.println("OUR GENERATION:");
-        printMovesInColumns(our_moves, outliers, numColumns);
-
-        System.out.println();
-        System.out.println("THEIR GENERATION:");
-        printMovesInColumns(their_moves, outliers, numColumns);
-        System.out.println();
-    }
-
-    private void printMovesInColumns(List<?> moves, List<String> outliers, int numColumns) {
-        int itemsPerColumn = (int) Math.ceil((double) moves.size() / numColumns);
-
-        for (int row = 0; row < itemsPerColumn; row++) {
-            StringBuilder line = new StringBuilder();
-            for (int col = 0; col < numColumns; col++) {
-                int index = row + col * itemsPerColumn;
-                if (index < moves.size()) {
-                    String moveStr = moves.get(index).toString();
-                    if (outliers.contains(moveStr)) {
-                        // Apply highlighting for outliers
-                        String formattedMove = moveStr + "◄"; // Using unicode symbol for better alignment
-                        line.append(String.format("\u001B[31m%-15s\u001B[0m", formattedMove));
-                    } else {
-                        line.append(String.format("%-15s", moveStr));
-                    }
-                } else {
-                    line.append(String.format("%-15s", ""));
-                }
-            }
-            System.out.println(line.toString());
-        }
-    }
-
-    // Extracted comparator methods for better readability
-    private int compareOurMoves(core.project.chess.domain.chess.value_objects.Move one,
-            core.project.chess.domain.chess.value_objects.Move two) {
-        // Compare from column
-        int result = Integer.compare(one.from().column(), two.from().column());
-        if (result != 0)
-            return result;
-
-        // Compare from row
-        result = Integer.compare(one.from().row(), two.from().row());
-        if (result != 0)
-            return result;
-
-        // Compare to column
-        result = Integer.compare(one.to().column(), two.to().column());
-        if (result != 0)
-            return result;
-
-        // Compare to row
-        return Integer.compare(one.to().row(), two.to().row());
-    }
-
-    private int compareTheirMoves(Move one, Move two) {
-        // Compare from file
-        int result = Integer.compare(one.getFrom().getFile().ordinal(), two.getFrom().getFile().ordinal());
-        if (result != 0)
-            return result;
-
-        // Compare from rank
-        result = Integer.compare(one.getFrom().getRank().ordinal(), two.getFrom().getRank().ordinal());
-        if (result != 0)
-            return result;
-
-        // Compare to file
-        result = Integer.compare(one.getTo().getFile().ordinal(), two.getTo().getFile().ordinal());
-        if (result != 0)
-            return result;
-
-        // Compare to rank
-        return Integer.compare(one.getTo().getRank().ordinal(), two.getTo().getRank().ordinal());
-    }
-
-    long perft(int depth, ChessBoard our_board, Board their_board) {
+    long robustPerft(int depth) {
         long nodes = 0L;
 
         if (depth == 0) {
@@ -353,41 +166,45 @@ class ChessPerft {
         List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = our_board.generateAllValidMoves();
         List<Move> their_valid_moves = their_board.legalMoves();
 
-        if (our_valid_moves.size() != their_valid_moves.size()) {
-            our_valid_moves.sort(null);
-            their_valid_moves.sort(null);
-            System.out.println("our moves");
-            for (var move : our_valid_moves) {
-                System.out.println(move);
-            }
+        String our_fen = our_board.actualRepresentationOfChessBoard();
+        String their_fen = their_board.getFen();
 
-            System.out.println("their moves");
-            for (var move : their_valid_moves) {
-                System.out.println(move);
-            }
+        if (!our_fen.equals(their_fen)) {
+            System.out.println("MOVES: " + our_board.listOfAlgebraicNotations());
+            System.out.println("OUR FEN: \t" + our_fen);
+            System.out.println("THEIR FEN: \t" + their_board.getFen());
+            System.out.println();
+            PerftUtil.analyze(our_fen, their_fen);
+            throw new RuntimeException("FEN mismatch");
+        }
+
+        if (our_valid_moves.size() != their_valid_moves.size()) {
+            System.out.println();
+            System.out.println("OUR FEN: \t" + our_fen);
+            System.out.println("THEIR FEN: \t" + their_board.getFen());
+            PerftUtil.print_mismatch(our_valid_moves, their_valid_moves);
             throw new RuntimeException("Move generation mismatch");
         }
 
-        for (var move : their_valid_moves) {
+        for (Move move : their_valid_moves) {
             Coordinate from = from(move);
             Coordinate to = to(move);
             Piece inCaseOfPromotion = getInCaseOfPromotion(move);
 
-            our_board.doMove(from, to, inCaseOfPromotion);
             their_board.doMove(move);
+            our_board.doMove(from, to, inCaseOfPromotion);
 
-            long newNodes = perft(depth - 1);
+            long newNodes = robustPerft(depth - 1);
             nodes += newNodes;
             calculatePerftValues(nodes);
             calculateSecondPerftValues(nodes, move);
             verifyPerft(move, from, to, inCaseOfPromotion);
 
-            our_board.undoMove();
             their_board.undoMove();
+            our_board.undoMove();
 
             if (depth == DEPTH) {
-                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes,
-                        this.our_board.actualRepresentationOfChessBoard());
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, our_fen);
             }
         }
 
@@ -401,39 +218,13 @@ class ChessPerft {
             return 1L;
         }
 
-        List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = pureChess.generateAllValidMoves();
-
-        for (var move : allValidMoves) {
-            Coordinate from = move.from();
-            Coordinate to = move.to();
-            Piece inCaseOfPromotion = move.promotion();
-
-            pureChess.doMove(from, to, inCaseOfPromotion);
-
-            long newNodes = onlyNodesPerft(depth - 1);
-            nodes += newNodes;
-            this.nodes = nodes;
-
-            pureChess.undoMove();
-        }
-
-        return nodes;
-    }
-
-    long onlyNodesPerft(int depth, ChessBoard board) {
-        long nodes = 0L;
-
-        if (depth == 0) {
-            return 1L;
-        }
-
         List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = null;
 
         try {
-            allValidMoves = board.generateAllValidMoves();
+            allValidMoves = our_board.generateAllValidMoves();
         } catch (Exception e) {
             System.out.println("Could not generate moves for posittion: %s | current depth: %s"
-                    .formatted(board.actualRepresentationOfChessBoard(), depth));
+                    .formatted(our_board.actualRepresentationOfChessBoard(), depth));
             throw e;
         }
 
@@ -443,22 +234,17 @@ class ChessPerft {
             Piece inCaseOfPromotion = move.promotion();
 
             try {
-                board.doMove(from, to, inCaseOfPromotion);
+                our_board.doMove(from, to, inCaseOfPromotion);
             } catch (Exception e) {
                 System.out.println("Error making move: %s | position: %s | depth: %s".formatted(move,
-                        board.actualRepresentationOfChessBoard(), depth));
+                        our_board.actualRepresentationOfChessBoard(), depth));
                 throw e;
             }
 
-            long newNodes = onlyNodesPerft(depth - 1, board);
+            long newNodes = onlyNodesPerft(depth - 1);
             nodes += newNodes;
-            this.nodes = nodes;
 
-            if (depth == DEPTH) {
-                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, board.actualRepresentationOfChessBoard());
-            }
-
-            board.undoMove();
+            our_board.undoMove();
         }
 
         return nodes;
@@ -703,6 +489,113 @@ class ChessPerft {
         }
 
         perftValues.capturesOnPassage++;
+    }
+
+    private void assertPerftDepth1() {
+        logValues();
+        assertEquals(20L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth2() {
+        logValues();
+        assertEquals(400L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth3() {
+        logValues();
+        assertEquals(8_902L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth4() {
+        logValues();
+        assertEquals(197_281L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth5() {
+        logValues();
+        assertEquals(4_865_609L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth6() {
+        logValues();
+        assertEquals(119_060_324L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth7() {
+        logValues();
+        assertEquals(3_195_901_860L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth8() {
+        logValues();
+        assertEquals(84_998_978_956L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth9() {
+        logValues();
+        assertEquals(2_439_530_234_167L, perftValues.nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth1(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(20L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth2(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(400L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth3(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(8_902L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth4(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(197_281L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth5(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(4_865_609L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth6(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(119_060_324L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth7(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(3_195_901_860L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth8(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(84_998_978_956L, nodes, "Nodes count mismatch");
+    }
+
+    private void assertPerftDepth9(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(2_439_530_234_167L, nodes, "Nodes count mismatch");
+    }
+
+    private void logValues() {
+        Log.infof("Nodes count: %d", perftValues.nodes);
+        Log.infof("Second nodes count: %d", secondPerftValues.nodes);
+        Log.infof("Captures count: %d", perftValues.captures);
+        Log.infof("Second captures count: %d", secondPerftValues.captures);
+        Log.infof("En Passant captures count: %d", perftValues.capturesOnPassage);
+        Log.infof("Second en passaunt count: %d", secondPerftValues.capturesOnPassage);
+        Log.infof("Castles count: %d", perftValues.castles);
+        Log.infof("Second castles count: %d", secondPerftValues.castles);
+        Log.infof("Promotions count: %d", perftValues.promotions);
+        Log.infof("Second promotions count: %d", secondPerftValues.promotions);
+        Log.infof("Checks count: %d", perftValues.checks);
+        Log.infof("Second checks count: %d", secondPerftValues.checks);
+        Log.infof("Checkmates count: %d", perftValues.checkMates);
+        Log.infof("Second checkmates count: %d", secondPerftValues.checkMates);
     }
 
     static class PerftValues {
