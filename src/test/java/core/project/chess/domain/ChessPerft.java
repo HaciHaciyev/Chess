@@ -14,18 +14,20 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Disabled("For separate run.")
+// @Disabled("For separate run.")
 class ChessPerft {
     private long nodes = 0;
-    public static final int DEPTH = 6;
+    public static final int DEPTH = 3;
     private ChessBoard our_board;
     private ChessBoard pureChess = ChessBoard.pureChess();
     private Board their_board;
@@ -35,7 +37,7 @@ class ChessPerft {
     @Test
     void customPositions() {
         String firstPosition = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-        System.out.println("Start with first position: " + firstPosition);
+        System.out.println("Start with position: " + firstPosition);
 
         our_board = ChessBoard.pureChessFromPosition(firstPosition);
 
@@ -209,12 +211,11 @@ class ChessPerft {
         List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = our_board.generateAllValidMoves();
         List<Move> their_valid_moves = their_board.legalMoves();
 
-        if  (our_valid_moves.size() != their_valid_moves.size()) {
-            System.out.println("Our moves:    " + our_valid_moves);
-            System.out.println("Our FEN:      " + our_board.toString());
-            System.out.println("Our PGN:      " + our_board.pgn());
-            System.out.println("Their moves:  " + their_valid_moves);
-
+        if (our_valid_moves.size() != their_valid_moves.size()) {
+            System.out.println();
+            System.out.println("OUR FEN: \t" + our_board.actualRepresentationOfChessBoard());
+            System.out.println("THEIR FEN: \t" + their_board.getFen());
+            print_mismatch(our_valid_moves, their_valid_moves);
             throw new RuntimeException("Move generation mismatch");
         }
 
@@ -243,6 +244,105 @@ class ChessPerft {
         return nodes;
     }
 
+    private void print_mismatch(List<core.project.chess.domain.chess.value_objects.Move> our_moves,
+            List<Move> their_moves) {
+
+        our_moves.sort(this::compareOurMoves);
+        their_moves.sort(this::compareTheirMoves);
+
+        var our_moves_str = our_moves.stream().map(Object::toString).collect(Collectors.toList());
+        var their_moves_str = their_moves.stream().map(Object::toString).collect(Collectors.toList());
+
+        List<String> outliers = new ArrayList<>();
+        boolean ourMovesLarger = our_moves.size() > their_moves.size();
+
+        // Determine which list has unique moves (outliers)
+        if (ourMovesLarger) {
+            our_moves_str.removeAll(their_moves_str);
+            outliers.addAll(our_moves_str);
+        } else {
+            their_moves_str.removeAll(our_moves_str);
+            outliers.addAll(their_moves_str);
+        }
+
+        int numColumns = 5;
+
+        System.out.println();
+        System.out.println("OUR GENERATION:");
+        printMovesInColumns(our_moves, outliers, numColumns);
+
+        System.out.println();
+        System.out.println("THEIR GENERATION:");
+        printMovesInColumns(their_moves, outliers, numColumns);
+        System.out.println();
+    }
+
+    private void printMovesInColumns(List<?> moves, List<String> outliers, int numColumns) {
+        int itemsPerColumn = (int) Math.ceil((double) moves.size() / numColumns);
+
+        for (int row = 0; row < itemsPerColumn; row++) {
+            StringBuilder line = new StringBuilder();
+            for (int col = 0; col < numColumns; col++) {
+                int index = row + col * itemsPerColumn;
+                if (index < moves.size()) {
+                    String moveStr = moves.get(index).toString();
+                    if (outliers.contains(moveStr)) {
+                        // Apply highlighting for outliers
+                        String formattedMove = moveStr + "◄"; // Using unicode symbol for better alignment
+                        line.append(String.format("\u001B[31m%-15s\u001B[0m", formattedMove));
+                    } else {
+                        line.append(String.format("%-15s", moveStr));
+                    }
+                } else {
+                    line.append(String.format("%-15s", ""));
+                }
+            }
+            System.out.println(line.toString());
+        }
+    }
+
+    // Extracted comparator methods for better readability
+    private int compareOurMoves(core.project.chess.domain.chess.value_objects.Move one,
+            core.project.chess.domain.chess.value_objects.Move two) {
+        // Compare from column
+        int result = Integer.compare(one.from().column(), two.from().column());
+        if (result != 0)
+            return result;
+
+        // Compare from row
+        result = Integer.compare(one.from().row(), two.from().row());
+        if (result != 0)
+            return result;
+
+        // Compare to column
+        result = Integer.compare(one.to().column(), two.to().column());
+        if (result != 0)
+            return result;
+
+        // Compare to row
+        return Integer.compare(one.to().row(), two.to().row());
+    }
+
+    private int compareTheirMoves(Move one, Move two) {
+        // Compare from file
+        int result = Integer.compare(one.getFrom().getFile().ordinal(), two.getFrom().getFile().ordinal());
+        if (result != 0)
+            return result;
+
+        // Compare from rank
+        result = Integer.compare(one.getFrom().getRank().ordinal(), two.getFrom().getRank().ordinal());
+        if (result != 0)
+            return result;
+
+        // Compare to file
+        result = Integer.compare(one.getTo().getFile().ordinal(), two.getTo().getFile().ordinal());
+        if (result != 0)
+            return result;
+
+        // Compare to rank
+        return Integer.compare(one.getTo().getRank().ordinal(), two.getTo().getRank().ordinal());
+    }
+
     long perft(int depth, ChessBoard our_board, Board their_board) {
         long nodes = 0L;
 
@@ -253,10 +353,18 @@ class ChessPerft {
         List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = our_board.generateAllValidMoves();
         List<Move> their_valid_moves = their_board.legalMoves();
 
-        if  (our_valid_moves.size() != their_valid_moves.size()) {
-            System.out.println("Our moves:  " + our_valid_moves);
-            System.out.println("Their moves:  " + their_valid_moves);
+        if (our_valid_moves.size() != their_valid_moves.size()) {
+            our_valid_moves.sort(null);
+            their_valid_moves.sort(null);
+            System.out.println("our moves");
+            for (var move : our_valid_moves) {
+                System.out.println(move);
+            }
 
+            System.out.println("their moves");
+            for (var move : their_valid_moves) {
+                System.out.println(move);
+            }
             throw new RuntimeException("Move generation mismatch");
         }
 
@@ -278,7 +386,8 @@ class ChessPerft {
             their_board.undoMove();
 
             if (depth == DEPTH) {
-                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, this.our_board.actualRepresentationOfChessBoard());
+                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes,
+                        this.our_board.actualRepresentationOfChessBoard());
             }
         }
 
@@ -320,12 +429,13 @@ class ChessPerft {
 
         List<core.project.chess.domain.chess.value_objects.Move> allValidMoves = null;
 
-		try {
-			allValidMoves = board.generateAllValidMoves();
-		} catch (Exception e) {
-            System.out.println("Could not generate moves for posittion: %s | current depth: %s".formatted(board.actualRepresentationOfChessBoard(), depth));
+        try {
+            allValidMoves = board.generateAllValidMoves();
+        } catch (Exception e) {
+            System.out.println("Could not generate moves for posittion: %s | current depth: %s"
+                    .formatted(board.actualRepresentationOfChessBoard(), depth));
             throw e;
-		}
+        }
 
         for (var move : allValidMoves) {
             Coordinate from = move.from();
@@ -333,11 +443,12 @@ class ChessPerft {
             Piece inCaseOfPromotion = move.promotion();
 
             try {
-				board.doMove(from, to, inCaseOfPromotion);
-			} catch (Exception e) {
-                System.out.println("Error making move: %s | position: %s | depth: %s".formatted(move, board.actualRepresentationOfChessBoard(), depth));
+                board.doMove(from, to, inCaseOfPromotion);
+            } catch (Exception e) {
+                System.out.println("Error making move: %s | position: %s | depth: %s".formatted(move,
+                        board.actualRepresentationOfChessBoard(), depth));
                 throw e;
-			}
+            }
 
             long newNodes = onlyNodesPerft(depth - 1, board);
             nodes += newNodes;
@@ -448,7 +559,8 @@ class ChessPerft {
             secondPerftValues.captures++;
         }
 
-        com.github.bhlangonijr.chesslib.Piece piece = their_board.getPiece(Square.valueOf(from.toString().toUpperCase()));
+        com.github.bhlangonijr.chesslib.Piece piece = their_board
+                .getPiece(Square.valueOf(from.toString().toUpperCase()));
         final boolean isTheKingMove = piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_KING) ||
                 piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_KING);
 
@@ -483,7 +595,8 @@ class ChessPerft {
             return false;
         }
 
-        com.github.bhlangonijr.chesslib.Piece piece = their_board.getPiece(Square.valueOf(from.toString().toUpperCase()));
+        com.github.bhlangonijr.chesslib.Piece piece = their_board
+                .getPiece(Square.valueOf(from.toString().toUpperCase()));
         return piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_PAWN) ||
                 piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_PAWN);
     }
@@ -553,6 +666,11 @@ class ChessPerft {
         }
 
         AlgebraicNotation preLastAN = AlgebraicNotation.of(preLastMove);
+
+        if (AlgebraicNotation.isCastling(preLastAN) != null) {
+            return;
+        }
+
         Pair<Coordinate, Coordinate> coordinatesOfPreLastMove = preLastAN.coordinates();
         final int startOfPreLastMove = coordinatesOfPreLastMove.getFirst().row();
         final int endOfPreLastMove = coordinatesOfPreLastMove.getSecond().row();
