@@ -210,7 +210,9 @@ class ChessPerft {
         List<Move> their_valid_moves = their_board.legalMoves();
 
         if  (our_valid_moves.size() != their_valid_moves.size()) {
-            System.out.println("Our moves:  " + our_valid_moves);
+            System.out.println("Our moves:    " + our_valid_moves);
+            System.out.println("Our FEN:      " + our_board.toString());
+            System.out.println("Our PGN:      " + our_board.pgn());
             System.out.println("Their moves:  " + their_valid_moves);
 
             throw new RuntimeException("Move generation mismatch");

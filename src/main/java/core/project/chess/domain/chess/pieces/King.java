@@ -294,19 +294,23 @@ public final class King implements Piece {
             if (canEat(boardNavigator, fieldWithEnemy)) return new KingStatus(Operations.CHECK, enemies);
             if (canBlock(boardNavigator, kingCoordinate, fieldWithEnemy)) return new KingStatus(Operations.CHECK, enemies);
 
-            Operations operation = isHaveSafetySurroundingField(boardNavigator, kingCoordinate) ? Operations.CHECK : Operations.CHECKMATE;
+            Operations operation = isSurrounded(surroundingFields(kingCoordinate), boardNavigator, kingCoordinate) ?
+                    Operations.CHECKMATE :
+                    Operations.CHECK;
             return new KingStatus(operation, enemies);
         }
 
         if (kingMove(boardNavigator.board(), kingCoordinate, enemies.getFirst()) &&
-                !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getFirst(), color))
+                !isFieldDangerousOrBlocked(boardNavigator, enemies.getFirst(), kingCoordinate))
             return new KingStatus(Operations.CHECK, enemies);
 
         if (kingMove(boardNavigator.board(), kingCoordinate, enemies.getLast()) &&
-                !isFieldDangerousOrBlockedForKing(boardNavigator, enemies.getLast(), color))
+                !isFieldDangerousOrBlocked(boardNavigator, enemies.getLast(), kingCoordinate))
             return new KingStatus(Operations.CHECK, enemies);
 
-        Operations operation = isHaveSafetySurroundingField(boardNavigator, kingCoordinate) ? Operations.CHECK : Operations.CHECKMATE;
+        Operations operation = isSurrounded(surroundingFields(kingCoordinate), boardNavigator, kingCoordinate) ?
+                Operations.CHECKMATE :
+                Operations.CHECK;
         return new KingStatus(operation, enemies);
     }
 
@@ -330,15 +334,6 @@ public final class King implements Piece {
         return true;
     }
 
-    private boolean isHaveSafetySurroundingField(ChessBoardNavigator boardNavigator, Coordinate kingCoordinate) {
-        List<Coordinate> fields = surroundingFields(kingCoordinate);
-        for (Coordinate field : fields) {
-            if (!isFieldDangerousOrBlockedForKing(boardNavigator, field, color)) return true;
-        }
-
-        return false;
-    }
-
     private boolean safeToCastle(ChessBoardNavigator navigator, Coordinate presentKingPosition, Coordinate futureKingPosition) {
         Castle castle;
         if (presentKingPosition.column() < futureKingPosition.column()) castle = Castle.SHORT_CASTLING;
@@ -351,7 +346,8 @@ public final class King implements Piece {
         List<Coordinate> fieldsToCastle = castlingFields(castle, color);
         for (int i = 1; i < fieldsToCastle.size(); i++) {
             Coordinate field = fieldsToCastle.get(i);
-            if (field.column() == 5) continue;
+            final boolean pathIsNotClear = navigator.board().piece(field) != null;
+            if (pathIsNotClear) return false;
             if (isFieldDangerousOrBlocked(navigator, field, presentKingPosition)) return false;
         }
 
@@ -622,49 +618,6 @@ public final class King implements Piece {
                     clearPath(boardNavigator.board(), potentialPawnCoordinate, secondPassageCoordinate) &&
                     safeForKing(boardNavigator.board(), potentialPawnCoordinate, secondPassageCoordinate);
         }
-        return false;
-    }
-
-    private boolean isFieldDangerousOrBlockedForKing(ChessBoardNavigator boardNavigator, Coordinate pivot, Color kingColor) {
-        ChessBoard board = boardNavigator.board();
-        Coordinate kingCoordinate = boardNavigator.kingCoordinate(kingColor);
-        Piece pivotPiece = board.piece(pivot);
-        Color oppositeColor = kingColor == WHITE ? BLACK : WHITE;
-
-        final boolean blocked = pivotPiece != null && pivotPiece.color() == kingColor;
-        if (blocked) return true;
-
-        List<Coordinate> pawns = boardNavigator.pawnsThreateningTheCoordinateOf(pivot, oppositeColor);
-        if (!pawns.isEmpty()) return true;
-
-        List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(pivot);
-        for (Coordinate possibleKnight : knights) {
-            Piece piece = board.piece(possibleKnight);
-            if (piece.color() != kingColor && piece instanceof Knight) return true;
-        }
-
-        final boolean isKingOpposition = boardNavigator.findKingOpposition(pivot, this.color == WHITE ? BLACK : WHITE);
-        if (isKingOpposition) return true;
-
-        List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(),
-                pivot, kingCoordinate
-        );
-
-        for (Coordinate coordinate : diagonalFields) {
-            Piece piece = board.piece(coordinate);
-            if (piece.color() != kingColor && (piece instanceof Bishop || piece instanceof Queen)) return true;
-        }
-
-        List<Coordinate> horizontalVerticalFields = boardNavigator.occupiedFieldsInDirections(
-                Direction.horizontalVerticalDirections(),
-                pivot, kingCoordinate
-        );
-
-        for (Coordinate coordinate : horizontalVerticalFields) {
-            Piece piece = board.piece(coordinate);
-            if (piece.color() != kingColor && (piece instanceof Rook || piece instanceof Queen)) return true;
-        }
-
         return false;
     }
 

@@ -23,42 +23,21 @@ class QuickTests {
 
     @Test
     void test() {
-        // 1. e2-e3 a7-a5 2. Qd1-h5 Ra8-a6 3. Qh5xa5 h7-h5 4. Qa5xc7 Ra6-h6 5. h2-h4 f7-f6 6. Qc7xd7+ ...
+        // 1. b2-b3 e7-e5 2. Bc1-a3 Ng8-f6 3. Ba3xf8 ...
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e2, Coordinate.e3, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.b2, Coordinate.b3, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.a7, Coordinate.a5, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e7, Coordinate.e5, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.d1, Coordinate.h5, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.c1, Coordinate.a3, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.a8, Coordinate.a6, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.g8, Coordinate.f6, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.h5, Coordinate.a5, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.h7, Coordinate.h5, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a5, Coordinate.c7, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.a6, Coordinate.h6, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.h2, Coordinate.h4, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.f7, Coordinate.f6, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.c7, Coordinate.d7, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e8, Coordinate.f7, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a3, Coordinate.f8, null);
         Log.info(navigator.prettyToString());
     }
 
