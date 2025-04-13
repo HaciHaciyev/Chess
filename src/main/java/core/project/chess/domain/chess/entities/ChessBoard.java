@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations.*;
@@ -1121,7 +1122,7 @@ public class ChessBoard {
         return Stream.of(pawnMoves, knightMoves, bishopMoves, rookMoves, queenMoves, kingMoves)
                 .map(CompletableFuture::join)
                 .flatMap(List::stream)
-                .toList();
+        .collect(Collectors.toList());
     }
 
     public void doMove(final Coordinate from, final Coordinate to) {
