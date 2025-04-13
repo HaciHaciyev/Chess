@@ -5,7 +5,6 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.Direction;
 import core.project.chess.domain.chess.pieces.*;
-import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -27,10 +26,6 @@ public record ChessBoardNavigator(ChessBoard board) {
     };
 
     private static final Coordinate[] coordinates = Coordinate.values();
-    public static final List<Coordinate> WSHORT_CASTLING_COORDINATES = List.of(Coordinate.e1, Coordinate.f1, Coordinate.g1);
-    public static final List<Coordinate> WLONG_CASTLING_COORDINATES = List.of(Coordinate.e1, Coordinate.d1, Coordinate.c1);
-    public static final List<Coordinate> BSHORT_CASTLING_COORDINATES = List.of(Coordinate.e8, Coordinate.f8, Coordinate.g8);
-    public static final List<Coordinate> BLONG_CASTLING_COORDINATES = List.of(Coordinate.e8, Coordinate.d8, Coordinate.c8);
 
     public Coordinate kingCoordinate(Color color) {
         if (color == Color.WHITE) {
@@ -108,16 +103,6 @@ public record ChessBoardNavigator(ChessBoard board) {
         }
 
         return fields;
-    }
-
-    public List<Coordinate> castlingFields(AlgebraicNotation.Castle castle, Color color) {
-        if (color == Color.WHITE) {
-            if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) return WSHORT_CASTLING_COORDINATES;
-            return WLONG_CASTLING_COORDINATES;
-        }
-
-        if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) return BSHORT_CASTLING_COORDINATES;
-        return BLONG_CASTLING_COORDINATES;
     }
 
     public List<Coordinate> occupiedFieldsInDirections(List<Direction> directions, Coordinate pivot) {

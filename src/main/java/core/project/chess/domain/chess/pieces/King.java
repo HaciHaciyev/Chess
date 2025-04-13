@@ -24,6 +24,10 @@ public final class King implements Piece {
 
     private static final King WHITE_KING = new King(WHITE, 5);
     private static final King BLACK_KING = new King(BLACK, 11);
+    public static final List<Coordinate> WSHORT_CASTLING_COORDINATES = List.of(Coordinate.e1, Coordinate.f1, Coordinate.g1);
+    public static final List<Coordinate> WLONG_CASTLING_COORDINATES = List.of(Coordinate.e1, Coordinate.d1, Coordinate.c1);
+    public static final List<Coordinate> BSHORT_CASTLING_COORDINATES = List.of(Coordinate.e8, Coordinate.f8, Coordinate.g8);
+    public static final List<Coordinate> BLONG_CASTLING_COORDINATES = List.of(Coordinate.e8, Coordinate.d8, Coordinate.c8);
     static final long[] WHITE_KING_MOVES_CACHE = new long[64];
     static final long[] BLACK_KING_MOVES_CACHE = new long[64];
     static {
@@ -340,58 +344,28 @@ public final class King implements Piece {
         if (presentKingPosition.column() < futureKingPosition.column()) castle = Castle.SHORT_CASTLING;
         else castle = Castle.LONG_CASTLING;
 
-        if (!navigator.board().ableToCastling(color, castle)) return false;
-
         KingStatus kingStatus = navigator.board().kingStatus();
         List<Coordinate> attackers = kingStatus != null ? kingStatus.enemiesAttackingTheKing() : check(navigator, null);
         if (!attackers.isEmpty()) return false;
 
-        List<Coordinate> fieldsToCastle = navigator.castlingFields(castle, color);
-        for (Coordinate field : fieldsToCastle) {
+        List<Coordinate> fieldsToCastle = castlingFields(castle, color);
+        for (int i = 1; i < fieldsToCastle.size(); i++) {
+            Coordinate field = fieldsToCastle.get(i);
             if (field.column() == 5) continue;
-            if (!processCastling(navigator, field)) return false;
+            if (isFieldDangerousOrBlocked(navigator, field, presentKingPosition)) return false;
         }
 
         return true;
     }
 
-    private boolean processCastling(ChessBoardNavigator boardNavigator, Coordinate pivot) {
-        Piece piece = boardNavigator.board().piece(pivot);
-        if (piece != null && !(piece instanceof King)) return false;
-
-        Color oppositeColor = color == WHITE ? BLACK : WHITE;
-
-        List<Coordinate> pawns = boardNavigator.pawnsThreateningTheCoordinateOf(pivot, oppositeColor);
-        for (Coordinate coordinate : pawns) {
-            Piece pawn = boardNavigator.board().piece(coordinate);
-            if (pawn.color() != this.color) return false;
+    private List<Coordinate> castlingFields(AlgebraicNotation.Castle castle, Color color) {
+        if (color == Color.WHITE) {
+            if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) return WSHORT_CASTLING_COORDINATES;
+            return WLONG_CASTLING_COORDINATES;
         }
 
-        List<Coordinate> knights = boardNavigator.knightAttackPositionsNonNull(pivot);
-        for (Coordinate coordinate : knights) {
-            Piece knight = boardNavigator.board().piece(coordinate);
-            if (knight instanceof Knight && knight.color() != this.color) return false;
-        }
-
-        List<Coordinate> diagonalFields = boardNavigator.occupiedFieldsInDirections(Direction.diagonalDirections(), pivot);
-        for (Coordinate coordinate : diagonalFields) {
-            Piece pieceDiagonal = boardNavigator.board().piece(coordinate);
-            if ((pieceDiagonal instanceof Bishop || pieceDiagonal instanceof Queen) && pieceDiagonal.color() != this.color) return false;
-        }
-
-        List<Coordinate> horizontalVertical = boardNavigator.occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), pivot);
-        for (Coordinate hvField : horizontalVertical) {
-            Piece pieceFromHV = boardNavigator.board().piece(hvField);
-            if ((piece instanceof Rook || piece instanceof Queen) && pieceFromHV.color() != this.color) return false;
-        }
-
-        List<Coordinate> surroundings = surroundingFields(pivot);
-        for (Coordinate surroundingField : surroundings) {
-            Piece surroundingPiece = boardNavigator.board().piece(surroundingField);
-            if (surroundingPiece instanceof King && surroundingPiece.color() != this.color) return false;
-        }
-
-        return true;
+        if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) return BSHORT_CASTLING_COORDINATES;
+        return BLONG_CASTLING_COORDINATES;
     }
 
     private boolean validatePieceMovementForKingSafety(
