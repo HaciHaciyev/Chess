@@ -14,9 +14,7 @@ import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -178,7 +176,7 @@ public class ChessBoard {
     private final Deque<Piece> capturedBlackPieces = new ArrayDeque<>();
 
     /** Executor service for parallel moves generation*/
-    private final ExecutorService executorService = Executors
+    private static final ExecutorService executorService = Executors
             .newFixedThreadPool(Runtime
             .getRuntime()
             .availableProcessors());
@@ -1112,17 +1110,59 @@ public class ChessBoard {
     }
 
     public List<Move> generateAllValidMoves() {
+        List<Move> pawnMoves = Pawn.of(figuresTurn).allValidMoves(this);
+        List<Move> knightMoves = Knight.of(figuresTurn).allValidMoves(this);
+        List<Move> bishopMoves = Bishop.of(figuresTurn).allValidMoves(this);
+        List<Move> rookMoves = Rook.of(figuresTurn).allValidMoves(this);
+        List<Move> queenMoves = Queen.of(figuresTurn).allValidMoves(this);
+        List<Move> kingMoves = King.of(figuresTurn).allValidMoves(this);
+
+        List<Move> allMoves = new ArrayList<>();
+        allMoves.addAll(pawnMoves);
+        allMoves.addAll(knightMoves);
+        allMoves.addAll(bishopMoves);
+        allMoves.addAll(rookMoves);
+        allMoves.addAll(queenMoves);
+        allMoves.addAll(kingMoves);
+        return allMoves;
+    }
+
+    public List<Move> generateAllValidMovesParallelStream() {
         return Stream.of(
-            Pawn.of(figuresTurn).allValidMoves(this),
-            Knight.of(figuresTurn).allValidMoves(this),
-            Bishop.of(figuresTurn).allValidMoves(this),
-            Rook.of(figuresTurn).allValidMoves(this),
-            Queen.of(figuresTurn).allValidMoves(this),
-            King.of(figuresTurn).allValidMoves(this)
-        )
-        .parallel()
-        .flatMap(List::stream)
-        .collect(Collectors.toList());
+                    Pawn.of(figuresTurn).allValidMoves(this),
+                    Knight.of(figuresTurn).allValidMoves(this),
+                    Bishop.of(figuresTurn).allValidMoves(this),
+                    Rook.of(figuresTurn).allValidMoves(this),
+                    Queen.of(figuresTurn).allValidMoves(this),
+                    King.of(figuresTurn).allValidMoves(this)
+                )
+                .parallel()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    public List<Move> generateAllValidMovesThreadPool() {
+        try {
+            List<Callable<List<Move>>> tasks = List.of(
+                    () -> Pawn.of(figuresTurn).allValidMoves(this),
+                    () -> Knight.of(figuresTurn).allValidMoves(this),
+                    () -> Bishop.of(figuresTurn).allValidMoves(this),
+                    () -> Rook.of(figuresTurn).allValidMoves(this),
+                    () -> Queen.of(figuresTurn).allValidMoves(this),
+                    () -> King.of(figuresTurn).allValidMoves(this)
+            );
+
+            List<Future<List<Move>>> futures = executorService.invokeAll(tasks);
+
+            List<Move> allMoves = new ArrayList<>();
+            for (Future<List<Move>> future : futures) {
+                allMoves.addAll(future.get());
+            }
+            return allMoves;
+
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Error during move generation", e);
+        }
     }
 
     public void doMove(final Coordinate from, final Coordinate to) {
