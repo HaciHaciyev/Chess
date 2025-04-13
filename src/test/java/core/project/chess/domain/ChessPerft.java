@@ -9,12 +9,11 @@ import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
-import testUtils.PerftUtil;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import testUtils.PerftUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Disabled("For separate run.")
 class ChessPerft {
-    public static int DEPTH = 4;
+    public static int DEPTH = 6;
 
     private ChessBoard our_board;
     private Board their_board;

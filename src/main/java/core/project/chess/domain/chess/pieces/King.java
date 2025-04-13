@@ -478,57 +478,22 @@ public final class King implements Piece {
         return opponentPawn.equals(to);
     }
 
-    private boolean canEat(ChessBoardNavigator boardNavigator, Coordinate enemyField) {
-        Piece enemyPiece = boardNavigator.board().piece(enemyField);
-        Coordinate enPassaunt = boardNavigator.board().enPassant();
+    private boolean canEat(ChessBoardNavigator navigator, Coordinate target) {
+        ChessBoard board = navigator.board();
+        int square = target.ordinal();
+        long targetMask = target.bitMask();
 
-        if (enemyPiece instanceof Pawn && enPassaunt != null) {
-            List<Coordinate> surroundedByEnPassauntPawns = boardNavigator.pawnsThreateningTheCoordinateOf(enPassaunt, color);
-            for (Coordinate possiblePawn : surroundedByEnPassauntPawns) {
-                if (safeForKing(boardNavigator.board(), possiblePawn, enPassaunt)) return true;
-            }
-        }
+        long ourPawns = board.bitboard(Pawn.of(color));
+        long ourKnights = board.bitboard(Knight.of(color));
+        long ourQueens = board.bitboard(Queen.of(color));
+        long ourBishopsQueens = board.bitboard(Bishop.of(color)) | ourQueens;
+        long ourRooksQueens = board.bitboard(Rook.of(color)) | ourQueens;
 
-        List<Coordinate> pawnsThatPotentiallyCanEatEnemyPiece = boardNavigator.pawnsThreateningTheCoordinateOf(enemyField, color);
-        for (Coordinate possiblePawn : pawnsThatPotentiallyCanEatEnemyPiece) {
-            if (safeForKing(boardNavigator.board(), possiblePawn, enemyField)) return true;
-        }
+        long[][] table = color == WHITE ? CHECKERS_BITBOARD_FOR_BLACK : CHECKERS_BITBOARD_FOR_WHITE;
 
-        List<Coordinate> knightsThatPotentiallyCanEatEnemyPiece = boardNavigator.knightAttackPositionsNonNull(enemyField);
-        for (Coordinate knight : knightsThatPotentiallyCanEatEnemyPiece) {
-            Piece piece = boardNavigator.board().piece(knight);
-
-            final boolean isOurKnight = piece.color() == color && piece instanceof Knight;
-            if (isOurKnight && safeForKing(boardNavigator.board(), knight, enemyField)) return true;
-        }
-
-        List<Coordinate> firstPiecesFromDiagonalVectors = boardNavigator
-                .occupiedFieldsInDirections(Direction.diagonalDirections(), enemyField);
-
-        for (Coordinate diagonalField : firstPiecesFromDiagonalVectors) {
-            Piece piece = boardNavigator.board().piece(diagonalField);
-
-            final boolean canEatFromDiagonalPosition = (piece instanceof Bishop || piece instanceof Queen) &&
-                    piece.color() == color &&
-                    safeForKing(boardNavigator.board(), diagonalField, enemyField);
-
-            if (canEatFromDiagonalPosition) return true;
-        }
-
-        List<Coordinate> firstPiecesFromHorizontalAndVerticalVectors = boardNavigator
-                .occupiedFieldsInDirections(Direction.horizontalVerticalDirections(), enemyField);
-
-        for (Coordinate horizontalVerticalField : firstPiecesFromHorizontalAndVerticalVectors) {
-            Piece piece = boardNavigator.board().piece(horizontalVerticalField);
-
-            final boolean canEatFromHorizontalAndVerticalPositions = (piece instanceof Rook || piece instanceof Queen) &&
-                    piece.color() == color &&
-                    safeForKing(boardNavigator.board(), horizontalVerticalField, enemyField);
-
-            if (canEatFromHorizontalAndVerticalPositions) return true;
-        }
-
-        return false;
+        if (pawnCanEat(target, board, table, ourPawns, square)) return true;
+        if (knightCanEat(target, table, square, ourKnights, board)) return true;
+        return slidersCanEat(target, table, square, ourBishopsQueens, board, ourRooksQueens);
     }
 
     private boolean canBlock(ChessBoardNavigator boardNavigator, Coordinate pivot, Coordinate enemyField) {
@@ -569,6 +534,75 @@ public final class King implements Piece {
                 if (piece.color() == color &&  (piece instanceof Rook || piece instanceof Queen) &&
                         safeForKing(boardNavigator.board(), horizontalVerticalField, field)) return true;
             }
+        }
+        return false;
+    }
+
+    private boolean pawnCanEat(Coordinate target, ChessBoard board, long[][] table, long ourPawns, int square) {
+        if (enPassant(target, board, table, ourPawns)) return true;
+
+        long pawnAttackers = table[Checkers.PAWNS.ordinal()][square] & ourPawns;
+        while (pawnAttackers != 0) {
+            int fromMask = Long.numberOfTrailingZeros(pawnAttackers);
+            Coordinate from = Coordinate.byOrdinal(fromMask);
+            if (safeForKing(board, from, target)) return true;
+            pawnAttackers &= pawnAttackers - 1;
+        }
+        return false;
+    }
+
+    private boolean enPassant(Coordinate target, ChessBoard board, long[][] table, long ourPawns) {
+        Coordinate enPassant = board.enPassant();
+        if (enPassant != null && board.piece(target) instanceof Pawn) {
+            if (validateEnPassantAbility(target, enPassant)) return false;
+            long enPassantAttackersMask = table[Checkers.PAWNS.ordinal()][enPassant.ordinal()] & ourPawns;
+            while (enPassantAttackersMask != 0) {
+                int fromMask = Long.numberOfTrailingZeros(enPassantAttackersMask);
+                if (safeForKing(board, Coordinate.byOrdinal(fromMask), enPassant)) return true;
+                enPassantAttackersMask &= enPassantAttackersMask - 1;
+            }
+        }
+        return false;
+    }
+
+    private boolean validateEnPassantAbility(Coordinate target, Coordinate enPassant) {
+        if (enPassant.column() == target.column()) {
+            if (color == WHITE) if (enPassant.row() - target.row() != 1) return true;
+            if (color == BLACK) return enPassant.row() - target.row() != -1;
+        }
+        return false;
+    }
+
+    private boolean knightCanEat(Coordinate target, long[][] table, int square, long ourKnights, ChessBoard board) {
+        long knightAttackers = table[Checkers.KNIGHTS.ordinal()][square] & ourKnights;
+        while (knightAttackers != 0) {
+            int fromMask = Long.numberOfTrailingZeros(knightAttackers);
+            if (safeForKing(board, Coordinate.byOrdinal(fromMask), target)) return true;
+            knightAttackers &= knightAttackers - 1;
+        }
+        return false;
+    }
+
+    private boolean slidersCanEat(
+            Coordinate target, long[][] table, int square,
+            long ourBishopsQueens, ChessBoard board, long ourRooksQueens) {
+
+        long diagonalAttackers = table[Checkers.DIAGONALS.ordinal()][square] & ourBishopsQueens;
+        while (diagonalAttackers != 0) {
+            int fromMask = Long.numberOfTrailingZeros(diagonalAttackers);
+            Coordinate from = Coordinate.byOrdinal(fromMask);
+            if (clearPath(board, from, target) &&
+                    safeForKing(board, from, target)) return true;
+            diagonalAttackers &= diagonalAttackers - 1;
+        }
+
+        long orthogonalAttackers = table[Checkers.ORTHOGONALS.ordinal()][square] & ourRooksQueens;
+        while (orthogonalAttackers != 0) {
+            int fromMask = Long.numberOfTrailingZeros(orthogonalAttackers);
+            Coordinate from = Coordinate.byOrdinal(fromMask);
+            if (clearPath(board, from, target) &&
+                    safeForKing(board, from, target)) return true;
+            orthogonalAttackers &= orthogonalAttackers - 1;
         }
         return false;
     }

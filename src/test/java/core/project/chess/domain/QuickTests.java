@@ -23,21 +23,24 @@ class QuickTests {
 
     @Test
     void test() {
-        // 1. b2-b3 e7-e5 2. Bc1-a3 Ng8-f6 3. Ba3xf8 ...
+        // PGN: 1. a2-a3 a7-a5 2. f2-f3 e7-e5 3. g2-g4 Qd8-h4+
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.b2, Coordinate.b3, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a2, Coordinate.a3, null);
+        Log.info(navigator.prettyToString());
+
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.a7, Coordinate.a5, null);
+        Log.info(navigator.prettyToString());
+
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.f2, Coordinate.f3, null);
         Log.info(navigator.prettyToString());
 
         chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e7, Coordinate.e5, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.c1, Coordinate.a3, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.g2, Coordinate.g4, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.g8, Coordinate.f6, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a3, Coordinate.f8, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.d8, Coordinate.h4, null);
         Log.info(navigator.prettyToString());
     }
 
