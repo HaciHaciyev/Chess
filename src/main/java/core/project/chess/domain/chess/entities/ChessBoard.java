@@ -1112,16 +1112,16 @@ public class ChessBoard {
     }
 
     public List<Move> generateAllValidMoves() {
-        var pawnMoves = CompletableFuture.supplyAsync(() -> Pawn.of(figuresTurn).allValidMoves(this), executorService);
-        var knightMoves = CompletableFuture.supplyAsync(() -> Knight.of(figuresTurn).allValidMoves(this), executorService);
-        var bishopMoves = CompletableFuture.supplyAsync(() -> Bishop.of(figuresTurn).allValidMoves(this), executorService);
-        var rookMoves = CompletableFuture.supplyAsync(() -> Rook.of(figuresTurn).allValidMoves(this), executorService);
-        var queenMoves = CompletableFuture.supplyAsync(() -> Queen.of(figuresTurn).allValidMoves(this), executorService);
-        var kingMoves = CompletableFuture.supplyAsync(() -> King.of(figuresTurn).allValidMoves(this), executorService);
-
-        return Stream.of(pawnMoves, knightMoves, bishopMoves, rookMoves, queenMoves, kingMoves)
-                .map(CompletableFuture::join)
-                .flatMap(List::stream)
+        return Stream.of(
+            Pawn.of(figuresTurn).allValidMoves(this),
+            Knight.of(figuresTurn).allValidMoves(this),
+            Bishop.of(figuresTurn).allValidMoves(this),
+            Rook.of(figuresTurn).allValidMoves(this),
+            Queen.of(figuresTurn).allValidMoves(this),
+            King.of(figuresTurn).allValidMoves(this)
+        )
+        .parallel()
+        .flatMap(List::stream)
         .collect(Collectors.toList());
     }
 
