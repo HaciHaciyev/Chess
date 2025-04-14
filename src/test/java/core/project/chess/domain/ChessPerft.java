@@ -225,6 +225,7 @@ class ChessPerft {
 
         if (our_valid_moves.size() != their_valid_moves.size()) {
             System.out.println();
+            System.out.println("MOVES: " + our_board.listOfAlgebraicNotations());
             System.out.println("OUR FEN: \t" + our_fen);
             System.out.println("THEIR FEN: \t" + their_board.getFen());
             PerftUtil.print_mismatch(our_valid_moves, their_valid_moves);

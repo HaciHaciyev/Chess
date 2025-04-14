@@ -714,7 +714,7 @@ public final class King implements Piece {
         }
 
         if (!clearPath(chessBoard, pivot, to)) return null;
-        if (opponentPiece instanceof Bishop || opponentPiece instanceof Queen) return to;
+        if (opponentPiece instanceof Bishop || opponentPiece instanceof Queen) return occupiedFieldInDirection;
         return null;
     }
 
