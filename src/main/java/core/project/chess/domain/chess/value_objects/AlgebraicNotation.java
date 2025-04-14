@@ -358,6 +358,7 @@ public class AlgebraicNotation {
             byte[] bytes = {
                     from.columnBytes(),
                     from.rowBytes(),
+                    dash,
                     to.columnBytes(),
                     to.rowBytes(),
                     equals,
@@ -370,6 +371,7 @@ public class AlgebraicNotation {
         byte[] bytes = {
                 from.columnBytes(),
                 from.rowBytes(),
+                dash,
                 to.columnBytes(),
                 to.rowBytes(),
                 equals,
