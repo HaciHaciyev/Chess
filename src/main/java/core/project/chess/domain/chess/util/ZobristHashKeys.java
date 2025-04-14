@@ -66,9 +66,9 @@ public class ZobristHashKeys {
                            final int enPassantFile) {
         long newHash = hash;
 
-        newHash ^= ZOBRIST_TABLE[startedPiece.index()][from.ordinal()];
+        newHash ^= ZOBRIST_TABLE[startedPiece.index()][from.index()];
 
-        newHash ^= ZOBRIST_TABLE[endedPiece.index()][to.ordinal()];
+        newHash ^= ZOBRIST_TABLE[endedPiece.index()][to.index()];
 
         if (castlingRights >= 0) newHash ^= CASTLING_RIGHTS[castlingRights];
 
@@ -90,7 +90,7 @@ public class ZobristHashKeys {
                            final int enPassantFile) {
         long newHash = updateHash(hash, startedPiece, from, endedPiece, to, castlingRights, enPassantFile);
 
-        newHash ^= ZOBRIST_TABLE[capturedPiece.index()][capturedAt.ordinal()];
+        newHash ^= ZOBRIST_TABLE[capturedPiece.index()][capturedAt.index()];
 
         return newHash;
     }
@@ -106,27 +106,27 @@ public class ZobristHashKeys {
 
         if (color == Color.WHITE) {
             if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
-                newHash ^= ZOBRIST_TABLE[kingIndex][WHITE_KING_START.ordinal()];
-                newHash ^= ZOBRIST_TABLE[kingIndex][WHITE_KING_SHORT_CASTLE.ordinal()];
-                newHash ^= ZOBRIST_TABLE[rookIndex][WHITE_ROOK_SHORT_CASTLE_START.ordinal()];
-                newHash ^= ZOBRIST_TABLE[rookIndex][WHITE_ROOK_SHORT_CASTLE_END.ordinal()];
+                newHash ^= ZOBRIST_TABLE[kingIndex][WHITE_KING_START.index()];
+                newHash ^= ZOBRIST_TABLE[kingIndex][WHITE_KING_SHORT_CASTLE.index()];
+                newHash ^= ZOBRIST_TABLE[rookIndex][WHITE_ROOK_SHORT_CASTLE_START.index()];
+                newHash ^= ZOBRIST_TABLE[rookIndex][WHITE_ROOK_SHORT_CASTLE_END.index()];
             } else {
-                newHash ^= ZOBRIST_TABLE[kingIndex][WHITE_KING_START.ordinal()];
-                newHash ^= ZOBRIST_TABLE[kingIndex][WHITE_KING_LONG_CASTLE.ordinal()];
-                newHash ^= ZOBRIST_TABLE[rookIndex][WHITE_ROOK_LONG_CASTLE_START.ordinal()];
-                newHash ^= ZOBRIST_TABLE[rookIndex][WHITE_ROOK_LONG_CASTLE_END.ordinal()];
+                newHash ^= ZOBRIST_TABLE[kingIndex][WHITE_KING_START.index()];
+                newHash ^= ZOBRIST_TABLE[kingIndex][WHITE_KING_LONG_CASTLE.index()];
+                newHash ^= ZOBRIST_TABLE[rookIndex][WHITE_ROOK_LONG_CASTLE_START.index()];
+                newHash ^= ZOBRIST_TABLE[rookIndex][WHITE_ROOK_LONG_CASTLE_END.index()];
             }
         } else {
             if (castle == AlgebraicNotation.Castle.SHORT_CASTLING) {
-                newHash ^= ZOBRIST_TABLE[kingIndex][BLACK_KING_START.ordinal()];
-                newHash ^= ZOBRIST_TABLE[kingIndex][BLACK_KING_SHORT_CASTLE.ordinal()];
-                newHash ^= ZOBRIST_TABLE[rookIndex][BLACK_ROOK_SHORT_CASTLE_START.ordinal()];
-                newHash ^= ZOBRIST_TABLE[rookIndex][BLACK_ROOK_SHORT_CASTLE_END.ordinal()];
+                newHash ^= ZOBRIST_TABLE[kingIndex][BLACK_KING_START.index()];
+                newHash ^= ZOBRIST_TABLE[kingIndex][BLACK_KING_SHORT_CASTLE.index()];
+                newHash ^= ZOBRIST_TABLE[rookIndex][BLACK_ROOK_SHORT_CASTLE_START.index()];
+                newHash ^= ZOBRIST_TABLE[rookIndex][BLACK_ROOK_SHORT_CASTLE_END.index()];
             } else {
-                newHash ^= ZOBRIST_TABLE[kingIndex][BLACK_KING_START.ordinal()];
-                newHash ^= ZOBRIST_TABLE[kingIndex][BLACK_KING_LONG_CASTLE.ordinal()];
-                newHash ^= ZOBRIST_TABLE[rookIndex][BLACK_ROOK_LONG_CASTLE_START.ordinal()];
-                newHash ^= ZOBRIST_TABLE[rookIndex][BLACK_ROOK_LONG_CASTLE_END.ordinal()];
+                newHash ^= ZOBRIST_TABLE[kingIndex][BLACK_KING_START.index()];
+                newHash ^= ZOBRIST_TABLE[kingIndex][BLACK_KING_LONG_CASTLE.index()];
+                newHash ^= ZOBRIST_TABLE[rookIndex][BLACK_ROOK_LONG_CASTLE_START.index()];
+                newHash ^= ZOBRIST_TABLE[rookIndex][BLACK_ROOK_LONG_CASTLE_END.index()];
             }
         }
 

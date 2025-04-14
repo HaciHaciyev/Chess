@@ -67,8 +67,8 @@ public final class Queen implements Piece {
     }
 
     boolean queenMove(final ChessBoard chessBoard, final Coordinate startField, final Coordinate endField) {
-        int startSquare = startField.ordinal();
-        int endSquare = endField.ordinal();
+        int startSquare = startField.index();
+        int endSquare = endField.index();
         long validMoves = QUEEN_MOVES_CACHE[startSquare] & ~chessBoard.pieces(color);
         if ((validMoves & (1L << endSquare)) == 0) return false;
         return clearPath(chessBoard, startField, endField);
@@ -87,8 +87,8 @@ public final class Queen implements Piece {
                 int toIndex = Long.numberOfTrailingZeros(moves);
                 moves &= moves - 1;
 
-                Coordinate from = Coordinate.byOrdinal(fromIndex);
-                Coordinate to = Coordinate.byOrdinal(toIndex);
+                Coordinate from = Coordinate.byIndex(fromIndex);
+                Coordinate to = Coordinate.byIndex(toIndex);
                 if (clearPath(chessBoard, from, to) && chessBoard.safeForKing(from, to)) return true;
             }
         }
@@ -113,8 +113,8 @@ public final class Queen implements Piece {
                 int toIndex = Long.numberOfTrailingZeros(moves);
                 moves &= moves - 1;
 
-                Coordinate from = Coordinate.byOrdinal(fromIndex);
-                Coordinate to = Coordinate.byOrdinal(toIndex);
+                Coordinate from = Coordinate.byIndex(fromIndex);
+                Coordinate to = Coordinate.byIndex(toIndex);
 
                 if (clearPath(chessBoard, from, to) &&
                         chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
@@ -160,8 +160,8 @@ public final class Queen implements Piece {
         int toCol = toSquare % 8;
 
         Direction direction = Direction.directionOf(
-                Coordinate.byOrdinal(fromSquare),
-                Coordinate.byOrdinal(toSquare)
+                Coordinate.byIndex(fromSquare),
+                Coordinate.byIndex(toSquare)
         );
         if (direction == null) return 0L;
 

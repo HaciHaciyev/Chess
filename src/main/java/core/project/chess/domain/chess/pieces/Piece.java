@@ -59,7 +59,7 @@ public sealed interface Piece
     @Nullable
     default Coordinate occupiedFieldInDirection(ChessBoard chessBoard, Direction direction, Coordinate pivot) {
         long occupied = chessBoard.whitePieces() | chessBoard.blackPieces();
-        int fromIndex = pivot.ordinal();
+        int fromIndex = pivot.index();
 
         long ray = rayMask(direction, fromIndex);
         long rayOccupied = ray & occupied;
@@ -73,7 +73,7 @@ public sealed interface Piece
             index = 63 - Long.numberOfLeadingZeros(rayOccupied);
         }
 
-        return Coordinate.byOrdinal(index);
+        return Coordinate.byIndex(index);
     }
 
     @Nullable
@@ -104,14 +104,14 @@ public sealed interface Piece
         while (surroundingsBitboard != 0) {
             int coordinateIndex = Long.numberOfTrailingZeros(surroundingsBitboard);
             surroundingsBitboard &= surroundingsBitboard - 1;
-            surroundings.add(Coordinate.byOrdinal(coordinateIndex));
+            surroundings.add(Coordinate.byIndex(coordinateIndex));
         }
 
         return surroundings;
     }
 
     private static long surroundingFieldBitboard(Coordinate pivot) {
-        int square = pivot.ordinal();
+        int square = pivot.index();
         long moves = King.WHITE_KING_MOVES_CACHE[square];
         if (square == 60) {
             moves &= ~(1L << 62);
@@ -125,7 +125,7 @@ public sealed interface Piece
     }
 
     default long rayMask(Coordinate from, Coordinate to) {
-        return RAY_BITBOARD[from.ordinal()][to.ordinal()];
+        return RAY_BITBOARD[from.index()][to.index()];
     }
 
     default long rayMask(Direction direction, int fromSquare) {

@@ -102,7 +102,7 @@ public final class Pawn implements Piece {
         final int startRow = startField.row();
         final int endRow = endField.row();
         long targetBit = endField.bitMask();
-        int fromIndex = startField.ordinal();
+        int fromIndex = startField.index();
 
         long pseudoMoves = (color == Color.WHITE ? WHITE_PAWN_MOVES_CACHE : BLACK_PAWN_MOVES_CACHE)[fromIndex];
         if ((pseudoMoves & targetBit) == 0) return null;
@@ -150,8 +150,8 @@ public final class Pawn implements Piece {
                 int toIndex = Long.numberOfTrailingZeros(moves);
                 moves &= moves - 1;
 
-                Coordinate from = Coordinate.byOrdinal(fromIndex);
-                Coordinate to = Coordinate.byOrdinal(toIndex);
+                Coordinate from = Coordinate.byIndex(fromIndex);
+                Coordinate to = Coordinate.byIndex(toIndex);
 
                 final int startColumn = from.column();
                 final int endColumn = to.column();
@@ -224,8 +224,8 @@ public final class Pawn implements Piece {
                 int toIndex = Long.numberOfTrailingZeros(moves);
                 moves &= moves - 1;
 
-                Coordinate from = Coordinate.byOrdinal(fromIndex);
-                Coordinate to = Coordinate.byOrdinal(toIndex);
+                Coordinate from = Coordinate.byIndex(fromIndex);
+                Coordinate to = Coordinate.byIndex(toIndex);
 
                 final int startColumn = from.column();
                 final int endColumn = to.column();

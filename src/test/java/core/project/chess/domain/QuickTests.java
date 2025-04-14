@@ -2,8 +2,10 @@ package core.project.chess.domain;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.events.SessionEvents;
+import core.project.chess.domain.chess.pieces.Queen;
 import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.Move;
 import core.project.chess.domain.user.entities.UserAccount;
@@ -18,30 +20,29 @@ import java.util.function.Supplier;
 
 @Disabled("Just utility")
 class QuickTests {
-    private final ChessGame chessGame = chessGameSupplier("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").get();
+    private final ChessGame chessGame = chessGameSupplier("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1").get();
     private final ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
 
     @Test
     void test() {
-        // PGN: Be2-d1, Nb6-c4, Ke1-f1, Nc4xb2+
-
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e2, Coordinate.d1, null);
+        // PGN: 1. g2xf1=Q+ Ke2-d2 2. Qf1-g2 b7xa8=Q 3. f2-f1=Q ...
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.b6, Coordinate.c4, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.g2, Coordinate.f1, Queen.of(Color.BLACK));
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e1, Coordinate.f1, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e2, Coordinate.d2, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.c4, Coordinate.b2, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.f1, Coordinate.g2, null);
         Log.info(navigator.prettyToString());
 
-        System.out.println("All valid moves: " + chessGame.getChessBoard().generateAllValidMoves());
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.b7, Coordinate.a8, Queen.of(Color.WHITE));
+        Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.c3, Coordinate.b5, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.f2, Coordinate.f1, Queen.of(Color.BLACK));
         Log.info(navigator.prettyToString());
     }
 

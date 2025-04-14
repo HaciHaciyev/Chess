@@ -59,7 +59,7 @@ public final class Knight implements Piece {
 
     boolean knightMove(final ChessBoard board, final Coordinate from, final Coordinate to) {
         long toMask = to.bitMask();
-        final boolean isKnightPattern = (KNIGHT_MOVES_CACHE[from.ordinal()] & toMask) != 0;
+        final boolean isKnightPattern = (KNIGHT_MOVES_CACHE[from.index()] & toMask) != 0;
         if (!isKnightPattern) return false;
 
         long ownPieces = board.pieces(color);
@@ -81,8 +81,8 @@ public final class Knight implements Piece {
                 int toIndex = Long.numberOfTrailingZeros(moves);
                 moves &= moves - 1;
 
-                Coordinate from = Coordinate.byOrdinal(fromIndex);
-                Coordinate to = Coordinate.byOrdinal(toIndex);
+                Coordinate from = Coordinate.byIndex(fromIndex);
+                Coordinate to = Coordinate.byIndex(toIndex);
 
                 if (chessBoard.safeForKing(from, to)) return true;
             }
@@ -112,8 +112,8 @@ public final class Knight implements Piece {
                 int toIndex = Long.numberOfTrailingZeros(moves);
                 moves &= moves - 1;
 
-                Coordinate from = Coordinate.byOrdinal(fromIndex);
-                Coordinate to = Coordinate.byOrdinal(toIndex);
+                Coordinate from = Coordinate.byIndex(fromIndex);
+                Coordinate to = Coordinate.byIndex(toIndex);
 
                 if (chessBoard.safeForKing(from, to)) validMoves.add(new Move(from, to, null));
             }

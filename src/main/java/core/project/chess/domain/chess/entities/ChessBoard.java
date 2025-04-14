@@ -105,31 +105,31 @@ public class ChessBoard {
 
     private static final Piece[] defaultOccupation = new Piece[64];
     static {
-        defaultOccupation[Coordinate.a1.ordinal()] = Rook.of(WHITE);
-        defaultOccupation[Coordinate.b1.ordinal()] = Knight.of(WHITE);
-        defaultOccupation[Coordinate.c1.ordinal()] = Bishop.of(WHITE);
-        defaultOccupation[Coordinate.d1.ordinal()] = Queen.of(WHITE);
-        defaultOccupation[Coordinate.e1.ordinal()] = King.of(WHITE);
-        defaultOccupation[Coordinate.f1.ordinal()] = Bishop.of(WHITE);
-        defaultOccupation[Coordinate.g1.ordinal()] = Knight.of(WHITE);
-        defaultOccupation[Coordinate.h1.ordinal()] = Rook.of(WHITE);
+        defaultOccupation[Coordinate.a1.index()] = Rook.of(WHITE);
+        defaultOccupation[Coordinate.b1.index()] = Knight.of(WHITE);
+        defaultOccupation[Coordinate.c1.index()] = Bishop.of(WHITE);
+        defaultOccupation[Coordinate.d1.index()] = Queen.of(WHITE);
+        defaultOccupation[Coordinate.e1.index()] = King.of(WHITE);
+        defaultOccupation[Coordinate.f1.index()] = Bishop.of(WHITE);
+        defaultOccupation[Coordinate.g1.index()] = Knight.of(WHITE);
+        defaultOccupation[Coordinate.h1.index()] = Rook.of(WHITE);
 
-        defaultOccupation[Coordinate.a8.ordinal()] = Rook.of(BLACK);
-        defaultOccupation[Coordinate.b8.ordinal()] = Knight.of(BLACK);
-        defaultOccupation[Coordinate.c8.ordinal()] = Bishop.of(BLACK);
-        defaultOccupation[Coordinate.d8.ordinal()] = Queen.of(BLACK);
-        defaultOccupation[Coordinate.e8.ordinal()] = King.of(BLACK);
-        defaultOccupation[Coordinate.f8.ordinal()] = Bishop.of(BLACK);
-        defaultOccupation[Coordinate.g8.ordinal()] = Knight.of(BLACK);
-        defaultOccupation[Coordinate.h8.ordinal()] = Rook.of(BLACK);
+        defaultOccupation[Coordinate.a8.index()] = Rook.of(BLACK);
+        defaultOccupation[Coordinate.b8.index()] = Knight.of(BLACK);
+        defaultOccupation[Coordinate.c8.index()] = Bishop.of(BLACK);
+        defaultOccupation[Coordinate.d8.index()] = Queen.of(BLACK);
+        defaultOccupation[Coordinate.e8.index()] = King.of(BLACK);
+        defaultOccupation[Coordinate.f8.index()] = Bishop.of(BLACK);
+        defaultOccupation[Coordinate.g8.index()] = Knight.of(BLACK);
+        defaultOccupation[Coordinate.h8.index()] = Rook.of(BLACK);
 
         for (Coordinate coordinate : Coordinate.values()) {
             if (coordinate.row() != 2 && coordinate.row() != 7) continue;
             if (coordinate.row() == 2) {
-                defaultOccupation[coordinate.ordinal()] = Pawn.of(WHITE);
+                defaultOccupation[coordinate.index()] = Pawn.of(WHITE);
                 continue;
             }
-            defaultOccupation[coordinate.ordinal()] = Pawn.of(BLACK);
+            defaultOccupation[coordinate.index()] = Pawn.of(BLACK);
         }
     }
 
@@ -1036,7 +1036,7 @@ public class ChessBoard {
             if (Character.isLetter(c)) {
                 Piece piece = AlgebraicNotation.fromSymbol(String.valueOf(c));
                 bitboard[piece.index()] |= coordinate.bitMask();
-                occupation[coordinate.ordinal()] = piece;
+                occupation[coordinate.index()] = piece;
                 if (piece.color() == WHITE) whitePieces |= coordinate.bitMask();
                 if (piece.color() == BLACK) blackPieces |= coordinate.bitMask();
                 pos++;
@@ -1056,13 +1056,13 @@ public class ChessBoard {
      */
     @Nullable
     public Piece piece(Coordinate coordinate) {
-        return occupation[coordinate.ordinal()];
+        return occupation[coordinate.index()];
     }
 
     private void addFigure(Coordinate coordinate, Piece piece) {
         long squareMask = coordinate.bitMask();
         bitboard[piece.index()] |= squareMask;
-        occupation[coordinate.ordinal()] = piece;
+        occupation[coordinate.index()] = piece;
         if (piece.color() == WHITE) whitePieces |= squareMask;
         else blackPieces |= squareMask;
     }
@@ -1070,8 +1070,8 @@ public class ChessBoard {
     private Piece removeFigure(Coordinate coordinate, Piece piece) {
         long squareMask = coordinate.bitMask();
         bitboard[piece.index()] &= ~squareMask;
-        Piece removedPiece = occupation[coordinate.ordinal()];
-        occupation[coordinate.ordinal()] = null;
+        Piece removedPiece = occupation[coordinate.index()];
+        occupation[coordinate.index()] = null;
         if (piece.color() == WHITE) whitePieces &= ~squareMask;
         else blackPieces &= ~squareMask;
         return removedPiece;

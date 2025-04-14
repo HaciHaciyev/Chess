@@ -90,8 +90,8 @@ public final class King implements Piece {
     boolean kingMove(ChessBoard chessBoard, Coordinate startField, Coordinate endField) {
         long ownPieces = chessBoard.pieces(color);
         long validMoves = color == WHITE ?
-                WHITE_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces :
-                BLACK_KING_MOVES_CACHE[startField.ordinal()] & ~ownPieces;
+                WHITE_KING_MOVES_CACHE[startField.index()] & ~ownPieces :
+                BLACK_KING_MOVES_CACHE[startField.index()] & ~ownPieces;
         return (validMoves & endField.bitMask()) != 0;
     }
 
@@ -184,8 +184,8 @@ public final class King implements Piece {
             int toIndex = Long.numberOfTrailingZeros(moves);
             moves &= moves - 1;
 
-            Coordinate from = Coordinate.byOrdinal(fromIndex);
-            Coordinate to = Coordinate.byOrdinal(toIndex);
+            Coordinate from = Coordinate.byIndex(fromIndex);
+            Coordinate to = Coordinate.byIndex(toIndex);
             if (chessBoard.isCastling(this, from, to)) {
                 Castle castle = AlgebraicNotation.castle(to);
                 if (!chessBoard.ableToCastling(color, castle)) continue;
@@ -236,7 +236,7 @@ public final class King implements Piece {
             Castle inCaseLastMoveIsCastle) {
 
         Coordinate kingCoordinate = chessBoard.kingCoordinate(color);
-        int kingSquare = kingCoordinate.ordinal();
+        int kingSquare = kingCoordinate.index();
         Color oppositeColor = color.opposite();
         long[][] checkersTable = color == WHITE ? CHECKERS_BITBOARD_FOR_WHITE : CHECKERS_BITBOARD_FOR_BLACK;
 
@@ -270,7 +270,7 @@ public final class King implements Piece {
         Piece piece = chessBoard.piece(pivot);
         if (piece != null && piece.color() == color) return true;
 
-        int pivotSquare = pivot.ordinal();
+        int pivotSquare = pivot.index();
         long[][] checkersTable = color == WHITE ? CHECKERS_BITBOARD_FOR_WHITE : CHECKERS_BITBOARD_FOR_BLACK;
         long[] enemyPieces = allEnemyPieces(chessBoard, color.opposite());
         long checkersBitboard = 0L;
@@ -282,7 +282,7 @@ public final class King implements Piece {
         while (checkersBitboard != 0L) {
             int attackerSquare = Long.numberOfTrailingZeros(checkersBitboard);
             checkersBitboard &= checkersBitboard - 1;
-            Coordinate attacker = Coordinate.byOrdinal(attackerSquare);
+            Coordinate attacker = Coordinate.byIndex(attackerSquare);
             Piece attackerPiece = chessBoard.piece(attacker);
             switch (attackerPiece) {
                 case Bishop b -> {
@@ -323,7 +323,7 @@ public final class King implements Piece {
         while (checkersBitboard != 0L) {
             int attackerSquare = Long.numberOfTrailingZeros(checkersBitboard);
             checkersBitboard &= checkersBitboard - 1;
-            Coordinate attacker = Coordinate.byOrdinal(attackerSquare);
+            Coordinate attacker = Coordinate.byIndex(attackerSquare);
             Piece piece = chessBoard.piece(attacker);
             switch (piece) {
                 case Bishop b -> {
@@ -500,7 +500,7 @@ public final class King implements Piece {
     }
 
     private boolean canEat(ChessBoard board, Coordinate target) {
-        int square = target.ordinal();
+        int square = target.index();
         long targetMask = target.bitMask();
 
         long ourPawns = board.bitboard(Pawn.of(color));
@@ -528,7 +528,7 @@ public final class King implements Piece {
             final boolean vertical = pivot.column() == enemyField.column() && pivot.row() != enemyField.row();
             if (!vertical && pawnCanBlock(board, target)) return true;
 
-            int square = target.ordinal();
+            int square = target.index();
             long targetMask = target.bitMask();
             long ourKnights = board.bitboard(Knight.of(color));
             long ourQueens = board.bitboard(Queen.of(color));
@@ -548,7 +548,7 @@ public final class King implements Piece {
         long pawnAttackers = table[Checkers.PAWNS.ordinal()][square] & ourPawns;
         while (pawnAttackers != 0) {
             int fromMask = Long.numberOfTrailingZeros(pawnAttackers);
-            Coordinate from = Coordinate.byOrdinal(fromMask);
+            Coordinate from = Coordinate.byIndex(fromMask);
             if (safeForKing(board, from, target)) return true;
             pawnAttackers &= pawnAttackers - 1;
         }
@@ -559,10 +559,10 @@ public final class King implements Piece {
         Coordinate enPassant = board.enPassant();
         if (enPassant != null && board.piece(target) instanceof Pawn) {
             if (validateEnPassantAbility(target, enPassant)) return false;
-            long enPassantAttackersMask = table[Checkers.PAWNS.ordinal()][enPassant.ordinal()] & ourPawns;
+            long enPassantAttackersMask = table[Checkers.PAWNS.ordinal()][enPassant.index()] & ourPawns;
             while (enPassantAttackersMask != 0) {
                 int fromMask = Long.numberOfTrailingZeros(enPassantAttackersMask);
-                if (safeForKing(board, Coordinate.byOrdinal(fromMask), enPassant)) return true;
+                if (safeForKing(board, Coordinate.byIndex(fromMask), enPassant)) return true;
                 enPassantAttackersMask &= enPassantAttackersMask - 1;
             }
         }
@@ -581,7 +581,7 @@ public final class King implements Piece {
         long knightAttackers = table[Checkers.KNIGHTS.ordinal()][square] & ourKnights;
         while (knightAttackers != 0) {
             int fromMask = Long.numberOfTrailingZeros(knightAttackers);
-            if (safeForKing(board, Coordinate.byOrdinal(fromMask), target)) return true;
+            if (safeForKing(board, Coordinate.byIndex(fromMask), target)) return true;
             knightAttackers &= knightAttackers - 1;
         }
         return false;
@@ -594,7 +594,7 @@ public final class King implements Piece {
         long diagonalAttackers = table[Checkers.DIAGONALS.ordinal()][square] & ourBishopsQueens;
         while (diagonalAttackers != 0) {
             int fromMask = Long.numberOfTrailingZeros(diagonalAttackers);
-            Coordinate from = Coordinate.byOrdinal(fromMask);
+            Coordinate from = Coordinate.byIndex(fromMask);
             if (clearPath(board, from, target) &&
                     safeForKing(board, from, target)) return true;
             diagonalAttackers &= diagonalAttackers - 1;
@@ -603,7 +603,7 @@ public final class King implements Piece {
         long orthogonalAttackers = table[Checkers.ORTHOGONALS.ordinal()][square] & ourRooksQueens;
         while (orthogonalAttackers != 0) {
             int fromMask = Long.numberOfTrailingZeros(orthogonalAttackers);
-            Coordinate from = Coordinate.byOrdinal(fromMask);
+            Coordinate from = Coordinate.byIndex(fromMask);
             if (clearPath(board, from, target) &&
                     safeForKing(board, from, target)) return true;
             orthogonalAttackers &= orthogonalAttackers - 1;
