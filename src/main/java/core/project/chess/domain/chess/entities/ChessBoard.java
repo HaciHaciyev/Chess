@@ -920,9 +920,8 @@ public class ChessBoard {
      * </p>
      */
     private void ruleOf50MovesAbility(final Piece piece, final Set<Operations> operations) {
-        if (this.isPureChess) return;
         if (!operations.contains(CAPTURE) && !(piece instanceof Pawn)) this.ruleOf50Moves++;
-        if (piece instanceof Pawn || operations.contains(CAPTURE)) this.ruleOf50Moves = 0;
+        else this.ruleOf50Moves = 0;
     }
 
     public boolean isInsufficientMatingMaterial() {
@@ -1289,7 +1288,7 @@ public class ChessBoard {
         changeOfCastlingAbility(from, king);
         enPassantStack.addLast(null);
         switchFiguresTurn();
-        ruleOf50MovesAbility(king, operations);
+        ruleOf50Moves++;
 
         /** Recording the move made in algebraic notation and Zobrist hashing.*/
         algebraicNotations.add(AlgebraicNotation.castlingOf(castle, operations));
@@ -1373,7 +1372,7 @@ public class ChessBoard {
         if (isCapture) revertCapture(to, pieceForUndo);
 
         this.countOfHalfMoves--;
-        if (!isPureChess && !isCapture && !(pieceForUndo instanceof Pawn) && ruleOf50Moves != 0) this.ruleOf50Moves--;
+        if (!isCapture && !(pieceForUndo instanceof Pawn) && ruleOf50Moves != 0) this.ruleOf50Moves--;
         if (pieceForUndo instanceof King king) changedKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(pieceForUndo);
         enPassantStack.pollLast();
@@ -1412,7 +1411,7 @@ public class ChessBoard {
         if (shortCasting) revertRookInShortCastling(to);
         else revertRookInLongCastling(to);
 
-        if (!isPureChess && ruleOf50Moves != 0) this.ruleOf50Moves--;
+        if (ruleOf50Moves != 0) this.ruleOf50Moves--;
         this.countOfHalfMoves--;
         enPassantStack.removeLast();
         changedKingPosition((King) kingEndedField, from);
