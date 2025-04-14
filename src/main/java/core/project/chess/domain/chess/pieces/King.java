@@ -751,12 +751,21 @@ public final class King implements Piece {
         }
 
         if (isSurrounded) {
-            if (piece instanceof  Pawn || piece instanceof Bishop || piece instanceof Queen) return to;
+            if (piece instanceof Pawn) {
+                if (color == WHITE && to.row() > pivot.row()) return to;
+                if (color == BLACK && to.row() < pivot.row()) return to;
+            }
+            if (piece instanceof Bishop || piece instanceof Queen) return to;
             return null;
         }
         if (!clearPath(chessBoard, pivot, to)) return null;
         if (piece instanceof Bishop || piece instanceof Queen) return to;
         return null;
+    }
+
+    private boolean pawnDiagonalAttack(Coordinate pivot, Coordinate to) {
+        if (color == WHITE) return to.row() > pivot.row();
+        return to.row() < pivot.row();
     }
 
     private static long generatePseudoValidKingMoves(int square, Color color) {
