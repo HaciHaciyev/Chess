@@ -167,7 +167,7 @@ public class AlgebraicNotation {
 
         int length = castle.bytes().length + 1;
         byte[] bytes = new byte[length];
-        System.arraycopy(castle.bytes(), 0, bytes, 0, bytes.length - 2);
+        System.arraycopy(castle.bytes(), 0, bytes, 0, length - 1);
         bytes[bytes.length - 1] = opponentKingStatus.bytes();
         return new AlgebraicNotation(bytes);
     }
