@@ -323,15 +323,26 @@ public final class King implements Piece {
         List<Coordinate> attackers = kingStatus != null ? kingStatus.enemiesAttackingTheKing() : check(chessBoard, null);
         if (!attackers.isEmpty()) return false;
 
+        final boolean castlePathClear = isCastlePathClear(chessBoard, castle);
+        if (!castlePathClear) return false;
+
         List<Coordinate> fieldsToCastle = castlingFields(castle, color);
         for (int i = 1; i < fieldsToCastle.size(); i++) {
             Coordinate field = fieldsToCastle.get(i);
-            final boolean pathIsNotClear = chessBoard.piece(field) != null;
-            if (pathIsNotClear) return false;
             if (isFieldDangerousOrBlocked(chessBoard, field, presentKingPosition)) return false;
         }
 
         return true;
+    }
+
+    private boolean isCastlePathClear(ChessBoard chessBoard, Castle castle) {
+        if (castle == Castle.SHORT_CASTLING) {
+            if (color == WHITE) return clearPath(chessBoard, Coordinate.e1, Coordinate.h1);
+            return clearPath(chessBoard, Coordinate.e8, Coordinate.h8);
+        }
+
+        if (color == WHITE) return clearPath(chessBoard, Coordinate.e1, Coordinate.a1);
+        return clearPath(chessBoard, Coordinate.e8, Coordinate.a8);
     }
 
     private boolean validatePieceMovementForKingSafety(
