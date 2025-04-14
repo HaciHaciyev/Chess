@@ -71,6 +71,7 @@ public class ChessBoard {
     private Color figuresTurn;
 
     private byte countOfHalfMoves;
+    private byte countOfFullMoves;
 
     /**
      * Flag indicating whether the game is in "pure chess" mode, disabling certain chess rules:
@@ -193,6 +194,7 @@ public class ChessBoard {
         this.isPureChess = isPureChess;
         this.ruleOf50Moves.add(0);
         this.countOfHalfMoves = 0;
+        this.countOfFullMoves = 1;
 
         if (inCaseOfInitFromFEN == null) {
             this.figuresTurn = WHITE;
@@ -382,7 +384,7 @@ public class ChessBoard {
     }
 
     public int countOfFullMoves() {
-        return (countOfHalfMoves / 2) + 1;
+        return countOfFullMoves;
     }
 
     public boolean isPureChess() {
@@ -411,6 +413,10 @@ public class ChessBoard {
 
     public long bitboard(final Piece piece) {
         return bitboard[piece.index()];
+    }
+
+    public int ruleOf50MovesCount() {
+        return this.ruleOf50Moves.peekLast();
     }
 
     public int castlingRights() {
@@ -1168,6 +1174,7 @@ public class ChessBoard {
         /** Monitor opportunities for castling, switch players.*/
         if (startField instanceof King king) changedKingPosition(king, to);
         final boolean isCastlingChanged = changeOfCastlingAbility(from, to, startField);
+        if (figuresTurn == BLACK) countOfFullMoves++;
         switchFiguresTurn();
         ruleOf50MovesAbility(startField, operations);
         changeOfEnPassaunt(from, to, startField);
@@ -1280,6 +1287,7 @@ public class ChessBoard {
         changedKingPosition(king, to);
         changeOfCastlingAbility(from, to, king);
         enPassantStack.addLast(null);
+        if (figuresTurn == BLACK) countOfFullMoves++;
         switchFiguresTurn();
         Integer lastRuleOf50Moves = this.ruleOf50Moves.peekLast();
         ruleOf50Moves.add(lastRuleOf50Moves + 1);
@@ -1369,6 +1377,7 @@ public class ChessBoard {
         this.ruleOf50Moves.pollLast();
         if (pieceForUndo instanceof King king) changedKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(pieceForUndo);
+        if (countOfFullMoves != 1 && figuresTurn == WHITE) countOfFullMoves--;
         enPassantStack.pollLast();
         zobristHashKeys.removeLast();
         kingStatuses.removeLast();
@@ -1410,6 +1419,7 @@ public class ChessBoard {
         enPassantStack.removeLast();
         changedKingPosition((King) kingEndedField, from);
         changeOfCastlingAbilityInRevertMove(kingEndedField);
+        if (countOfFullMoves != 1 && figuresTurn == WHITE) countOfFullMoves--;
         zobristHashKeys.removeLast();
         kingStatuses.removeLast();
         switchFiguresTurn();

@@ -66,41 +66,44 @@ class ChessPerft {
     }
 
     @Test
-    void customPositions() {
-        {
-            DEPTH = 5;
-            perftValues = PerftValues.newInstance();
-            secondPerftValues = PerftValues.newInstance();
+    void forCastlingTests() {
+        DEPTH = 5;
+        perftValues = PerftValues.newInstance();
+        secondPerftValues = PerftValues.newInstance();
 
-            String position = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-            System.out.println("Position #1: " + position);
+        String position = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+        System.out.println("Position #1: " + position);
 
-            our_board = ChessBoard.pureChessFromPosition(position);
+        our_board = ChessBoard.pureChessFromPosition(position);
+        System.out.println("Our board initialized   : " + our_board);
+        their_board = new Board();
+        their_board.loadFromFen(position);
+        System.out.println("Their board initialized : " + their_board.getFen());
 
-            their_board = new Board();
-            their_board.loadFromFen(position);
-
-            long nodes_good_position = robustPerft(DEPTH);
-            System.out.println("Nodes: " + nodes_good_position);
-        }
-
-        {
-            DEPTH = 5;
-            perftValues = PerftValues.newInstance();
-            secondPerftValues = PerftValues.newInstance();
-
-            String position = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
-            System.out.println("Position #2: " + position);
-
-            our_board = ChessBoard.pureChessFromPosition(position);
-
-            their_board = new Board();
-            their_board.loadFromFen(position);
-
-            long nodes_good_position = robustPerft(DEPTH);
-            System.out.println("Nodes: " + nodes_good_position);
-        }
+        long nodes_good_position = robustPerft(DEPTH);
+        System.out.println("Nodes: " + nodes_good_position);
     }
+
+    @Test
+    void forPromotionTests() {
+        DEPTH = 5;
+        perftValues = PerftValues.newInstance();
+        secondPerftValues = PerftValues.newInstance();
+
+        String position = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
+        System.out.println("Position #2: " + position);
+
+        our_board = ChessBoard.pureChessFromPosition(position);
+        System.out.println("Our board initialized   : " + our_board);
+
+        their_board = new Board();
+        their_board.loadFromFen(position);
+        System.out.println("Their board initialized : " + their_board.getFen());
+
+        long nodes_good_position = robustPerft(DEPTH);
+        System.out.println("Nodes: " + nodes_good_position);
+    }
+
 
     @Test
     void clearPerft() {
@@ -216,6 +219,8 @@ class ChessPerft {
 
         if (!our_fen.equals(their_fen)) {
             System.out.println("MOVES: " + our_board.listOfAlgebraicNotations());
+            System.out.println("Count of half moves : " + our_board.countOfHalfMoves());
+            System.out.println("Rule of 50 moves    : " + our_board.ruleOf50MovesCount());
             System.out.println("OUR FEN: \t" + our_fen);
             System.out.println("THEIR FEN: \t" + their_board.getFen());
             System.out.println();
