@@ -637,24 +637,28 @@ public class ChessBoard {
         final King whiteKing = theKing(WHITE);
         final King blackKing = theKing(BLACK);
 
-        final KingStatus checkOrMateForWhite = whiteKing.kingStatus(this, null);
+        final KingStatus checkOrMateForWhite = whiteKing
+                .kingStatus(this, null, null);
         if (checkOrMateForWhite.status().equals(CHECKMATE) ||
                 !activeColor.equals(WHITE) && checkOrMateForWhite.status().equals(CHECK)) {
             throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
         }
 
-        final KingStatus checkOrMateForBlack = blackKing.kingStatus(this, null);
+        final KingStatus checkOrMateForBlack = blackKing
+                .kingStatus(this, null, null);
         if (checkOrMateForBlack.status().equals(CHECKMATE) ||
                 !activeColor.equals(BLACK) && checkOrMateForBlack.status().equals(CHECK)) {
             throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
         }
 
-        final boolean stalemateForWhite = activeColor.equals(WHITE) && whiteKing.stalemate(this, null);
+        final boolean stalemateForWhite = activeColor.equals(WHITE) &&
+                whiteKing.stalemate(this, null, null);
         if (stalemateForWhite) {
             throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
         }
 
-        final boolean stalemateForBlack = activeColor.equals(BLACK) && blackKing.stalemate(this, null);
+        final boolean stalemateForBlack = activeColor.equals(BLACK) &&
+                blackKing.stalemate(this, null, null);
         if (stalemateForBlack) {
             throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
         }
@@ -1146,7 +1150,7 @@ public class ChessBoard {
         final boolean isCheckPossible = countOfHalfMoves() >= 3 || initType == InitType.FEN;
 
         KingStatus opponentKingStatusAndEnemies = isCheckPossible ?
-                opponentKing.kingStatus(this, lastMove) :
+                opponentKing.kingStatus(this, lastMove, null) :
                 new KingStatus(CONTINUE, Collections.emptyList());
 
         kingStatuses.addLast(opponentKingStatusAndEnemies);
@@ -1157,7 +1161,7 @@ public class ChessBoard {
 
         final boolean isStalemate = isRequiredTOCheckStalemate &&
                 opponentKingStatus == CONTINUE &&
-                opponentKing.stalemate(this, lastMove);
+                opponentKing.stalemate(this, lastMove, null);
 
         if (isStalemate) operations.add(STALEMATE);
 
@@ -1257,7 +1261,7 @@ public class ChessBoard {
         final boolean isCheckPossible = countOfHalfMoves() + 1 >= 3 || initType == InitType.FEN;
 
         KingStatus opponentKingStatusAndEnemies = isCheckPossible ?
-                opponentKing.kingStatus(this, lastMove) :
+                opponentKing.kingStatus(this, lastMove, castle) :
                 new KingStatus(CONTINUE, Collections.emptyList());
 
         kingStatuses.addLast(opponentKingStatusAndEnemies);
@@ -1268,7 +1272,7 @@ public class ChessBoard {
 
         final boolean isStalemate = isRequiredTOCheckStalemate &&
                 opponentKingStatus == CONTINUE &&
-                opponentKing.stalemate(this, lastMove);
+                opponentKing.stalemate(this, lastMove, castle);
 
         if (isStalemate) operations.add(STALEMATE);
 

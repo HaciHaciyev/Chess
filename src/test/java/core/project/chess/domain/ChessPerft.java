@@ -68,7 +68,7 @@ class ChessPerft {
     @Test
     void customPositions() {
         {
-            DEPTH = 4;
+            DEPTH = 5;
             perftValues = PerftValues.newInstance();
             secondPerftValues = PerftValues.newInstance();
 

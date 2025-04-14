@@ -95,8 +95,14 @@ public final class King implements Piece {
         return (validMoves & endField.bitMask()) != 0;
     }
 
-    public boolean safeForKing(final ChessBoard chessBoard, final Coordinate from, final Coordinate to) {
-        Coordinate kingPosition = color.equals(WHITE) ? chessBoard.currentWhiteKingPosition() : chessBoard.currentBlackKingPosition();
+    public boolean safeForKing(
+            final ChessBoard chessBoard,
+            final Coordinate from,
+            final Coordinate to) {
+
+        Coordinate kingPosition = color.equals(WHITE) ?
+                chessBoard.currentWhiteKingPosition() :
+                chessBoard.currentBlackKingPosition();
 
         if (kingPosition == from) {
             if (chessBoard.isCastling(this, from, to)) return safeToCastle(chessBoard, from, to);
@@ -106,11 +112,19 @@ public final class King implements Piece {
         return validatePieceMovementForKingSafety(chessBoard, kingPosition, from, to);
     }
 
-    public KingStatus kingStatus(final ChessBoard chessBoard, final @Nullable Move lastMove) {
-        return checkOrMate(chessBoard, lastMove);
+    public KingStatus kingStatus(
+            final ChessBoard chessBoard,
+            final @Nullable Move lastMove,
+            final @Nullable Castle inCaseLastMoveIsCastle) {
+
+        return checkOrMate(chessBoard, lastMove, inCaseLastMoveIsCastle);
     }
 
-    public boolean stalemate(final ChessBoard chessBoard, final @Nullable Move lastMove) {
+    public boolean stalemate(
+            final ChessBoard chessBoard,
+            final @Nullable Move lastMove,
+            final @Nullable Castle inCaseLastMoveIsCastle) {
+
         Coordinate kingCoordinate = chessBoard.kingCoordinate(color);
 
         KingStatus kingStatus = chessBoard.kingStatus();
@@ -119,7 +133,7 @@ public final class King implements Piece {
 
         List<Coordinate> enemies = kingStatus != null ?
                 kingStatus.enemiesAttackingTheKing() :
-                check(chessBoard, lastMove);
+                check(chessBoard, lastMove, inCaseLastMoveIsCastle);
         if (!enemies.isEmpty()) return false;
 
         List<Coordinate> surroundingFieldsOfKing = surroundingFields(kingCoordinate);
@@ -184,8 +198,8 @@ public final class King implements Piece {
         return validMoves;
     }
 
-    private KingStatus checkOrMate(ChessBoard chessBoard, Move lastMove) {
-        List<Coordinate> enemies = check(chessBoard, lastMove);
+    private KingStatus checkOrMate(ChessBoard chessBoard, Move lastMove, Castle inCaseLastMoveIsCastle) {
+        List<Coordinate> enemies = check(chessBoard, lastMove, inCaseLastMoveIsCastle);
         if (enemies.isEmpty()) return new KingStatus(Operations.CONTINUE, enemies);
 
         Coordinate kingCoordinate = chessBoard.kingCoordinate(color);
@@ -216,25 +230,36 @@ public final class King implements Piece {
         return new KingStatus(operation, enemies);
     }
 
-    private List<Coordinate> check(ChessBoard chessBoard, Move lastMove) {
+    private List<Coordinate> check(
+            ChessBoard chessBoard,
+            Move lastMove,
+            Castle inCaseLastMoveIsCastle) {
+
         Coordinate kingCoordinate = chessBoard.kingCoordinate(color);
         int kingSquare = kingCoordinate.ordinal();
         Color oppositeColor = color.opposite();
         long[][] checkersTable = color == WHITE ? CHECKERS_BITBOARD_FOR_WHITE : CHECKERS_BITBOARD_FOR_BLACK;
 
         List<Coordinate> enemies = new ArrayList<>(2);
-        if (lastMove != null) {
-            Coordinate from = lastMove.from();
-            Coordinate to = lastMove.to();
+        if (lastMove == null)
+            return check(chessBoard, oppositeColor, checkersTable, kingSquare, kingCoordinate, enemies);
 
-            Coordinate possibleCheckDirection = checkDirection(chessBoard, kingCoordinate, to);
-            if (possibleCheckDirection != null) enemies.add(possibleCheckDirection);
+        Coordinate from = lastMove.from();
+        Coordinate to = lastMove.to();
 
-            Coordinate secondPossibleCheckDirection = checkDirection(chessBoard, kingCoordinate, from);
-            if (secondPossibleCheckDirection != null) enemies.add(secondPossibleCheckDirection);
-            return enemies;
+        Coordinate possibleCheckDirection = checkDirection(chessBoard, kingCoordinate, to);
+        if (possibleCheckDirection != null) enemies.add(possibleCheckDirection);
+
+        Coordinate secondPossibleCheckDirection = checkDirection(chessBoard, kingCoordinate, from);
+        if (secondPossibleCheckDirection != null) enemies.add(secondPossibleCheckDirection);
+
+        if (inCaseLastMoveIsCastle != null) {
+            Coordinate possibleRookCheckCoordinate = coordinateOfRookPositionInCastle(inCaseLastMoveIsCastle);
+            Coordinate rookCheck = checkDirection(chessBoard, kingCoordinate, possibleRookCheckCoordinate);
+            if (rookCheck != null) enemies.add(rookCheck);
         }
-        return check(chessBoard, oppositeColor, checkersTable, kingSquare, kingCoordinate, enemies);
+
+        return enemies;
     }
 
     private boolean isFieldDangerousOrBlocked(
@@ -320,13 +345,19 @@ public final class King implements Piece {
         return enemies;
     }
 
-    private boolean safeToCastle(ChessBoard chessBoard, Coordinate presentKingPosition, Coordinate futureKingPosition) {
+    private boolean safeToCastle(
+            ChessBoard chessBoard,
+            Coordinate presentKingPosition,
+            Coordinate futureKingPosition) {
+
         Castle castle;
         if (presentKingPosition.column() < futureKingPosition.column()) castle = Castle.SHORT_CASTLING;
         else castle = Castle.LONG_CASTLING;
 
         KingStatus kingStatus = chessBoard.kingStatus();
-        List<Coordinate> attackers = kingStatus != null ? kingStatus.enemiesAttackingTheKing() : check(chessBoard, null);
+        List<Coordinate> attackers = kingStatus != null ?
+                kingStatus.enemiesAttackingTheKing() :
+                check(chessBoard, null, null);
         if (!attackers.isEmpty()) return false;
 
         final boolean castlePathClear = isCastlePathClear(chessBoard, castle);
@@ -361,7 +392,7 @@ public final class King implements Piece {
         KingStatus kingStatus = chessBoard.kingStatus();
 
         List<Coordinate> attackers = kingStatus == null ?
-                check(chessBoard, null) :
+                check(chessBoard, null, null) :
                 kingStatus.enemiesAttackingTheKing();
 
         if (attackers.size() == 2) return false;
@@ -493,8 +524,8 @@ public final class King implements Piece {
                 Math.abs(pivot.column() - enemyField.column()) <= 1;
         if (surround) return false;
 
-        final boolean vertical = pivot.column() == enemyField.column() && pivot.row() != enemyField.row();
         for (Coordinate target : fieldsInPath(pivot, enemyField)) {
+            final boolean vertical = pivot.column() == enemyField.column() && pivot.row() != enemyField.row();
             if (!vertical && pawnCanBlock(board, target)) return true;
 
             int square = target.ordinal();
@@ -642,6 +673,16 @@ public final class King implements Piece {
         long opponentPieces = board.pieces(color.opposite());
         if (to == board.enPassant()) return opponentPieces ^ board.enPassant().bitMask();
         return opponentPieces ^ toBitmask;
+    }
+
+    private Coordinate coordinateOfRookPositionInCastle(Castle castle) {
+        if (color == WHITE) {
+            if (castle == Castle.SHORT_CASTLING) return Coordinate.BLACK_ROOK_SHORT_CASTLE_END;
+            return Coordinate.BLACK_ROOK_LONG_CASTLE_END;
+        }
+
+        if (castle == Castle.SHORT_CASTLING) return Coordinate.WHITE_ROOK_SHORT_CASTLE_END;
+        return Coordinate.WHITE_ROOK_LONG_CASTLE_END;
     }
 
     @Nullable

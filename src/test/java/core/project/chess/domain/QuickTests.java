@@ -22,19 +22,22 @@ class QuickTests {
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
 
     @Test
-    void test() { // FIX STALEMATE ISSUE
-        // PGN: 1. Ne5-g4 e6xd5 2. Be2-d1 O-O
+    void test() {
+        // PGN: 1. Ne5xd7 Ke8xd7 2. d5-d6 Kd7-c6 3. d6-d7+ ...
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e5, Coordinate.g4, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e5, Coordinate.d7, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e6, Coordinate.d5, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e8, Coordinate.d7, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e2, Coordinate.d1, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.d5, Coordinate.d6, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e8, Coordinate.g8, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.d7, Coordinate.c6, null);
+        Log.info(navigator.prettyToString());
+
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.d6, Coordinate.d7, null);
         Log.info(navigator.prettyToString());
     }
 
