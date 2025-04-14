@@ -126,6 +126,10 @@ public enum Coordinate {
         this.index = index;
     }
 
+    public static Coordinate[] coordinates() {
+        return COORDINATES.clone();
+    }
+
     public int row() {
         return row;
     }

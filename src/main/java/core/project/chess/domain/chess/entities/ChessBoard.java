@@ -123,7 +123,7 @@ public class ChessBoard {
         defaultOccupation[Coordinate.g8.index()] = Knight.of(BLACK);
         defaultOccupation[Coordinate.h8.index()] = Rook.of(BLACK);
 
-        for (Coordinate coordinate : Coordinate.values()) {
+        for (Coordinate coordinate : Coordinate.coordinates()) {
             if (coordinate.row() != 2 && coordinate.row() != 7) continue;
             if (coordinate.row() == 2) {
                 defaultOccupation[coordinate.index()] = Pawn.of(WHITE);
@@ -1025,7 +1025,7 @@ public class ChessBoard {
 
     private void initializeFromFEN(String fen) {
         int pos = 0;
-        Coordinate[] coordinates = Coordinate.values();
+        Coordinate[] coordinates = Coordinate.coordinates();
 
         for (char c : fen.toCharArray()) {
             if (c == '/') continue;

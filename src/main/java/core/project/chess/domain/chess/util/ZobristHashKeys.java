@@ -37,7 +37,7 @@ public class ZobristHashKeys {
         long zobristHash = 0L;
 
         int square = 0;
-        for (Coordinate coordinate : Coordinate.values()) {
+        for (Coordinate coordinate : Coordinate.coordinates()) {
             Piece piece = chessBoard.piece(coordinate);
             if (piece != null) {
                 int pieceIndex = piece.index();

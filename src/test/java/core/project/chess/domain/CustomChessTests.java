@@ -792,4 +792,25 @@ class CustomChessTests {
         // VALID, Rook move.
         chessGame.makeMovement(secondPlayerUsername, Coordinate.a8, Coordinate.b8, null);
     }
+
+    @Test
+    void temp() {
+        ChessBoard chessBoard = ChessBoard.fromPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        System.out.println("WHITE PAWNS: " + chessBoard.bitboard(Pawn.of(Color.WHITE)));
+        System.out.println("BLACK PAWNS: " + chessBoard.bitboard(Pawn.of(Color.BLACK)));
+        System.out.println("WHITE KNIGHTS: " + chessBoard.bitboard(Knight.of(Color.WHITE)));
+        System.out.println("BLACK KNIGHTS: " + chessBoard.bitboard(Knight.of(Color.BLACK)));
+        System.out.println("WHITE BISHOPS: " + chessBoard.bitboard(Bishop.of(Color.WHITE)));
+        System.out.println("BLACK BISHOPS: " + chessBoard.bitboard(Bishop.of(Color.BLACK)));
+        System.out.println("WHITE ROOKS: " + chessBoard.bitboard(Rook.of(Color.WHITE)));
+        System.out.println("BLACK ROOKS: " + chessBoard.bitboard(Rook.of(Color.BLACK)));
+        System.out.println("WHITE QUEENS: " + chessBoard.bitboard(Queen.of(Color.WHITE)));
+        System.out.println("BLACK QUEENS: " + chessBoard.bitboard(Queen.of(Color.BLACK)));
+        System.out.println("WHITE KING: " + chessBoard.bitboard(King.of(Color.WHITE)));
+        System.out.println("BLACK KING: " + chessBoard.bitboard(King.of(Color.BLACK)));
+
+        System.out.println();
+        System.out.println("WHITES: " + chessBoard.whitePieces());
+        System.out.println("BLACKS: " + chessBoard.blackPieces());
+    }
 }
