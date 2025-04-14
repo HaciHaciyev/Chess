@@ -798,51 +798,37 @@ public class ChessBoard {
      * @param piece The piece that was moved.
      * @throws IllegalStateException if the provided piece is not a Rook or King.
      */
-    private boolean changeOfCastlingAbility(final Coordinate from, final Piece piece) {
-        if (!(piece instanceof Rook) && !(piece instanceof King)) return false;
-
-        final Color color = piece.color();
-
-        final boolean whiteColorFigure = color.equals(WHITE);
-        if (whiteColorFigure) {
-            if (piece instanceof King) {
-                this.validWhiteShortCasting = false;
-                this.validWhiteLongCasting = false;
-                addCastlingAbility();
-                return true;
-            }
-            if (from.equals(Coordinate.a1)) {
-                validWhiteLongCasting = false;
-                addCastlingAbility();
-                return true;
-            }
-            if (from.equals(Coordinate.h1)) {
-                validWhiteShortCasting = false;
-                addCastlingAbility();
-                return true;
-            }
-            addCastlingAbility();
-            return false;
-        }
-
+    private boolean changeOfCastlingAbility(final Coordinate from, final Coordinate to, final Piece piece) {
         if (piece instanceof King) {
-            this.validBlackShortCasting = false;
-            this.validBlackLongCasting = false;
-            addCastlingAbility();
-            return true;
+            if (piece.color() == WHITE) {
+                validWhiteShortCasting = false;
+                validWhiteLongCasting = false;
+            } else {
+                validBlackShortCasting = false;
+                validBlackLongCasting = false;
+            }
         }
-        if (from.equals(Coordinate.a8)) {
-            validBlackLongCasting = false;
-            addCastlingAbility();
-            return true;
+
+        if (piece instanceof Rook) {
+            if (piece.color() == WHITE) {
+                if (from == Coordinate.a1) validWhiteLongCasting = false;
+                if (from == Coordinate.h1) validWhiteShortCasting = false;
+            } else {
+                if (from == Coordinate.a8) validBlackLongCasting = false;
+                if (from == Coordinate.h8) validBlackShortCasting = false;
+            }
         }
-        if (from.equals(Coordinate.h8)) {
-            validBlackShortCasting = false;
-            addCastlingAbility();
-            return true;
+
+        switch (to) {
+            case a1 -> validWhiteLongCasting = false;
+            case h1 -> validWhiteShortCasting = false;
+            case a8 -> validBlackLongCasting = false;
+            case h8 -> validBlackShortCasting = false;
         }
+
+        CastlingAbility previous = castlingAbilities.peekLast();
         addCastlingAbility();
-        return false;
+        return previous != castlingAbilities.peekLast();
     }
 
     private void addCastlingAbility() {
@@ -861,10 +847,6 @@ public class ChessBoard {
      * @throws IllegalStateException if the provided piece is not a King or Rook.
      */
     private void changeOfCastlingAbilityInRevertMove(final Piece piece) {
-        if (!(piece instanceof King) && !(piece instanceof Rook)) {
-            return;
-        }
-
         castlingAbilities.pollLast();
         CastlingAbility castlingAbility = castlingAbilities.peekLast();
         this.validWhiteShortCasting = castlingAbility.whiteShortCastling();
@@ -1181,7 +1163,7 @@ public class ChessBoard {
 
         /** Monitor opportunities for castling, switch players.*/
         if (startField instanceof King king) changedKingPosition(king, to);
-        final boolean isCastlingChanged = changeOfCastlingAbility(from, startField);
+        final boolean isCastlingChanged = changeOfCastlingAbility(from, to, startField);
         switchFiguresTurn();
         ruleOf50MovesAbility(startField, operations);
         changeOfEnPassaunt(from, to, startField);
@@ -1292,7 +1274,7 @@ public class ChessBoard {
 
         /** Monitor opportunities for castling, enPassaunt, king position, fifty rules ability, and switch players.*/
         changedKingPosition(king, to);
-        changeOfCastlingAbility(from, king);
+        changeOfCastlingAbility(from, to, king);
         enPassantStack.addLast(null);
         switchFiguresTurn();
         Integer lastRuleOf50Moves = this.ruleOf50Moves.peekLast();
