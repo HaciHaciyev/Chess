@@ -255,6 +255,19 @@ class ChessPerft {
             their_board.undoMove();
             our_board.undoMove();
 
+            String our_undo_fen = our_board.actualRepresentationOfChessBoard();
+            String their_undo_fen = their_board.getFen();
+
+            if (!our_undo_fen.equals(their_undo_fen)) {
+                System.out.println("LAST MOVE/UNDO : " + move);
+                System.out.println("MOVES: " + our_board.listOfAlgebraicNotations());
+                System.out.println("OUR FEN: \t" + our_undo_fen);
+                System.out.println("THEIR FEN: \t" + their_undo_fen);
+                System.out.println();
+                PerftUtil.analyze(our_fen, their_fen);
+                throw new RuntimeException("UNDO FEN mismatch");
+            }
+
             if (depth == DEPTH) {
                 System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, our_fen);
             }
@@ -477,7 +490,7 @@ class ChessPerft {
             return;
         }
 
-        final boolean isPawnMove = Stream.of("K", "Q", "B", "N", "R").noneMatch(lastMove::startsWith) ||
+        final boolean isPawnMove = Stream.of("K", "Q", "B", "N", "R").noneMatch(lastMove::startsWith) &&
                 Stream.of("K", "Q", "B", "N", "R").noneMatch(preLastMove::startsWith);
         if (!isPawnMove) {
             return;

@@ -70,7 +70,6 @@ public class ChessBoard {
 
     private Color figuresTurn;
 
-    private byte ruleOf50Moves;
     private byte countOfHalfMoves;
 
     /**
@@ -167,6 +166,11 @@ public class ChessBoard {
      */
     private final Deque<Coordinate> enPassantStack = new LinkedList<>();
 
+    /**
+     * Half moves clock (for rule of 50 moves)
+     */
+    private final Deque<Integer> ruleOf50Moves = new ArrayDeque<>();
+
     /** History of captured pieces for every color*/
     private final Deque<Piece> capturedWhitePieces = new ArrayDeque<>();
     private final Deque<Piece> capturedBlackPieces = new ArrayDeque<>();
@@ -187,7 +191,7 @@ public class ChessBoard {
 
         this.chessBoardId = chessBoardId;
         this.isPureChess = isPureChess;
-        this.ruleOf50Moves = 0;
+        this.ruleOf50Moves.add(0);
         this.countOfHalfMoves = 0;
 
         if (inCaseOfInitFromFEN == null) {
@@ -920,8 +924,11 @@ public class ChessBoard {
      * </p>
      */
     private void ruleOf50MovesAbility(final Piece piece, final Set<Operations> operations) {
-        if (!operations.contains(CAPTURE) && !(piece instanceof Pawn)) this.ruleOf50Moves++;
-        else this.ruleOf50Moves = 0;
+        if (!operations.contains(CAPTURE) && !(piece instanceof Pawn)) {
+            Integer lastRuleOf50Moves = this.ruleOf50Moves.peekLast();
+            ruleOf50Moves.add(lastRuleOf50Moves + 1);
+        }
+        else this.ruleOf50Moves.add(0);
     }
 
     public boolean isInsufficientMatingMaterial() {
@@ -1189,7 +1196,7 @@ public class ChessBoard {
         if (opponentKingStatus.equals(CHECKMATE)) return GameResultMessage.Checkmate;
         if (opponentKingStatus.equals(CHECK)) return GameResultMessage.Continue;
         if (isInsufficientMatingMaterial()) return GameResultMessage.InsufficientMatingMaterial;
-        if (!isPureChess && ruleOf50Moves == 100) return GameResultMessage.RuleOf50Moves;
+        if (!isPureChess && ruleOf50Moves.peekLast() == 100) return GameResultMessage.RuleOf50Moves;
         if (isThreeFoldActive()) return GameResultMessage.RuleOf3EqualsPositions;
         return GameResultMessage.Continue;
     }
@@ -1288,7 +1295,8 @@ public class ChessBoard {
         changeOfCastlingAbility(from, king);
         enPassantStack.addLast(null);
         switchFiguresTurn();
-        ruleOf50Moves++;
+        Integer lastRuleOf50Moves = this.ruleOf50Moves.peekLast();
+        ruleOf50Moves.add(lastRuleOf50Moves + 1);
 
         /** Recording the move made in algebraic notation and Zobrist hashing.*/
         algebraicNotations.add(AlgebraicNotation.castlingOf(castle, operations));
@@ -1297,7 +1305,7 @@ public class ChessBoard {
         /** Retrieve message about move result.*/
         if (isStalemate) return GameResultMessage.Stalemate;
         if (opponentKingStatus.equals(CHECKMATE)) return GameResultMessage.Checkmate;
-        if (!isPureChess && ruleOf50Moves == 100) return GameResultMessage.RuleOf50Moves;
+        if (!isPureChess && ruleOf50Moves.peekLast() == 100) return GameResultMessage.RuleOf50Moves;
         if (isThreeFoldActive()) return GameResultMessage.RuleOf3EqualsPositions;
         return GameResultMessage.Continue;
     }
@@ -1372,7 +1380,7 @@ public class ChessBoard {
         if (isCapture) revertCapture(to, pieceForUndo);
 
         this.countOfHalfMoves--;
-        if (!isCapture && !(pieceForUndo instanceof Pawn) && ruleOf50Moves != 0) this.ruleOf50Moves--;
+        this.ruleOf50Moves.pollLast();
         if (pieceForUndo instanceof King king) changedKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(pieceForUndo);
         enPassantStack.pollLast();
@@ -1411,7 +1419,7 @@ public class ChessBoard {
         if (shortCasting) revertRookInShortCastling(to);
         else revertRookInLongCastling(to);
 
-        if (ruleOf50Moves != 0) this.ruleOf50Moves--;
+        this.ruleOf50Moves.pollLast();
         this.countOfHalfMoves--;
         enPassantStack.removeLast();
         changedKingPosition((King) kingEndedField, from);
@@ -1609,9 +1617,12 @@ public class ChessBoard {
         }
         if (fen.charAt(fen.length() - 1) != ' ') fen.append(" ");
         if (this.enPassantStack.peekLast() != null) fen.append(enPassantStack.getLast());
-        else fen.append("-").append(" ");
-        if (fen.charAt(fen.length() - 1) != ' ') fen.append(' ').append(this.ruleOf50Moves).append(' ').append(this.countOfFullMoves());
-        else fen.append(this.ruleOf50Moves).append(' ').append(this.countOfFullMoves());
+        else fen.append("- ");
+        if (fen.charAt(fen.length() - 1) != ' ') fen.append(' ')
+                .append(this.ruleOf50Moves.peekLast())
+                .append(' ')
+                .append(this.countOfFullMoves());
+        else fen.append(this.ruleOf50Moves.peekLast()).append(' ').append(this.countOfFullMoves());
         return fen.toString();
     }
 

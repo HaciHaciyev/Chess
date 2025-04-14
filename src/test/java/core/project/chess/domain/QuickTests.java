@@ -16,31 +16,22 @@ import java.util.function.Supplier;
 
 @Disabled("Just utility")
 class QuickTests {
-    private final ChessGame chessGame = chessGameSupplier().get();
+    private final ChessGame chessGame = chessGameSupplier("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").get();
     private final ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
 
     @Test
     void test() {
-        // PGN: 1. a2-a3 a7-a5 2. f2-f3 e7-e5 3. g2-g4 Qd8-h4+
+        // PGN: 1. g2xh3, Nb6-a4 2. Nc3-b1
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.a2, Coordinate.a3, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.g2, Coordinate.h3, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.a7, Coordinate.a5, null);
+        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.b6, Coordinate.a4, null);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.f2, Coordinate.f3, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e7, Coordinate.e5, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.g2, Coordinate.g4, null);
-        Log.info(navigator.prettyToString());
-
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.d8, Coordinate.h4, null);
+        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.c3, Coordinate.b1, null);
         Log.info(navigator.prettyToString());
     }
 
