@@ -378,7 +378,7 @@ public class ChessBoard {
     }
 
     public int countOfFullMoves() {
-        return countOfHalfMoves == 1 || countOfHalfMoves == 0 ? 1 :countOfHalfMoves / 2;
+        return (countOfHalfMoves / 2) + 1;
     }
 
     public boolean isPureChess() {
@@ -1131,8 +1131,7 @@ public class ChessBoard {
                     .format("Invalid move. From:%s. To:%s. Failed validation for %s movement.", from, to, startField));
         }
 
-        final boolean promotionOperation = operations.contains(PROMOTION);
-        if (promotionOperation) {
+        if (operations.contains(PROMOTION)) {
             Pawn pawn = (Pawn) startField;
             final boolean isValidPieceForPromotion = pawn.isValidPromotion(pawn, inCaseOfPromotion);
             if (!isValidPieceForPromotion) {
@@ -1413,7 +1412,7 @@ public class ChessBoard {
         if (shortCasting) revertRookInShortCastling(to);
         else revertRookInLongCastling(to);
 
-        this.ruleOf50Moves--;
+        if (!isPureChess && ruleOf50Moves != 0) this.ruleOf50Moves--;
         this.countOfHalfMoves--;
         enPassantStack.removeLast();
         changedKingPosition((King) kingEndedField, from);
