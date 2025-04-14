@@ -126,26 +126,32 @@ public final class King implements Piece {
         final boolean isSurrounded = isSurrounded(surroundingFieldsOfKing, chessBoard, kingCoordinate);
         if (!isSurrounded) return false;
 
+        int countOfMoves = 0;
+
         Pawn pawn = Pawn.of(color);
         long pawnBitboard = chessBoard.bitboard(pawn);
-        if (pawnBitboard != 0) return !pawn.isAtLeastOneMove(chessBoard);
+        if (pawnBitboard != 0 && pawn.isAtLeastOneMove(chessBoard)) countOfMoves++;
+        if (countOfMoves == 1) return false;
 
         Knight knight = Knight.of(color);
         long knightBitboard = chessBoard.bitboard(knight);
-        if (knightBitboard != 0) return !knight.isAtLeastOneMove(chessBoard);
+        if (knightBitboard != 0 && knight.isAtLeastOneMove(chessBoard)) countOfMoves++;
+        if (countOfMoves == 1) return false;
 
         Bishop bishop = Bishop.of(color);
         long bishopBitboard = chessBoard.bitboard(bishop);
-        if (bishopBitboard != 0) return !bishop.isAtLeastOneMove(chessBoard);
+        if (bishopBitboard != 0 && bishop.isAtLeastOneMove(chessBoard)) countOfMoves++;
+        if (countOfMoves == 1) return false;
 
         Rook rook = Rook.of(color);
         long rookBitboard = chessBoard.bitboard(rook);
-        if (rookBitboard != 0) return !rook.isAtLeastOneMove(chessBoard);
+        if (rookBitboard != 0 && rook.isAtLeastOneMove(chessBoard)) countOfMoves++;
+        if (countOfMoves == 1) return false;
 
         Queen queen = Queen.of(color);
         long queenBitboard = chessBoard.bitboard(queen);
-        if (queenBitboard != 0) return !queen.isAtLeastOneMove(chessBoard);
-        return true;
+        if (queenBitboard != 0 && queen.isAtLeastOneMove(chessBoard)) countOfMoves++;
+        return countOfMoves != 1;
     }
 
     public List<Move> allValidMoves(final ChessBoard chessBoard) {

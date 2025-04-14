@@ -16,14 +16,14 @@ import java.util.function.Supplier;
 
 @Disabled("Just utility")
 class QuickTests {
-    private final ChessGame chessGame = chessGameSupplier("r4rk1/p1ppqpb1/bn3np1/3p4/1p2P1N1/2N2Q1p/PPPB1PPP/R2BK2R w KQ - 2 3").get();
+    private final ChessGame chessGame = chessGameSupplier("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").get();
     private final ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
     private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername();
     private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
 
     @Test
-    void test() {
-        // PGN: 1. Ne5-g4 e6xd5 2. Be2-d1 O-
+    void test() { // FIX STALEMATE ISSUE
+        // PGN: 1. Ne5-g4 e6xd5 2. Be2-d1 O-O
 
         chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.e5, Coordinate.g4, null);
         Log.info(navigator.prettyToString());
