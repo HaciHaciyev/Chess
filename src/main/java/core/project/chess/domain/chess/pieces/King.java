@@ -439,6 +439,7 @@ public final class King implements Piece {
 
         /** Check for attack blocking ability.*/
         Direction direction = Direction.directionOf(kingPosition, opponentField);
+        if (direction == null) return false;
 
         if (direction.isVertical()) {
             if (to.column() != kingPosition.column()) return false;

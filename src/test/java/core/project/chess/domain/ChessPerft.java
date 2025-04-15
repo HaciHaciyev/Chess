@@ -86,7 +86,7 @@ class ChessPerft {
 
     @Test
     void forPromotionTests() {
-        DEPTH = 5;
+        DEPTH = 6;
         perftValues = PerftValues.newInstance();
         secondPerftValues = PerftValues.newInstance();
 
