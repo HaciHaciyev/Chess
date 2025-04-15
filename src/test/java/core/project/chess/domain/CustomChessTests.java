@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static core.project.chess.domain.chess.enumerations.Coordinate.*;
+import static core.project.chess.domain.chess.util.ToStringUtils.prettyBitBoard;
 import static core.project.chess.domain.entities.ChessGameTest.chessGameSupplier;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -812,5 +813,27 @@ class CustomChessTests {
         System.out.println();
         System.out.println("WHITES: " + chessBoard.whitePieces());
         System.out.println("BLACKS: " + chessBoard.blackPieces());
+
+
+        System.out.println("WHITES:" + prettyBitBoard(chessBoard.whitePieces()));
+        System.out.println(prettyBitBoard(chessBoard.blackPieces()));
+
+        System.out.println("White pawns bitboard:" + prettyBitBoard(chessBoard.bitboard(Pawn.of(Color.WHITE))));
+        System.out.println("White knights bitboard:" + prettyBitBoard(chessBoard.bitboard(Knight.of(Color.WHITE))));
+        System.out.println("White bishops bitboard:" + prettyBitBoard(chessBoard.bitboard(Bishop.of(Color.WHITE))));
+        System.out.println("White rooks bitboard:" + prettyBitBoard(chessBoard.bitboard(Rook.of(Color.WHITE))));
+        System.out.println("White queens bitboard:" + prettyBitBoard(chessBoard.bitboard(Queen.of(Color.WHITE))));
+        System.out.println("White king bitboard:" + prettyBitBoard(chessBoard.bitboard(King.of(Color.WHITE))));
+
+        System.out.println();
+
+        System.out.println("Black pawns bitboard:" + prettyBitBoard(chessBoard.bitboard(Pawn.of(Color.BLACK))));
+        System.out.println("Black knights bitboard:" + prettyBitBoard(chessBoard.bitboard(Knight.of(Color.BLACK))));
+        System.out.println("Black bishops bitboard:" + prettyBitBoard(chessBoard.bitboard(Bishop.of(Color.BLACK))));
+        System.out.println("Black rooks bitboard:" + prettyBitBoard(chessBoard.bitboard(Rook.of(Color.BLACK))));
+        System.out.println("Black queens bitboard:" + prettyBitBoard(chessBoard.bitboard(Queen.of(Color.BLACK))));
+        System.out.println("Black king bitboard:" + prettyBitBoard(chessBoard.bitboard(King.of(Color.BLACK))));
+
+        System.out.println("FEN: " + chessBoard);
     }
 }

@@ -272,12 +272,14 @@ public final class Pawn implements Piece {
 
     private static long generatePseudoValidPawnMoves(int square, Color color) {
         long moves = 0L;
-        int direction = (color == Color.WHITE) ? -1 : 1;
+        int direction = (color == Color.WHITE) ? 1 : -1;
         int row = square / 8;
         int col = square % 8;
         if (isValidSquare(row + direction, col)) moves |= (1L << (square + direction * 8));
-        if (color == Color.WHITE && row == 6 && isValidSquare(row + direction * 2, col)) moves |= (1L << (square + direction * 16));
-        if (color == Color.BLACK && row == 1 && isValidSquare(row + direction * 2, col)) moves |= (1L << (square + direction * 16));
+        if (color == Color.WHITE && row == 1 && isValidSquare(row + direction * 2, col))
+            moves |= (1L << (square + direction * 16));
+        if (color == Color.BLACK && row == 6 && isValidSquare(row + direction * 2, col))
+            moves |= (1L << (square + direction * 16));
         if (isValidSquare(row + direction, col - 1)) moves |= (1L << (square + direction * 8 - 1));
         if (isValidSquare(row + direction, col + 1)) moves |= (1L << (square + direction * 8 + 1));
         return moves;
@@ -285,5 +287,13 @@ public final class Pawn implements Piece {
 
     private static boolean isValidSquare(int row, int col) {
         return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+
+    @Override
+    public String toString() {
+        return "Pawn{" +
+                "color=" + color +
+                ", index=" + index +
+                '}';
     }
 }

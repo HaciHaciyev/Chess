@@ -140,4 +140,12 @@ public final class Bishop implements Piece {
 
         return moves;
     }
+
+    @Override
+    public String toString() {
+        return "Bishop{" +
+                "color=" + color +
+                ", index=" + index +
+                '}';
+    }
 }

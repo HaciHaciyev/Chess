@@ -143,4 +143,12 @@ public final class Knight implements Piece {
 
         return moves;
     }
+
+    @Override
+    public String toString() {
+        return "Knight{" +
+                "color=" + color +
+                ", index=" + index +
+                '}';
+    }
 }

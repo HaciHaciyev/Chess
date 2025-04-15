@@ -131,4 +131,12 @@ public final class Rook implements Piece {
         for (int i = row + 1; i < 8; i++) moves |= 1L << (i * 8 + col);
         return moves;
     }
+
+    @Override
+    public String toString() {
+        return "Rook{" +
+                "color=" + color +
+                ", index=" + index +
+                '}';
+    }
 }

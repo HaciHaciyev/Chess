@@ -1006,26 +1006,26 @@ public class ChessBoard {
     }
 
     private void initialize() {
-        whitePieces = -281474976710656L;
-        bitboard[Pawn.of(WHITE).index()] = 71776119061217280L;
-        bitboard[Knight.of(WHITE).index()] = 4755801206503243776L;
-        bitboard[Bishop.of(WHITE).index()] = 2594073385365405696L;
-        bitboard[Rook.of(WHITE).index()] = -9151314442816847872L;
-        bitboard[Queen.of(WHITE).index()] = 576460752303423488L;
-        bitboard[King.of(WHITE).index()] = 1152921504606846976L;
+        whitePieces = 65535L;
+        bitboard[Pawn.of(WHITE).index()] = 65280L;
+        bitboard[Knight.of(WHITE).index()] = 66L;
+        bitboard[Bishop.of(WHITE).index()] = 36L;
+        bitboard[Rook.of(WHITE).index()] = 129L;
+        bitboard[Queen.of(WHITE).index()] = 8L;
+        bitboard[King.of(WHITE).index()] = 16L;
 
-        blackPieces = 65535L;
-        bitboard[Pawn.of(BLACK).index()] = 65280L;
-        bitboard[Knight.of(BLACK).index()] = 66L;
-        bitboard[Bishop.of(BLACK).index()] = 36L;
-        bitboard[Rook.of(BLACK).index()] = 129L;
-        bitboard[Queen.of(BLACK).index()] = 8L;
-        bitboard[King.of(BLACK).index()] = 16L;
+        blackPieces = -281474976710656L;
+        bitboard[Pawn.of(BLACK).index()] = 71776119061217280L;
+        bitboard[Knight.of(BLACK).index()] = 4755801206503243776L;
+        bitboard[Bishop.of(BLACK).index()] = 2594073385365405696L;
+        bitboard[Rook.of(BLACK).index()] = -9151314442816847872L;
+        bitboard[Queen.of(BLACK).index()] = 576460752303423488L;
+        bitboard[King.of(BLACK).index()] = 1152921504606846976L;
     }
 
     private void initializeFromFEN(String fen) {
         int pos = 0;
-        Coordinate[] coordinates = Coordinate.coordinates();
+        Coordinate[] coordinates = Coordinate.values();
 
         for (char c : fen.toCharArray()) {
             if (c == '/') continue;

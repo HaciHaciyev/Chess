@@ -133,7 +133,7 @@ public sealed interface Piece
         int row = fromSquare / 8;
         int col = fromSquare % 8;
 
-        int rowStep = -direction.rowDelta();
+        int rowStep = direction.rowDelta();
         int colStep = direction.colDelta();
 
         row += rowStep;

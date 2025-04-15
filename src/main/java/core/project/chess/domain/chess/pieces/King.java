@@ -785,14 +785,22 @@ public final class King implements Piece {
             }
         }
 
-        if (color == WHITE && square == 60) {
+        if (color == BLACK && square == 60) {
             moves |= 1L << 62;
             moves |= 1L << 58;
         }
-        if (color == BLACK && square == 4) {
+        if (color == WHITE && square == 4) {
             moves |= 1L << 6;
             moves |= 1L << 2;
         }
         return moves;
+    }
+
+    @Override
+    public String toString() {
+        return "King{" +
+                "color=" + color +
+                ", index=" + index +
+                '}';
     }
 }

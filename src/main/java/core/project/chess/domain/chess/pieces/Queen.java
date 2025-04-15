@@ -165,7 +165,7 @@ public final class Queen implements Piece {
         );
         if (direction == null) return 0L;
 
-        int rowStep = -direction.rowDelta();
+        int rowStep = direction.rowDelta();
         int colStep = direction.colDelta();
 
         row += rowStep;
@@ -180,5 +180,13 @@ public final class Queen implements Piece {
         }
 
         return ray;
+    }
+
+    @Override
+    public String toString() {
+        return "Queen{" +
+                "color=" + color +
+                ", index=" + index +
+                '}';
     }
 }
