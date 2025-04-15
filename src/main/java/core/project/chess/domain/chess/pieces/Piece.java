@@ -63,16 +63,11 @@ public sealed interface Piece
 
         long ray = rayMask(direction, fromIndex);
         long rayOccupied = ray & occupied;
-
         if (rayOccupied == 0) return null;
 
         int index;
-        if (direction.isTowardsLowBits()) {
-            index = Long.numberOfTrailingZeros(rayOccupied);
-        } else {
-            index = 63 - Long.numberOfLeadingZeros(rayOccupied);
-        }
-
+        if (direction.isTowardsLowBits()) index = Long.SIZE - 1 - Long.numberOfLeadingZeros(rayOccupied);
+        else index = Long.numberOfTrailingZeros(rayOccupied);
         return Coordinate.byIndex(index);
     }
 

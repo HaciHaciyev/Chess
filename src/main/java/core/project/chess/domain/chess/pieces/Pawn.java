@@ -189,7 +189,7 @@ public final class Pawn implements Piece {
         int row = square / 8;
         int col = square % 8;
 
-        if (color == WHITE) {
+        if (color == BLACK) {
             if (row < 7) {
                 if (col > 0) attacks |= 1L << ((row + 1) * 8 + (col - 1));
                 if (col < 7) attacks |= 1L << ((row + 1) * 8 + (col + 1));
