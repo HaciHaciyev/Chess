@@ -1,5 +1,7 @@
 package testUtils;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,7 +12,49 @@ import java.util.stream.Collectors;
 
 import com.github.bhlangonijr.chesslib.move.Move;
 
+import io.quarkus.logging.Log;
+
 public class PerftUtil {
+
+    public static void assertPerftDepth1(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(20L, nodes, "Nodes count mismatch");
+    }
+
+    public static void assertPerftDepth2(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(400L, nodes, "Nodes count mismatch");
+    }
+
+    public static void assertPerftDepth3(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(8_902L, nodes, "Nodes count mismatch");
+    }
+
+    public static void assertPerftDepth4(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(197_281L, nodes, "Nodes count mismatch");
+    }
+
+    public static void assertPerftDepth5(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(4_865_609L, nodes, "Nodes count mismatch");
+    }
+
+    public static void assertPerftDepth6(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(119_060_324L, nodes, "Nodes count mismatch");
+    }
+
+    public static void assertPerftDepth7(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(3_195_901_860L, nodes, "Nodes count mismatch");
+    }
+
+    public static void assertPerftDepth8(long nodes) {
+        Log.infof("Count of nodes: %d.", nodes);
+        assertEquals(84_998_978_956L, nodes, "Nodes count mismatch");
+    }
 
     public static void analyze(String our, String their) {
         // Split FENs into components
