@@ -1,47 +1,43 @@
 package core.project.chess.domain;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
-import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.domain.chess.events.SessionEvents;
+import core.project.chess.domain.chess.pieces.Queen;
 import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.Move;
-import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.domain.user.value_objects.PersonalData;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.function.Supplier;
 
 @Disabled("Just utility")
 class QuickTests {
-    private final ChessGame chessGame = chessGameSupplier().get();
-    private final ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
-    private final String usernameOfPlayerForWhites = chessGame.getPlayerForWhite().getUsername();
-    private final String usernameOfPlayerForBlacks = chessGame.getPlayerForBlack().getUsername();
+    private final ChessBoard chessBoard = ChessBoard.pureChessFromPosition("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1");
+    private final ToStringUtils navigator = new ToStringUtils(chessBoard);
 
     @Test
     void test() {
-        //  PGN: 1. c2-c4 f7-f5 2. Qd1-b3 Ke8-f7 3. c4-c5 ...
+        //  PGN: g2xf1=Q+, Ke2-e3, Kd7-c6, Ke3-d4
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.c2, Coordinate.c4, null);
+        chessBoard.doMove(Coordinate.g2, Coordinate.f1, Queen.of(Color.BLACK));
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.f7, Coordinate.f5, null);
+        chessBoard.doMove(Coordinate.e2, Coordinate.e3);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.d1, Coordinate.b3, null);
+        chessBoard.doMove(Coordinate.d7, Coordinate.c6);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForBlacks, Coordinate.e8, Coordinate.f7, null);
+        chessBoard.doMove(Coordinate.e3, Coordinate.d4);
         Log.info(navigator.prettyToString());
 
-        chessGame.makeMovement(usernameOfPlayerForWhites, Coordinate.c4, Coordinate.c5, null);
-        Log.info(navigator.prettyToString());
+        List<Move> moves = navigator.board().generateAllValidMoves();
+        assertNotContains(moves, new Move(Coordinate.c6, Coordinate.d5, null));
+        assertNotContains(moves, new Move(Coordinate.c6, Coordinate.c5, null));
+        Log.info(moves);
     }
 
     @Test
@@ -78,52 +74,13 @@ class QuickTests {
         System.out.println(toStringUtils.prettyToString());
     }
 
-    private void returnMove() {
-        chessGame.returnMovement(usernameOfPlayerForWhites);
-        chessGame.returnMovement(usernameOfPlayerForBlacks);
-        Log.info(navigator.prettyToString());
-    }
-
     private static void assertContains(List<Move> allValidMoves, Object o) {
         if (!allValidMoves.contains(o))
             throw new AssertionError("Do not contains required data.");
     }
 
-    static Supplier<ChessGame> chessGameSupplier() {
-        final ChessBoard chessBoard = ChessBoard.pureChess();
-
-        return () -> ChessGame.of(
-                UUID.randomUUID(),
-                chessBoard,
-                userAccountSupplier("firstPlayer", "firstplayer@domai.com").get(),
-                userAccountSupplier("secondPlayer", "secondplayer@domai.com").get(),
-                SessionEvents.defaultEvents(),
-                ChessGame.Time.DEFAULT,
-                false
-        );
-    }
-
-    static Supplier<ChessGame> chessGameSupplier(String fen) {
-        final ChessBoard chessBoard = ChessBoard.pureChessFromPosition(fen);
-
-        return () -> ChessGame.of(
-                UUID.randomUUID(),
-                chessBoard,
-                userAccountSupplier("firstPlayer", "firstplayer@domai.com").get(),
-                userAccountSupplier("secondPlayer", "secondplayer@domai.com").get(),
-                SessionEvents.defaultEvents(),
-                ChessGame.Time.DEFAULT,
-                false
-        );
-    }
-
-    static Supplier<UserAccount> userAccountSupplier(String username, String email) {
-        return () -> UserAccount.of(new PersonalData(
-                "generateFirstname",
-                "generateSurname",
-                username,
-                email,
-                "password"
-        ));
+    private static void assertNotContains(List<Move> allValidMoves, Object o) {
+        if (allValidMoves.contains(o))
+            throw new AssertionError("Contains invalid data: {%s}".formatted(o.toString()));
     }
 }

@@ -269,6 +269,7 @@ public final class King implements Piece {
 
         Piece piece = chessBoard.piece(pivot);
         if (piece != null && piece.color() == color) return true;
+        if (isOpponentKingOpposition(chessBoard, pivot)) return true;
 
         int pivotSquare = pivot.index();
         long[][] checkersTable = color == WHITE ? CHECKERS_BITBOARD_FOR_WHITE : CHECKERS_BITBOARD_FOR_BLACK;
@@ -303,6 +304,12 @@ public final class King implements Piece {
             }
         }
         return false;
+    }
+
+    private boolean isOpponentKingOpposition(ChessBoard chessBoard, Coordinate pivot) {
+        Coordinate opponentKing = chessBoard.kingCoordinate(color.opposite());
+        return Math.abs(pivot.row() - opponentKing.row()) <= 1 &&
+                Math.abs(pivot.column() - opponentKing.column()) <= 1;
     }
 
     private List<Coordinate> check(
