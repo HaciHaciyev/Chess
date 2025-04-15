@@ -251,7 +251,8 @@ public final class King implements Piece {
         if (possibleCheckDirection != null) enemies.add(possibleCheckDirection);
 
         Coordinate secondPossibleCheckDirection = checkDirection(chessBoard, kingCoordinate, from);
-        if (secondPossibleCheckDirection != null) enemies.add(secondPossibleCheckDirection);
+        if (secondPossibleCheckDirection != null && secondPossibleCheckDirection != possibleCheckDirection)
+            enemies.add(secondPossibleCheckDirection);
 
         if (inCaseLastMoveIsCastle != null) {
             Coordinate possibleRookCheckCoordinate = coordinateOfRookPositionInCastle(inCaseLastMoveIsCastle);
@@ -716,7 +717,7 @@ public final class King implements Piece {
 
         if (direction == SimpleDirection.VERTICAL || direction == SimpleDirection.HORIZONTAL) {
             if (!clearPath(chessBoard, pivot, to)) return null;
-            if (opponentPiece instanceof Rook || opponentPiece instanceof Queen) return to;
+            if (opponentPiece instanceof Rook || opponentPiece instanceof Queen) return occupiedFieldInDirection;
             return null;
         }
 

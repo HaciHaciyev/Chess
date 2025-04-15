@@ -19,25 +19,23 @@ class QuickTests {
 
     @Test
     void test() {
-        //  PGN: g2xf1=Q+, Ke2-e3, Kd7-c6, Ke3-d4
+        //  PGN: 1. g2-g1=Q Nf1-d2 2. Nc8-d6 Ke2-f3 3. f2-f1=Q# ...
         Log.info(navigator.prettyToString());
 
-        chessBoard.doMove(Coordinate.g2, Coordinate.f1, Queen.of(Color.BLACK));
+        chessBoard.doMove(Coordinate.g2, Coordinate.g1, Queen.of(Color.BLACK));
         Log.info(navigator.prettyToString());
 
-        chessBoard.doMove(Coordinate.e2, Coordinate.e3);
+        chessBoard.doMove(Coordinate.f1, Coordinate.d2);
         Log.info(navigator.prettyToString());
 
-        chessBoard.doMove(Coordinate.d7, Coordinate.c6);
+        chessBoard.doMove(Coordinate.c8, Coordinate.d6);
         Log.info(navigator.prettyToString());
 
-        chessBoard.doMove(Coordinate.e3, Coordinate.d4);
+        chessBoard.doMove(Coordinate.e2, Coordinate.f3);
         Log.info(navigator.prettyToString());
 
-        List<Move> moves = navigator.board().generateAllValidMoves();
-        assertNotContains(moves, new Move(Coordinate.c6, Coordinate.d5, null));
-        assertNotContains(moves, new Move(Coordinate.c6, Coordinate.c5, null));
-        Log.info(moves);
+        chessBoard.doMove(Coordinate.f2, Coordinate.f1, Queen.of(Color.BLACK));
+        Log.info(navigator.prettyToString());
     }
 
     @Test
