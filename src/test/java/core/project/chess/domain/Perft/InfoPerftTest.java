@@ -8,9 +8,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.assertj.core.api.Assertions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.jupiter.api.Disabled;
 
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Square;
@@ -88,7 +88,7 @@ public class InfoPerftTest {
 
     @Test
     void perftPromotionPosition() {
-        DEPTH = 2;
+        DEPTH = 6;
 
         String fen = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
         System.out.println("Perft promotion position: " + fen);
@@ -108,25 +108,132 @@ public class InfoPerftTest {
     }
 
     @Test
-    @Disabled
-    void perftCustomPosition() {
-        DEPTH = 0;
+    void perftCustomPositionsLite() {
+        List<PerftTask> perftTasks = PerftUtil.read_perft_tasks();
+        long total_nodes = 0;
+        int processed_fen = 0;
 
-        String fen = "";
-        System.out.println("Perft custom position: " + fen);
+        for (int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+            PerftTask task = perftTasks.get(task_idx);
 
-        move_stack = new ArrayDeque<>();
-        undo_stack = new ArrayDeque<>();
+            String fen = task.fen();
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
 
-        our_board = ChessBoard.pureChessFromPosition(fen);
-        their_board = new Board();
-        their_board.loadFromFen(fen);
+            for (int depth = 0; depth < task.values().length - 2; depth++) {
+                DEPTH = depth + 1;
 
-        perftValues = PerftValues.newInstance();
-        secondPerftValues = PerftValues.newInstance();
+                move_stack = new ArrayDeque<>();
+                undo_stack = new ArrayDeque<>();
 
-        long nodes = perft(DEPTH);
-        System.out.println("Nodes: " + nodes);
+                our_board = ChessBoard.pureChessFromPosition(fen);
+
+                their_board = new Board();
+                their_board.loadFromFen(fen);
+
+                perftValues = PerftValues.newInstance();
+                secondPerftValues = PerftValues.newInstance();
+
+                System.out.println();
+                System.out.println("\tDepth: " + DEPTH);
+                long nodes = perft(DEPTH);
+                total_nodes += nodes;
+                System.out.println("\tNodes: " + nodes);
+                System.out.println();
+                Assertions.assertThat(nodes).isEqualTo(task.values()[depth]);
+            }
+            System.out.println("+---------------------------------------------------------------------------------+");
+
+            processed_fen++;
+        }
+
+        System.out.println("Processed %s fens".formatted(processed_fen));
+        System.out.println("Total %s nodes".formatted(total_nodes));
+    }
+
+    @Test
+    void perftCustomPositionsMid() {
+        List<PerftTask> perftTasks = PerftUtil.read_perft_tasks();
+        long total_nodes = 0;
+        int processed_fen = 0;
+
+        for (int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+            PerftTask task = perftTasks.get(task_idx);
+
+            String fen = task.fen();
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+
+            for (int depth = 0; depth < task.values().length - 1; depth++) {
+                DEPTH = depth + 1;
+
+                move_stack = new ArrayDeque<>();
+                undo_stack = new ArrayDeque<>();
+
+                our_board = ChessBoard.pureChessFromPosition(fen);
+
+                their_board = new Board();
+                their_board.loadFromFen(fen);
+
+                perftValues = PerftValues.newInstance();
+                secondPerftValues = PerftValues.newInstance();
+
+                System.out.println();
+                System.out.println("\tDepth: " + DEPTH);
+                long nodes = perft(DEPTH);
+                total_nodes += nodes;
+                System.out.println("\tNodes: " + nodes);
+                System.out.println();
+                Assertions.assertThat(nodes).isEqualTo(task.values()[depth]);
+            }
+            System.out.println("+---------------------------------------------------------------------------------+");
+
+            processed_fen++;
+        }
+
+        System.out.println("Processed %s fens".formatted(processed_fen));
+        System.out.println("Total %s nodes".formatted(total_nodes));
+    }
+
+    @Test
+    void perftCustomPositionsVerbose() {
+        List<PerftTask> perftTasks = PerftUtil.read_perft_tasks();
+        long total_nodes = 0;
+        int processed_fen = 0;
+
+        for (int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+            PerftTask task = perftTasks.get(task_idx);
+
+            String fen = task.fen();
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+
+            for (int depth = 0; depth < task.values().length; depth++) {
+                DEPTH = depth + 1;
+
+                move_stack = new ArrayDeque<>();
+                undo_stack = new ArrayDeque<>();
+
+                our_board = ChessBoard.pureChessFromPosition(fen);
+
+                their_board = new Board();
+                their_board.loadFromFen(fen);
+
+                perftValues = PerftValues.newInstance();
+                secondPerftValues = PerftValues.newInstance();
+
+                System.out.println();
+                System.out.println("\tDepth: " + DEPTH);
+                long nodes = perft(DEPTH);
+                total_nodes += nodes;
+                System.out.println("\tNodes: " + nodes);
+                System.out.println();
+                Assertions.assertThat(nodes).isEqualTo(task.values()[depth]);
+            }
+            System.out.println("+---------------------------------------------------------------------------------+");
+
+            processed_fen++;
+        }
+
+        System.out.println("Processed %s fens".formatted(processed_fen));
+        System.out.println("Total %s nodes".formatted(total_nodes));
     }
 
     long perft(int depth) {
@@ -142,7 +249,7 @@ public class InfoPerftTest {
         try {
             our_valid_moves = our_board.generateAllValidMoves();
         } catch (Exception e) {
-            System.out.printf("Could not generate moves for position: %s | current depth: %s%n",
+            System.out.printf("\t Could not generate moves for position: %s | current depth: %s%n",
                     our_board.actualRepresentationOfChessBoard(), depth);
             throw e;
         }
@@ -197,7 +304,8 @@ public class InfoPerftTest {
             verifyPerft(move, from, to, inCaseOfPromotion);
 
             if (depth == DEPTH) {
-                System.out.printf("%s -> %s \t|\t %s\n", move, newNodes, our_board.actualRepresentationOfChessBoard());
+                System.out.printf("\t%s -> %s \t|\t %s\n", move, newNodes,
+                        our_board.actualRepresentationOfChessBoard());
             }
 
             their_board.undoMove();

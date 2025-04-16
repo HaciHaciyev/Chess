@@ -1,9 +1,8 @@
 package core.project.chess.domain.Perft;
 
-import java.time.Duration;
 import java.util.List;
 
-import org.junit.jupiter.api.Disabled;
+import org.assertj.core.api.Assertions;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Coordinate;
@@ -49,7 +48,7 @@ public class ClearPerftTest {
 
     @Test
     void perftPromotionPosition() {
-        int depth = 5;
+        int depth = 6;
         String fen = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
         System.out.println("Perft promotion position: " + fen);
         our_board = ChessBoard.pureChessFromPosition(fen);
@@ -59,15 +58,90 @@ public class ClearPerftTest {
     }
 
     @Test
-    @Disabled
-    void perftCustomPosition() {
-        int depth = 0;
-        String fen = "";
-        System.out.println("Perft custom position: " + fen);
-        our_board = ChessBoard.pureChessFromPosition(fen);
+    void perftCustomPositionsLite() {
+        List<PerftTask> perftTasks = PerftUtil.read_perft_tasks();
+        long total_nodes = 0;
+        int processed_fen = 0;
 
-        long nodes = perft(depth);
-        System.out.println("Nodes: " + nodes);
+        for(int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+            PerftTask task = perftTasks.get(task_idx);
+
+            String fen = task.fen();
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+
+            for (int j = 0; j < task.values().length - 2; j++) {
+                int depth = j + 1;
+                our_board = ChessBoard.pureChessFromPosition(fen);
+
+                long nodes = perft(depth);
+                total_nodes += nodes;
+                System.out.println("\t Depth: " + depth + " \tNodes: " + nodes);
+                Assertions.assertThat(nodes).isEqualTo(task.values()[j]);
+            }
+
+            processed_fen++;
+        }
+
+        System.out.println("Processed %s fens".formatted(processed_fen));
+        System.out.println("Total %s nodes".formatted(total_nodes));
+    }
+
+    @Test
+    void perftCustomPositionsMid() {
+        List<PerftTask> perftTasks = PerftUtil.read_perft_tasks();
+        long total_nodes = 0;
+        int processed_fen = 0;
+
+        for(int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+            PerftTask task = perftTasks.get(task_idx);
+
+            String fen = task.fen();
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+
+            for (int j = 0; j < task.values().length - 1; j++) {
+                int depth = j + 1;
+                our_board = ChessBoard.pureChessFromPosition(fen);
+
+                long nodes = perft(depth);
+                total_nodes += nodes;
+                System.out.println("\t Depth: " + depth + " \tNodes: " + nodes);
+                Assertions.assertThat(nodes).isEqualTo(task.values()[j]);
+            }
+
+            processed_fen++;
+        }
+
+        System.out.println("Processed %s fens".formatted(processed_fen));
+        System.out.println("Total %s nodes".formatted(total_nodes));
+    }
+
+    @Test
+    void perftCustomPositionsVerbose() {
+        List<PerftTask> perftTasks = PerftUtil.read_perft_tasks();
+        long total_nodes = 0;
+        int processed_fen = 0;
+
+        for(int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+            PerftTask task = perftTasks.get(task_idx);
+
+            String fen = task.fen();
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+
+            for (int j = 0; j < task.values().length; j++) {
+                int depth = j + 1;
+                our_board = ChessBoard.pureChessFromPosition(fen);
+
+                long nodes = perft(depth);
+                total_nodes += nodes;
+                System.out.println("\t Depth: " + depth + " \tNodes: " + nodes);
+                Assertions.assertThat(nodes).isEqualTo(task.values()[j]);
+            }
+
+            processed_fen++;
+        }
+
+        System.out.println("Processed %s fens".formatted(processed_fen));
+        System.out.println("Total %s nodes".formatted(total_nodes));
     }
 
     long perft(int depth) {

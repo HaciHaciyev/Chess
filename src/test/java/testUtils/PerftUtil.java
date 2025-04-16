@@ -2,19 +2,21 @@ package testUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.github.bhlangonijr.chesslib.move.Move;
 
+import core.project.chess.domain.Perft.PerftTask;
 import io.quarkus.logging.Log;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PerftUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(PerftUtil.class);
 
     public static void assertPerftDepth1(long nodes) {
         Log.infof("Count of nodes: %d.", nodes);
@@ -54,6 +56,36 @@ public class PerftUtil {
     public static void assertPerftDepth8(long nodes) {
         Log.infof("Count of nodes: %d.", nodes);
         assertEquals(84_998_978_956L, nodes, "Nodes count mismatch");
+    }
+
+    public static List<PerftTask> read_perft_tasks() {
+        String path = "src/main/resources/pgn/perftsuite.epd";
+
+        File file = new File(path);
+        List<PerftTask> perftTasks = new ArrayList<>();
+
+        try (var reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                PerftTask task = getPerftTask(line);
+                perftTasks.add(task);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return perftTasks;
+    }
+
+    private static PerftTask getPerftTask(String line) {
+        String[] parts = line.split(";");
+        String fen = parts[0].trim();
+        long[] values = new long[parts.length - 1];
+
+        for (int i = 1; i < parts.length; i++) {
+            values[i - 1] = Long.parseLong(parts[i].split(" ")[1]);
+        }
+        return new PerftTask(fen, values);
     }
 
     public static void analyze(String our, String their) {
