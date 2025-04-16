@@ -1,8 +1,8 @@
 package core.project.chess.domain.user.value_objects;
 
+import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.util.PictureUtility;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import io.quarkus.logging.Log;
 
 import java.util.Arrays;

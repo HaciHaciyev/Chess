@@ -1,7 +1,7 @@
 package core.project.chess.domain.chess.util;
 
 import core.project.chess.domain.chess.value_objects.FromFEN;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import core.project.chess.domain.commons.containers.StatusPair;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

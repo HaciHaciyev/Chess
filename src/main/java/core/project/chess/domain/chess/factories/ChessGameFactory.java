@@ -6,9 +6,9 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.value_objects.GameParameters;
+import core.project.chess.domain.commons.containers.StatusPair;
+import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.infrastructure.utilities.containers.Pair;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.Objects;

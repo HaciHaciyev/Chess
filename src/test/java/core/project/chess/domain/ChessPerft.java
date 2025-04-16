@@ -7,7 +7,7 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
-import core.project.chess.infrastructure.utilities.containers.Pair;
+import core.project.chess.domain.commons.tuples.Pair;
 import io.quarkus.logging.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -6,10 +6,10 @@ import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.util.ChessCountdownTimer;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
+import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
 import jakarta.annotation.Nullable;
 
 import java.time.Duration;

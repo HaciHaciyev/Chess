@@ -3,9 +3,9 @@ package core.project.chess.infrastructure.dal.cache;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.value_objects.GameParameters;
+import core.project.chess.domain.commons.tuples.Pair;
+import core.project.chess.domain.commons.tuples.Triple;
 import core.project.chess.domain.user.entities.UserAccount;
-import core.project.chess.infrastructure.utilities.containers.Pair;
-import core.project.chess.infrastructure.utilities.containers.Triple;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 

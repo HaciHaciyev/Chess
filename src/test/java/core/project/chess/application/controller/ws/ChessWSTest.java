@@ -6,7 +6,7 @@ import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.utilities.containers.Pair;
+import core.project.chess.domain.commons.tuples.Pair;
 import io.quarkus.logging.Log;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.common.http.TestHTTPResource;

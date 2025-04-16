@@ -1,6 +1,6 @@
 package core.project.chess.domain.user.util;
 
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import core.project.chess.domain.commons.containers.StatusPair;
 import io.quarkus.logging.Log;
 import org.apache.tika.Tika;
 

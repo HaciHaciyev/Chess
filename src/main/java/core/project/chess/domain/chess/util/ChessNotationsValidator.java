@@ -5,8 +5,8 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.FromFEN;
-import core.project.chess.infrastructure.utilities.containers.Pair;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import core.project.chess.domain.commons.containers.StatusPair;
+import core.project.chess.domain.commons.tuples.Pair;
 import io.quarkus.logging.Log;
 
 import java.util.*;

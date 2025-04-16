@@ -5,7 +5,7 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
-import core.project.chess.infrastructure.utilities.containers.Pair;
+import core.project.chess.domain.commons.tuples.Pair;
 import jakarta.annotation.Nullable;
 
 import java.nio.charset.StandardCharsets;

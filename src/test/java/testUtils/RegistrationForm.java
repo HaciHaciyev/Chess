@@ -1,8 +1,8 @@
 package testUtils;
 
+import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.value_objects.Firstname;
 import core.project.chess.domain.user.value_objects.Surname;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import net.datafaker.Faker;
 import net.datafaker.providers.base.Name;
 

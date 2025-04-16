@@ -2,6 +2,7 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
+import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
@@ -11,7 +12,6 @@ import core.project.chess.domain.user.value_objects.PersonalData;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
-import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;

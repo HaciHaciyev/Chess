@@ -1,4 +1,4 @@
-package core.project.chess.infrastructure.utilities.containers;
+package core.project.chess.domain.commons.tuples;
 
 import java.util.Objects;
 

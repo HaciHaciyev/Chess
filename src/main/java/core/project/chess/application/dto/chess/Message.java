@@ -6,8 +6,8 @@ import core.project.chess.domain.chess.entities.ChessGame.Time;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.value_objects.GameParameters;
+import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 
 import java.util.Objects;

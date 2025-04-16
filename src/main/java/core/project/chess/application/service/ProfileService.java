@@ -1,10 +1,10 @@
 package core.project.chess.application.service;
 
+import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
 import core.project.chess.infrastructure.dal.files.ImageFileRepository;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;

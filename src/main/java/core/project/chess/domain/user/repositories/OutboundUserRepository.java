@@ -1,11 +1,11 @@
 package core.project.chess.domain.user.repositories;
 
 import core.project.chess.application.dto.user.UserProperties;
+import core.project.chess.domain.commons.containers.Result;
+import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.UserAccount;
 import core.project.chess.domain.user.value_objects.Email;
-import core.project.chess.infrastructure.utilities.containers.Pair;
-import core.project.chess.infrastructure.utilities.containers.Result;
 
 import java.util.UUID;
 

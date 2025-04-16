@@ -4,7 +4,7 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.value_objects.Move;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import core.project.chess.domain.commons.containers.StatusPair;
 
 import java.util.ArrayList;
 import java.util.EnumSet;

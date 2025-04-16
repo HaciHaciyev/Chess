@@ -1,7 +1,7 @@
 package testUtils;
 
+import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped

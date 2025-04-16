@@ -2,7 +2,7 @@ package core.project.chess.domain.chess.value_objects;
 
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.infrastructure.utilities.containers.Pair;
+import core.project.chess.domain.commons.tuples.Pair;
 
 import java.util.Optional;
 

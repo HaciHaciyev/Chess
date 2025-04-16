@@ -1,9 +1,9 @@
 package core.project.chess.infrastructure.dal.util.jdbc;
 
+import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.infrastructure.dal.util.exceptions.DataNotFoundException;
 import core.project.chess.infrastructure.dal.util.exceptions.InvalidDataArgumentException;
 import core.project.chess.infrastructure.dal.util.exceptions.RepositoryDataException;
-import core.project.chess.infrastructure.utilities.containers.Result;
 import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;

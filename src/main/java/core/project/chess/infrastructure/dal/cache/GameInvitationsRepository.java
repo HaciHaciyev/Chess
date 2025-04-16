@@ -1,9 +1,9 @@
 package core.project.chess.infrastructure.dal.cache;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.application.util.JSONUtilities;
-import core.project.chess.infrastructure.utilities.containers.StatusPair;
+import core.project.chess.domain.chess.value_objects.GameParameters;
+import core.project.chess.domain.commons.containers.StatusPair;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.hash.HashCommands;
 import jakarta.enterprise.context.ApplicationScoped;
