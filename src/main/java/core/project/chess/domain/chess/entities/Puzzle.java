@@ -182,7 +182,7 @@ public class Puzzle {
             }
 
             final AlgebraicNotation algebraicNotation = algebraicNotations[++currentPosition];
-            final Pair<Coordinate, Coordinate> coordinates = chessBoard.coordinates(algebraicNotation);
+            final Pair<Coordinate, Coordinate> coordinates = chessBoard.extractCoordinates(algebraicNotation);
             final Piece requiredPromotion = chessBoard.getInCaseOfPromotion(algebraicNotation);
 
             chessBoard.doMove(coordinates.getFirst(), coordinates.getSecond(), requiredPromotion);
@@ -204,7 +204,7 @@ public class Puzzle {
 
     private boolean isProperMove(Coordinate from, Coordinate to, Piece inCaseOfPromotion) {
         final AlgebraicNotation algebraicNotation = algebraicNotations[++currentPosition];
-        final Pair<Coordinate, Coordinate> coordinates = chessBoard.coordinates(algebraicNotation);
+        final Pair<Coordinate, Coordinate> coordinates = chessBoard.extractCoordinates(algebraicNotation);
         final Piece requiredPromotion = chessBoard.getInCaseOfPromotion(algebraicNotation);
 
         return from.equals(coordinates.getFirst()) && to.equals(coordinates.getSecond()) && inCaseOfPromotion.equals(requiredPromotion);

@@ -69,14 +69,14 @@ public final class Queen implements Piece {
     boolean queenMove(final ChessBoard chessBoard, final Coordinate startField, final Coordinate endField) {
         int startSquare = startField.index();
         int endSquare = endField.index();
-        long validMoves = QUEEN_MOVES_CACHE[startSquare] & ~chessBoard.pieces(color);
+        long validMoves = QUEEN_MOVES_CACHE[startSquare] & ~chessBoard.allPiecesOf(color);
         if ((validMoves & (1L << endSquare)) == 0) return false;
         return clearPath(chessBoard, startField, endField);
     }
 
     public boolean isAtLeastOneMove(final ChessBoard chessBoard) {
         long queenBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         while (queenBitboard != 0) {
             int fromIndex = Long.numberOfTrailingZeros(queenBitboard);
@@ -102,7 +102,7 @@ public final class Queen implements Piece {
 
     public List<Move> allValidMoves(final ChessBoard chessBoard, List<Move> validMoves) {
         long queenBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         while (queenBitboard != 0) {
             int fromIndex = Long.numberOfTrailingZeros(queenBitboard);

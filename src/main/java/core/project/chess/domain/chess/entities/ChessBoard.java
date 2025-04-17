@@ -89,8 +89,8 @@ public class ChessBoard {
     private boolean validBlackShortCasting;
     private boolean validBlackLongCasting;
 
-    private Coordinate currentWhiteKingPosition;
-    private Coordinate currentBlackKingPosition;
+    private Coordinate whiteKingPosition;
+    private Coordinate blackKingPosition;
 
     /** Zobrist Hashing*/
     private final ZobristHashKeys zobrist;
@@ -199,8 +199,8 @@ public class ChessBoard {
         // if FEN is null initialize chess board with default position
         if (inCaseOfInitFromFEN == null) {
             this.figuresTurn = WHITE;
-            this.currentWhiteKingPosition = Coordinate.e1;
-            this.currentBlackKingPosition = Coordinate.e8;
+            this.whiteKingPosition = Coordinate.e1;
+            this.blackKingPosition = Coordinate.e8;
 
             this.materialAdvantageOfWhite = 39;
             this.materialAdvantageOfBlack = 39;
@@ -225,7 +225,7 @@ public class ChessBoard {
             }
 
             if (nonNull(algebraicNotations)) {
-                validateAndForward(algebraicNotations);
+                validateNotations(algebraicNotations);
                 this.initType = InitType.PGN;
             } else {
                 this.initType = InitType.DEFAULT;
@@ -240,8 +240,8 @@ public class ChessBoard {
         this.enPassantStack.addLast(getEnPassant(inCaseOfInitFromFEN));
 
         this.figuresTurn = inCaseOfInitFromFEN.figuresTurn();
-        this.currentWhiteKingPosition = inCaseOfInitFromFEN.whiteKing();
-        this.currentBlackKingPosition = inCaseOfInitFromFEN.blackKing();
+        this.whiteKingPosition = inCaseOfInitFromFEN.whiteKing();
+        this.blackKingPosition = inCaseOfInitFromFEN.blackKing();
 
         this.materialAdvantageOfWhite = inCaseOfInitFromFEN.materialAdvantageOfWhite();
         this.materialAdvantageOfBlack = inCaseOfInitFromFEN.materialAdvantageOfBlack();
@@ -268,6 +268,9 @@ public class ChessBoard {
         else this.zobristHash = null;
     }
 
+    /**
+    * helper method which is called when constructing Board from FEN
+    */
     private Coordinate getEnPassant(FromFEN inCaseOfInitFromFEN) {
         Optional<Pair<Coordinate, Coordinate>> lastMovement = inCaseOfInitFromFEN.isLastMovementWasPassage();
         if (lastMovement.isEmpty()) {
@@ -410,7 +413,7 @@ public class ChessBoard {
         return blackPieces;
     }
 
-    public long pieces(final Color color) {
+    public long allPiecesOf(final Color color) {
         return color == WHITE ? whitePieces : blackPieces;
     }
 
@@ -468,8 +471,8 @@ public class ChessBoard {
      *
      * @return a new Coordinate object representing the current position of the white king
      */
-    public Coordinate currentWhiteKingPosition() {
-        return currentWhiteKingPosition;
+    public Coordinate whiteKingPosition() {
+        return whiteKingPosition;
     }
 
     /**
@@ -477,12 +480,12 @@ public class ChessBoard {
      *
      * @return a new Coordinate object representing the current position of the white king
      */
-    public Coordinate currentBlackKingPosition() {
-        return currentBlackKingPosition;
+    public Coordinate blackKingPosition() {
+        return blackKingPosition;
     }
 
     public Coordinate kingCoordinate(Color color) {
-        return color == WHITE ? currentWhiteKingPosition : currentBlackKingPosition;
+        return color == WHITE ? whiteKingPosition : blackKingPosition;
     }
 
     /**
@@ -678,9 +681,14 @@ public class ChessBoard {
         }
     }
 
-    private void validateAndForward(final List<AlgebraicNotation> listOfAlgebraicNotations) {
+    /** 
+    * helper method for validating PGN when Board is initialized from FEN
+    *<p>
+    * called in constructor
+    */
+    private void validateNotations(final List<AlgebraicNotation> listOfAlgebraicNotations) {
         for (final AlgebraicNotation algebraicNotation : listOfAlgebraicNotations) {
-            final Pair<Coordinate, Coordinate> coordinates = coordinates(algebraicNotation);
+            final Pair<Coordinate, Coordinate> coordinates = extractCoordinates(algebraicNotation);
 
             final Coordinate from = coordinates.getFirst();
             final Coordinate to = coordinates.getSecond();
@@ -705,7 +713,7 @@ public class ChessBoard {
         }
     }
 
-    Pair<Coordinate, Coordinate> coordinates(AlgebraicNotation algebraicNotation) {
+    Pair<Coordinate, Coordinate> extractCoordinates(AlgebraicNotation algebraicNotation) {
         final AlgebraicNotation.Castle isCastling = AlgebraicNotation.isCastling(algebraicNotation);
         if (isCastling != null) return algebraicNotation.castlingCoordinates(isCastling, figuresTurn);
         return algebraicNotation.coordinates();
@@ -726,8 +734,8 @@ public class ChessBoard {
      * @throws IllegalStateException If the king object cannot be found.
      */
     public King theKing(final Color kingColor) {
-        if (kingColor == WHITE) return (King) piece(currentWhiteKingPosition);
-        return (King) piece(currentBlackKingPosition);
+        if (kingColor == WHITE) return (King) piece(whiteKingPosition);
+        return (King) piece(blackKingPosition);
     }
 
     private void switchFiguresTurn() {
@@ -735,10 +743,12 @@ public class ChessBoard {
         else figuresTurn = WHITE;
     }
 
-    /** This is not a complete validation of which player should play at this point.
-     * This validation rather checks what color pieces should be moved.
-     * Finally, validation of the question of who should walk can only be carried out in the controller.*/
-    private boolean validateFiguresTurnAndPieceExisting(final Coordinate coordinate, final Coordinate to) {
+    /**
+    * This is not a complete validation of which player should play at this point.
+    * This validation rather checks what color pieces should be moved.
+    * Finally, validation of the question of who should walk can only be carried out in the controller.
+    */
+    private boolean validateFiguresTurnAndPieceExistence(final Coordinate coordinate, final Coordinate to) {
         Piece piece = piece(coordinate);
         return piece.color() == figuresTurn;
     }
@@ -749,9 +759,9 @@ public class ChessBoard {
      * @param king        The king piece that has moved.
      * @param coordinate  The new coordinate of the king.
      */
-    private void changedKingPosition(final King king, final Coordinate coordinate) {
-        if (king.color() == WHITE) this.currentWhiteKingPosition = coordinate;
-        else this.currentBlackKingPosition = coordinate;
+    private void changeKingPosition(final King king, final Coordinate coordinate) {
+        if (king.color() == WHITE) this.whiteKingPosition = coordinate;
+        else this.blackKingPosition = coordinate;
     }
 
     /**
@@ -876,6 +886,9 @@ public class ChessBoard {
         this.validBlackLongCasting = castlingAbility.blackLongCastling();
     }
 
+    /**
+    * update enPassaunt stack
+    */
     private void changeOfEnPassaunt(final Coordinate from, final Coordinate to, final Piece piece) {
         if (piece instanceof Pawn && from.column() == to.column() && Math.abs(from.row() - to.row()) == 2) {
             int enPassauntRow = to.row() == 4 ? 3 : 6;
@@ -891,10 +904,11 @@ public class ChessBoard {
         int castlingRights = isCastlingAbilityChanged ? -1 : castlingRights();
 
         if (nonNull(capturedAt)) {
-            long newZobristHash = this.zobrist.updateHash(zobristHash(),
-                    piece, from, endedPiece, to,
-                    capturedAt.getFirst(), capturedAt.getSecond(),
-                    castlingRights, enPassantFile()
+            long newZobristHash = this.zobrist.updateHash(
+                zobristHash(),
+                piece, from, endedPiece, to,
+                capturedAt.getFirst(), capturedAt.getSecond(),
+                castlingRights, enPassantFile()
             );
             zobristHashKeys.addLast(newZobristHash);
             if (isPureChess) return;
@@ -902,7 +916,11 @@ public class ChessBoard {
             return;
         }
 
-        long newZobristHash = this.zobrist.updateHash(zobristHash(), piece, from, endedPiece, to, castlingRights(), enPassantFile());
+        long newZobristHash = this.zobrist.updateHash(
+            zobristHash(),
+            piece, from, endedPiece, to,
+            castlingRights(), enPassantFile()
+        );
         zobristHashKeys.addLast(newZobristHash);
         if (isPureChess) return;
         zobristHash.put(newZobristHash, zobristHash.getOrDefault(newZobristHash, 0) + 1);
@@ -1113,7 +1131,7 @@ public class ChessBoard {
     }
 
     /**
-     * Processes a piece repositioning on the chess board.
+     * Processes a piece movement on the chess board.
      *
      * @param from                  The coordinate the piece is moving from.
      * @param to                    The coordinate the piece is moving to.
@@ -1126,7 +1144,7 @@ public class ChessBoard {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        if (!validateFiguresTurnAndPieceExisting(from, to)) {
+        if (!validateFiguresTurnAndPieceExistence(from, to)) {
             throw new IllegalArgumentException(String
                     .format("At the moment, the player for %s must move, not the opponent", figuresTurn));
         }
@@ -1192,7 +1210,7 @@ public class ChessBoard {
         if (isStalemate) operations.add(STALEMATE);
 
         /** Monitor opportunities for castling, switch players.*/
-        if (startField instanceof King king) changedKingPosition(king, to);
+        if (startField instanceof King king) changeKingPosition(king, to);
         final boolean isCastlingChanged = changeOfCastlingAbility(from, to, startField);
         if (figuresTurn == BLACK) countOfFullMoves++;
         switchFiguresTurn();
@@ -1304,7 +1322,7 @@ public class ChessBoard {
         if (isStalemate) operations.add(STALEMATE);
 
         /** Monitor opportunities for castling, enPassaunt, king position, fifty rules ability, and switch players.*/
-        changedKingPosition(king, to);
+        changeKingPosition(king, to);
         changeOfCastlingAbility(from, to, king);
         enPassantStack.addLast(null);
         if (figuresTurn == BLACK) countOfFullMoves++;
@@ -1395,7 +1413,7 @@ public class ChessBoard {
 
         this.countOfHalfMoves--;
         this.ruleOf50Moves.pollLast();
-        if (pieceForUndo instanceof King king) changedKingPosition(king, from);
+        if (pieceForUndo instanceof King king) changeKingPosition(king, from);
         changeOfCastlingAbilityInRevertMove(pieceForUndo);
         if (countOfFullMoves != 1 && figuresTurn == WHITE) countOfFullMoves--;
         enPassantStack.pollLast();
@@ -1437,7 +1455,7 @@ public class ChessBoard {
         this.ruleOf50Moves.pollLast();
         this.countOfHalfMoves--;
         enPassantStack.removeLast();
-        changedKingPosition((King) kingEndedField, from);
+        changeKingPosition((King) kingEndedField, from);
         changeOfCastlingAbilityInRevertMove(kingEndedField);
         if (countOfFullMoves != 1 && figuresTurn == WHITE) countOfFullMoves--;
         zobristHashKeys.removeLast();

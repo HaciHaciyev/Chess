@@ -60,14 +60,14 @@ public final class Rook implements Piece {
     boolean rookMove(final ChessBoard chessBoard, final Coordinate startField, final Coordinate endField) {
         int startSquare = startField.index();
         int endSquare = endField.index();
-        long validMoves = ROOK_MOVES_CACHE[startSquare] & ~chessBoard.pieces(color);
+        long validMoves = ROOK_MOVES_CACHE[startSquare] & ~chessBoard.allPiecesOf(color);
         if ((validMoves & (1L << endSquare)) == 0) return false;
         return clearPath(chessBoard, startField, endField);
     }
 
     public boolean isAtLeastOneMove(final ChessBoard chessBoard) {
         long rookBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         while (rookBitboard != 0) {
             int fromIndex = Long.numberOfTrailingZeros(rookBitboard);
@@ -97,7 +97,7 @@ public final class Rook implements Piece {
 
     public List<Move> allValidMoves(final ChessBoard chessBoard, final List<Move> validMoves) {
         long rookBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         while (rookBitboard != 0) {
             int fromIndex = Long.numberOfTrailingZeros(rookBitboard);

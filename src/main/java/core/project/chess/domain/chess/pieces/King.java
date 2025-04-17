@@ -88,7 +88,7 @@ public final class King implements Piece {
     }
 
     boolean kingMove(ChessBoard chessBoard, Coordinate startField, Coordinate endField) {
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
         long validMoves = color == WHITE ?
                 WHITE_KING_MOVES_CACHE[startField.index()] & ~ownPieces :
                 BLACK_KING_MOVES_CACHE[startField.index()] & ~ownPieces;
@@ -101,8 +101,8 @@ public final class King implements Piece {
             final Coordinate to) {
 
         Coordinate kingPosition = color.equals(WHITE) ?
-                chessBoard.currentWhiteKingPosition() :
-                chessBoard.currentBlackKingPosition();
+                chessBoard.whiteKingPosition() :
+                chessBoard.blackKingPosition();
 
         if (kingPosition == from) {
             if (chessBoard.isCastling(this, from, to)) return safeToCastle(chessBoard, from, to);
@@ -174,7 +174,7 @@ public final class King implements Piece {
 
     public List<Move> allValidMoves(final ChessBoard chessBoard, final List<Move> validMoves) {
         long kingBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         int fromIndex = Long.numberOfTrailingZeros(kingBitboard);
         long moves = color == WHITE ?
@@ -679,7 +679,7 @@ public final class King implements Piece {
     }
 
     private long simulateOpponentBitboard(ChessBoard board, Coordinate to, long toBitmask) {
-        long opponentPieces = board.pieces(color.opposite());
+        long opponentPieces = board.allPiecesOf(color.opposite());
         if (to == board.enPassant()) return opponentPieces ^ board.enPassant().bitMask();
         return opponentPieces ^ toBitmask;
     }

@@ -107,7 +107,7 @@ public final class Pawn implements Piece {
         long pseudoMoves = (color == Color.WHITE ? WHITE_PAWN_MOVES_CACHE : BLACK_PAWN_MOVES_CACHE)[fromIndex];
         if ((pseudoMoves & targetBit) == 0) return null;
 
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
         if ((targetBit & ownPieces) != 0) return null;
 
         long opponentPieces = color == WHITE ? chessBoard.blackPieces() : chessBoard.whitePieces();
@@ -136,7 +136,7 @@ public final class Pawn implements Piece {
 
     public boolean isAtLeastOneMove(final ChessBoard chessBoard) {
         long pawnBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         while (pawnBitboard != 0) {
             int fromIndex = Long.numberOfTrailingZeros(pawnBitboard);
@@ -210,7 +210,7 @@ public final class Pawn implements Piece {
 
     public List<Move> allValidMoves(final ChessBoard chessBoard, final List<Move> validMoves) {
         long pawnBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         while (pawnBitboard != 0) {
             int fromIndex = Long.numberOfTrailingZeros(pawnBitboard);

@@ -62,7 +62,7 @@ public final class Knight implements Piece {
         final boolean isKnightPattern = (KNIGHT_MOVES_CACHE[from.index()] & toMask) != 0;
         if (!isKnightPattern) return false;
 
-        long ownPieces = board.pieces(color);
+        long ownPieces = board.allPiecesOf(color);
         final boolean targetOccupiedByOwn = (ownPieces & toMask) != 0;
 
         return !targetOccupiedByOwn;
@@ -70,7 +70,7 @@ public final class Knight implements Piece {
 
     public boolean isAtLeastOneMove(final ChessBoard chessBoard) {
         long knightBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         while (knightBitboard != 0) {
             int fromIndex = Long.numberOfTrailingZeros(knightBitboard);
@@ -101,7 +101,7 @@ public final class Knight implements Piece {
 
     public List<Move> allValidMoves(final ChessBoard chessBoard, final List<Move> validMoves) {
         long knightBitboard = chessBoard.bitboard(this);
-        long ownPieces = chessBoard.pieces(color);
+        long ownPieces = chessBoard.allPiecesOf(color);
 
         while (knightBitboard != 0) {
             int fromIndex = Long.numberOfTrailingZeros(knightBitboard);
