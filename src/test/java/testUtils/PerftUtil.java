@@ -2,21 +2,14 @@ package testUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.github.bhlangonijr.chesslib.move.Move;
+import core.project.chess.domain.Perft.PerftTask;
+import io.quarkus.logging.Log;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.github.bhlangonijr.chesslib.move.Move;
-
-import core.project.chess.domain.Perft.PerftTask;
-import io.quarkus.logging.Log;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class PerftUtil {
-
-    private static final Logger log = LoggerFactory.getLogger(PerftUtil.class);
 
     public static void assertPerftDepth1(long nodes) {
         Log.infof("Count of nodes: %d.", nodes);
@@ -140,7 +133,7 @@ public class PerftUtil {
                     if (piece1 == '.') {
                         // Piece added in board2
                         System.out.print("\u001B[42m" + piece1 + "\u001B[0m"); // Green background for empty space where
-                                                                               // piece was added
+                        // piece was added
                     } else if (piece2 == '.') {
                         // Piece removed in board2
                         System.out.print("\u001B[41m" + piece1 + "\u001B[0m"); // Red background for removed piece
@@ -167,7 +160,7 @@ public class PerftUtil {
                     } else if (piece2 == '.') {
                         // Piece removed in board2
                         System.out.print("\u001B[41m" + piece2 + "\u001B[0m"); // Red background for empty space where
-                                                                               // piece was removed
+                        // piece was removed
                     } else {
                         // Piece changed
                         System.out.print("\u001B[43m" + piece2 + "\u001B[0m"); // Yellow background for changed piece
@@ -188,10 +181,30 @@ public class PerftUtil {
         System.out.println("\nDetailed Analysis:");
 
         // Detect castling
-        boolean whiteKingSideCastle = detectCastling(expandedBoard1, expandedBoard2, 'K', true);
-        boolean whiteQueenSideCastle = detectCastling(expandedBoard1, expandedBoard2, 'Q', true);
-        boolean blackKingSideCastle = detectCastling(expandedBoard1, expandedBoard2, 'k', false);
-        boolean blackQueenSideCastle = detectCastling(expandedBoard1, expandedBoard2, 'q', false);
+        boolean whiteKingSideCastle = detectCastling(
+            expandedBoard1,
+            expandedBoard2,
+            'K',
+            true
+        );
+        boolean whiteQueenSideCastle = detectCastling(
+            expandedBoard1,
+            expandedBoard2,
+            'Q',
+            true
+        );
+        boolean blackKingSideCastle = detectCastling(
+            expandedBoard1,
+            expandedBoard2,
+            'k',
+            false
+        );
+        boolean blackQueenSideCastle = detectCastling(
+            expandedBoard1,
+            expandedBoard2,
+            'q',
+            false
+        );
 
         if (whiteKingSideCastle) {
             System.out.println("White castled kingside (O-O)");
@@ -210,21 +223,45 @@ public class PerftUtil {
         for (char piece : allPieces) {
             String pieceName = getPieceName(piece);
 
-            List<String> beforePositions = piecesBefore.getOrDefault(piece, new ArrayList<>());
-            List<String> afterPositions = piecesAfter.getOrDefault(piece, new ArrayList<>());
+            List<String> beforePositions = piecesBefore.getOrDefault(
+                piece,
+                new ArrayList<>()
+            );
+            List<String> afterPositions = piecesAfter.getOrDefault(
+                piece,
+                new ArrayList<>()
+            );
 
             // Handle new pieces (like promotions)
-            if (!piecesBefore.containsKey(piece) && piecesAfter.containsKey(piece)) {
+            if (
+                !piecesBefore.containsKey(piece) &&
+                piecesAfter.containsKey(piece)
+            ) {
                 for (String pos : afterPositions) {
-                    System.out.println("\u001B[32m" + pieceName + " appeared at " + pos + "\u001B[0m");
+                    System.out.println(
+                        "\u001B[32m" +
+                        pieceName +
+                        " appeared at " +
+                        pos +
+                        "\u001B[0m"
+                    );
                 }
                 continue;
             }
 
             // Handle removed pieces
-            if (piecesBefore.containsKey(piece) && !piecesAfter.containsKey(piece)) {
+            if (
+                piecesBefore.containsKey(piece) &&
+                !piecesAfter.containsKey(piece)
+            ) {
                 for (String pos : beforePositions) {
-                    System.out.println("\u001B[31m" + pieceName + " removed from " + pos + "\u001B[0m");
+                    System.out.println(
+                        "\u001B[31m" +
+                        pieceName +
+                        " removed from " +
+                        pos +
+                        "\u001B[0m"
+                    );
                 }
                 continue;
             }
@@ -232,11 +269,19 @@ public class PerftUtil {
             // Handle moved pieces (count changed)
             if (beforePositions.size() > afterPositions.size()) {
                 // Some pieces captured
-                List<String> remainingPositions = new ArrayList<>(beforePositions);
+                List<String> remainingPositions = new ArrayList<>(
+                    beforePositions
+                );
                 remainingPositions.removeAll(afterPositions);
 
                 for (String pos : remainingPositions) {
-                    System.out.println("\u001B[31m" + pieceName + " at " + pos + " was captured\u001B[0m");
+                    System.out.println(
+                        "\u001B[31m" +
+                        pieceName +
+                        " at " +
+                        pos +
+                        " was captured\u001B[0m"
+                    );
                 }
             } else if (beforePositions.size() < afterPositions.size()) {
                 // Pieces added (promotion)
@@ -245,21 +290,47 @@ public class PerftUtil {
 
                 for (String pos : newPositions) {
                     System.out.println(
-                            "\u001B[32m" + pieceName + " appeared at " + pos + " (possibly from promotion)\u001B[0m");
+                        "\u001B[32m" +
+                        pieceName +
+                        " appeared at " +
+                        pos +
+                        " (possibly from promotion)\u001B[0m"
+                    );
                 }
-            } else if (beforePositions.size() == afterPositions.size() &&
-                    !new HashSet<>(beforePositions).equals(new HashSet<>(afterPositions))) {
+            } else if (
+                beforePositions.size() == afterPositions.size() &&
+                !new HashSet<>(beforePositions).equals(
+                    new HashSet<>(afterPositions)
+                )
+            ) {
                 // Same number of pieces but positions changed - piece moved
                 if (beforePositions.size() == 1 && afterPositions.size() == 1) {
                     // Clear case of a single piece moving
-                    System.out.println("\u001B[33m" + pieceName + " moved from " +
-                            beforePositions.get(0) + " to " + afterPositions.get(0) + "\u001B[0m");
+                    System.out.println(
+                        "\u001B[33m" +
+                        pieceName +
+                        " moved from " +
+                        beforePositions.get(0) +
+                        " to " +
+                        afterPositions.get(0) +
+                        "\u001B[0m"
+                    );
                 } else {
                     // Multiple pieces of same type moved - try to identify individual movements
-                    Map<String, String> moves = identifyPieceMoves(beforePositions, afterPositions);
+                    Map<String, String> moves = identifyPieceMoves(
+                        beforePositions,
+                        afterPositions
+                    );
                     for (Map.Entry<String, String> move : moves.entrySet()) {
-                        System.out.println("\u001B[33m" + pieceName + " moved from " +
-                                move.getKey() + " to " + move.getValue() + "\u001B[0m");
+                        System.out.println(
+                            "\u001B[33m" +
+                            pieceName +
+                            " moved from " +
+                            move.getKey() +
+                            " to " +
+                            move.getValue() +
+                            "\u001B[0m"
+                        );
                     }
                 }
             }
@@ -269,32 +340,48 @@ public class PerftUtil {
         compareOtherFENParts(parts1, parts2);
     }
 
-    private static boolean detectCastling(char[][] before, char[][] after, char king, boolean isWhite) {
+    private static boolean detectCastling(
+        char[][] before,
+        char[][] after,
+        char king,
+        boolean isWhite
+    ) {
         int baseRank = isWhite ? 7 : 0;
 
         if (before[baseRank][4] == king && after[baseRank][4] != king) {
             // King-side castling
             if (after[baseRank][6] == king) {
                 char rook = isWhite ? 'R' : 'r';
-                return before[baseRank][7] == rook && after[baseRank][5] == rook;
+                return (
+                    before[baseRank][7] == rook && after[baseRank][5] == rook
+                );
             }
             // Queen-side castling
             else if (after[baseRank][2] == king) {
                 char rook = isWhite ? 'R' : 'r';
-                return before[baseRank][0] == rook && after[baseRank][3] == rook;
+                return (
+                    before[baseRank][0] == rook && after[baseRank][3] == rook
+                );
             }
         }
         return false;
     }
 
-    private static Map<String, String> identifyPieceMoves(List<String> before, List<String> after) {
+    private static Map<String, String> identifyPieceMoves(
+        List<String> before,
+        List<String> after
+    ) {
         Map<String, String> moves = new HashMap<>();
 
         // Naive approach - match pieces by proximity
         for (String beforePos : before) {
             if (!after.contains(beforePos)) {
                 // Find closest position in 'after' that's not in 'before'
-                String closestAfterPos = findClosestPosition(beforePos, after, before);
+                String closestAfterPos = findClosestPosition(
+                    beforePos,
+                    after,
+                    before
+                );
                 if (closestAfterPos != null) {
                     moves.put(beforePos, closestAfterPos);
                 }
@@ -304,7 +391,11 @@ public class PerftUtil {
         return moves;
     }
 
-    private static String findClosestPosition(String fromPos, List<String> candidates, List<String> excluded) {
+    private static String findClosestPosition(
+        String fromPos,
+        List<String> candidates,
+        List<String> excluded
+    ) {
         String closest = null;
         int minDistance = Integer.MAX_VALUE;
 
@@ -316,7 +407,8 @@ public class PerftUtil {
                 int toFile = candidate.charAt(0) - 'a';
                 int toRank = '8' - candidate.charAt(1);
 
-                int distance = Math.abs(fromFile - toFile) + Math.abs(fromRank - toRank);
+                int distance =
+                    Math.abs(fromFile - toFile) + Math.abs(fromRank - toRank);
                 if (distance < minDistance) {
                     minDistance = distance;
                     closest = candidate;
@@ -349,8 +441,13 @@ public class PerftUtil {
     }
 
     private static void compareOtherFENParts(String[] parts1, String[] parts2) {
-        String[] partNames = { "Active color", "Castling availability", "En passant target",
-                "Halfmove clock", "Fullmove number" };
+        String[] partNames = {
+            "Active color",
+            "Castling availability",
+            "En passant target",
+            "Halfmove clock",
+            "Fullmove number",
+        };
 
         System.out.println("\nOther FEN differences:");
 
@@ -359,22 +456,29 @@ public class PerftUtil {
                 System.out.println(partNames[i - 1] + ":");
 
                 if (i == 1) { // Active color
-                    System.out.println("  Turn changed from " +
-                            (parts1[i].equals("w") ? "White" : "Black") +
-                            " to " +
-                            (parts2[i].equals("w") ? "White" : "Black"));
+                    System.out.println(
+                        "  Turn changed from " +
+                        (parts1[i].equals("w") ? "White" : "Black") +
+                        " to " +
+                        (parts2[i].equals("w") ? "White" : "Black")
+                    );
                 } else if (i == 2) { // Castling
                     analyzeCastlingChanges(parts1[i], parts2[i]);
                 } else if (i == 3) { // En passant
                     analyzeEnPassantChanges(parts1[i], parts2[i]);
                 } else {
-                    System.out.println("  Changed from " + parts1[i] + " to " + parts2[i]);
+                    System.out.println(
+                        "  Changed from " + parts1[i] + " to " + parts2[i]
+                    );
                 }
             }
         }
     }
 
-    private static void analyzeCastlingChanges(String castling1, String castling2) {
+    private static void analyzeCastlingChanges(
+        String castling1,
+        String castling2
+    ) {
         Set<Character> rights1 = new HashSet<>();
         Set<Character> rights2 = new HashSet<>();
 
@@ -390,10 +494,18 @@ public class PerftUtil {
         for (char c : castling1.toCharArray()) {
             if (!rights2.contains(c)) {
                 switch (c) {
-                    case 'K' -> System.out.println("  White lost kingside castling rights");
-                    case 'Q' -> System.out.println("  White lost queenside castling rights");
-                    case 'k' -> System.out.println("  Black lost kingside castling rights");
-                    case 'q' -> System.out.println("  Black lost queenside castling rights");
+                    case 'K' -> System.out.println(
+                        "  White lost kingside castling rights"
+                    );
+                    case 'Q' -> System.out.println(
+                        "  White lost queenside castling rights"
+                    );
+                    case 'k' -> System.out.println(
+                        "  Black lost kingside castling rights"
+                    );
+                    case 'q' -> System.out.println(
+                        "  Black lost queenside castling rights"
+                    );
                 }
             }
         }
@@ -402,10 +514,18 @@ public class PerftUtil {
         for (char c : castling2.toCharArray()) {
             if (!rights1.contains(c)) {
                 switch (c) {
-                    case 'K' -> System.out.println("  White gained kingside castling rights");
-                    case 'Q' -> System.out.println("  White gained queenside castling rights");
-                    case 'k' -> System.out.println("  Black gained kingside castling rights");
-                    case 'q' -> System.out.println("  Black gained queenside castling rights");
+                    case 'K' -> System.out.println(
+                        "  White gained kingside castling rights"
+                    );
+                    case 'Q' -> System.out.println(
+                        "  White gained queenside castling rights"
+                    );
+                    case 'k' -> System.out.println(
+                        "  Black gained kingside castling rights"
+                    );
+                    case 'q' -> System.out.println(
+                        "  Black gained queenside castling rights"
+                    );
                 }
             }
         }
@@ -415,9 +535,13 @@ public class PerftUtil {
         if (ep1.equals("-") && !ep2.equals("-")) {
             System.out.println("  En passant target square set to " + ep2);
         } else if (!ep1.equals("-") && ep2.equals("-")) {
-            System.out.println("  En passant target square removed from " + ep1);
+            System.out.println(
+                "  En passant target square removed from " + ep1
+            );
         } else if (!ep1.equals("-") && !ep2.equals("-")) {
-            System.out.println("  En passant target square changed from " + ep1 + " to " + ep2);
+            System.out.println(
+                "  En passant target square changed from " + ep1 + " to " + ep2
+            );
         }
     }
 
@@ -447,14 +571,21 @@ public class PerftUtil {
         return board;
     }
 
-    public static void print_mismatch(List<core.project.chess.domain.chess.value_objects.Move> our_moves,
-            List<Move> their_moves) {
-
+    public static void print_mismatch(
+        List<core.project.chess.domain.chess.value_objects.Move> our_moves,
+        List<Move> their_moves
+    ) {
         our_moves.sort(PerftUtil::compareOurMoves);
         their_moves.sort(PerftUtil::compareTheirMoves);
 
-        var our_moves_str = our_moves.stream().map(Object::toString).collect(Collectors.toList());
-        var their_moves_str = their_moves.stream().map(Object::toString).collect(Collectors.toList());
+        var our_moves_str = our_moves
+            .stream()
+            .map(Object::toString)
+            .collect(Collectors.toList());
+        var their_moves_str = their_moves
+            .stream()
+            .map(Object::toString)
+            .collect(Collectors.toList());
 
         List<String> outliers = new ArrayList<>();
         boolean ourMovesLarger = our_moves.size() > their_moves.size();
@@ -471,17 +602,27 @@ public class PerftUtil {
         int numColumns = 5;
 
         System.out.println();
-        System.out.println("OUR GENERATION: %s moves".formatted(our_moves.size()));
+        System.out.println(
+            "OUR GENERATION: %s moves".formatted(our_moves.size())
+        );
         printMovesInColumns(our_moves, outliers, numColumns);
 
         System.out.println();
-        System.out.println("THEIR GENERATION: %s moves".formatted(their_moves.size()));
+        System.out.println(
+            "THEIR GENERATION: %s moves".formatted(their_moves.size())
+        );
         printMovesInColumns(their_moves, outliers, numColumns);
         System.out.println();
     }
 
-    private static void printMovesInColumns(List<?> moves, List<String> outliers, int numColumns) {
-        int itemsPerColumn = (int) Math.ceil((double) moves.size() / numColumns);
+    private static void printMovesInColumns(
+        List<?> moves,
+        List<String> outliers,
+        int numColumns
+    ) {
+        int itemsPerColumn = (int) Math.ceil(
+            (double) moves.size() / numColumns
+        );
 
         for (int row = 0; row < itemsPerColumn; row++) {
             StringBuilder line = new StringBuilder();
@@ -492,7 +633,12 @@ public class PerftUtil {
                     if (outliers.contains(moveStr)) {
                         // Apply highlighting for outliers
                         String formattedMove = moveStr + "◄"; // Using unicode symbol for better alignment
-                        line.append(String.format("\u001B[31m%-15s\u001B[0m", formattedMove));
+                        line.append(
+                            String.format(
+                                "\u001B[31m%-15s\u001B[0m",
+                                formattedMove
+                            )
+                        );
                     } else {
                         line.append(String.format("%-15s", moveStr));
                     }
@@ -505,22 +651,21 @@ public class PerftUtil {
     }
 
     // Extracted comparator methods for better readability
-    private static int compareOurMoves(core.project.chess.domain.chess.value_objects.Move one,
-            core.project.chess.domain.chess.value_objects.Move two) {
+    private static int compareOurMoves(
+        core.project.chess.domain.chess.value_objects.Move one,
+        core.project.chess.domain.chess.value_objects.Move two
+    ) {
         // Compare from column
         int result = Integer.compare(one.from().column(), two.from().column());
-        if (result != 0)
-            return result;
+        if (result != 0) return result;
 
         // Compare from row
         result = Integer.compare(one.from().row(), two.from().row());
-        if (result != 0)
-            return result;
+        if (result != 0) return result;
 
         // Compare to column
         result = Integer.compare(one.to().column(), two.to().column());
-        if (result != 0)
-            return result;
+        if (result != 0) return result;
 
         // Compare to row
         return Integer.compare(one.to().row(), two.to().row());
@@ -528,21 +673,30 @@ public class PerftUtil {
 
     private static int compareTheirMoves(Move one, Move two) {
         // Compare from file
-        int result = Integer.compare(one.getFrom().getFile().ordinal(), two.getFrom().getFile().ordinal());
-        if (result != 0)
-            return result;
+        int result = Integer.compare(
+            one.getFrom().getFile().ordinal(),
+            two.getFrom().getFile().ordinal()
+        );
+        if (result != 0) return result;
 
         // Compare from rank
-        result = Integer.compare(one.getFrom().getRank().ordinal(), two.getFrom().getRank().ordinal());
-        if (result != 0)
-            return result;
+        result = Integer.compare(
+            one.getFrom().getRank().ordinal(),
+            two.getFrom().getRank().ordinal()
+        );
+        if (result != 0) return result;
 
         // Compare to file
-        result = Integer.compare(one.getTo().getFile().ordinal(), two.getTo().getFile().ordinal());
-        if (result != 0)
-            return result;
+        result = Integer.compare(
+            one.getTo().getFile().ordinal(),
+            two.getTo().getFile().ordinal()
+        );
+        if (result != 0) return result;
 
         // Compare to rank
-        return Integer.compare(one.getTo().getRank().ordinal(), two.getTo().getRank().ordinal());
+        return Integer.compare(
+            one.getTo().getRank().ordinal(),
+            two.getTo().getRank().ordinal()
+        );
     }
 }

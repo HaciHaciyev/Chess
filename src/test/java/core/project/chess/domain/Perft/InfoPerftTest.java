@@ -7,8 +7,15 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
-import core.project.chess.domain.commons.tuples.Pair;
+import core.project.chess.infrastructure.utilities.containers.Pair;
 import io.quarkus.logging.Log;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +26,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class InfoPerftTest {
+
     private int DEPTH = 0;
     private ChessBoard our_board;
     private Board their_board;
@@ -62,7 +70,8 @@ public class InfoPerftTest {
     void perftGoodPosition() {
         DEPTH = 4;
 
-        String fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+        String fen =
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
         System.out.println("Perft good position: " + fen);
 
         move_stack = new ArrayDeque<>();
@@ -110,7 +119,9 @@ public class InfoPerftTest {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+            System.out.println(
+                "Perft custom position #%s: %s".formatted(task_idx, fen)
+            );
 
             for (int depth = 0; depth < task.values().length - 2; depth++) {
                 DEPTH = depth + 1;
@@ -134,7 +145,9 @@ public class InfoPerftTest {
                 System.out.println();
                 Assertions.assertThat(nodes).isEqualTo(task.values()[depth]);
             }
-            System.out.println("+---------------------------------------------------------------------------------+");
+            System.out.println(
+                "+---------------------------------------------------------------------------------+"
+            );
 
             processed_fen++;
         }
@@ -153,7 +166,9 @@ public class InfoPerftTest {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+            System.out.println(
+                "Perft custom position #%s: %s".formatted(task_idx, fen)
+            );
 
             for (int depth = 0; depth < task.values().length - 1; depth++) {
                 DEPTH = depth + 1;
@@ -177,7 +192,9 @@ public class InfoPerftTest {
                 System.out.println();
                 Assertions.assertThat(nodes).isEqualTo(task.values()[depth]);
             }
-            System.out.println("+---------------------------------------------------------------------------------+");
+            System.out.println(
+                "+---------------------------------------------------------------------------------+"
+            );
 
             processed_fen++;
         }
@@ -196,7 +213,9 @@ public class InfoPerftTest {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+            System.out.println(
+                "Perft custom position #%s: %s".formatted(task_idx, fen)
+            );
 
             for (int depth = 0; depth < task.values().length; depth++) {
                 DEPTH = depth + 1;
@@ -220,7 +239,9 @@ public class InfoPerftTest {
                 System.out.println();
                 Assertions.assertThat(nodes).isEqualTo(task.values()[depth]);
             }
-            System.out.println("+---------------------------------------------------------------------------------+");
+            System.out.println(
+                "+---------------------------------------------------------------------------------+"
+            );
 
             processed_fen++;
         }
@@ -236,14 +257,20 @@ public class InfoPerftTest {
             return 1L;
         }
 
-        List<core.project.chess.domain.chess.value_objects.Move> our_valid_moves = null;
-        List<com.github.bhlangonijr.chesslib.move.Move> their_valid_moves = their_board.legalMoves();
+        List<
+            core.project.chess.domain.chess.value_objects.Move
+        > our_valid_moves = null;
+        List<com.github.bhlangonijr.chesslib.move.Move> their_valid_moves =
+            their_board.legalMoves();
 
         try {
             our_valid_moves = our_board.generateAllValidMoves();
         } catch (Exception e) {
-            System.out.printf("\t Could not generate moves for position: %s | current depth: %s%n",
-                    our_board.actualRepresentationOfChessBoard(), depth);
+            System.out.printf(
+                "\t Could not generate moves for position: %s | current depth: %s%n",
+                our_board.actualRepresentationOfChessBoard(),
+                depth
+            );
             throw e;
         }
 
@@ -252,8 +279,13 @@ public class InfoPerftTest {
             System.out.println("DEPTH: " + depth);
             System.out.println("MOVE STACK: " + move_stack);
             System.out.println("UNDO STACK: " + undo_stack);
-            System.out.println("MOVES HISTORY OF BOARD: " + our_board.listOfAlgebraicNotations());
-            System.out.println("OUR FEN: \t" + our_board.actualRepresentationOfChessBoard());
+            System.out.println(
+                "MOVES HISTORY OF BOARD: " +
+                our_board.listOfAlgebraicNotations()
+            );
+            System.out.println(
+                "OUR FEN: \t" + our_board.actualRepresentationOfChessBoard()
+            );
             System.out.println("THEIR FEN: \t" + their_board.getFen());
             PerftUtil.print_mismatch(our_valid_moves, their_valid_moves);
             throw new RuntimeException("Move generation mismatch");
@@ -277,7 +309,10 @@ public class InfoPerftTest {
                     System.out.println("DEPTH: " + depth);
                     System.out.println("MOVE STACK: " + move_stack);
                     System.out.println("UNDO STACK: " + undo_stack);
-                    System.out.println("MOVES HISTORY OF BOARD: " + our_board.listOfAlgebraicNotations());
+                    System.out.println(
+                        "MOVES HISTORY OF BOARD: " +
+                        our_board.listOfAlgebraicNotations()
+                    );
                     System.out.println("OUR FEN: \t" + our_fen);
                     System.out.println("THEIR FEN: \t" + their_fen);
                     System.out.println();
@@ -285,8 +320,12 @@ public class InfoPerftTest {
                     throw new RuntimeException("FEN mismatch");
                 }
             } catch (Exception e) {
-                System.out.printf("Error making move: %s | position: %s | depth: %s%n", move,
-                        our_board.actualRepresentationOfChessBoard(), depth);
+                System.out.printf(
+                    "Error making move: %s | position: %s | depth: %s%n",
+                    move,
+                    our_board.actualRepresentationOfChessBoard(),
+                    depth
+                );
                 throw e;
             }
 
@@ -297,8 +336,12 @@ public class InfoPerftTest {
             verifyPerft(move, from, to, inCaseOfPromotion);
 
             if (depth == DEPTH) {
-                System.out.printf("\t%s -> %s \t|\t %s\n", move, newNodes,
-                        our_board.actualRepresentationOfChessBoard());
+                System.out.printf(
+                    "\t%s -> %s \t|\t %s\n",
+                    move,
+                    newNodes,
+                    our_board.actualRepresentationOfChessBoard()
+                );
             }
 
             their_board.undoMove();
@@ -313,7 +356,10 @@ public class InfoPerftTest {
                 System.out.println("DEPTH: " + depth);
                 System.out.println("MOVE STACK: " + move_stack);
                 System.out.println("UNDO STACK: " + undo_stack);
-                System.out.println("MOVES HISTORY OF BOARD: " + our_board.listOfAlgebraicNotations());
+                System.out.println(
+                    "MOVES HISTORY OF BOARD: " +
+                    our_board.listOfAlgebraicNotations()
+                );
                 System.out.println("OUR FEN: \t" + our_undo_fen);
                 System.out.println("THEIR FEN: \t" + their_undo_fen);
                 System.out.println();
@@ -345,8 +391,9 @@ public class InfoPerftTest {
     }
 
     private static @Nullable Piece getInCaseOfPromotion(Move move) {
-        return move.getPromotion() == com.github.bhlangonijr.chesslib.Piece.NONE ? null
-                : AlgebraicNotation.fromSymbol(move.getPromotion().getFenSymbol());
+        return move.getPromotion() == com.github.bhlangonijr.chesslib.Piece.NONE
+            ? null
+            : AlgebraicNotation.fromSymbol(move.getPromotion().getFenSymbol());
     }
 
     public static int columnToInt(char c) {
@@ -356,13 +403,27 @@ public class InfoPerftTest {
         throw new IllegalStateException("Unexpected value: " + c);
     }
 
-    private void verifyPerft(Move move, Coordinate from, Coordinate to, Piece inCaseOfPromotion) {
+    private void verifyPerft(
+        Move move,
+        Coordinate from,
+        Coordinate to,
+        Piece inCaseOfPromotion
+    ) {
         if (perftValues.verify(secondPerftValues)) {
             return;
         }
 
-        Log.errorf("Perft failed. On move: from - %s, to - %s, inCaseOfPromotion - %s", from, to, inCaseOfPromotion);
-        Log.errorf("Our ChessBoard: FEN: %s, PGN: %s", our_board.toString(), our_board.pgn());
+        Log.errorf(
+            "Perft failed. On move: from - %s, to - %s, inCaseOfPromotion - %s",
+            from,
+            to,
+            inCaseOfPromotion
+        );
+        Log.errorf(
+            "Our ChessBoard: FEN: %s, PGN: %s",
+            our_board.toString(),
+            our_board.pgn()
+        );
         System.out.println();
         their_board.undoMove();
         String[] fen = new String[2];
@@ -381,7 +442,10 @@ public class InfoPerftTest {
         System.out.println();
 
         Log.infof("First en passaunt: %d", perftValues.capturesOnPassage);
-        Log.infof("Second en passaunt: %d", secondPerftValues.capturesOnPassage);
+        Log.infof(
+            "Second en passaunt: %d",
+            secondPerftValues.capturesOnPassage
+        );
         System.out.println();
 
         Log.infof("First castles: %d", perftValues.castles);
@@ -411,27 +475,35 @@ public class InfoPerftTest {
         secondPerftValues.nodes = nodes;
         their_board.undoMove();
 
-        com.github.bhlangonijr.chesslib.Piece pieceOnEndOfMove = their_board
-                .getPiece(Square.valueOf(to.toString().toUpperCase()));
-        if (!pieceOnEndOfMove.equals(com.github.bhlangonijr.chesslib.Piece.NONE)) {
+        com.github.bhlangonijr.chesslib.Piece pieceOnEndOfMove =
+            their_board.getPiece(Square.valueOf(to.toString().toUpperCase()));
+        if (
+            !pieceOnEndOfMove.equals(com.github.bhlangonijr.chesslib.Piece.NONE)
+        ) {
             secondPerftValues.captures++;
         }
 
         Square enPassant = their_board.getEnPassant();
-        if (!enPassant.equals(Square.NONE) && isCaptureOnPassage(from, to, enPassant)) {
+        if (
+            !enPassant.equals(Square.NONE) &&
+            isCaptureOnPassage(from, to, enPassant)
+        ) {
             secondPerftValues.capturesOnPassage++;
             secondPerftValues.captures++;
         }
 
-        com.github.bhlangonijr.chesslib.Piece piece = their_board
-                .getPiece(Square.valueOf(from.toString().toUpperCase()));
-        final boolean isTheKingMove = piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_KING) ||
-                piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_KING);
+        com.github.bhlangonijr.chesslib.Piece piece = their_board.getPiece(
+            Square.valueOf(from.toString().toUpperCase())
+        );
+        final boolean isTheKingMove =
+            piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_KING) ||
+            piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_KING);
 
-        final boolean isCastle = (from.equals(Coordinate.e1) &&
+        final boolean isCastle =
+            (from.equals(Coordinate.e1) &&
                 (to.equals(Coordinate.c1) || to.equals(Coordinate.g1))) ||
-                ((from.equals(Coordinate.e8)) &&
-                        (to.equals(Coordinate.c8) || to.equals(Coordinate.g8)));
+            ((from.equals(Coordinate.e8)) &&
+                (to.equals(Coordinate.c8) || to.equals(Coordinate.g8)));
 
         if (isTheKingMove && isCastle) {
             secondPerftValues.castles++;
@@ -443,7 +515,8 @@ public class InfoPerftTest {
 
         their_board.doMove(move);
 
-        final boolean isCheck = their_board.isKingAttacked() && !their_board.isMated();
+        final boolean isCheck =
+            their_board.isKingAttacked() && !their_board.isMated();
         if (isCheck) {
             secondPerftValues.checks++;
         }
@@ -453,26 +526,36 @@ public class InfoPerftTest {
         }
     }
 
-    private boolean isCaptureOnPassage(Coordinate from, Coordinate to, Square enPassant) {
-        final boolean isMoveEndingOnEnPassant = Square.valueOf(to.toString().toUpperCase()).equals(enPassant);
+    private boolean isCaptureOnPassage(
+        Coordinate from,
+        Coordinate to,
+        Square enPassant
+    ) {
+        final boolean isMoveEndingOnEnPassant = Square.valueOf(
+            to.toString().toUpperCase()
+        ).equals(enPassant);
         if (!isMoveEndingOnEnPassant) {
             return false;
         }
 
-        com.github.bhlangonijr.chesslib.Piece piece = their_board
-                .getPiece(Square.valueOf(from.toString().toUpperCase()));
-        return piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_PAWN) ||
-                piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_PAWN);
+        com.github.bhlangonijr.chesslib.Piece piece = their_board.getPiece(
+            Square.valueOf(from.toString().toUpperCase())
+        );
+        return (
+            piece.equals(com.github.bhlangonijr.chesslib.Piece.WHITE_PAWN) ||
+            piece.equals(com.github.bhlangonijr.chesslib.Piece.BLACK_PAWN)
+        );
     }
 
     private void calculatePerftValues(long nodes) {
         perftValues.nodes = nodes;
 
-        List<String> listOfAlgebraicNotations = our_board.listOfAlgebraicNotations();
-        Optional<AlgebraicNotation> notation = our_board.lastAlgebraicNotation();
+        List<String> listOfAlgebraicNotations =
+            our_board.listOfAlgebraicNotations();
+        Optional<AlgebraicNotation> notation =
+            our_board.lastAlgebraicNotation();
 
-        if (notation.isEmpty())
-            return;
+        if (notation.isEmpty()) return;
 
         AlgebraicNotation algebraicNotation = notation.get();
         var lastMove = notation.get().algebraicNotation();
@@ -482,7 +565,9 @@ public class InfoPerftTest {
         }
 
         if (listOfAlgebraicNotations.size() >= 2) {
-            String preLastMove = listOfAlgebraicNotations.get(listOfAlgebraicNotations.size() - 2);
+            String preLastMove = listOfAlgebraicNotations.get(
+                listOfAlgebraicNotations.size() - 2
+            );
             calculateCapturesOnPassage(preLastMove, lastMove);
         }
 
@@ -503,7 +588,10 @@ public class InfoPerftTest {
         }
     }
 
-    private void calculateCapturesOnPassage(String preLastMove, String lastMove) {
+    private void calculateCapturesOnPassage(
+        String preLastMove,
+        String lastMove
+    ) {
         if (Objects.isNull(preLastMove)) {
             return;
         }
@@ -514,17 +602,24 @@ public class InfoPerftTest {
             return;
         }
 
-        final boolean isPawnMove = Stream.of("K", "Q", "B", "N", "R").noneMatch(lastMove::startsWith) &&
-                Stream.of("K", "Q", "B", "N", "R").noneMatch(preLastMove::startsWith);
+        final boolean isPawnMove =
+            Stream.of("K", "Q", "B", "N", "R").noneMatch(
+                lastMove::startsWith
+            ) &&
+            Stream.of("K", "Q", "B", "N", "R").noneMatch(
+                preLastMove::startsWith
+            );
         if (!isPawnMove) {
             return;
         }
 
         AlgebraicNotation lastAN = AlgebraicNotation.of(lastMove);
-        Pair<Coordinate, Coordinate> coordinatesOfLastMove = lastAN.coordinates();
+        Pair<Coordinate, Coordinate> coordinatesOfLastMove =
+            lastAN.coordinates();
         final int endOfLastMove = coordinatesOfLastMove.getSecond().row();
 
-        final boolean isCaptureOnEnPassaunLine = endOfLastMove == 3 || endOfLastMove == 6;
+        final boolean isCaptureOnEnPassaunLine =
+            endOfLastMove == 3 || endOfLastMove == 6;
         if (!isCaptureOnEnPassaunLine) {
             return;
         }
@@ -535,12 +630,16 @@ public class InfoPerftTest {
             return;
         }
 
-        Pair<Coordinate, Coordinate> coordinatesOfPreLastMove = preLastAN.coordinates();
-        final int startOfPreLastMove = coordinatesOfPreLastMove.getFirst().row();
+        Pair<Coordinate, Coordinate> coordinatesOfPreLastMove =
+            preLastAN.coordinates();
+        final int startOfPreLastMove = coordinatesOfPreLastMove
+            .getFirst()
+            .row();
         final int endOfPreLastMove = coordinatesOfPreLastMove.getSecond().row();
 
-        final boolean isNotTheSameColumn = coordinatesOfPreLastMove.getSecond().column() != coordinatesOfLastMove
-                .getSecond().column();
+        final boolean isNotTheSameColumn =
+            coordinatesOfPreLastMove.getSecond().column() !=
+            coordinatesOfLastMove.getSecond().column();
         if (isNotTheSameColumn) {
             return;
         }

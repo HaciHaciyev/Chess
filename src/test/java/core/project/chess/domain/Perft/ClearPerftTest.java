@@ -1,16 +1,15 @@
 package core.project.chess.domain.Perft;
 
-import java.util.List;
-
-import org.assertj.core.api.Assertions;
-
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
+import java.util.List;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import testUtils.PerftUtil;
 
 public class ClearPerftTest {
+
     private ChessBoard our_board;
 
     @Test
@@ -32,13 +31,13 @@ public class ClearPerftTest {
             case 7 -> PerftUtil.assertPerftDepth7(nodes);
             case 8 -> PerftUtil.assertPerftDepth8(nodes);
         }
-
     }
 
     @Test
     void perftGoodPosition() {
         int depth = 5;
-        String fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+        String fen =
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
         System.out.println("Perft good position: " + fen);
         our_board = ChessBoard.pureChessFromPosition(fen);
 
@@ -63,11 +62,13 @@ public class ClearPerftTest {
         long total_nodes = 0;
         int processed_fen = 0;
 
-        for(int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+        for (int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+            System.out.println(
+                "Perft custom position #%s: %s".formatted(task_idx, fen)
+            );
 
             for (int j = 0; j < task.values().length - 2; j++) {
                 int depth = j + 1;
@@ -92,11 +93,13 @@ public class ClearPerftTest {
         long total_nodes = 0;
         int processed_fen = 0;
 
-        for(int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+        for (int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+            System.out.println(
+                "Perft custom position #%s: %s".formatted(task_idx, fen)
+            );
 
             for (int j = 0; j < task.values().length - 1; j++) {
                 int depth = j + 1;
@@ -121,11 +124,13 @@ public class ClearPerftTest {
         long total_nodes = 0;
         int processed_fen = 0;
 
-        for(int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
+        for (int task_idx = 0; task_idx < perftTasks.size(); task_idx++) {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+            System.out.println(
+                "Perft custom position #%s: %s".formatted(task_idx, fen)
+            );
 
             for (int j = 0; j < task.values().length; j++) {
                 int depth = j + 1;
@@ -151,13 +156,17 @@ public class ClearPerftTest {
             return 1L;
         }
 
-        List<core.project.chess.domain.chess.value_objects.Move> legal_moves = null;
+        List<core.project.chess.domain.chess.value_objects.Move> legal_moves =
+            null;
 
         try {
             legal_moves = our_board.generateAllValidMoves();
         } catch (Exception e) {
-            System.out.printf("Could not generate moves for position: %s | current depth: %s%n",
-                    our_board.actualRepresentationOfChessBoard(), depth);
+            System.out.printf(
+                "Could not generate moves for position: %s | current depth: %s%n",
+                our_board.actualRepresentationOfChessBoard(),
+                depth
+            );
             throw e;
         }
 
@@ -169,8 +178,12 @@ public class ClearPerftTest {
             try {
                 our_board.doMove(from, to, inCaseOfPromotion);
             } catch (Exception e) {
-                System.out.printf("Error making move: %s | position: %s | depth: %s%n", move,
-                        our_board.actualRepresentationOfChessBoard(), depth);
+                System.out.printf(
+                    "Error making move: %s | position: %s | depth: %s%n",
+                    move,
+                    our_board.actualRepresentationOfChessBoard(),
+                    depth
+                );
                 throw e;
             }
 
