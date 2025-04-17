@@ -772,11 +772,6 @@ public final class King implements Piece {
         return null;
     }
 
-    private boolean pawnDiagonalAttack(Coordinate pivot, Coordinate to) {
-        if (color == WHITE) return to.row() > pivot.row();
-        return to.row() < pivot.row();
-    }
-
     private static long generatePseudoValidKingMoves(int square, Color color) {
         long moves = 0L;
         int row = square / 8;

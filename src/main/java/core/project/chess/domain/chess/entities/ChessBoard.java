@@ -1126,8 +1126,8 @@ public class ChessBoard {
         return allValidMoves;
     }
 
-    public void doMove(final Coordinate from, final Coordinate to) {
-        doMove(from, to, null);
+    public GameResultMessage doMove(final Coordinate from, final Coordinate to) {
+        return doMove(from, to, null);
     }
 
     /**
