@@ -10,6 +10,9 @@ import java.util.Random;
 
 import static core.project.chess.domain.chess.enumerations.Coordinate.*;
 
+/**
+ * Generates Zobrist hash keys for chess board positions.
+ */
 public class ZobristHashKeys {
     private static final int CASTLING_RIGHTS_COUNT = 16;
     private static final int EN_PASSANT_FILES_COUNT = 9;
@@ -33,6 +36,12 @@ public class ZobristHashKeys {
         SIDE_TO_MOVE = random.nextLong();
     }
 
+    /**
+     * Computes the Zobrist hash for the given chess board.
+     *
+     * @param chessBoard the chess board
+     * @return the Zobrist hash
+     */
     public long computeZobristHash(final ChessBoard chessBoard) {
         long zobristHash = 0L;
 

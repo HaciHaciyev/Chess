@@ -417,6 +417,12 @@ public class AlgebraicNotation {
         };
     }
 
+    /**
+     * Converts an algebraic notation symbol to its corresponding piece.
+     *
+     * @param symbol The algebraic notation symbol to be converted.
+     * @return The piece corresponding to the algebraic notation symbol.
+     */
     public static Piece fromSymbol(String symbol) {
         return switch (symbol) {
             case "K" -> King.of(Color.WHITE);

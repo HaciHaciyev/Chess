@@ -6,6 +6,9 @@ import core.project.chess.domain.commons.tuples.Pair;
 
 import java.util.Optional;
 
+/**
+ * Represents the FEN (Forsyth-Edwards Notation) of a chess position.
+ */
 public record FromFEN(String fen,
                       Color figuresTurn,
                       Coordinate whiteKing,

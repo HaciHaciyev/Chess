@@ -196,6 +196,7 @@ public class ChessBoard {
         this.countOfHalfMoves = 0;
         this.countOfFullMoves = 1;
 
+        // if FEN is null initialize chess board with default position
         if (inCaseOfInitFromFEN == null) {
             this.figuresTurn = WHITE;
             this.currentWhiteKingPosition = Coordinate.e1;
@@ -219,16 +220,17 @@ public class ChessBoard {
             if (!isPureChess) {
                 this.zobristHash = new HashMap<>();
                 this.zobristHash.put(key, 1);
+            } else {
+                this.zobristHash = null;
             }
-            else this.zobristHash = null;
 
-            InitType tempInitType = InitType.DEFAULT;
             if (nonNull(algebraicNotations)) {
                 validateAndForward(algebraicNotations);
-                tempInitType = InitType.PGN;
+                this.initType = InitType.PGN;
+            } else {
+                this.initType = InitType.DEFAULT;
             }
 
-            this.initType = tempInitType;
             return;
         }
 
@@ -248,6 +250,7 @@ public class ChessBoard {
         this.validWhiteLongCasting = inCaseOfInitFromFEN.validWhiteLongCasting();
         this.validBlackShortCasting = inCaseOfInitFromFEN.validBlackShortCasting();
         this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
+        
         addCastlingAbility();
 
         this.bitboard = new long[12];
@@ -638,6 +641,11 @@ public class ChessBoard {
         return king.safeForKing(this, from, to);
     }
 
+    /**
+     * Validates the stalemate and checkmate conditions.
+     *
+     * @param fromFEN The FEN representation of the chess position.
+     */
     private void validateStalemateAndCheckmate(FromFEN fromFEN) {
         final Color activeColor = fromFEN.figuresTurn();
         final King whiteKing = theKing(WHITE);
@@ -841,6 +849,9 @@ public class ChessBoard {
         return previous != castlingAbilities.peekLast();
     }
 
+    /**
+     * This method is responsible for adding a new castling ability to the stack.
+     */
     private void addCastlingAbility() {
         castlingAbilities.addLast(new CastlingAbility(
                 validWhiteShortCasting,
@@ -1005,6 +1016,9 @@ public class ChessBoard {
         return validBlackLongCasting;
     }
 
+    /**
+     * Initializes the chess board with the starting positions of all pieces.
+     */
     private void initialize() {
         whitePieces = 65535L;
         bitboard[Pawn.of(WHITE).index()] = 65280L;
@@ -1023,6 +1037,9 @@ public class ChessBoard {
         bitboard[King.of(BLACK).index()] = 1152921504606846976L;
     }
 
+    /**
+     * Initializes the chess board from a Forsyth-Edwards Notation (FEN) string.
+     */
     private void initializeFromFEN(String fen) {
         int pos = 0;
         Coordinate[] coordinates = Coordinate.values();
@@ -1035,10 +1052,13 @@ public class ChessBoard {
 
             if (Character.isLetter(c)) {
                 Piece piece = AlgebraicNotation.fromSymbol(String.valueOf(c));
-                bitboard[piece.index()] |= coordinate.bitMask();
-                occupation[coordinate.index()] = piece;
+                
+                bitboard[piece.index()] |= coordinate.bitMask(); // add piece to bitboard
+                occupation[coordinate.index()] = piece; // add piece to occupation array
+                
                 if (piece.color() == WHITE) whitePieces |= coordinate.bitMask();
                 if (piece.color() == BLACK) blackPieces |= coordinate.bitMask();
+                
                 pos++;
                 continue;
             }

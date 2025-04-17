@@ -150,6 +150,11 @@ public enum Coordinate {
         return index;
     }
 
+    /**
+     * Returns a bit mask representing the position of this coordinate.
+     *
+     * @return a long value representing the bit mask
+     */
     public long bitMask() {
         return 1L << this.index;
     }
