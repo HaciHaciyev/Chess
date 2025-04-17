@@ -39,7 +39,7 @@ public class AuthResource {
         }
 
         userAuthService.registration(registrationForm);
-        return Response.ok("Registration successful. Verify you email.").build();
+        return Response.ok("Registration successful. Verify your email.").build();
     }
 
     @PATCH

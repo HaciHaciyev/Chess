@@ -47,9 +47,9 @@ public class ProfilePictureResource {
             inputStream.close();
         } catch (IOException e) {
             Log.errorf("Can`t read input stream for profile inputStream as bytes: %s", e.getMessage());
-            throw responseException(Response.Status.BAD_REQUEST, "Invalid file: corrupted or to big.");
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid file: corrupted or too big.");
         }
-        return Response.accepted("Successfully saved inputStream.").build();
+        return Response.accepted("Successfully saved the profile picture for " + username).build();
     }
 
     @GET
@@ -67,13 +67,13 @@ public class ProfilePictureResource {
         String username = getUsername();
 
         profileService.deleteProfilePicture(username);
-        return Response.accepted("Successfully delete a profile image.").build();
+        return Response.accepted("Successfully deleted the profile image.").build();
     }
 
     private String getUsername() {
         String username = jwt.getName();
         if (!Username.isValid(username)) {
-            throw responseException(Response.Status.BAD_REQUEST, "Invalid username provided.");
+            throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
         }
 
         return username;

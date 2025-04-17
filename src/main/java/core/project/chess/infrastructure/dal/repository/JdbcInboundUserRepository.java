@@ -263,7 +263,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     @Override
     public void enable(final EmailConfirmationToken token) {
         if (!token.isConfirmed() || !token.getUserAccount().isEnabled()) {
-            throw new IllegalArgumentException("Token need to be confirmed & UserAccount need to be enabled");
+            throw new IllegalArgumentException("Token needs to be confirmed & UserAccount needs to be enabled");
         }
 
         jdbc.write(UPDATE_USER_TOKEN_AND_ACCOUNT,

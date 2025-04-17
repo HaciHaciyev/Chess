@@ -15,7 +15,7 @@ public class MessageEncoder implements Encoder.Text<Message> {
         try {
             return mapper.writeValueAsString(message);
         } catch (JsonProcessingException e) {
-            throw new EncodeException(message, "uhh", e);
+            throw new EncodeException(message, "data", e);
         }
     }
 }

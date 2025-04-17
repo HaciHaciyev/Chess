@@ -84,7 +84,7 @@ public class ColumnBuilder {
 
     public FunctionBuilder concat(String... columns) {
         if (columns.length == 0) {
-            throw new IllegalArgumentException("Columns, at least one, required.");
+            throw new IllegalArgumentException("At least one column must be provided.");
         }
 
         query.append(", CONCAT(");

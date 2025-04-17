@@ -80,7 +80,7 @@ public final class ChessGameFixedThreadExecutor {
     public boolean start() {
         if (!isRunning.compareAndSet(false, true)) {
             Log.info("Executor is already running");
-            throw new IllegalStateException("Eee");
+            throw new IllegalStateException();
         }
 
         Log.info("Launching the executor");

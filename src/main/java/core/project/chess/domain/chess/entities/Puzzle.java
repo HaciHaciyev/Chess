@@ -50,14 +50,14 @@ public class Puzzle {
             throw new IllegalArgumentException("PGN can`t be blank.");
         }
         if (startPositionOfPuzzle < 0) {
-            throw new IllegalArgumentException("Position index can`t be lower then 0.");
+            throw new IllegalArgumentException("Position index can`t be lower than 0.");
         }
 
         ChessBoard chessBoard = ChessBoard.fromPGN(pgn);
         AlgebraicNotation[] algebraicNotations = chessBoard.arrayOfAlgebraicNotations();
 
         if ((algebraicNotations.length - 1) >= startPositionOfPuzzle) {
-            throw new IllegalArgumentException("Start position of puzzle can`t be greater or equal to size of halfmoves.");
+            throw new IllegalArgumentException("Start position of puzzle can`t be greater or equal than the size of halfmoves.");
         }
 
         return new Puzzle(UUID.randomUUID(), Rating.defaultRating(), chessBoard, algebraicNotations, null, startPositionOfPuzzle);
@@ -72,14 +72,14 @@ public class Puzzle {
             throw new IllegalArgumentException("PGN can`t be blank.");
         }
         if (startPositionOfPuzzle < 0) {
-            throw new IllegalArgumentException("Position index can`t be lower then 0.");
+            throw new IllegalArgumentException("Position index can`t be lower than 0.");
         }
 
         ChessBoard chessBoard = ChessBoard.fromPGN(pgn);
         AlgebraicNotation[] algebraicNotations = chessBoard.arrayOfAlgebraicNotations();
 
         if ((algebraicNotations.length - 1) >= startPositionOfPuzzle) {
-            throw new IllegalArgumentException("Start position of puzzle can`t be greater or equal to size of halfmoves.");
+            throw new IllegalArgumentException("Start position of puzzle can`t be greater or equal than the size of halfmoves.");
         }
 
         int requiredMoveReturns = (algebraicNotations.length - 1) - startPositionOfPuzzle;
@@ -161,7 +161,7 @@ public class Puzzle {
                                                        final Coordinate to,
                                                        @Nullable final Piece inCaseOfPromotion) {
         if (this.isEnded) {
-            throw new IllegalArgumentException("Puzzle already solved.");
+            throw new IllegalArgumentException("Puzzle is already solved.");
         }
 
         if (!isProperMove(from, to, inCaseOfPromotion)) {
@@ -187,7 +187,7 @@ public class Puzzle {
 
             chessBoard.doMove(coordinates.getFirst(), coordinates.getSecond(), requiredPromotion);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Unexpected exception. Make sure the pgn for initializing the chess problem is valid.");
+            throw new IllegalArgumentException("Unexpected exception. Make sure the pgn for initializing the chess problem is valid: " + e.getMessage());
         }
 
         return Pair.of(representationAfterPlayerMove, Optional.of(chessBoard.actualRepresentationOfChessBoard()));

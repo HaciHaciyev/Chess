@@ -390,63 +390,63 @@ public class JDBC {
                     try {
                         return rs.getString(1);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to String.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to String: " + e.getMessage());
                     }
                 },
                 Boolean.class, rs -> {
                     try {
                         return rs.getBoolean(1);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Boolean.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Boolean: " + e.getMessage());
                     }
                 },
                 Character.class, rs -> {
                     try {
                         return rs.getString(1).charAt(0);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Character.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Character: " + e.getMessage());
                     }
                 },
                 Byte.class, rs -> {
                     try {
                         return rs.getByte(1);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Byte.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Byte: " + e.getMessage());
                     }
                 },
                 Short.class, rs -> {
                     try {
                         return rs.getShort(1);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Short.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Short: " + e.getMessage());
                     }
                 },
                 Integer.class, rs -> {
                     try {
                         return rs.getInt(1);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Integer.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Integer: " + e.getMessage());
                     }
                 },
                 Long.class, rs -> {
                     try {
                         return rs.getLong(1);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Long.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Long: " + e.getMessage());
                     }
                 },
                 Float.class, rs -> {
                     try {
                         return rs.getFloat(1);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Float.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Float: " + e.getMessage());
                     }
                 },
                 Double.class, rs -> {
                     try {
                         return rs.getDouble(1);
                     } catch (SQLException e) {
-                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Double.");
+                        throw new IllegalArgumentException("Invalid object type. Can`t cast to Double: " + e.getMessage());
                     }
                 }
         );

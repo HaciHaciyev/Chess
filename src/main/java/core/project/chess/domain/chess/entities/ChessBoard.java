@@ -314,7 +314,7 @@ public class ChessBoard {
     public static ChessBoard fromPosition(final String fen) {
         StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
         if (!isValidFEN.status()) {
-            throw new IllegalArgumentException("Invalid FEN.");
+            throw new IllegalArgumentException("Invalid FEN: " + fen);
         }
 
         return new ChessBoard(UUID.randomUUID(), isValidFEN.orElseThrow(), false, null);
@@ -334,7 +334,7 @@ public class ChessBoard {
     public static ChessBoard pureChessFromPosition(final String fen) {
         StatusPair<FromFEN> isValidFEN = ChessNotationsValidator.validateFEN(fen);
         if (!isValidFEN.status()) {
-            throw new IllegalArgumentException("Invalid FEN.");
+            throw new IllegalArgumentException("Invalid FEN: " + fen);
         }
 
         return new ChessBoard(UUID.randomUUID(), isValidFEN.orElseThrow(), true, null);
@@ -353,7 +353,7 @@ public class ChessBoard {
     public static ChessBoard fromPGN(final String pgn) {
         List<AlgebraicNotation> listOfAlgebraicNotations = ChessNotationsValidator.listOfAlgebraicNotations(pgn);
         if (listOfAlgebraicNotations.isEmpty()) {
-            throw new IllegalArgumentException("Invalid PGN");
+            throw new IllegalArgumentException("PGN is empty");
         }
 
         return new ChessBoard(UUID.randomUUID(), null, false, listOfAlgebraicNotations);
@@ -376,7 +376,7 @@ public class ChessBoard {
     public static ChessBoard pureChessFromPGN(final String pgn) {
         List<AlgebraicNotation> listOfAlgebraicNotations = ChessNotationsValidator.listOfAlgebraicNotations(pgn);
         if (listOfAlgebraicNotations.isEmpty()) {
-            throw new IllegalArgumentException("Invalid PGN");
+            throw new IllegalArgumentException("PGN is empty");
         }
 
         return new ChessBoard(UUID.randomUUID(), null, true, listOfAlgebraicNotations);
@@ -655,26 +655,26 @@ public class ChessBoard {
                 .kingStatus(this, null, null);
         if (checkOrMateForWhite.status().equals(CHECKMATE) ||
                 !activeColor.equals(WHITE) && checkOrMateForWhite.status().equals(CHECK)) {
-            throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
+            throw new IllegalArgumentException("Invalid FEN. Checkmate position: " + fromFEN.fen());
         }
 
         final KingStatus checkOrMateForBlack = blackKing
                 .kingStatus(this, null, null);
         if (checkOrMateForBlack.status().equals(CHECKMATE) ||
                 !activeColor.equals(BLACK) && checkOrMateForBlack.status().equals(CHECK)) {
-            throw new IllegalArgumentException("Invalid FEN. Checkmate position.");
+            throw new IllegalArgumentException("Invalid FEN. Checkmate position: " + fromFEN.fen());
         }
 
         final boolean stalemateForWhite = activeColor.equals(WHITE) &&
                 whiteKing.stalemate(this, null, null);
         if (stalemateForWhite) {
-            throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
+            throw new IllegalArgumentException("Invalid FEN. Stalemate position: " + fromFEN.fen());
         }
 
         final boolean stalemateForBlack = activeColor.equals(BLACK) &&
                 blackKing.stalemate(this, null, null);
         if (stalemateForBlack) {
-            throw new IllegalArgumentException("Invalid FEN. Stalemate position.");
+            throw new IllegalArgumentException("Invalid FEN. Stalemate position: " + fromFEN.fen());
         }
     }
 
@@ -691,7 +691,7 @@ public class ChessBoard {
                 message = doMove(from, to, inCaseOfPromotion);
             } catch (IllegalArgumentException e) {
                 logErrorMove(from, to);
-                throw new IllegalArgumentException("Invalid PGN.");
+                throw new IllegalArgumentException(String.format("Invalid PGN: %s", e.getMessage()));
             }
 
             final boolean isGameOver = message.equals(GameResultMessage.Checkmate) ||
@@ -700,7 +700,7 @@ public class ChessBoard {
                     message.equals(GameResultMessage.InsufficientMatingMaterial);
 
             if (isGameOver) {
-                throw new IllegalArgumentException("Invalid PGN, You can`t start a game with ended position.");
+                throw new IllegalArgumentException("Invalid PGN, You can`t start a game from ended position.");
             }
         }
     }
@@ -799,7 +799,7 @@ public class ChessBoard {
             case Knight n -> 3;
             case Bishop b -> 3;
             case Pawn p -> 1;
-            default -> throw new IllegalStateException("Unexpected value: " + piece);
+            case King k -> throw new UnsupportedOperationException("Can't perform such operation on a King");
         };
     }
 
@@ -1128,11 +1128,11 @@ public class ChessBoard {
 
         if (!validateFiguresTurnAndPieceExisting(from, to)) {
             throw new IllegalArgumentException(String
-                    .format("At the moment, the player for %s must move and not the opponent", figuresTurn));
+                    .format("At the moment, the player for %s must move, not the opponent", figuresTurn));
         }
 
         if (from.equals(to)) {
-            throw new IllegalArgumentException("Invalid move. Coordinate 'from' can`t be equal to coordinate 'to'");
+            throw new IllegalArgumentException("Invalid move. The source and destination coordinates cannot be the same");
         }
 
         final Piece startField = piece(from);

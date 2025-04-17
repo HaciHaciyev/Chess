@@ -102,7 +102,7 @@ public class ChessNotationsValidator {
             return;
         }
 
-        throw new IllegalArgumentException("Invalid algebraic notation format.");
+        throw new IllegalArgumentException("Invalid algebraic notation format: " + algebraicNotation);
     }
 
     public static boolean isSimplePawnMovement(final String algebraicNotation) {
@@ -148,7 +148,7 @@ public class ChessNotationsValidator {
         final Coordinate to = Coordinate.valueOf(algebraicNotation.substring(3, 5));
 
         if (from.column() != to.column()) {
-            throw new IllegalArgumentException("'From' can`t be equal to 'to' coordinate.");
+            throw new IllegalArgumentException("From and to are equal: " + algebraicNotation);
         }
 
         final boolean validPassage = (from.row() == 2 && to.row() == 4) || (from.row() == 7 && to.row() == 5);
@@ -160,13 +160,13 @@ public class ChessNotationsValidator {
         if (validMoveDistance) {
             final boolean fieldForPromotion = to.row() == 1 || to.row() == 8;
             if (fieldForPromotion) {
-                throw new IllegalArgumentException("It is the field for PROMOTION but promotion is not added.");
+                throw new IllegalArgumentException("Promotion field, but no promotion is specified: " + algebraicNotation);
             }
 
             return;
         }
 
-        throw new IllegalArgumentException("Invalid pawn movement.");
+        throw new IllegalArgumentException("Invalid pawn movement: " + algebraicNotation);
     }
 
     public static void validatePawnCaptureOperation(final String algebraicNotation) {
@@ -181,13 +181,13 @@ public class ChessNotationsValidator {
         if (diagonalCapture) {
             final boolean fieldForPromotion = to.row() == 1 || to.row() == 8;
             if (fieldForPromotion) {
-                throw new IllegalArgumentException("It is the field for PROMOTION but promotion is not added.");
+                throw new IllegalArgumentException("Promotion field, but no promotion is specified: " + algebraicNotation);
             }
 
             return;
         }
 
-        throw new IllegalArgumentException("Invalid pawn capture status.");
+        throw new IllegalArgumentException("Invalid pawn capture status: " + algebraicNotation);
     }
 
     public static void validatePromotion(final String algebraicNotation) {
@@ -205,7 +205,7 @@ public class ChessNotationsValidator {
 
         final boolean validColumns = (startColumn == endColumn) || Math.abs(startColumn - endColumn) == 1;
         if (!validColumns) {
-            throw new IllegalArgumentException("Invalid coordinates for pawn promotion.");
+            throw new IllegalArgumentException("Invalid coordinates for pawn promotion: " + algebraicNotation);
         }
     }
 
@@ -225,7 +225,7 @@ public class ChessNotationsValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid king movement.");
+            throw new IllegalArgumentException("Invalid king movement: " + algebraicNotation);
         }
 
         final boolean verticalMove = startColumn == endColumn && startRow != endRow;
@@ -246,7 +246,7 @@ public class ChessNotationsValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid queen movement coordinates.");
+            throw new IllegalArgumentException("Invalid queen movement coordinates: " + algebraicNotation);
         }
 
         final boolean rook = algebraicNotation.charAt(0) == 'R';
@@ -259,7 +259,7 @@ public class ChessNotationsValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid rook movement coordinates.");
+            throw new IllegalArgumentException("Invalid rook movement coordinates: " + algebraicNotation);
         }
 
         final boolean bishop = algebraicNotation.charAt(0) == 'B';
@@ -268,7 +268,7 @@ public class ChessNotationsValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid bishop movement coordinates.");
+            throw new IllegalArgumentException("Invalid bishop movement coordinates: " + algebraicNotation);
         }
 
         final boolean knight = algebraicNotation.charAt(0) == 'N';
@@ -282,7 +282,7 @@ public class ChessNotationsValidator {
                 return;
             }
 
-            throw new IllegalArgumentException("Invalid knight movement coordinates.");
+            throw new IllegalArgumentException("Invalid knight movement coordinates: " + algebraicNotation);
         }
     }
 
@@ -407,7 +407,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.Q);
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceValue(PieceTYPE.Q);
                 }
                 case 'q' -> {
                     countOfBlackQueens++;
@@ -415,7 +415,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.Q);
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceValue(PieceTYPE.Q);
                 }
                 case 'B' -> {
                     if (fieldColor.equals(WHITE)) {
@@ -428,7 +428,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.B);
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceValue(PieceTYPE.B);
                 }
                 case 'b' -> {
                     if (fieldColor.equals(WHITE)) {
@@ -441,7 +441,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.B);
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceValue(PieceTYPE.B);
                 }
                 case 'N' -> {
                     countOfWhiteKnights++;
@@ -449,7 +449,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.N);
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceValue(PieceTYPE.N);
                 }
                 case 'n' -> {
                     countOfBlackKnights++;
@@ -457,7 +457,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.N);
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceValue(PieceTYPE.N);
                 }
                 case 'R' -> {
                     countOfWhiteRooks++;
@@ -465,7 +465,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.R);
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceValue(PieceTYPE.R);
 
                     if (shortWhiteCastling && !isRookForShortWhiteCastlingExists) {
                         isRookForShortWhiteCastlingExists = coordinate.equals(h1);
@@ -481,7 +481,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.R);
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceValue(PieceTYPE.R);
 
                     if (shortBlackCastling && !isRookForShortBlackCastlingExists) {
                         isRookForShortBlackCastlingExists = coordinate.equals(h8);
@@ -501,7 +501,7 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfWhite += AlgebraicNotation.pieceRank(PieceTYPE.P);
+                    materialAdvantageOfWhite += AlgebraicNotation.pieceValue(PieceTYPE.P);
 
                     final boolean isPassagePawnFound = passagePawnCoordinate.isPresent() && passagePawnCoordinate.orElseThrow().equals(coordinate);
                     if (isPassagePawnFound) {
@@ -518,14 +518,14 @@ public class ChessNotationsValidator {
                         return StatusPair.ofFalse();
                     }
 
-                    materialAdvantageOfBlack += AlgebraicNotation.pieceRank(PieceTYPE.P);
+                    materialAdvantageOfBlack += AlgebraicNotation.pieceValue(PieceTYPE.P);
 
                     final boolean isPassagePawnFound = passagePawnCoordinate.isPresent() && passagePawnCoordinate.orElseThrow().equals(coordinate);
                     if (isPassagePawnFound) {
                         isValidPassage = true;
                     }
                 }
-                default -> throw new IllegalArgumentException("Invalid FEN.");
+                default -> throw new IllegalArgumentException("Invalid FEN: " + fen);
             }
         }
 

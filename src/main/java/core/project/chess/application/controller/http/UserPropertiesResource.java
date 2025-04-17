@@ -34,7 +34,7 @@ public class UserPropertiesResource {
         }
 
         UserProperties userProperties = outboundUserRepository.userProperties(username)
-                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "Can`t find user properties."));
+                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "Can`t find the user properties for " + username));
 
         return Response.ok(userProperties).build();
     }

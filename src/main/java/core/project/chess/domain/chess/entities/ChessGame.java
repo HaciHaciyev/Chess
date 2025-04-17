@@ -66,7 +66,7 @@ public class ChessGame {
         Objects.requireNonNull(statusPair);
 
         if (playerForBlack.getId().equals(playerForWhite.getId())) {
-            throw new IllegalArgumentException("Game can`t be initialize with one same player.");
+            throw new IllegalArgumentException("Game can`t be initialized with same player for both sides.");
         }
 
         this.chessGameId = chessGameId;
@@ -404,7 +404,7 @@ public class ChessGame {
 
     private void gameOver(final Operations operation) {
         if (isGameOver.status()) {
-            throw new IllegalArgumentException("Game was over.");
+            throw new IllegalArgumentException("Game is already over.");
         }
 
         if (operation.equals(Operations.STALEMATE)) {

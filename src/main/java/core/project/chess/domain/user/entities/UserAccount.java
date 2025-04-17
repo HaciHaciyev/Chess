@@ -163,7 +163,7 @@ public class UserAccount {
     public void addPuzzle(final Puzzle puzzle) {
         final boolean doNotMatch = !puzzle.player().getId().equals(this.id);
         if (doNotMatch) {
-            throw new IllegalArgumentException("This user and puzzle is do not match.");
+            throw new IllegalArgumentException("Puzzle does not belong to this user");
         }
 
         puzzles.add(puzzle);
@@ -227,7 +227,7 @@ public class UserAccount {
 
         final boolean doNotMatch = !puzzle.player().getId().equals(this.id);
         if (doNotMatch) {
-            throw new IllegalArgumentException("This user and puzzle is do not match.");
+            throw new IllegalArgumentException("Puzzle does not belong to this user");
         }
 
         final double result = puzzle.isSolved() ? 1 : -1;

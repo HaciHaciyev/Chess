@@ -68,18 +68,18 @@ public class UserAuthService {
             final UserAccount userAccount = outboundUserRepository
                     .findByUsername(loginForm.username())
                     .orElseThrow(() -> {
-                        Log.error("Login failure, user not found");
+                        Log.errorf("Login failure, user %s not found", loginForm.username());
                         return responseException(Response.Status.NOT_FOUND, String.format(USER_NOT_FOUND, loginForm.username()));
                     });
 
             if (!userAccount.isEnabled()) {
-                Log.error("Login failure, account is not enabled");
+                Log.errorf("Login failure, account %s is not enabled", loginForm.username());
                 throw responseException(Response.Status.BAD_REQUEST, NOT_ENABLED);
             }
 
             final boolean isPasswordsMatch = passwordEncoder.verify(loginForm.password(), userAccount.getPassword());
             if (!isPasswordsMatch) {
-                Log.error("Login failure, wrong password");
+                Log.errorf("Login failure, wrong password for user %s", loginForm.username());
                 throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
             }
 
@@ -98,7 +98,7 @@ public class UserAuthService {
             Password.validate(registrationForm.password());
 
             if (!Objects.equals(registrationForm.password(), registrationForm.passwordConfirmation())) {
-                Log.error("Registration failure, passwords do not match");
+                Log.errorf("Registration failure, passwords do not match for user %s", registrationForm.username());
                 throw responseException(Response.Status.BAD_REQUEST, "Passwords do not match");
             }
 
@@ -116,7 +116,7 @@ public class UserAuthService {
             }
 
             if (outboundUserRepository.isEmailExists(registrationForm.email())) {
-                Log.errorf("Registration failure, email %s already exists", registrationForm.email());
+                Log.errorf("Registration failure, email %s of user %s already exists", registrationForm.email(), registrationForm.username());
                 throw responseException(Response.Status.BAD_REQUEST, "Email already exists.");
             }
 

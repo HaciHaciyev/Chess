@@ -452,13 +452,13 @@ public class AlgebraicNotation {
         };
     }
 
-    public static byte pieceRank(PieceTYPE piece) {
+    public static byte pieceValue(PieceTYPE piece) {
         return switch (piece) {
             case PieceTYPE.P -> 1;
             case PieceTYPE.N, PieceTYPE.B -> 3;
             case PieceTYPE.R -> 5;
             case PieceTYPE.Q -> 9;
-            default -> throw new IllegalStateException("Unexpected value: " + piece);
+            default -> throw new IllegalStateException("King does not have a value, it's infinite");
         };
     }
 
