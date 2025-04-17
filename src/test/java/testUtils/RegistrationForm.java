@@ -34,7 +34,6 @@ public record RegistrationForm(String firstname, String surname, String username
     }
 
     public RegistrationForm withUsername(String username) {
-        Name name = faker.name();
         return new RegistrationForm(
                 generateFirstname(),
                 generateSurname(),
@@ -46,7 +45,6 @@ public record RegistrationForm(String firstname, String surname, String username
     }
 
     public RegistrationForm withEmail(String email) {
-        Name name = faker.name();
         return new RegistrationForm(
                 generateFirstname(),
                 generateSurname(),
@@ -58,7 +56,6 @@ public record RegistrationForm(String firstname, String surname, String username
     }
 
     public RegistrationForm withPassword(String password) {
-        Name name = faker.name();
         return new RegistrationForm(
                 generateFirstname(),
                 generateSurname(),
@@ -70,7 +67,6 @@ public record RegistrationForm(String firstname, String surname, String username
     }
 
     public RegistrationForm withPasswordConfirmation(String passwordConfirmation) {
-        Name name = faker.name();
         return new RegistrationForm(
                 generateFirstname(),
                 generateSurname(),
