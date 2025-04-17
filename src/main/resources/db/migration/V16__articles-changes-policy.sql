@@ -29,7 +29,7 @@ CREATE TRIGGER enforce_tag_status
 
 CREATE FUNCTION enforce_article_published_on_comment_likes() RETURNS TRIGGER AS $$
 BEGIN
-    IF (SELECT a.status FROM Article a JOIN Cooments c ON c.id = NEW.comment_id) <> 'PUBLISHED' THEN
+    IF (SELECT a.status FROM Article a JOIN Comments c ON c.id = NEW.comment_id) <> 'PUBLISHED' THEN
         RAISE EXCEPTION 'Operation not allowed: Article must be PUBLISHED';
 END IF;
 RETURN NEW;

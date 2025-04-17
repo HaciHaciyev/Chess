@@ -8,3 +8,24 @@ CREATE TABLE UserToken (
     PRIMARY KEY (id),
     CONSTRAINT user_token_fk FOREIGN KEY (user_id) REFERENCES UserAccount(id)
 );
+
+CREATE FUNCTION delete_unconfirmed_user() RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM UserAccount
+    WHERE id IN (
+        SELECT user_id
+        FROM UserToken
+        WHERE is_confirmed = false
+          AND creation_date <= NOW() - INTERVAL '6 minutes'
+    );
+
+    DELETE FROM UserToken
+    WHERE is_confirmed = false
+      AND creation_date <= NOW() - INTERVAL '6 minutes';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_delete_unconfirmed_user
+AFTER INSERT ON UserToken
+FOR EACH STATEMENT
+EXECUTE FUNCTION delete_unconfirmed_user();
