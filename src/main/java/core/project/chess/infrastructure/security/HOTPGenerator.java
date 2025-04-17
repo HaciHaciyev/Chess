@@ -25,7 +25,6 @@ import java.util.Base64;
 public class HOTPGenerator {
     private final Mac mac;
     private final int passwordLength;
-    private final int modDivisor;
     public static final String DEFAULT_ALGORITHM = "HmacSHA256";
     public static final int DEFAULT_LENGTH = 6;
 
@@ -42,7 +41,6 @@ public class HOTPGenerator {
                     .formatted(e.getLocalizedMessage()));
         }
         this.passwordLength = DEFAULT_LENGTH;
-        this.modDivisor = 1_000_000;
     }
 
     /**
@@ -62,7 +60,6 @@ public class HOTPGenerator {
         }
 
         this.passwordLength = DEFAULT_LENGTH;
-        this.modDivisor = 1_000_000;
     }
 
     /**
@@ -79,12 +76,8 @@ public class HOTPGenerator {
             throw new IllegalArgumentException("Invalid algorithm: %s"
                     .formatted(e.getLocalizedMessage()));
         }
-        switch (passwordLength) {
-            case 6 -> this.modDivisor = 1_000_000;
-            case 7 -> this.modDivisor = 10_000_000;
-            case 8 -> this.modDivisor = 100_000_000;
-            default -> throw new IllegalArgumentException("Invalid password size");
-        }
+        if (passwordLength < 6 || passwordLength > 8)
+            throw new IllegalArgumentException("Password length must be between 6 and 8 characters");
         this.passwordLength = passwordLength;
     }
 
