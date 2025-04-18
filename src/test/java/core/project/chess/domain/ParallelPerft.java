@@ -297,7 +297,7 @@ class ParallelPerft {
             board.doMove(move);
             game.makeMovement(activePlayer, from, to, promotionPiece);
 
-            String newFen = game.getChessBoard().actualRepresentationOfChessBoard();
+            String newFen = game.getChessBoard().toString();
 
             // Create and run perft task for the new board state
             ChessGame nestedGame = chessGameSupplier(newFen).get();
@@ -311,7 +311,7 @@ class ParallelPerft {
         }
 
         private ChessGame copyGame(ChessGame originalGame) {
-            String fen = originalGame.getChessBoard().actualRepresentationOfChessBoard();
+            String fen = originalGame.getChessBoard().toString();
             return chessGameSupplier(fen).get();
         }
 
@@ -405,7 +405,7 @@ class ParallelPerft {
                         Log.error(String.format(
                                 "Invalid move processing: %s | FEN: %s | Error: %s",
                                 move,
-                                gameCopy.getChessBoard().actualRepresentationOfChessBoard(),
+                                gameCopy.getChessBoard().toString(),
                                 e.getMessage()));
                     }
                 }

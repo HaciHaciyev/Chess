@@ -87,7 +87,7 @@ public class GameFunctionalityService {
 
         return Pair.of(MessageAddressee.FOR_ALL, Message.builder(MessageType.FEN_PGN)
                 .gameID(chessGame.getChessGameId().toString())
-                .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                .FEN(chessGame.getChessBoard().toString())
                 .PGN(chessGame.getChessBoard().pgn())
                 .timeLeft(remainingTimeAsString(chessGame))
                 .isThreeFoldActive(chessGame.isThreeFoldActive())
@@ -161,7 +161,7 @@ public class GameFunctionalityService {
             case SUCCESSFUL_UNDO -> {
                 final Message message = Message.builder(MessageType.FEN_PGN)
                         .gameID(chessGame.getChessGameId().toString())
-                        .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                        .FEN(chessGame.getChessBoard().toString())
                         .PGN(chessGame.getChessBoard().pgn())
                         .timeLeft(remainingTimeAsString(chessGame))
                         .isThreeFoldActive(chessGame.isThreeFoldActive())

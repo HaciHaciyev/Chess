@@ -509,7 +509,7 @@ public class ChessGameService {
 
         final Message message = Message.builder(MessageType.FEN_PGN)
                 .gameID(chessGame.getChessGameId().toString())
-                .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                .FEN(chessGame.getChessBoard().toString())
                 .PGN(chessGame.getChessBoard().pgn())
                 .build();
 

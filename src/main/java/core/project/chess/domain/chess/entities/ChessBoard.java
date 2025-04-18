@@ -515,15 +515,6 @@ public class ChessBoard {
     }
 
     /**
-     * Retrieves a last generating toString() for ChessBoard.
-     *
-     * @return String representation of ChessBoard.
-     */
-    public String actualRepresentationOfChessBoard() {
-        return this.toString();
-    }
-
-    /**
      * Counts the number of half-moves (plies) made in the game.
      * <p>
      * A half-move, or plies, refers to a single move made by either player. In

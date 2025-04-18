@@ -47,7 +47,7 @@ public class PuzzleService {
 
         return Message.builder(MessageType.PUZZLE)
                 .gameID(puzzle.ID().toString())
-                .FEN(puzzle.chessBoard().actualRepresentationOfChessBoard())
+                .FEN(puzzle.chessBoard().toString())
                 .PGN(puzzle.chessBoard().pgn())
                 .build();
     }
@@ -66,7 +66,7 @@ public class PuzzleService {
 
             return Message.builder(MessageType.PUZZLE_MOVE)
                     .gameID(puzzle.ID().toString())
-                    .FEN(puzzle.chessBoard().actualRepresentationOfChessBoard())
+                    .FEN(puzzle.chessBoard().toString())
                     .PGN(puzzle.chessBoard().pgn())
                     .isPuzzleEnded(puzzle.isEnded())
                     .isPuzzleSolved(puzzle.isSolved())
