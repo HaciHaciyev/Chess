@@ -396,7 +396,6 @@ public final class King implements Piece {
             Coordinate from,
             Coordinate to) {
 
-        Color oppositeColor = color.opposite();
         KingStatus kingStatus = chessBoard.kingStatus();
 
         List<Coordinate> attackers = kingStatus == null ?
@@ -510,7 +509,6 @@ public final class King implements Piece {
 
     private boolean canEat(ChessBoard board, Coordinate target) {
         int square = target.index();
-        long targetMask = target.bitMask();
 
         long ourPawns = board.bitboard(Pawn.of(color));
         long ourKnights = board.bitboard(Knight.of(color));
@@ -538,7 +536,6 @@ public final class King implements Piece {
             if (!vertical && pawnCanBlock(board, target)) return true;
 
             int square = target.index();
-            long targetMask = target.bitMask();
             long ourKnights = board.bitboard(Knight.of(color));
             long ourQueens = board.bitboard(Queen.of(color));
             long ourBishopsQueens = board.bitboard(Bishop.of(color)) | ourQueens;
