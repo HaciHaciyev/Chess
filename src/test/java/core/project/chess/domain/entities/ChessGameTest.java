@@ -233,8 +233,8 @@ public class ChessGameTest {
     public static void executeGameFromPGN(String pgn, int pgnNum, boolean enableLogging, boolean enableAssertions, boolean enablePGN) {
         ChessGame game = chessGameSupplier().get();
 
-        String white = game.getPlayerForWhite().getUsername();
-        String black = game.getPlayerForBlack().getUsername();
+        String white = game.getWhitePlayer().getUsername();
+        String black = game.getBlackPlayer().getUsername();
 
         ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
 
@@ -391,8 +391,8 @@ public class ChessGameTest {
     void fenTest() {
         final ChessGame chessGame = chessGameSupplier().get();
 
-        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername();
-        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername();
+        final String firstPlayerUsername = chessGame.getWhitePlayer().getUsername();
+        final String secondPlayerUsername = chessGame.getBlackPlayer().getUsername();
 
         System.out.println(chessGame.getChessBoard().toString());
 

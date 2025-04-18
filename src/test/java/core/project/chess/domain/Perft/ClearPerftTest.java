@@ -164,7 +164,7 @@ public class ClearPerftTest {
         } catch (Exception e) {
             System.out.printf(
                 "Could not generate moves for position: %s | current depth: %s%n",
-                our_board.actualRepresentationOfChessBoard(),
+                our_board.toString(),
                 depth
             );
             throw e;
@@ -181,7 +181,7 @@ public class ClearPerftTest {
                 System.out.printf(
                     "Error making move: %s | position: %s | depth: %s%n",
                     move,
-                    our_board.actualRepresentationOfChessBoard(),
+                    our_board.toString(),
                     depth
                 );
                 throw e;

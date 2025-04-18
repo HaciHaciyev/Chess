@@ -265,7 +265,7 @@ public class InfoPerftTest {
         } catch (Exception e) {
             System.out.printf(
                 "\t Could not generate moves for position: %s | current depth: %s%n",
-                our_board.actualRepresentationOfChessBoard(),
+                our_board.toString(),
                 depth
             );
             throw e;
@@ -281,7 +281,7 @@ public class InfoPerftTest {
                 our_board.listOfAlgebraicNotations()
             );
             System.out.println(
-                "OUR FEN: \t" + our_board.actualRepresentationOfChessBoard()
+                "OUR FEN: \t" + our_board.toString()
             );
             System.out.println("THEIR FEN: \t" + their_board.getFen());
             PerftUtil.print_mismatch(our_valid_moves, their_valid_moves);
@@ -299,7 +299,7 @@ public class InfoPerftTest {
                 our_board.doMove(from, to, inCaseOfPromotion);
                 move_stack.push(move.toString());
 
-                String our_fen = our_board.actualRepresentationOfChessBoard();
+                String our_fen = our_board.toString();
                 String their_fen = their_board.getFen();
 
                 if (!our_fen.equals(their_board.getFen())) {
@@ -320,7 +320,7 @@ public class InfoPerftTest {
                 System.out.printf(
                     "Error making move: %s | position: %s | depth: %s%n",
                     move,
-                    our_board.actualRepresentationOfChessBoard(),
+                    our_board.toString(),
                     depth
                 );
                 throw e;
@@ -337,7 +337,7 @@ public class InfoPerftTest {
                     "\t%s -> %s \t|\t %s\n",
                     move,
                     newNodes,
-                    our_board.actualRepresentationOfChessBoard()
+                    our_board.toString()
                 );
             }
 
@@ -345,7 +345,7 @@ public class InfoPerftTest {
             our_board.undoMove();
             undo_stack.push(move.toString());
 
-            String our_undo_fen = our_board.actualRepresentationOfChessBoard();
+            String our_undo_fen = our_board.toString();
             String their_undo_fen = their_board.getFen();
 
             if (!our_undo_fen.equals(their_undo_fen)) {

@@ -33,7 +33,7 @@ public class Puzzle {
         this.rating = rating;
         this.chessBoard = chessBoard;
         this.algebraicNotations = algebraicNotations;
-        this.startPositionFEN = chessBoard.actualRepresentationOfChessBoard();
+        this.startPositionFEN = chessBoard.toString();
         this.player = player;
         this.startPositionIndex = startPositionIndex;
         this.player.addPuzzle(this);
@@ -173,7 +173,7 @@ public class Puzzle {
         final String representationAfterPlayerMove;
         try {
             chessBoard.doMove(from, to, inCaseOfPromotion);
-            representationAfterPlayerMove = chessBoard.actualRepresentationOfChessBoard();
+            representationAfterPlayerMove = chessBoard.toString();
 
             final boolean isLastMove = currentPosition == algebraicNotations.length - 1;
             if (isLastMove) {
@@ -190,7 +190,7 @@ public class Puzzle {
             throw new IllegalArgumentException("Unexpected exception. Make sure the pgn for initializing the chess problem is valid: " + e.getMessage());
         }
 
-        return Pair.of(representationAfterPlayerMove, Optional.of(chessBoard.actualRepresentationOfChessBoard()));
+        return Pair.of(representationAfterPlayerMove, Optional.of(chessBoard.toString()));
     }
 
     private void puzzleOver() {

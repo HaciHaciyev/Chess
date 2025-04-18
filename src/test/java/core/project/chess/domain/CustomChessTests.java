@@ -26,8 +26,8 @@ class CustomChessTests {
         ChessGame game = chessGameSupplier().get();
         ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
 
-        String whitePlayer = game.getPlayerForWhite().getUsername();
-        String blackPlayer = game.getPlayerForBlack().getUsername();
+        String whitePlayer = game.getWhitePlayer().getUsername();
+        String blackPlayer = game.getBlackPlayer().getUsername();
 
         //1.
         game.makeMovement(whitePlayer, e2, e4, null);
@@ -76,8 +76,8 @@ class CustomChessTests {
     void enPassaunOnCheck() {
         ChessGame chessGame = chessGameSupplier("8/1p3p1k/1P2b2p/2Q1P1pP/5K1n/8/5P2/4r3 w - g6 0 63").get();
         ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
-        String firstPlayer = chessGame.getPlayerForWhite().getUsername();
-        String secondPlayer = chessGame.getPlayerForBlack().getUsername();
+        String firstPlayer = chessGame.getWhitePlayer().getUsername();
+        String secondPlayer = chessGame.getBlackPlayer().getUsername();
 
         System.out.println(navigator.prettyToString());
 
@@ -103,8 +103,8 @@ class CustomChessTests {
     void enPassaun() {
         ChessGame chessGame = chessGameSupplier("3b4/2p5/6b1/2pk2p1/1pP1N1P1/pP3P2/P7/3KB3 b - c3 0 32").get();
         ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
-        String firstPlayer = chessGame.getPlayerForWhite().getUsername();
-        String secondPlayer = chessGame.getPlayerForBlack().getUsername();
+        String firstPlayer = chessGame.getWhitePlayer().getUsername();
+        String secondPlayer = chessGame.getBlackPlayer().getUsername();
 
         System.out.println(navigator.prettyToString());
 
@@ -124,8 +124,8 @@ class CustomChessTests {
     void undoMove() {
         ChessGame game = chessGameSupplier().get();
 
-        String white = game.getPlayerForWhite().getUsername();
-        String black = game.getPlayerForBlack().getUsername();
+        String white = game.getWhitePlayer().getUsername();
+        String black = game.getBlackPlayer().getUsername();
 
         ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
 
@@ -187,8 +187,8 @@ class CustomChessTests {
     void testChessGameEndByPat() {
         final ChessGame chessGame = chessGameSupplier().get();
 
-        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername();
-        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername();
+        final String firstPlayerUsername = chessGame.getWhitePlayer().getUsername();
+        final String secondPlayerUsername = chessGame.getBlackPlayer().getUsername();
 
         // 1.
         chessGame.makeMovement(firstPlayerUsername, e2, e3, null);
@@ -333,8 +333,8 @@ class CustomChessTests {
     void game() {
         ChessGame game = chessGameSupplier().get();
 
-        String whitePlayer = game.getPlayerForWhite().getUsername();
-        String blackPlayer = game.getPlayerForBlack().getUsername();
+        String whitePlayer = game.getWhitePlayer().getUsername();
+        String blackPlayer = game.getBlackPlayer().getUsername();
 
         //1.
         game.makeMovement(whitePlayer, e2, e4, null);
@@ -550,8 +550,8 @@ class CustomChessTests {
     public void chessGameLoad() {
         final ChessGame chessGame = chessGameSupplier().get();
 
-        final String firstPlayerUsername = chessGame.getPlayerForWhite().getUsername();
-        final String secondPlayerUsername = chessGame.getPlayerForBlack().getUsername();
+        final String firstPlayerUsername = chessGame.getWhitePlayer().getUsername();
+        final String secondPlayerUsername = chessGame.getBlackPlayer().getUsername();
 
         // INVALID. Invalid players turn.
         assertThrows(

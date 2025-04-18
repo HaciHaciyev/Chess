@@ -24,10 +24,10 @@ import static java.util.Objects.nonNull;
 public class ChessGame {
     private final UUID chessGameId;
     private final ChessBoard chessBoard;
-    private final UserAccount playerForWhite;
-    private final UserAccount playerForBlack;
-    private final Rating playerForWhiteRating;
-    private final Rating playerForBlackRating;
+    private final UserAccount whitePlayer;
+    private final UserAccount blackPlayer;
+    private final Rating whiteRating;
+    private final Rating blackRating;
     private final SessionEvents sessionEvents;
     private final Time time;
     private final List<ChatMessage> chatMessages;
@@ -46,10 +46,10 @@ public class ChessGame {
 
     private ChessGame(UUID chessGameId,
                       ChessBoard chessBoard,
-                      UserAccount playerForWhite,
-                      UserAccount playerForBlack,
-                      Rating playerForWhiteRating,
-                      Rating playerForBlackRating,
+                      UserAccount whitePlayer,
+                      UserAccount blackPlayer,
+                      Rating whiteRating,
+                      Rating blackRating,
                       SessionEvents sessionEvents,
                       Time time,
                       StatusPair<GameResult> statusPair,
@@ -57,15 +57,15 @@ public class ChessGame {
 
         Objects.requireNonNull(chessGameId);
         Objects.requireNonNull(chessBoard);
-        Objects.requireNonNull(playerForWhite);
-        Objects.requireNonNull(playerForBlack);
-        Objects.requireNonNull(playerForWhiteRating);
-        Objects.requireNonNull(playerForBlackRating);
+        Objects.requireNonNull(whitePlayer);
+        Objects.requireNonNull(blackPlayer);
+        Objects.requireNonNull(whiteRating);
+        Objects.requireNonNull(blackRating);
         Objects.requireNonNull(sessionEvents);
         Objects.requireNonNull(time);
         Objects.requireNonNull(statusPair);
 
-        if (playerForBlack.getId().equals(playerForWhite.getId())) {
+        if (blackPlayer.getId().equals(whitePlayer.getId())) {
             throw new IllegalArgumentException("Game can`t be initialized with same player for both sides.");
         }
 
@@ -75,10 +75,10 @@ public class ChessGame {
         this.chessBoard = chessBoard;
         this.playersTurn = this.chessBoard.turn();
         this.isThreeFoldActive = false;
-        this.playerForWhite = playerForWhite;
-        this.playerForBlack = playerForBlack;
-        this.playerForWhiteRating = playerForWhiteRating;
-        this.playerForBlackRating = playerForBlackRating;
+        this.whitePlayer = whitePlayer;
+        this.blackPlayer = blackPlayer;
+        this.whiteRating = whiteRating;
+        this.blackRating = blackRating;
         this.sessionEvents = sessionEvents;
         this.time = time;
         this.isGameOver = statusPair;
@@ -95,29 +95,29 @@ public class ChessGame {
             calculatePlayersRating();
         });
 
-        playerForWhite.addGame(this);
-        playerForBlack.addGame(this);
+        whitePlayer.addGame(this);
+        blackPlayer.addGame(this);
     }
 
     public static ChessGame of(
             UUID chessGameId,
             ChessBoard chessBoard,
-            UserAccount playerForWhite,
-            UserAccount playerForBlack,
+            UserAccount whitePlayer,
+            UserAccount blackPlayer,
             SessionEvents sessionEvents,
             Time time,
             boolean isCasualGame
     ) {
-        Rating whitePlayerRating = getRating(playerForWhite, time);
-        Rating blackPlayerRating = getRating(playerForBlack, time);
+        Rating whiteRating = getRating(whitePlayer, time);
+        Rating blackRating = getRating(blackPlayer, time);
 
         return new ChessGame(
                 chessGameId,
                 chessBoard,
-                playerForWhite,
-                playerForBlack,
-                whitePlayerRating,
-                blackPlayerRating,
+                whitePlayer,
+                blackPlayer,
+                whiteRating,
+                blackRating,
                 sessionEvents,
                 time,
                 StatusPair.ofFalse(),
@@ -142,20 +142,20 @@ public class ChessGame {
         return chessBoard;
     }
 
-    public UserAccount getPlayerForWhite() {
-        return playerForWhite;
+    public UserAccount getWhitePlayer() {
+        return whitePlayer;
     }
 
-    public UserAccount getPlayerForBlack() {
-        return playerForBlack;
+    public UserAccount getBlackPlayer() {
+        return blackPlayer;
     }
 
-    public Rating getPlayerForWhiteRating() {
-        return playerForWhiteRating;
+    public Rating getWhiteRating() {
+        return whiteRating;
     }
 
-    public Rating getPlayerForBlackRating() {
-        return playerForBlackRating;
+    public Rating getBlackRating() {
+        return blackRating;
     }
 
     public SessionEvents getSessionEvents() {
@@ -216,7 +216,7 @@ public class ChessGame {
     }
 
     public boolean isPlayer(Username username) {
-        return username.username().equals(playerForWhite.getUsername()) || username.username().equals(playerForBlack.getUsername());
+        return username.username().equals(whitePlayer.getUsername()) || username.username().equals(blackPlayer.getUsername());
     }
 
     public GameResultMessage makeMovement(final String username, final Coordinate from,final Coordinate to, @Nullable Piece inCaseOfPromotion)
@@ -342,7 +342,7 @@ public class ChessGame {
         }
 
         if (attemptToFinalizeAgreement(color)) {
-            this.agreementPair = new AgreementPair(playerForWhite.getUsername(), playerForBlack.getUsername());
+            this.agreementPair = new AgreementPair(whitePlayer.getUsername(), blackPlayer.getUsername());
             gameOver(Operations.STALEMATE);
             return;
         }
@@ -358,25 +358,24 @@ public class ChessGame {
             return;
         }
 
-        Color color = username.username().equals(playerForWhite.getUsername()) ? WHITE : BLACK;
+        Color color = username.username().equals(whitePlayer.getUsername()) ? WHITE : BLACK;
 
         if (color.equals(WHITE)) {
             this.afkTimer = new ChessCountdownTimer(this, "AFK White timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
                 this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN);
                 calculatePlayersRating();
             });
-            return;
+        } else {
+            this.afkTimer = new ChessCountdownTimer(this, "AFK Black timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
+                this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
+                calculatePlayersRating();
+            });
         }
-
-        this.afkTimer = new ChessCountdownTimer(this, "AFK Black timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
-            this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
-            calculatePlayersRating();
-        });
     }
 
     public void returnedToTheBoard(Username username) {
         if (!isPlayer(username)) {
-            throw new IllegalArgumentException("Not a player.");
+            throw new IllegalArgumentException("Not a player: " + username);
         }
         if (isNull(afkTimer)) {
             return;
@@ -442,8 +441,8 @@ public class ChessGame {
             return;
         }
 
-        playerForWhite.changeRating(this);
-        playerForBlack.changeRating(this);
+        whitePlayer.changeRating(this);
+        blackPlayer.changeRating(this);
     }
 
     public Duration remainingTimeForWhite() {
@@ -455,18 +454,18 @@ public class ChessGame {
     }
 
     private Color validateUsername(final String username) {
-        final boolean isWhitePlayer = username.equals(playerForWhite.getUsername());
-        final boolean isBlackPlayer = username.equals(playerForBlack.getUsername());
+        final boolean isWhitePlayer = username.equals(whitePlayer.getUsername());
+        final boolean isBlackPlayer = username.equals(blackPlayer.getUsername());
 
         if (!isWhitePlayer && !isBlackPlayer) {
-            throw new IllegalArgumentException("Not a player.");
+            throw new IllegalArgumentException("Not a player: " + username);
         }
         if (nonNull(afkTimer)) {
             final boolean illegalAccess = (isWhitePlayer && afkTimer.getName().equals("AFK White timer")) ||
                     (isBlackPlayer && afkTimer.getName().equals("AFK Black timer"));
 
             if (illegalAccess) {
-                throw new IllegalStateException("A player cannot make a move without being at the board.");
+                throw new IllegalStateException("A player cannot make a move without being at the board: " + username);
             }
         }
 
@@ -504,10 +503,10 @@ public class ChessGame {
 
         ChessGame chessGame = (ChessGame) o;
         return Objects.equals(chessBoard, chessGame.chessBoard) &&
-                Objects.equals(playerForWhite, chessGame.playerForWhite) &&
-                Objects.equals(playerForBlack, chessGame.playerForBlack) &&
-                Objects.equals(playerForWhiteRating, chessGame.playerForWhiteRating) &&
-                Objects.equals(playerForBlackRating, chessGame.playerForBlackRating) &&
+                Objects.equals(whitePlayer, chessGame.whitePlayer) &&
+                Objects.equals(blackPlayer, chessGame.blackPlayer) &&
+                Objects.equals(whiteRating, chessGame.whiteRating) &&
+                Objects.equals(blackRating, chessGame.blackRating) &&
                 Objects.equals(sessionEvents, chessGame.sessionEvents) &&
                 time == chessGame.time &&
                 Objects.equals(isGameOver, chessGame.isGameOver);
@@ -516,10 +515,10 @@ public class ChessGame {
     @Override
     public int hashCode() {
         int result = Objects.hashCode(chessBoard);
-        result = 31 * result + Objects.hashCode(playerForWhite);
-        result = 31 * result + Objects.hashCode(playerForBlack);
-        result = 31 * result + Objects.hashCode(playerForWhiteRating);
-        result = 31 * result + Objects.hashCode(playerForBlackRating);
+        result = 31 * result + Objects.hashCode(whitePlayer);
+        result = 31 * result + Objects.hashCode(blackPlayer);
+        result = 31 * result + Objects.hashCode(whiteRating);
+        result = 31 * result + Objects.hashCode(blackRating);
         result = 31 * result + Objects.hashCode(sessionEvents);
         result = 31 * result + Objects.hashCode(time);
         result = 31 * result + Objects.hashCode(isGameOver);
@@ -543,8 +542,8 @@ public class ChessGame {
                     Is game over : %s, reason : %s
                 }
                 """,
-                this.chessGameId.toString(), this.playersTurn.toString(), this.playerForWhite.getUsername(), this.playerForBlack.getUsername(),
-                this.playerForWhiteRating.rating(), this.playerForBlackRating.rating(), this.sessionEvents.creationDate().toString(),
+                this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer.getUsername(), this.blackPlayer.getUsername(),
+                this.whiteRating.rating(), this.blackRating.rating(), this.sessionEvents.creationDate().toString(),
                 this.sessionEvents.lastUpdateDate().toString(), this.time.toString(), this.isCasualGame,
                 isGameOver.status(), isGameOver.status() ? isGameOver.orElseThrow().toString() : "game is not over."
         );

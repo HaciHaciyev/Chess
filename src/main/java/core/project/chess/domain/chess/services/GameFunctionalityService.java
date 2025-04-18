@@ -87,7 +87,7 @@ public class GameFunctionalityService {
 
         return Pair.of(MessageAddressee.FOR_ALL, Message.builder(MessageType.FEN_PGN)
                 .gameID(chessGame.getChessGameId().toString())
-                .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                .FEN(chessGame.getChessBoard().toString())
                 .PGN(chessGame.getChessBoard().pgn())
                 .timeLeft(remainingTimeAsString(chessGame))
                 .isThreeFoldActive(chessGame.isThreeFoldActive())
@@ -161,7 +161,7 @@ public class GameFunctionalityService {
             case SUCCESSFUL_UNDO -> {
                 final Message message = Message.builder(MessageType.FEN_PGN)
                         .gameID(chessGame.getChessGameId().toString())
-                        .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                        .FEN(chessGame.getChessBoard().toString())
                         .PGN(chessGame.getChessBoard().pgn())
                         .timeLeft(remainingTimeAsString(chessGame))
                         .isThreeFoldActive(chessGame.isThreeFoldActive())
@@ -281,20 +281,20 @@ public class GameFunctionalityService {
 
         switch (chessGame.getTime()) {
             case CLASSIC, DEFAULT -> {
-                inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
-                inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
+                inboundUserRepository.updateOfRating(chessGame.getWhitePlayer());
+                inboundUserRepository.updateOfRating(chessGame.getBlackPlayer());
             }
             case BULLET -> {
-                inboundUserRepository.updateOfBulletRating(chessGame.getPlayerForWhite());
-                inboundUserRepository.updateOfBulletRating(chessGame.getPlayerForBlack());
+                inboundUserRepository.updateOfBulletRating(chessGame.getWhitePlayer());
+                inboundUserRepository.updateOfBulletRating(chessGame.getBlackPlayer());
             }
             case BLITZ -> {
-                inboundUserRepository.updateOfBlitzRating(chessGame.getPlayerForWhite());
-                inboundUserRepository.updateOfBlitzRating(chessGame.getPlayerForBlack());
+                inboundUserRepository.updateOfBlitzRating(chessGame.getWhitePlayer());
+                inboundUserRepository.updateOfBlitzRating(chessGame.getBlackPlayer());
             }
             case RAPID -> {
-                inboundUserRepository.updateOfRapidRating(chessGame.getPlayerForWhite());
-                inboundUserRepository.updateOfRapidRating(chessGame.getPlayerForBlack());
+                inboundUserRepository.updateOfRapidRating(chessGame.getWhitePlayer());
+                inboundUserRepository.updateOfRapidRating(chessGame.getBlackPlayer());
             }
         }
     }

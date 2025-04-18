@@ -180,13 +180,13 @@ public class ChessBoard {
      * Constructs a new `ChessBoard` instance with the given parameters.
      *
      * @param chessBoardId        The unique identifier of the chess board.
-     * @param inCaseOfInitFromFEN The data for initialization of chess board from FEN.
+     * @param maybeFEN The data for initialization of chess board from FEN.
      * @param isPureChess         The data which disables the following chess rules:
      *      - insufficient mating material;
      *      - three-fold rule;
      *      - fifty moves rule.
      */
-    private ChessBoard(final UUID chessBoardId, @Nullable final FromFEN inCaseOfInitFromFEN,
+    private ChessBoard(final UUID chessBoardId, @Nullable final FromFEN maybeFEN,
                        final boolean isPureChess, @Nullable final List<AlgebraicNotation> algebraicNotations) {
         Objects.requireNonNull(chessBoardId);
 
@@ -197,7 +197,7 @@ public class ChessBoard {
         this.countOfFullMoves = 1;
 
         // if FEN is null initialize chess board with default position
-        if (inCaseOfInitFromFEN == null) {
+        if (maybeFEN == null) {
             this.figuresTurn = WHITE;
             this.whiteKingPosition = Coordinate.e1;
             this.blackKingPosition = Coordinate.e8;
@@ -234,29 +234,29 @@ public class ChessBoard {
             return;
         }
 
-        String FEN = inCaseOfInitFromFEN.fen();
+        String FEN = maybeFEN.fen();
 
         this.initType = InitType.FEN;
-        this.enPassantStack.addLast(getEnPassant(inCaseOfInitFromFEN));
+        this.enPassantStack.addLast(getEnPassant(maybeFEN));
 
-        this.figuresTurn = inCaseOfInitFromFEN.figuresTurn();
-        this.whiteKingPosition = inCaseOfInitFromFEN.whiteKing();
-        this.blackKingPosition = inCaseOfInitFromFEN.blackKing();
+        this.figuresTurn = maybeFEN.figuresTurn();
+        this.whiteKingPosition = maybeFEN.whiteKing();
+        this.blackKingPosition = maybeFEN.blackKing();
 
-        this.materialAdvantageOfWhite = inCaseOfInitFromFEN.materialAdvantageOfWhite();
-        this.materialAdvantageOfBlack = inCaseOfInitFromFEN.materialAdvantageOfBlack();
+        this.materialAdvantageOfWhite = maybeFEN.materialAdvantageOfWhite();
+        this.materialAdvantageOfBlack = maybeFEN.materialAdvantageOfBlack();
 
-        this.validWhiteShortCasting = inCaseOfInitFromFEN.validWhiteShortCasting();
-        this.validWhiteLongCasting = inCaseOfInitFromFEN.validWhiteLongCasting();
-        this.validBlackShortCasting = inCaseOfInitFromFEN.validBlackShortCasting();
-        this.validBlackLongCasting = inCaseOfInitFromFEN.validBlackLongCasting();
+        this.validWhiteShortCasting = maybeFEN.validWhiteShortCasting();
+        this.validWhiteLongCasting = maybeFEN.validWhiteLongCasting();
+        this.validBlackShortCasting = maybeFEN.validBlackShortCasting();
+        this.validBlackLongCasting = maybeFEN.validBlackLongCasting();
         
         addCastlingAbility();
 
         this.bitboard = new long[12];
         this.occupation = new Piece[64];
         initializeFromFEN(FEN);
-        validateStalemateAndCheckmate(inCaseOfInitFromFEN);
+        validateStalemateAndCheckmate(maybeFEN);
 
         this.zobrist = new ZobristHashKeys();
         long key = zobrist.computeZobristHash(this);
@@ -271,8 +271,8 @@ public class ChessBoard {
     /**
     * helper method which is called when constructing Board from FEN
     */
-    private Coordinate getEnPassant(FromFEN inCaseOfInitFromFEN) {
-        Optional<Pair<Coordinate, Coordinate>> lastMovement = inCaseOfInitFromFEN.isLastMovementWasPassage();
+    private Coordinate getEnPassant(FromFEN maybeFEN) {
+        Optional<Pair<Coordinate, Coordinate>> lastMovement = maybeFEN.isLastMovementWasPassage();
         if (lastMovement.isEmpty()) {
             return null;
         }
@@ -512,15 +512,6 @@ public class ChessBoard {
         }
 
         return Optional.of(algebraicNotations.peekLast());
-    }
-
-    /**
-     * Retrieves a last generating toString() for ChessBoard.
-     *
-     * @return String representation of ChessBoard.
-     */
-    public String actualRepresentationOfChessBoard() {
-        return this.toString();
     }
 
     /**

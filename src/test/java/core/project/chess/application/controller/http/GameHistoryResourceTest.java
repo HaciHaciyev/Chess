@@ -243,7 +243,6 @@ class GameHistoryResourceTest {
 
         Coordinate from = move.from();
         Coordinate to = move.to();
-        AlgebraicNotation.PieceTYPE inCaseOfPromotion = move.promotion() == null ? null : AlgebraicNotation.pieceToType(move.promotion());
 
         if (Objects.isNull(message.PGN()) || message.PGN().isBlank()) {
             return false;

@@ -500,16 +500,16 @@ public class ChessGameService {
     private void sendGameStartNotifications(Session session, ChessGame chessGame) {
         final Message overviewMessage = Message.builder(MessageType.GAME_START_INFO)
                 .gameID(chessGame.getChessGameId().toString())
-                .whitePlayerUsername(chessGame.getPlayerForWhite().getUsername())
-                .blackPlayerUsername(chessGame.getPlayerForBlack().getUsername())
-                .whitePlayerRating(chessGame.getPlayerForWhiteRating().rating())
-                .blackPlayerRating(chessGame.getPlayerForBlackRating().rating())
+                .whitePlayerUsername(chessGame.getWhitePlayer().getUsername())
+                .blackPlayerUsername(chessGame.getBlackPlayer().getUsername())
+                .whitePlayerRating(chessGame.getWhiteRating().rating())
+                .blackPlayerRating(chessGame.getBlackRating().rating())
                 .time(chessGame.getTime())
                 .build();
 
         final Message message = Message.builder(MessageType.FEN_PGN)
                 .gameID(chessGame.getChessGameId().toString())
-                .FEN(chessGame.getChessBoard().actualRepresentationOfChessBoard())
+                .FEN(chessGame.getChessBoard().toString())
                 .PGN(chessGame.getChessBoard().pgn())
                 .build();
 
