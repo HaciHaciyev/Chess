@@ -25,7 +25,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE FUNCTION delete_confirmed_token() RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM UserToken
+    WHERE is_confirmed = true;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER trigger_delete_unconfirmed_user
 AFTER INSERT ON UserToken
 FOR EACH STATEMENT
 EXECUTE FUNCTION delete_unconfirmed_user();
+
+CREATE TRIGGER trigger_delete_confirmed_token
+AFTER INSERT OR UPDATE ON UserToken
+FOR EACH STATEMENT
+EXECUTE FUNCTION delete_confirmed_token();
