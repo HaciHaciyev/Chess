@@ -58,7 +58,7 @@ public enum Direction {
             }
         }
 
-        throw new IllegalArgumentException("No matching direction for " + begin + " to " + end);
+        return null;
     }
 
     @Nullable

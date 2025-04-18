@@ -147,6 +147,11 @@ public sealed interface Piece
 
     default List<Coordinate> fieldsInPath(Coordinate start, Coordinate end) {
         Direction direction = Direction.ofPath(start, end);
+        
+        if (direction == null) {
+            throw new IllegalArgumentException("Can't calculate direction for %s%s".formatted(start, end));
+        }
+        
         List<Coordinate> fields = new ArrayList<>();
 
         Coordinate current = start;
