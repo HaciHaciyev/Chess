@@ -183,10 +183,10 @@ public class UserAccount {
         }
 
         final Color color;
-        if (chessGame.getPlayerForWhite().getId().equals(this.id)) {
+        if (chessGame.getWhitePlayer().getId().equals(this.id)) {
             color = WHITE;
         }
-        else if (chessGame.getPlayerForBlack().getId().equals(this.id)) {
+        else if (chessGame.getBlackPlayer().getId().equals(this.id)) {
             color = Color.BLACK;
         }
         else {
@@ -194,7 +194,7 @@ public class UserAccount {
         }
 
         final double result = getResult(chessGame.gameResult().get(), color);
-        final UserAccount opponent =  color.equals(WHITE) ? chessGame.getPlayerForBlack() : chessGame.getPlayerForWhite();
+        final UserAccount opponent =  color.equals(WHITE) ? chessGame.getBlackPlayer() : chessGame.getWhitePlayer();
 
         switch (chessGame.getTime()) {
             case DEFAULT, CLASSIC -> {

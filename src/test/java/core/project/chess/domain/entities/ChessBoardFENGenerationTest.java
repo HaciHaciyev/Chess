@@ -15,8 +15,8 @@ class ChessBoardFENGenerationTest {
     @Test
     void testFENGeneration() throws InterruptedException {
         ChessGame chessGame = chessGameSupplier().get();
-        String firstPlayer = chessGame.getPlayerForWhite().getUsername();
-        String secondPlayer = chessGame.getPlayerForBlack().getUsername();
+        String firstPlayer = chessGame.getWhitePlayer().getUsername();
+        String secondPlayer = chessGame.getBlackPlayer().getUsername();
 
         //1.
         chessGame.makeMovement(firstPlayer, e2, e4, null);

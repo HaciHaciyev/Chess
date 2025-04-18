@@ -329,8 +329,8 @@ class ParallelPerft {
         }
 
         private String determineActivePlayer(ChessGame game) {
-            var whitePlayer = game.getPlayerForWhite().getUsername();
-            var blackPlayer = game.getPlayerForBlack().getUsername();
+            var whitePlayer = game.getWhitePlayer().getUsername();
+            var blackPlayer = game.getBlackPlayer().getUsername();
 
             return game.getPlayersTurn().equals(Color.WHITE) ? whitePlayer : blackPlayer;
         }

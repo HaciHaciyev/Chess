@@ -281,20 +281,20 @@ public class GameFunctionalityService {
 
         switch (chessGame.getTime()) {
             case CLASSIC, DEFAULT -> {
-                inboundUserRepository.updateOfRating(chessGame.getPlayerForWhite());
-                inboundUserRepository.updateOfRating(chessGame.getPlayerForBlack());
+                inboundUserRepository.updateOfRating(chessGame.getWhitePlayer());
+                inboundUserRepository.updateOfRating(chessGame.getBlackPlayer());
             }
             case BULLET -> {
-                inboundUserRepository.updateOfBulletRating(chessGame.getPlayerForWhite());
-                inboundUserRepository.updateOfBulletRating(chessGame.getPlayerForBlack());
+                inboundUserRepository.updateOfBulletRating(chessGame.getWhitePlayer());
+                inboundUserRepository.updateOfBulletRating(chessGame.getBlackPlayer());
             }
             case BLITZ -> {
-                inboundUserRepository.updateOfBlitzRating(chessGame.getPlayerForWhite());
-                inboundUserRepository.updateOfBlitzRating(chessGame.getPlayerForBlack());
+                inboundUserRepository.updateOfBlitzRating(chessGame.getWhitePlayer());
+                inboundUserRepository.updateOfBlitzRating(chessGame.getBlackPlayer());
             }
             case RAPID -> {
-                inboundUserRepository.updateOfRapidRating(chessGame.getPlayerForWhite());
-                inboundUserRepository.updateOfRapidRating(chessGame.getPlayerForBlack());
+                inboundUserRepository.updateOfRapidRating(chessGame.getWhitePlayer());
+                inboundUserRepository.updateOfRapidRating(chessGame.getBlackPlayer());
             }
         }
     }
