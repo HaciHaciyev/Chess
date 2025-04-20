@@ -236,7 +236,7 @@ public class ChessGameTest {
         String white = game.getWhitePlayer().getUsername();
         String black = game.getBlackPlayer().getUsername();
 
-        ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
+        ToStringUtils navigator = game.toStringUtils();
 
         if (enableLogging) {
             Log.infof("Reading game#%s.", pgnNum);
@@ -306,7 +306,7 @@ public class ChessGameTest {
         String result = pgnReader.tag("Result");
 
         if (enableLogging) {
-            Log.infof("Chessland PGN: %s.", game.getChessBoard().pgn());
+            Log.infof("Chessland PGN: %s.", game.pgn());
             Log.info("Result of PGN: " + result);
             Log.info("Game status: " + game.gameResult());
             System.out.println();
@@ -394,16 +394,16 @@ public class ChessGameTest {
         final String firstPlayerUsername = chessGame.getWhitePlayer().getUsername();
         final String secondPlayerUsername = chessGame.getBlackPlayer().getUsername();
 
-        System.out.println(chessGame.getChessBoard().toString());
+        System.out.println(chessGame.fen());
 
         // 1
         chessGame.doMove(firstPlayerUsername, e2, e4, null);
 
-        System.out.println(chessGame.getChessBoard().toString());
+        System.out.println(chessGame.fen());
 
         chessGame.doMove(secondPlayerUsername, e7, e5, null);
 
-        System.out.println(chessGame.getChessBoard().toString());
+        System.out.println(chessGame.fen());
     }
 
     public static Supplier<ChessGame> chessGameSupplier() {

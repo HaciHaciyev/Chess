@@ -112,9 +112,9 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         .ifFailure(Throwable::printStackTrace);
 
         jdbc.write(SAVE_CHESS_GAME_HISTORY,
-            chessGame.getChessBoard().ID().toString(),
+            chessGame.historyID().toString(),
             chessGame.getChessGameId().toString(),
-            chessGame.getChessBoard().pgn()
+            chessGame.pgn()
         )
 
         .ifFailure(Throwable::printStackTrace);

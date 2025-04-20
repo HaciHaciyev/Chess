@@ -87,8 +87,8 @@ public class GameFunctionalityService {
 
         return Pair.of(MessageAddressee.FOR_ALL, Message.builder(MessageType.FEN_PGN)
                 .gameID(chessGame.getChessGameId().toString())
-                .FEN(chessGame.getChessBoard().toString())
-                .PGN(chessGame.getChessBoard().pgn())
+                .FEN(chessGame.fen())
+                .PGN(chessGame.pgn())
                 .timeLeft(remainingTimeAsString(chessGame))
                 .isThreeFoldActive(chessGame.isThreeFoldActive())
                 .build()
@@ -96,7 +96,7 @@ public class GameFunctionalityService {
     }
 
     private String remainingTimeAsString(ChessGame cg) {
-        if (cg.getChessBoard().countOfHalfMoves() == 0 || cg.getChessBoard().countOfHalfMoves() == 1) {
+        if (cg.countOfHalfMoves() == 0 || cg.countOfHalfMoves() == 1) {
             return "W -> 02:59:59 | B -> 03:00:00";
         }
 
@@ -161,8 +161,8 @@ public class GameFunctionalityService {
             case SUCCESSFUL_UNDO -> {
                 final Message message = Message.builder(MessageType.FEN_PGN)
                         .gameID(chessGame.getChessGameId().toString())
-                        .FEN(chessGame.getChessBoard().toString())
-                        .PGN(chessGame.getChessBoard().pgn())
+                        .FEN(chessGame.fen())
+                        .PGN(chessGame.pgn())
                         .timeLeft(remainingTimeAsString(chessGame))
                         .isThreeFoldActive(chessGame.isThreeFoldActive())
                         .build();
@@ -264,10 +264,8 @@ public class GameFunctionalityService {
     }
 
     public void executeGameOverOperations(final ChessGame chessGame) {
-        if (chessGame.gameResult().isEmpty()) {
-            throw new IllegalStateException("You can`t save not finished game.");
-        }
-        if (outboundChessRepository.isChessHistoryPresent(chessGame.getChessBoard().ID())) {
+        if (chessGame.gameResult().isEmpty()) throw new IllegalStateException("You can`t save not finished game.");
+        if (outboundChessRepository.isChessHistoryPresent(chessGame.historyID())) {
             Log.infof("History of game %s is already present", chessGame.getChessGameId());
             return;
         }
@@ -275,10 +273,7 @@ public class GameFunctionalityService {
         Log.infof("Saving finished game %s and changing ratings", chessGame.getChessGameId());
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
 
-        if (chessGame.isCasualGame()) {
-            return;
-        }
-
+        if (chessGame.isCasualGame()) return;
         switch (chessGame.getTime()) {
             case CLASSIC, DEFAULT -> {
                 inboundUserRepository.updateOfRating(chessGame.getWhitePlayer());

@@ -297,7 +297,7 @@ class ParallelPerft {
             board.doMove(move);
             game.doMove(activePlayer, from, to, promotionPiece);
 
-            String newFen = game.getChessBoard().toString();
+            String newFen = game.fen();
 
             // Create and run perft task for the new board state
             ChessGame nestedGame = chessGameSupplier(newFen).get();
@@ -311,7 +311,7 @@ class ParallelPerft {
         }
 
         private ChessGame copyGame(ChessGame originalGame) {
-            String fen = originalGame.getChessBoard().toString();
+            String fen = originalGame.fen();
             return chessGameSupplier(fen).get();
         }
 
@@ -405,7 +405,7 @@ class ParallelPerft {
                         Log.error(String.format(
                                 "Invalid move processing: %s | FEN: %s | Error: %s",
                                 move,
-                                gameCopy.getChessBoard().toString(),
+                                gameCopy.fen(),
                                 e.getMessage()));
                     }
                 }
@@ -419,8 +419,8 @@ class ParallelPerft {
             }
 
             private void updateOurPerftData(ChessGame game, long nodes) {
-                List<String> notations = game.getChessBoard().listOfAlgebraicNotations();
-                game.getChessBoard().lastAlgebraicNotation().ifPresent(notation -> {
+                List<String> notations = game.listOfAlgebraicNotations();
+                game.lastAlgebraicNotation().ifPresent(notation -> {
                     String lastMove = notation.algebraicNotation();
 
                     ourPerftData.nodes = nodes;
@@ -556,8 +556,8 @@ class ParallelPerft {
                     Log.error(String.format(
                             "Perft verification failed. Move: %s, FEN: %s, PGN: %s",
                             move,
-                            game.getChessBoard().toString(),
-                            game.getChessBoard().pgn()));
+                            game.fen(),
+                            game.pgn()));
 
                     // Detailed logging of discrepancies
                     logPerftDataDetails();

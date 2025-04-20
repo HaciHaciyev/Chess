@@ -512,8 +512,8 @@ public class ChessGameService {
 
         final Message message = Message.builder(MessageType.FEN_PGN)
                 .gameID(chessGame.getChessGameId().toString())
-                .FEN(chessGame.getChessBoard().toString())
-                .PGN(chessGame.getChessBoard().pgn())
+                .FEN(chessGame.fen())
+                .PGN(chessGame.pgn())
                 .build();
 
         sendMessage(session, overviewMessage);
@@ -603,7 +603,7 @@ public class ChessGameService {
 
                     CompletableFuture.runAsync(() -> {
                         gameFunctionalityService.executeGameOverOperations(game);
-                        PuzzleInbound puzzleInbound = puzzlerClient.sendPGN(game.getChessBoard().pgn());
+                        PuzzleInbound puzzleInbound = puzzlerClient.sendPGN(game.pgn());
                         puzzleService.save(puzzleInbound.PGN(), puzzleInbound.startPositionOfPuzzle());
                     });
                     isRunning.set(false);

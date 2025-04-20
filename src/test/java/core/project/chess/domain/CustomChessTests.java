@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static core.project.chess.domain.chess.enumerations.Coordinate.*;
-import static core.project.chess.domain.chess.util.ToStringUtils.prettyBitBoard;
 import static core.project.chess.domain.entities.ChessGameTest.chessGameSupplier;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,58 +23,58 @@ class CustomChessTests {
     @Test
     void revertPromotion() {
         ChessGame game = chessGameSupplier().get();
-        ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
+        ToStringUtils boardStringUtils = game.toStringUtils();
 
         String whitePlayer = game.getWhitePlayer().getUsername();
         String blackPlayer = game.getBlackPlayer().getUsername();
 
         //1.
         game.doMove(whitePlayer, e2, e4, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         game.doMove(blackPlayer, e7, e5, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         //2.
         game.doMove(whitePlayer, f2, f4, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         game.doMove(blackPlayer, e5, f4, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         //3.
         game.doMove(whitePlayer, g2, g3, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         game.doMove(blackPlayer, f4, g3, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         //4.
         game.doMove(whitePlayer, g1, f3, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         game.doMove(blackPlayer, g3, h2, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         //5.
         game.doMove(whitePlayer, f3, g1, null);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         game.doMove(blackPlayer, h2, g1, Queen.of(Color.BLACK));
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         game.undo(whitePlayer);
         game.undo(blackPlayer);
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
 
         game.doMove(blackPlayer, d8, h4, Queen.of(Color.BLACK));
-        System.out.println(navigator.prettyToString());
+        System.out.println(boardStringUtils.prettyToString());
     }
 
     @Test
     void enPassaunOnCheck() {
         ChessGame chessGame = chessGameSupplier("8/1p3p1k/1P2b2p/2Q1P1pP/5K1n/8/5P2/4r3 w - g6 0 63").get();
-        ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
+        ToStringUtils navigator = chessGame.toStringUtils();
         String firstPlayer = chessGame.getWhitePlayer().getUsername();
         String secondPlayer = chessGame.getBlackPlayer().getUsername();
 
@@ -102,7 +101,7 @@ class CustomChessTests {
     @Test
     void enPassaun() {
         ChessGame chessGame = chessGameSupplier("3b4/2p5/6b1/2pk2p1/1pP1N1P1/pP3P2/P7/3KB3 b - c3 0 32").get();
-        ToStringUtils navigator = new ToStringUtils(chessGame.getChessBoard());
+        ToStringUtils navigator = chessGame.toStringUtils();
         String firstPlayer = chessGame.getWhitePlayer().getUsername();
         String secondPlayer = chessGame.getBlackPlayer().getUsername();
 
@@ -127,7 +126,7 @@ class CustomChessTests {
         String white = game.getWhitePlayer().getUsername();
         String black = game.getBlackPlayer().getUsername();
 
-        ToStringUtils navigator = new ToStringUtils(game.getChessBoard());
+        ToStringUtils navigator = game.toStringUtils();
 
         game.doMove(white, e2, e4, null);
         System.out.println(navigator.prettyToString());
@@ -792,48 +791,5 @@ class CustomChessTests {
 
         // VALID, Rook move.
         chessGame.doMove(secondPlayerUsername, Coordinate.a8, Coordinate.b8, null);
-    }
-
-    @Test
-    void temp() {
-        ChessBoard chessBoard = ChessBoard.fromPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        System.out.println("WHITE PAWNS: " + chessBoard.bitboard(Pawn.of(Color.WHITE)));
-        System.out.println("BLACK PAWNS: " + chessBoard.bitboard(Pawn.of(Color.BLACK)));
-        System.out.println("WHITE KNIGHTS: " + chessBoard.bitboard(Knight.of(Color.WHITE)));
-        System.out.println("BLACK KNIGHTS: " + chessBoard.bitboard(Knight.of(Color.BLACK)));
-        System.out.println("WHITE BISHOPS: " + chessBoard.bitboard(Bishop.of(Color.WHITE)));
-        System.out.println("BLACK BISHOPS: " + chessBoard.bitboard(Bishop.of(Color.BLACK)));
-        System.out.println("WHITE ROOKS: " + chessBoard.bitboard(Rook.of(Color.WHITE)));
-        System.out.println("BLACK ROOKS: " + chessBoard.bitboard(Rook.of(Color.BLACK)));
-        System.out.println("WHITE QUEENS: " + chessBoard.bitboard(Queen.of(Color.WHITE)));
-        System.out.println("BLACK QUEENS: " + chessBoard.bitboard(Queen.of(Color.BLACK)));
-        System.out.println("WHITE KING: " + chessBoard.bitboard(King.of(Color.WHITE)));
-        System.out.println("BLACK KING: " + chessBoard.bitboard(King.of(Color.BLACK)));
-
-        System.out.println();
-        System.out.println("WHITES: " + chessBoard.whitePieces());
-        System.out.println("BLACKS: " + chessBoard.blackPieces());
-
-
-        System.out.println("WHITES:" + prettyBitBoard(chessBoard.whitePieces()));
-        System.out.println(prettyBitBoard(chessBoard.blackPieces()));
-
-        System.out.println("White pawns bitboard:" + prettyBitBoard(chessBoard.bitboard(Pawn.of(Color.WHITE))));
-        System.out.println("White knights bitboard:" + prettyBitBoard(chessBoard.bitboard(Knight.of(Color.WHITE))));
-        System.out.println("White bishops bitboard:" + prettyBitBoard(chessBoard.bitboard(Bishop.of(Color.WHITE))));
-        System.out.println("White rooks bitboard:" + prettyBitBoard(chessBoard.bitboard(Rook.of(Color.WHITE))));
-        System.out.println("White queens bitboard:" + prettyBitBoard(chessBoard.bitboard(Queen.of(Color.WHITE))));
-        System.out.println("White king bitboard:" + prettyBitBoard(chessBoard.bitboard(King.of(Color.WHITE))));
-
-        System.out.println();
-
-        System.out.println("Black pawns bitboard:" + prettyBitBoard(chessBoard.bitboard(Pawn.of(Color.BLACK))));
-        System.out.println("Black knights bitboard:" + prettyBitBoard(chessBoard.bitboard(Knight.of(Color.BLACK))));
-        System.out.println("Black bishops bitboard:" + prettyBitBoard(chessBoard.bitboard(Bishop.of(Color.BLACK))));
-        System.out.println("Black rooks bitboard:" + prettyBitBoard(chessBoard.bitboard(Rook.of(Color.BLACK))));
-        System.out.println("Black queens bitboard:" + prettyBitBoard(chessBoard.bitboard(Queen.of(Color.BLACK))));
-        System.out.println("Black king bitboard:" + prettyBitBoard(chessBoard.bitboard(King.of(Color.BLACK))));
-
-        System.out.println("FEN: " + chessBoard);
     }
 }

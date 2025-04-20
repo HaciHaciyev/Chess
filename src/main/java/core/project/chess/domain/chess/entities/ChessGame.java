@@ -5,6 +5,8 @@ import core.project.chess.domain.chess.enumerations.*;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.util.ChessCountdownTimer;
+import core.project.chess.domain.chess.util.ToStringUtils;
+import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.user.entities.UserAccount;
@@ -138,8 +140,32 @@ public class ChessGame {
         return chessGameId;
     }
 
-    public ChessBoard getChessBoard() {
-        return chessBoard;
+    public String fen() {
+        return chessBoard.toString();
+    }
+
+    public String pgn() {
+        return chessBoard.pgn();
+    }
+
+    public List<String> listOfAlgebraicNotations() {
+        return chessBoard.listOfAlgebraicNotations();
+    }
+
+    public Optional<AlgebraicNotation> lastAlgebraicNotation() {
+        return chessBoard.lastAlgebraicNotation();
+    }
+
+    public int countOfHalfMoves() {
+        return chessBoard.countOfHalfMoves();
+    }
+
+    public int countOfFullMoves() {
+        return chessBoard.countOfFullMoves();
+    }
+
+    public UUID historyID() {
+        return chessBoard.ID();
     }
 
     public UserAccount getWhitePlayer() {
@@ -178,24 +204,19 @@ public class ChessGame {
         return isCasualGame;
     }
 
+    public ToStringUtils toStringUtils() {
+        return new ToStringUtils(chessBoard);
+    }
+
     public void addChatMessage(final String username, final ChatMessage message) {
         validateUsername(username);
         chatMessages.add(message);
     }
 
     public Optional<GameResult> gameResult() {
-        if (!this.isGameOver.status()) {
-            return Optional.empty();
-        }
-
-        if (isGameOver.orElseThrow().equals(GameResult.DRAW)) {
-            return Optional.of(GameResult.DRAW);
-        }
-
-        if (isGameOver.orElseThrow().equals(GameResult.WHITE_WIN)) {
-            return Optional.of(GameResult.WHITE_WIN);
-        }
-
+        if (!this.isGameOver.status()) return Optional.empty();
+        if (isGameOver.orElseThrow().equals(GameResult.DRAW)) return Optional.of(GameResult.DRAW);
+        if (isGameOver.orElseThrow().equals(GameResult.WHITE_WIN)) return Optional.of(GameResult.WHITE_WIN);
         return Optional.of(GameResult.BLACK_WIN);
     }
 
