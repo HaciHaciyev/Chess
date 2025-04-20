@@ -44,15 +44,8 @@ public class JwtUtility {
 
     public Optional<JsonWebToken> extractJWT(Session session) {
         List<String> token = session.getRequestParameterMap().get("token");
-
-        if (Objects.isNull(token)) {
-            return Optional.empty();
-        }
-
-        if (token.isEmpty()) {
-            return Optional.empty();
-        }
-
+        if (Objects.isNull(token)) return Optional.empty();
+        if (token.isEmpty()) return Optional.empty();
         try {
             return Optional.of(jwtParser.parse(token.getFirst()));
         } catch (ParseException e) {
