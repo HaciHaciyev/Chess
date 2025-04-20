@@ -171,6 +171,7 @@ public class UserAuthService {
         final var tokenExpiration = LocalDateTime.ofEpochSecond(tokenExpirationDate, 0, ZoneOffset.UTC);
 
         if (LocalDateTime.now(ZoneOffset.UTC).isAfter(tokenExpiration)) {
+            inboundUserRepository.removeRefreshToken(refreshToken);
             throw responseException(Response.Status.BAD_REQUEST, "Refresh token is expired, you need to login.");
         }
 

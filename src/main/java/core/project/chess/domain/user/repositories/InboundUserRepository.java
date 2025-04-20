@@ -26,4 +26,6 @@ public interface InboundUserRepository {
     void addPartnership(UserAccount firstUser, UserAccount secondUser);
 
     void saveRefreshToken(UserAccount userAccount, String refreshToken);
+
+    void removeRefreshToken(String refreshToken);
 }

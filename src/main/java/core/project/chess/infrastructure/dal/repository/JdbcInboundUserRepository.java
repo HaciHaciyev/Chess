@@ -142,6 +142,11 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .build()
     );
 
+    static private final String DELETE_REFRESH_TOKEN = delete()
+            .from("RefreshToken")
+            .where("token = ?")
+            .build();
+
     JdbcInboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;
     }
@@ -313,5 +318,10 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     public void saveRefreshToken(UserAccount userAccount, String refreshToken) {
         jdbc.write(INSERT_OR_UPDATE_REFRESH_TOKEN, userAccount.getId().toString(), refreshToken, refreshToken)
                 .ifFailure(Throwable::printStackTrace);
+    }
+
+    @Override
+    public void removeRefreshToken(String refreshToken) {
+        jdbc.write(DELETE_REFRESH_TOKEN, refreshToken).ifFailure(Throwable::printStackTrace);
     }
 }
