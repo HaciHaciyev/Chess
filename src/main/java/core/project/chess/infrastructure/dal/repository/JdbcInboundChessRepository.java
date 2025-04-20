@@ -81,17 +81,17 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     public void completelySaveStartedChessGame(final ChessGame chessGame) {
         jdbc.write(SAVE_STARTED_CHESS_GAME,
 
-            chessGame.getChessGameId().toString(),
-            chessGame.getWhiteRating().rating(),
-            chessGame.getBlackRating().rating(),
-            chessGame.getTime().toString(),
-            chessGame.getSessionEvents().creationDate(),
-            chessGame.getSessionEvents().lastUpdateDate(),
+            chessGame.chessGameID().toString(),
+            chessGame.whiteRating().rating(),
+            chessGame.blackRating().rating(),
+            chessGame.time().toString(),
+            chessGame.sessionEvents().creationDate(),
+            chessGame.sessionEvents().lastUpdateDate(),
             false, "NONE",
 
-            chessGame.getChessGameId().toString(),
-            chessGame.getWhitePlayer().getId().toString(),
-            chessGame.getBlackPlayer().getId().toString()
+            chessGame.chessGameID().toString(),
+            chessGame.whitePlayer().id().toString(),
+            chessGame.blackPlayer().id().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
@@ -106,14 +106,14 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         jdbc.write(UPDATE_FINISHED_CHESS_GAME,
                 chessGame.gameResult().isPresent(),
                 chessGame.gameResult().orElseThrow().toString(),
-                chessGame.getChessGameId().toString()
+                chessGame.chessGameID().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
 
         jdbc.write(SAVE_CHESS_GAME_HISTORY,
             chessGame.historyID().toString(),
-            chessGame.getChessGameId().toString(),
+            chessGame.chessGameID().toString(),
             chessGame.pgn()
         )
 
@@ -146,7 +146,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                 puzzle.rating().ratingDeviation(),
                 puzzle.rating().volatility(),
                 puzzle.ID().toString(),
-                puzzle.player().getId().toString(),
+                puzzle.player().id().toString(),
                 puzzle.isSolved()
         )
 

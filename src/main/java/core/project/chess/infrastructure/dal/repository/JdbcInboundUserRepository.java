@@ -1,7 +1,7 @@
 package core.project.chess.infrastructure.dal.repository;
 
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
@@ -152,99 +152,99 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void save(final UserAccount userAccount) {
+    public void save(final User user) {
 
         jdbc.write(INSERT_USER_ACCOUNT,
-            userAccount.getId().toString(),
-            userAccount.getFirstname(),
-            userAccount.getSurname(),
-            userAccount.getUsername(),
-            userAccount.getEmail(),
-            userAccount.getPassword(),
-            userAccount.getUserRole().toString(),
-            userAccount.getRating().rating(),
-            userAccount.getRating().ratingDeviation(),
-            userAccount.getRating().volatility(),
-            userAccount.getBulletRating().rating(),
-            userAccount.getBulletRating().ratingDeviation(),
-            userAccount.getBulletRating().volatility(),
-            userAccount.getBlitzRating().rating(),
-            userAccount.getBlitzRating().ratingDeviation(),
-            userAccount.getBlitzRating().volatility(),
-            userAccount.getRapidRating().rating(),
-            userAccount.getRapidRating().ratingDeviation(),
-            userAccount.getRapidRating().volatility(),
-            userAccount.getPuzzlesRating().rating(),
-            userAccount.getPuzzlesRating().ratingDeviation(),
-            userAccount.getPuzzlesRating().volatility(),
-            userAccount.isEnabled(),
-            userAccount.getAccountEvents().creationDate(),
-            userAccount.getAccountEvents().lastUpdateDate()
+            user.id().toString(),
+            user.firstname(),
+            user.surname(),
+            user.username(),
+            user.email(),
+            user.password(),
+            user.userRole().toString(),
+            user.rating().rating(),
+            user.rating().ratingDeviation(),
+            user.rating().volatility(),
+            user.bulletRating().rating(),
+            user.bulletRating().ratingDeviation(),
+            user.bulletRating().volatility(),
+            user.blitzRating().rating(),
+            user.blitzRating().ratingDeviation(),
+            user.blitzRating().volatility(),
+            user.rapidRating().rating(),
+            user.rapidRating().ratingDeviation(),
+            user.rapidRating().volatility(),
+            user.puzzlesRating().rating(),
+            user.puzzlesRating().ratingDeviation(),
+            user.puzzlesRating().volatility(),
+            user.isEnabled(),
+            user.accountEvents().creationDate(),
+            user.accountEvents().lastUpdateDate()
         )
 
         .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
-    public void updateOfRating(final UserAccount userAccount) {
+    public void updateOfRating(final User user) {
 
         jdbc.write(UPDATE_USER_RATING,
-                userAccount.getRating().rating(),
-                userAccount.getRating().ratingDeviation(),
-                userAccount.getRating().volatility(),
-                userAccount.getId().toString()
+                user.rating().rating(),
+                user.rating().ratingDeviation(),
+                user.rating().volatility(),
+                user.id().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
-    public void updateOfBulletRating(UserAccount userAccount) {
+    public void updateOfBulletRating(User user) {
 
         jdbc.write(UPDATE_USER_BULLET_RATING,
-                userAccount.getBulletRating().rating(),
-                userAccount.getBulletRating().ratingDeviation(),
-                userAccount.getBulletRating().volatility(),
-                userAccount.getId().toString()
+                user.bulletRating().rating(),
+                user.bulletRating().ratingDeviation(),
+                user.bulletRating().volatility(),
+                user.id().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
-    public void updateOfBlitzRating(UserAccount userAccount) {
+    public void updateOfBlitzRating(User user) {
 
         jdbc.write(UPDATE_USER_BLITZ_RATING,
-                userAccount.getBlitzRating().rating(),
-                userAccount.getBlitzRating().ratingDeviation(),
-                userAccount.getBlitzRating().volatility(),
-                userAccount.getId().toString()
+                user.blitzRating().rating(),
+                user.blitzRating().ratingDeviation(),
+                user.blitzRating().volatility(),
+                user.id().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
-    public void updateOfRapidRating(UserAccount userAccount) {
+    public void updateOfRapidRating(User user) {
 
         jdbc.write(UPDATE_USER_RAPID_RATING,
-                userAccount.getRapidRating().rating(),
-                userAccount.getRapidRating().ratingDeviation(),
-                userAccount.getRapidRating().volatility(),
-                userAccount.getId().toString()
+                user.rapidRating().rating(),
+                user.rapidRating().ratingDeviation(),
+                user.rapidRating().volatility(),
+                user.id().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
-    public void updateOfPuzzleRating(final UserAccount userAccount) {
-        Rating puzzlesRating = userAccount.getPuzzlesRating();
+    public void updateOfPuzzleRating(final User user) {
+        Rating puzzlesRating = user.puzzlesRating();
         jdbc.write(UPDATE_USER_PUZZLES_RATING,
                 puzzlesRating.rating(),
                 puzzlesRating.ratingDeviation(),
                 puzzlesRating.volatility(),
-                userAccount.getId().toString()
+                user.id().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
@@ -254,12 +254,12 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     public void saveUserToken(final EmailConfirmationToken token) {
 
         jdbc.write(INSERT_USER_TOKEN,
-            token.getTokenId().toString(),
-            token.getUserAccount().getId().toString(),
-            token.getToken().token().toString(),
+            token.tokenID().toString(),
+            token.user().id().toString(),
+            token.token().token().toString(),
             Boolean.FALSE,
-            token.getTokenEvents().getCreationDate(),
-            token.getTokenEvents().getExpirationDate()
+            token.tokenEvents().creationDate(),
+            token.tokenEvents().expirationDate()
         )
 
         .ifFailure(Throwable::printStackTrace);
@@ -267,16 +267,16 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void enable(final EmailConfirmationToken token) {
-        if (!token.isConfirmed() || !token.getUserAccount().isEnabled()) {
+        if (!token.isConfirmed() || !token.user().isEnabled()) {
             throw new IllegalArgumentException("Token needs to be confirmed & UserAccount needs to be enabled");
         }
 
         jdbc.write(UPDATE_USER_TOKEN_AND_ACCOUNT,
             token.isConfirmed(),
-            token.getTokenId().toString(),
-            token.getUserAccount().isEnabled(),
-            token.getUserAccount().getUserRole().toString(),
-            token.getUserAccount().getId().toString()
+            token.tokenID().toString(),
+            token.user().isEnabled(),
+            token.user().userRole().toString(),
+            token.user().id().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
@@ -285,23 +285,23 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void deleteByToken(final EmailConfirmationToken token) throws IllegalAccessException {
-        final boolean isEnable = token.getUserAccount().isEnabled();
+        final boolean isEnable = token.user().isEnabled();
 
         if (isEnable || token.isConfirmed()) {
             throw new IllegalAccessException("It is prohibited to delete an accessible account");
         }
 
         jdbc.write(DELETE_USER_TOKEN_AND_ACCOUNT,
-            token.getTokenId().toString(),
-            token.getUserAccount().getId().toString()
+            token.tokenID().toString(),
+            token.user().id().toString()
         )
 
         .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
-    public void saveRefreshToken(UserAccount userAccount, String refreshToken) {
-        jdbc.write(INSERT_OR_UPDATE_REFRESH_TOKEN, userAccount.getId().toString(), refreshToken, refreshToken)
+    public void saveRefreshToken(User user, String refreshToken) {
+        jdbc.write(INSERT_OR_UPDATE_REFRESH_TOKEN, user.id().toString(), refreshToken, refreshToken)
                 .ifFailure(Throwable::printStackTrace);
     }
 

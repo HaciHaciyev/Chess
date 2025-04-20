@@ -38,7 +38,7 @@ public class ChessCountdownTimer implements Runnable {
         this.name = name + "#" + threadID++;
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
@@ -75,7 +75,7 @@ public class ChessCountdownTimer implements Runnable {
 
     public void start() {
         if (isRunning.get() && !isPaused.get()) {
-            Log.warnf("%s for the game %s is already running", name, chessGame.getChessGameId());
+            Log.warnf("%s for the game %s is already running", name, chessGame.chessGameID());
             return;
         }
 

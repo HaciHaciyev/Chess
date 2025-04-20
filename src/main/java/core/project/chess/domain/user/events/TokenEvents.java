@@ -15,11 +15,11 @@ public final class TokenEvents {
         this.expirationDate = creationDate.plusMinutes(EXPIRATION_TIME);
     }
 
-    public LocalDateTime getCreationDate() {
+    public LocalDateTime creationDate() {
         return creationDate;
     }
 
-    public LocalDateTime getExpirationDate() {
+    public LocalDateTime expirationDate() {
         return expirationDate;
     }
 

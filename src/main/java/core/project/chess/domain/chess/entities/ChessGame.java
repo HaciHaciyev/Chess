@@ -9,7 +9,7 @@ import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.commons.containers.StatusPair;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
 import jakarta.annotation.Nullable;
@@ -26,8 +26,8 @@ import static java.util.Objects.nonNull;
 public class ChessGame {
     private final UUID chessGameId;
     private final ChessBoard chessBoard;
-    private final UserAccount whitePlayer;
-    private final UserAccount blackPlayer;
+    private final User whitePlayer;
+    private final User blackPlayer;
     private final Rating whiteRating;
     private final Rating blackRating;
     private final SessionEvents sessionEvents;
@@ -48,8 +48,8 @@ public class ChessGame {
 
     private ChessGame(UUID chessGameId,
                       ChessBoard chessBoard,
-                      UserAccount whitePlayer,
-                      UserAccount blackPlayer,
+                      User whitePlayer,
+                      User blackPlayer,
                       Rating whiteRating,
                       Rating blackRating,
                       SessionEvents sessionEvents,
@@ -67,7 +67,7 @@ public class ChessGame {
         Objects.requireNonNull(time);
         Objects.requireNonNull(statusPair);
 
-        if (blackPlayer.getId().equals(whitePlayer.getId())) {
+        if (blackPlayer.id().equals(whitePlayer.id())) {
             throw new IllegalArgumentException("Game can`t be initialized with same player for both sides.");
         }
 
@@ -101,10 +101,10 @@ public class ChessGame {
         blackPlayer.addGame(this);
     }
 
-    public static ChessGame of(
+    public static ChessGame standard(
             UUID chessGameId,
-            UserAccount whitePlayer,
-            UserAccount blackPlayer,
+            User whitePlayer,
+            User blackPlayer,
             SessionEvents sessionEvents,
             Time time,
             boolean isCasualGame
@@ -119,8 +119,8 @@ public class ChessGame {
     public static ChessGame byPGN(
             UUID chessGameId,
             String pgn,
-            UserAccount whitePlayer,
-            UserAccount blackPlayer,
+            User whitePlayer,
+            User blackPlayer,
             SessionEvents sessionEvents,
             Time time,
             Boolean isCasualGame) {
@@ -135,8 +135,8 @@ public class ChessGame {
     public static ChessGame byFEN(
             UUID chessGameId,
             String fen,
-            UserAccount whitePlayer,
-            UserAccount blackPlayer,
+            User whitePlayer,
+            User blackPlayer,
             SessionEvents sessionEvents,
             Time time,
             Boolean isCasualGame) {
@@ -150,8 +150,8 @@ public class ChessGame {
 
     public static ChessGame pureChess(
             UUID chessGameId,
-            UserAccount whitePlayer,
-            UserAccount blackPlayer,
+            User whitePlayer,
+            User blackPlayer,
             SessionEvents sessionEvents,
             Time time,
             boolean isCasualGame) {
@@ -166,8 +166,8 @@ public class ChessGame {
     public static ChessGame pureChessByFEN(
             UUID chessGameId,
             String fen,
-            UserAccount whitePlayer,
-            UserAccount blackPlayer,
+            User whitePlayer,
+            User blackPlayer,
             SessionEvents sessionEvents,
             Time time,
             boolean isCasualGame) {
@@ -182,8 +182,8 @@ public class ChessGame {
     private static ChessGame chessGameInit(
             UUID chessGameId,
             ChessBoard chessBoard,
-            UserAccount whitePlayer,
-            UserAccount blackPlayer,
+            User whitePlayer,
+            User blackPlayer,
             Rating whiteRating,
             Rating blackRating,
             SessionEvents sessionEvents,
@@ -204,16 +204,16 @@ public class ChessGame {
         );
     }
 
-    private static Rating getRating(UserAccount user, Time time) {
+    private static Rating getRating(User user, Time time) {
         return switch (time) {
-            case DEFAULT, CLASSIC -> user.getRating();
-            case BULLET -> user.getBulletRating();
-            case BLITZ -> user.getBlitzRating();
-            case RAPID -> user.getRapidRating();
+            case DEFAULT, CLASSIC -> user.rating();
+            case BULLET -> user.bulletRating();
+            case BLITZ -> user.blitzRating();
+            case RAPID -> user.rapidRating();
         };
     }
 
-    public UUID getChessGameId() {
+    public UUID chessGameID() {
         return chessGameId;
     }
 
@@ -245,31 +245,31 @@ public class ChessGame {
         return chessBoard.ID();
     }
 
-    public UserAccount getWhitePlayer() {
+    public User whitePlayer() {
         return whitePlayer;
     }
 
-    public UserAccount getBlackPlayer() {
+    public User blackPlayer() {
         return blackPlayer;
     }
 
-    public Rating getWhiteRating() {
+    public Rating whiteRating() {
         return whiteRating;
     }
 
-    public Rating getBlackRating() {
+    public Rating blackRating() {
         return blackRating;
     }
 
-    public SessionEvents getSessionEvents() {
+    public SessionEvents sessionEvents() {
         return sessionEvents;
     }
 
-    public Time getTime() {
+    public Time time() {
         return time;
     }
 
-    public Color getPlayersTurn() {
+    public Color playersTurn() {
         return playersTurn;
     }
 
@@ -314,7 +314,7 @@ public class ChessGame {
     }
 
     public boolean isPlayer(Username username) {
-        return username.username().equals(whitePlayer.getUsername()) || username.username().equals(blackPlayer.getUsername());
+        return username.username().equals(whitePlayer.username()) || username.username().equals(blackPlayer.username());
     }
 
     public GameResultMessage doMove(
@@ -416,7 +416,7 @@ public class ChessGame {
         if (isGameOver.status()) throw new IllegalArgumentException("Game is over.");
 
         if (attemptToFinalizeAgreement(color)) {
-            this.agreementPair = new AgreementPair(whitePlayer.getUsername(), blackPlayer.getUsername());
+            this.agreementPair = new AgreementPair(whitePlayer.username(), blackPlayer.username());
             gameOver(Operations.STALEMATE);
             return;
         }
@@ -428,7 +428,7 @@ public class ChessGame {
         if (!isPlayer(username)) return;
         if (nonNull(afkTimer)) return;
 
-        Color color = username.username().equals(whitePlayer.getUsername()) ? WHITE : BLACK;
+        Color color = username.username().equals(whitePlayer.username()) ? WHITE : BLACK;
 
         if (color == WHITE) {
             this.afkTimer = new ChessCountdownTimer(this, "AFK White timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
@@ -502,13 +502,13 @@ public class ChessGame {
     }
 
     private Color validateUsername(final String username) {
-        final boolean isWhitePlayer = username.equals(whitePlayer.getUsername());
-        final boolean isBlackPlayer = username.equals(blackPlayer.getUsername());
+        final boolean isWhitePlayer = username.equals(whitePlayer.username());
+        final boolean isBlackPlayer = username.equals(blackPlayer.username());
 
         if (!isWhitePlayer && !isBlackPlayer) throw new IllegalArgumentException("Not a player: " + username);
         if (nonNull(afkTimer)) {
-            final boolean illegalAccess = (isWhitePlayer && afkTimer.getName().equals("AFK White timer")) ||
-                    (isBlackPlayer && afkTimer.getName().equals("AFK Black timer"));
+            final boolean illegalAccess = (isWhitePlayer && afkTimer.name().equals("AFK White timer")) ||
+                    (isBlackPlayer && afkTimer.name().equals("AFK Black timer"));
 
             if (illegalAccess)
                 throw new IllegalStateException("A player cannot make a move without being at the board: " + username);
@@ -583,8 +583,8 @@ public class ChessGame {
                     Is game over : %s, reason : %s
                 }
                 """,
-                this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer.getUsername(),
-                this.blackPlayer.getUsername(), this.whiteRating.rating(), this.blackRating.rating(),
+                this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer.username(),
+                this.blackPlayer.username(), this.whiteRating.rating(), this.blackRating.rating(),
                 this.sessionEvents.creationDate().toString(), this.sessionEvents.lastUpdateDate().toString(),
                 this.time.toString(), this.isCasualGame, isGameOver.status(),
                 isGameOver.status() ? isGameOver.orElseThrow().toString() : "game is not over."

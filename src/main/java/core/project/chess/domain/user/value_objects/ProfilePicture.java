@@ -1,7 +1,7 @@
 package core.project.chess.domain.user.value_objects;
 
 import core.project.chess.domain.commons.containers.StatusPair;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.util.PictureUtility;
 import io.quarkus.logging.Log;
 
@@ -22,11 +22,11 @@ public final class ProfilePicture {
         this.imageType = imageType;
     }
 
-    public static ProfilePicture of(byte[] profilePicture, UserAccount userAccount) {
+    public static ProfilePicture of(byte[] profilePicture, User user) {
         Objects.requireNonNull(profilePicture, "Profile picture cannot be null");
-        Objects.requireNonNull(userAccount, "User account cannot be null");
+        Objects.requireNonNull(user, "User account cannot be null");
 
-        String path = profilePicturePath(userAccount.getId().toString());
+        String path = profilePicturePath(user.id().toString());
         StatusPair<String> typeOfImage = validate(path, profilePicture);
 
         if (!typeOfImage.status()) {

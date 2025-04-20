@@ -15,7 +15,7 @@ import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.commons.tuples.Triple;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.clients.PuzzlerClient;
@@ -73,7 +73,7 @@ public class ChessGameService {
 
     public void onOpen(Session session, Username username) {
         CompletableFuture.runAsync(() -> {
-            Result<UserAccount, Throwable> result = outboundUserRepository.findByUsername(username.username());
+            Result<User, Throwable> result = outboundUserRepository.findByUsername(username.username());
             if (!result.success()) {
                 closeSession(session, Message.error("This account is do not founded."));
                 return;
@@ -171,12 +171,12 @@ public class ChessGameService {
             return;
         }
 
-        sessionStorage.getGameSessions(chessGame.getChessGameId())
+        sessionStorage.getGameSessions(chessGame.chessGameID())
                 .forEach(gameSession -> sendMessage(gameSession, resultMessage));
     }
 
     private void handlePuzzleAction(Session session, Username username, Message message) {
-        UserAccount user = sessionStorage.getSessionByUsername(username.username()).orElseThrow().getSecond();
+        User user = sessionStorage.getSessionByUsername(username.username()).orElseThrow().getSecond();
 
         if (message.type().equals(MessageType.PUZZLE)) {
             sendMessage(session, puzzleService.chessPuzzle(user));
@@ -194,7 +194,8 @@ public class ChessGameService {
             return;
         }
 
-        Message response = puzzleService.puzzleMove(user, idResult.orElseThrow(), message.from(), message.to(), message.inCaseOfPromotion());
+        Message response = puzzleService.puzzleMove(user, idResult.orElseThrow(),
+                message.from(), message.to(), message.inCaseOfPromotion());
         sendMessage(session, response);
     }
 
@@ -255,7 +256,7 @@ public class ChessGameService {
                     .message("Player %s returned to the game".formatted(username.username()))
                     .build();
 
-            for (Session gameSession : sessionStorage.getGameSessions(game.getChessGameId())) {
+            for (Session gameSession : sessionStorage.getGameSessions(game.chessGameID())) {
                 sendMessage(gameSession, message);
             }
         }
@@ -264,11 +265,11 @@ public class ChessGameService {
     }
 
     private void startNewGame(Session session, Username username, GameParameters gameParameters) {
-        final UserAccount firstPlayer = outboundUserRepository.findByUsername(username.username()).orElseThrow();
+        final User firstPlayer = outboundUserRepository.findByUsername(username.username()).orElseThrow();
 
         sendMessage(session, Message.userInfo("Finding opponent..."));
 
-        final StatusPair<Triple<Session, UserAccount, GameParameters>> potentialOpponent = locateOpponentForGame(firstPlayer, gameParameters);
+        final var potentialOpponent = locateOpponentForGame(firstPlayer, gameParameters);
         if (!potentialOpponent.status()) {
             sessionStorage.addWaitingUser(session, firstPlayer, gameParameters);
 
@@ -277,10 +278,10 @@ public class ChessGameService {
             return;
         }
 
-        final Triple<Session, UserAccount, GameParameters> opponentData = potentialOpponent.orElseThrow();
-        final UserAccount secondPlayer = opponentData.getSecond();
+        final Triple<Session, User, GameParameters> opponentData = potentialOpponent.orElseThrow();
+        final User secondPlayer = opponentData.getSecond();
 
-        sessionStorage.removeWaitingUser(secondPlayer.getUsername());
+        sessionStorage.removeWaitingUser(secondPlayer.username());
 
         startStandardChessGame(
                 Triple.of(session, firstPlayer, gameParameters), opponentData, false
@@ -291,12 +292,14 @@ public class ChessGameService {
         sessionStorage.removeWaitingUser(username.username());
     }
 
-    private StatusPair<Triple<Session, UserAccount, GameParameters>> locateOpponentForGame(final UserAccount firstPlayer,
-                                                                                           final GameParameters gameParameters) {
+    private StatusPair<Triple<Session, User, GameParameters>> locateOpponentForGame(
+            final User firstPlayer,
+            final GameParameters gameParameters) {
+
         for (var entry : sessionStorage.waitingUsers()) {
-            final Deque<Triple<Session, UserAccount, GameParameters>> queue = entry.getValue();
+            final Deque<Triple<Session, User, GameParameters>> queue = entry.getValue();
             for (var opponentTriple : queue) {
-                final UserAccount potentialOpponent = opponentTriple.getSecond();
+                final User potentialOpponent = opponentTriple.getSecond();
                 final GameParameters gameParametersOfPotentialOpponent = opponentTriple.getThird();
 
                 final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer,
@@ -315,7 +318,8 @@ public class ChessGameService {
         return StatusPair.ofFalse();
     }
 
-    private void handlePartnershipGameRequest(Session session, Username addresserUsername, GameParameters gameParameters, Message message) {
+    private void handlePartnershipGameRequest(Session session, Username addresserUsername,
+                                              GameParameters gameParameters, Message message) {
         final Result<Username, IllegalArgumentException> partnerUsername = message.partnerUsername();
         if (!partnerUsername.success()) {
             String errorMessage = "Invalid username for partner.%s".formatted(partnerUsername.throwable().getMessage());
@@ -329,13 +333,13 @@ public class ChessGameService {
             return;
         }
 
-        final UserAccount addresserAccount = outboundUserRepository.findByUsername(addresserUsername.username()).orElseThrow();
+        final User addresserAccount = outboundUserRepository.findByUsername(addresserUsername.username()).orElseThrow();
 
-        final Optional<Pair<Session, UserAccount>> optionalSession = sessionStorage.getSessionByUsername(addresseeUsername.username());
-        final UserAccount addresseeAccount = optionalSession.map(Pair::getSecond)
+        final Optional<Pair<Session, User>> optionalSession = sessionStorage.getSessionByUsername(addresseeUsername.username());
+        final User addresseeAccount = optionalSession.map(Pair::getSecond)
                 .orElseGet(() -> outboundUserRepository.findByUsername(addresseeUsername.username()).orElseThrow());
 
-        final String addressee = addresseeAccount.getUsername();
+        final String addressee = addresseeAccount.username();
 
         final boolean isHavePartnership = outboundUserRepository.havePartnership(addresseeAccount, addresserAccount);
         Log.info("Is partnership for chess game exists: %s.".formatted(isHavePartnership));
@@ -379,7 +383,7 @@ public class ChessGameService {
         }
     }
 
-    private void handlePartnershipGameRespond(Session session, UserAccount addresserAccount, UserAccount addresseeAccount,
+    private void handlePartnershipGameRespond(Session session, User addresserAccount, User addresseeAccount,
                                               GameParameters addresserGameParameters, boolean isAddresseeActive) {
         if (!isAddresseeActive) {
             cancelRequests(addresserAccount, addresseeAccount);
@@ -390,8 +394,8 @@ public class ChessGameService {
             ));
         }
 
-        String addresserUsername = addresserAccount.getUsername();
-        String addresseeUsername = addresseeAccount.getUsername();
+        String addresserUsername = addresserAccount.username();
+        String addresseeUsername = addresseeAccount.username();
 
         Map<String, GameParameters> partnershipGameRequests = partnershipGameCacheService.getAll(addresserUsername);
         if (!partnershipGameRequests.containsKey(addresseeUsername)) {
@@ -411,7 +415,7 @@ public class ChessGameService {
 
         cancelRequests(addresserAccount, addresseeAccount);
 
-        Optional<Pair<Session, UserAccount>> addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.getUsername());
+        Optional<Pair<Session, User>> addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.username());
         if (addresseeSession.isEmpty()) {
             cancelRequests(addresserAccount, addresseeAccount);
             sendMessage(session, Message.error("""
@@ -446,20 +450,20 @@ public class ChessGameService {
         sendMessage(sessionStorage.getSessionByUsername(addresseeUsername.username()).orElseThrow().getFirst(), message);
     }
 
-    private void cancelRequests(UserAccount firstPlayer, UserAccount secondPlayer) {
-        partnershipGameCacheService.delete(firstPlayer.getUsername(), secondPlayer.getUsername());
-        partnershipGameCacheService.delete(secondPlayer.getUsername(), firstPlayer.getUsername());
+    private void cancelRequests(User firstPlayer, User secondPlayer) {
+        partnershipGameCacheService.delete(firstPlayer.username(), secondPlayer.username());
+        partnershipGameCacheService.delete(secondPlayer.username(), firstPlayer.username());
     }
 
-    private void startStandardChessGame(Triple<Session, UserAccount, GameParameters> firstPlayerData,
-                                        Triple<Session, UserAccount, GameParameters> secondPlayerData,
+    private void startStandardChessGame(Triple<Session, User, GameParameters> firstPlayerData,
+                                        Triple<Session, User, GameParameters> secondPlayerData,
                                         final boolean isPartnershipGame) {
         Session firstSession = firstPlayerData.getFirst();
-        UserAccount firstPlayer = firstPlayerData.getSecond();
+        User firstPlayer = firstPlayerData.getSecond();
         GameParameters firstGameParameters = firstPlayerData.getThird();
 
         Session secondSession = secondPlayerData.getFirst();
-        UserAccount secondPlayer = secondPlayerData.getSecond();
+        User secondPlayer = secondPlayerData.getSecond();
         GameParameters secondGameParameters = secondPlayerData.getThird();
 
         ChessGame chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
@@ -487,31 +491,30 @@ public class ChessGameService {
         sendGameStartNotifications(firstSession, chessGame);
         sendGameStartNotifications(secondSession, chessGame);
 
-        String gameId = chessGame.getChessGameId().toString();
+        String gameId = chessGame.chessGameID().toString();
         updateSessionGameIds(firstSession, gameId);
         updateSessionGameIds(secondSession, gameId);
     }
 
     @SuppressWarnings("User properties is always a list of strings.")
     private void updateSessionGameIds(Session session, String gameId) {
-        final List<String> gameIds = (List<String>) session.getUserProperties().computeIfAbsent("game-id", key -> new ArrayList<>());
-        if (!gameIds.contains(gameId)) {
-            gameIds.add(gameId);
-        }
+        final List<String> gameIds = (List<String>) session.getUserProperties()
+                .computeIfAbsent("game-id", key -> new ArrayList<>());
+        if (!gameIds.contains(gameId)) gameIds.add(gameId);
     }
 
     private void sendGameStartNotifications(Session session, ChessGame chessGame) {
         final Message overviewMessage = Message.builder(MessageType.GAME_START_INFO)
-                .gameID(chessGame.getChessGameId().toString())
-                .whitePlayerUsername(chessGame.getWhitePlayer().getUsername())
-                .blackPlayerUsername(chessGame.getBlackPlayer().getUsername())
-                .whitePlayerRating(chessGame.getWhiteRating().rating())
-                .blackPlayerRating(chessGame.getBlackRating().rating())
-                .time(chessGame.getTime())
+                .gameID(chessGame.chessGameID().toString())
+                .whitePlayerUsername(chessGame.whitePlayer().username())
+                .blackPlayerUsername(chessGame.blackPlayer().username())
+                .whitePlayerRating(chessGame.whiteRating().rating())
+                .blackPlayerRating(chessGame.blackRating().rating())
+                .time(chessGame.time())
                 .build();
 
         final Message message = Message.builder(MessageType.FEN_PGN)
-                .gameID(chessGame.getChessGameId().toString())
+                .gameID(chessGame.chessGameID().toString())
                 .FEN(chessGame.fen())
                 .PGN(chessGame.pgn())
                 .build();
@@ -547,7 +550,8 @@ public class ChessGameService {
             }
 
             final Set<Session> sessionHashSet = sessionStorage.getGameSessions(gameUuid);
-            final String messageInCaseOfGameEnding = "Game ended. Because of %s".formatted(chessGame.orElseThrow().gameResult().orElseThrow().toString());
+            final String messageInCaseOfGameEnding = "Game ended. Because of %s"
+                    .formatted(chessGame.orElseThrow().gameResult().orElseThrow().toString());
             closeSession(session, Message.info(messageInCaseOfGameEnding));
 
             sessionHashSet.remove(session);
@@ -562,7 +566,7 @@ public class ChessGameService {
     private void handleAFK(Username username, ChessGame chessGame, UUID gameUuid) {
         chessGame.awayFromTheBoard(username);
         Message message = Message.builder(MessageType.INFO)
-                .gameID(chessGame.getChessGameId().toString())
+                .gameID(chessGame.chessGameID().toString())
                 .message("Player %s is AFK.".formatted(username.username()))
                 .build();
 
@@ -592,14 +596,14 @@ public class ChessGameService {
                 game.gameResult().ifPresent(gameResult -> {
                     String message = "Game is over by result {%s}".formatted(gameResult);
                     Log.info(message);
-                    Log.debugf("Removing game {%s}", game.getChessGameId());
-                    for (Session session : sessionStorage.getGameSessions(game.getChessGameId())) {
+                    Log.debugf("Removing game {%s}", game.chessGameID());
+                    for (Session session : sessionStorage.getGameSessions(game.chessGameID())) {
                         sendMessage(session, Message.builder(MessageType.GAME_ENDED)
                                 .message(message)
-                                .gameID(game.getChessGameId().toString())
+                                .gameID(game.chessGameID().toString())
                                 .build());
                     }
-                    sessionStorage.removeGame(game.getChessGameId());
+                    sessionStorage.removeGame(game.chessGameID());
 
                     CompletableFuture.runAsync(() -> {
                         gameFunctionalityService.executeGameOverOperations(game);

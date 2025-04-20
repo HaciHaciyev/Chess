@@ -10,7 +10,7 @@ import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.PersonalData;
 import io.quarkus.logging.Log;
 import org.jetbrains.annotations.NotNull;
@@ -213,8 +213,8 @@ class ParallelPerft {
                 false);
     }
 
-    static Supplier<UserAccount> userAccountSupplier(String username, String email) {
-        return () -> UserAccount.of(new PersonalData(
+    static Supplier<User> userAccountSupplier(String username, String email) {
+        return () -> User.of(new PersonalData(
                 "generateFirstname",
                 "generateSurname",
                 username,
@@ -323,10 +323,10 @@ class ParallelPerft {
         }
 
         private String determineActivePlayer(ChessGame game) {
-            var whitePlayer = game.getWhitePlayer().getUsername();
-            var blackPlayer = game.getBlackPlayer().getUsername();
+            var whitePlayer = game.whitePlayer().username();
+            var blackPlayer = game.blackPlayer().username();
 
-            return game.getPlayersTurn().equals(Color.WHITE) ? whitePlayer : blackPlayer;
+            return game.playersTurn().equals(Color.WHITE) ? whitePlayer : blackPlayer;
         }
 
         private void shutdownExecutor() {

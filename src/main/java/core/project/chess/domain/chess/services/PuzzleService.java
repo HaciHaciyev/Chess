@@ -8,7 +8,7 @@ import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -34,8 +34,8 @@ public class PuzzleService {
         this.inboundChessRepository = inboundChessRepository;
     }
 
-    public Message chessPuzzle(UserAccount user) {
-        var puzzleProperties = outboundChessRepository.puzzle(user.getRating().rating()).orElseThrow();
+    public Message chessPuzzle(User user) {
+        var puzzleProperties = outboundChessRepository.puzzle(user.rating().rating()).orElseThrow();
         Puzzle puzzle = Puzzle.fromRepository(
                 puzzleProperties.puzzleId(),
                 user, puzzleProperties.PGN(),
@@ -52,8 +52,8 @@ public class PuzzleService {
                 .build();
     }
 
-    public Message puzzleMove(UserAccount user, UUID puzzleID, Coordinate from, Coordinate to, @Nullable String promotion) {
-        Optional<Puzzle> puzzleOptional = sessionStorage.getPuzzle(user.getUsername(), puzzleID);
+    public Message puzzleMove(User user, UUID puzzleID, Coordinate from, Coordinate to, @Nullable String promotion) {
+        Optional<Puzzle> puzzleOptional = sessionStorage.getPuzzle(user.username(), puzzleID);
         if (puzzleOptional.isEmpty()) {
             return Message.error("This puzzle session do not exists.");
         }

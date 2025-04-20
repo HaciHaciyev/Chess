@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.security;
 
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
@@ -23,22 +23,22 @@ public class JwtUtility {
         this.jwtParser = jwtParser;
     }
 
-    public String generateToken(UserAccount userAccount) {
+    public String generateToken(User user) {
         Duration expiration = Duration.ofDays(1).plusSeconds(1);
 
         return Jwt.issuer("Chessland")
-                .upn(userAccount.getUsername())
-                .groups(userAccount.getUserRole().getUserRole())
+                .upn(user.username())
+                .groups(user.userRole().getUserRole())
                 .expiresIn(expiration)
                 .sign();
     }
 
-    public String refreshToken(UserAccount userAccount) {
+    public String refreshToken(User user) {
         Duration year = Duration.ofDays(365);
 
         return Jwt.issuer("Chessland")
-                .upn(userAccount.getUsername())
-                .groups(userAccount.getUserRole().getUserRole())
+                .upn(user.username())
+                .groups(user.userRole().getUserRole())
                 .expiresIn(year)
                 .sign();
     }

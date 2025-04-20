@@ -6,7 +6,7 @@ import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.UUID;
@@ -15,9 +15,9 @@ import java.util.UUID;
 public class ChessGameFactory {
 
     public ChessGame createChessGameInstance(
-            final UserAccount firstPlayer,
+            final User firstPlayer,
             final GameParameters gameParameters,
-            final UserAccount secondPlayer,
+            final User secondPlayer,
             final GameParameters secondGameParameters,
             final boolean isPartnershipGame) {
 
@@ -48,14 +48,14 @@ public class ChessGameFactory {
 
     private ChessGame standardChessGame(
             ChessGame.Time time,
-            UserAccount firstPlayer,
-            UserAccount secondPlayer,
+            User firstPlayer,
+            User secondPlayer,
             boolean firstPlayerIsWhite,
             boolean secondPlayerIsBlack,
             boolean isCasualGame) {
 
         if (firstPlayerIsWhite && secondPlayerIsBlack)
-            return ChessGame.of(
+            return ChessGame.standard(
                     UUID.randomUUID(),
                     firstPlayer,
                     secondPlayer,
@@ -64,7 +64,7 @@ public class ChessGameFactory {
                     isCasualGame
             );
 
-        return ChessGame.of(
+        return ChessGame.standard(
                 UUID.randomUUID(),
                 secondPlayer,
                 firstPlayer,
@@ -76,8 +76,8 @@ public class ChessGameFactory {
 
     private ChessGame chessGameByPGN(
             ChessGame.Time time,
-            UserAccount firstPlayer,
-            UserAccount secondPlayer,
+            User firstPlayer,
+            User secondPlayer,
             boolean firstPlayerIsWhite,
             boolean secondPlayerIsBlack,
             Boolean isCasualGame,
@@ -107,8 +107,8 @@ public class ChessGameFactory {
 
     private ChessGame chessGameByFEN(
             ChessGame.Time time,
-            UserAccount firstPlayer,
-            UserAccount secondPlayer,
+            User firstPlayer,
+            User secondPlayer,
             boolean firstPlayerIsWhite,
             boolean secondPlayerIsBlack,
             Boolean isCasualGame,

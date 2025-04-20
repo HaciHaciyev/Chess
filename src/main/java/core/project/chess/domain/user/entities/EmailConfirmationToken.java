@@ -12,48 +12,49 @@ public class EmailConfirmationToken {
     private final Token token;
     private final TokenEvents tokenEvents;
     private boolean isConfirmed;
-    private final /**@OneToOne*/ UserAccount userAccount;
+    private final /**@OneToOne*/
+            User user;
 
     private EmailConfirmationToken(
             UUID tokenId,
             Token token,
             TokenEvents tokenEvents,
             boolean isConfirmed,
-            UserAccount userAccount) {
+            User user) {
 
         Objects.requireNonNull(tokenId);
         Objects.requireNonNull(token);
         Objects.requireNonNull(tokenEvents);
-        Objects.requireNonNull(userAccount);
+        Objects.requireNonNull(user);
 
         this.tokenId = tokenId;
         this.token = token;
         this.tokenEvents = tokenEvents;
         this.isConfirmed = isConfirmed;
-        this.userAccount = userAccount;
+        this.user = user;
     }
 
-    public static EmailConfirmationToken createToken(final UserAccount userAccount) {
+    public static EmailConfirmationToken createToken(final User user) {
         return new EmailConfirmationToken(
-                UUID.randomUUID(), Token.createToken(), new TokenEvents(LocalDateTime.now()), false, userAccount
+                UUID.randomUUID(), Token.createToken(), new TokenEvents(LocalDateTime.now()), false, user
         );
     }
 
     public static EmailConfirmationToken fromRepository(
-            UUID tokenId, Token token, TokenEvents tokenEvents, Boolean isConfirmed, UserAccount userAccount
+            UUID tokenId, Token token, TokenEvents tokenEvents, Boolean isConfirmed, User user
     ) {
-        return new EmailConfirmationToken(tokenId, token, tokenEvents, isConfirmed, userAccount);
+        return new EmailConfirmationToken(tokenId, token, tokenEvents, isConfirmed, user);
     }
 
-    public UUID getTokenId() {
+    public UUID tokenID() {
         return tokenId;
     }
 
-    public Token getToken() {
+    public Token token() {
         return token;
     }
 
-    public TokenEvents getTokenEvents() {
+    public TokenEvents tokenEvents() {
         return tokenEvents;
     }
 
@@ -61,8 +62,8 @@ public class EmailConfirmationToken {
         return isConfirmed;
     }
 
-    public UserAccount getUserAccount() {
-        return userAccount;
+    public User user() {
+        return user;
     }
 
     public boolean isExpired() {

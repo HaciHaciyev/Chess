@@ -15,27 +15,27 @@ import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 import static core.project.chess.domain.chess.enumerations.GameResult.WHITE_WIN;
 
-public class UserAccount {
+public class User {
     private final UUID id;
     private final PersonalData personalData;
     private UserRole userRole;
     private boolean isEnable;
     private Ratings ratings;
     private final AccountEvents accountEvents;
-    private final @Nullable Set<UserAccount> partners;
-    private final @Nullable Set<ChessGame> games;
-    private final @Nullable Set<Puzzle> puzzles;
-    private @Nullable ProfilePicture profilePicture;
+    private final Set<User> partners;
+    private final Set<ChessGame> games;
+    private final Set<Puzzle> puzzles;
+    private ProfilePicture profilePicture;
 
-    private UserAccount(UUID id,
-                        PersonalData personalData,
-                        UserRole userRole,
-                        boolean isEnable, Ratings ratings,
-                        AccountEvents accountEvents,
-                        @Nullable Set<UserAccount> partners,
-                        @Nullable Set<ChessGame> games,
-                        @Nullable Set<Puzzle> puzzles,
-                        @Nullable ProfilePicture profilePicture) {
+    private User(UUID id,
+                 PersonalData personalData,
+                 UserRole userRole,
+                 boolean isEnable, Ratings ratings,
+                 AccountEvents accountEvents,
+                 @Nullable Set<User> partners,
+                 @Nullable Set<ChessGame> games,
+                 @Nullable Set<Puzzle> puzzles,
+                 @Nullable ProfilePicture profilePicture) {
         this.id = id;
         this.personalData = personalData;
         this.userRole = userRole;
@@ -48,10 +48,10 @@ public class UserAccount {
         this.profilePicture = profilePicture;
     }
 
-    public static UserAccount of(PersonalData personalData) {
+    public static User of(PersonalData personalData) {
         if (personalData == null) throw new IllegalArgumentException("UserProfile cannot be null");
 
-        return new UserAccount(
+        return new User(
                 UUID.randomUUID(), personalData, UserRole.NONE, false, Ratings.defaultRatings(),
                 AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(), null
         );
@@ -60,45 +60,46 @@ public class UserAccount {
     /**
      * this method is used to call only from repository
      */
-    public static UserAccount fromRepository(UUID id,
-                                             PersonalData personalData,
-                                             UserRole userRole,
-                                             boolean enabled,
-                                             Ratings ratings,
-                                             AccountEvents events) {
+    public static User fromRepository(UUID id,
+                                      PersonalData personalData,
+                                      UserRole userRole,
+                                      boolean enabled,
+                                      Ratings ratings,
+                                      AccountEvents events) {
         if (id == null || personalData == null || userRole == null || ratings == null || events == null)
             throw new IllegalArgumentException("Values cannot be null");
 
-        return new UserAccount(
-                id, personalData, userRole, enabled, ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(), null
+        return new User(
+                id, personalData, userRole, enabled, ratings, events,
+                new HashSet<>(), new HashSet<>(), new HashSet<>(), null
         );
     }
 
-    public UUID getId() {
+    public UUID id() {
         return id;
     }
 
-    public String getFirstname() {
+    public String firstname() {
         return personalData.firstname();
     }
 
-    public String getSurname() {
+    public String surname() {
         return personalData.surname();
     }
 
-    public String getUsername() {
+    public String username() {
         return personalData.username();
     }
 
-    public String getEmail() {
+    public String email() {
         return personalData.email();
     }
 
-    public String getPassword() {
+    public String password() {
         return personalData.password();
     }
 
-    public UserRole getUserRole() {
+    public UserRole userRole() {
         return userRole;
     }
 
@@ -106,21 +107,25 @@ public class UserAccount {
         return isEnable;
     }
 
-    public AccountEvents getAccountEvents() {
+    public AccountEvents accountEvents() {
         return accountEvents;
     }
 
     @Nullable
-    public Set<ChessGame> getGames() {
+    public Set<ChessGame> games() {
         return games;
     }
 
     @Nullable
-    public Set<Puzzle> getPuzzles() {
+    public Set<Puzzle> puzzles() {
         return puzzles;
     }
 
-    public Optional<ProfilePicture> getProfilePicture() {
+    public Set<User> partners() {
+        return new HashSet<>(partners);
+    }
+
+    public Optional<ProfilePicture> profilePicture() {
         return Optional.ofNullable(profilePicture);
     }
 
@@ -128,28 +133,24 @@ public class UserAccount {
         return isEnable;
     }
 
-    public Rating getRating() {
+    public Rating rating() {
         return ratings.rating();
     }
 
-    public Rating getBulletRating() {
+    public Rating bulletRating() {
         return ratings.bulletRating();
     }
 
-    public Rating getBlitzRating() {
+    public Rating blitzRating() {
         return ratings.blitzRating();
     }
 
-    public Rating getRapidRating() {
+    public Rating rapidRating() {
         return ratings.rapidRating();
     }
 
-    public Rating getPuzzlesRating() {
+    public Rating puzzlesRating() {
         return ratings.puzzlesRating();
-    }
-
-    public Set<UserAccount> getPartners() {
-        return new HashSet<>(partners);
     }
 
     public void addGame(final ChessGame game) {
@@ -158,7 +159,7 @@ public class UserAccount {
     }
 
     public void addPuzzle(final Puzzle puzzle) {
-        final boolean doNotMatch = !puzzle.player().getId().equals(this.id);
+        final boolean doNotMatch = !puzzle.player().id().equals(this.id);
         if (doNotMatch) {
             throw new IllegalArgumentException("Puzzle does not belong to this user");
         }
@@ -180,10 +181,10 @@ public class UserAccount {
         }
 
         final Color color;
-        if (chessGame.getWhitePlayer().getId().equals(this.id)) {
+        if (chessGame.whitePlayer().id().equals(this.id)) {
             color = WHITE;
         }
-        else if (chessGame.getBlackPlayer().getId().equals(this.id)) {
+        else if (chessGame.blackPlayer().id().equals(this.id)) {
             color = Color.BLACK;
         }
         else {
@@ -191,26 +192,26 @@ public class UserAccount {
         }
 
         final double result = getResult(chessGame.gameResult().get(), color);
-        final UserAccount opponent =  color.equals(WHITE) ? chessGame.getBlackPlayer() : chessGame.getWhitePlayer();
+        final User opponent =  color.equals(WHITE) ? chessGame.blackPlayer() : chessGame.whitePlayer();
 
-        switch (chessGame.getTime()) {
+        switch (chessGame.time()) {
             case DEFAULT, CLASSIC -> {
-                Rating newRating = Glicko2RatingCalculator.calculate(this.ratings.rating(), opponent.getRating(), result);
+                Rating newRating = Glicko2RatingCalculator.calculate(this.ratings.rating(), opponent.rating(), result);
                 this.ratings = Ratings.newRating(this.ratings, newRating);
             }
 
             case BULLET -> {
-                Rating newBulletRating = Glicko2RatingCalculator.calculate(this.ratings.bulletRating(), opponent.getBulletRating(), result);
+                Rating newBulletRating = Glicko2RatingCalculator.calculate(this.ratings.bulletRating(), opponent.bulletRating(), result);
                 this.ratings = Ratings.newBulletRating(this.ratings, newBulletRating);
             }
 
             case BLITZ -> {
-                Rating newBlitzRating = Glicko2RatingCalculator.calculate(this.ratings.blitzRating(), opponent.getBlitzRating(), result);
+                Rating newBlitzRating = Glicko2RatingCalculator.calculate(this.ratings.blitzRating(), opponent.blitzRating(), result);
                 this.ratings = Ratings.newBlitzRating(this.ratings, newBlitzRating);
             }
 
             case RAPID -> {
-                Rating newRapidRating = Glicko2RatingCalculator.calculate(this.ratings.rapidRating(), opponent.getRapidRating(), result);
+                Rating newRapidRating = Glicko2RatingCalculator.calculate(this.ratings.rapidRating(), opponent.rapidRating(), result);
                 this.ratings = Ratings.newRapidRating(this.ratings, newRapidRating);
             }
         }
@@ -222,7 +223,7 @@ public class UserAccount {
             throw new IllegalArgumentException("Puzzle is not ended.");
         }
 
-        final boolean doNotMatch = !puzzle.player().getId().equals(this.id);
+        final boolean doNotMatch = !puzzle.player().id().equals(this.id);
         if (doNotMatch) {
             throw new IllegalArgumentException("Puzzle does not belong to this user");
         }
@@ -257,7 +258,7 @@ public class UserAccount {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UserAccount that = (UserAccount) o;
+        User that = (User) o;
         return isEnable == that.isEnable &&
                 Objects.equals(id, that.id) &&
                 Objects.equals(personalData, that.personalData) &&

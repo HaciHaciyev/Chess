@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.dal.files;
 
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -15,9 +15,9 @@ import java.util.Optional;
 @ApplicationScoped
 public class ImageFileRepository {
 
-    public void put(UserAccount userAccount) {
-        final ProfilePicture profilePicture = userAccount.getProfilePicture()
-                .orElseThrow(() -> new NullPointerException("Can`t get profile picture. UserAccount does`t contains profile picture."));
+    public void put(User user) {
+        final ProfilePicture profilePicture = user.profilePicture()
+                .orElseThrow(() -> new NullPointerException("Can`t get profile picture. User does`t contains profile picture."));
         final String path = profilePicture.path();
         final byte[] picture = profilePicture.profilePicture();
 

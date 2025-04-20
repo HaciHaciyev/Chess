@@ -1,7 +1,7 @@
 package core.project.chess.application.service;
 
 import core.project.chess.domain.commons.containers.Result;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
 import core.project.chess.infrastructure.dal.files.ImageFileRepository;
@@ -24,7 +24,7 @@ public class ProfileService {
     }
 
     public void putProfilePicture(byte[] picture, String username) {
-        final UserAccount userAccount = outboundUserRepository
+        final User user = outboundUserRepository
                 .findByUsername(username)
                 .orElseThrow(() -> {
                     Log.error("User not found");
@@ -32,7 +32,7 @@ public class ProfileService {
                 });
 
         final ProfilePicture profilePicture = Result
-                .ofThrowable(() -> ProfilePicture.of(picture, userAccount))
+                .ofThrowable(() -> ProfilePicture.of(picture, user))
                 .orElseThrow(() -> {
                     String errorMessage = "Invalid image or image size is too big";
                     Log.error(errorMessage);
@@ -40,25 +40,25 @@ public class ProfileService {
                 });
 
         Log.info("Successfully validate image.");
-        userAccount.setProfilePicture(profilePicture);
+        user.setProfilePicture(profilePicture);
 
-        imageFileRepository.put(userAccount);
+        imageFileRepository.put(user);
     }
 
     public ProfilePicture getProfilePicture(String username) {
-        final UserAccount userAccount = outboundUserRepository.findByUsername(username)
+        final User user = outboundUserRepository.findByUsername(username)
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "User not found."));
 
         return imageFileRepository
-                .load(ProfilePicture.profilePicturePath(userAccount.getId().toString()))
+                .load(ProfilePicture.profilePicturePath(user.id().toString()))
                 .orElseGet(ProfilePicture::defaultProfilePicture);
     }
 
     public void deleteProfilePicture(String username) {
-        final UserAccount userAccount = outboundUserRepository.findByUsername(username)
+        final User user = outboundUserRepository.findByUsername(username)
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "User not found."));
 
-        userAccount.deleteProfilePicture();
-        imageFileRepository.delete(ProfilePicture.profilePicturePath(userAccount.getId().toString()));
+        user.deleteProfilePicture();
+        imageFileRepository.delete(ProfilePicture.profilePicturePath(user.id().toString()));
     }
 }

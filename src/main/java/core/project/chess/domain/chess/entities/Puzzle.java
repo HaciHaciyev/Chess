@@ -4,7 +4,7 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
 import core.project.chess.domain.user.value_objects.Rating;
 import jakarta.annotation.Nullable;
@@ -19,7 +19,7 @@ public class Puzzle {
     private Rating rating;
     private final ChessBoard chessBoard;
     private final AlgebraicNotation[] algebraicNotations;
-    private final UserAccount player;
+    private final User player;
     private final String startPositionFEN;
     private final int startPositionIndex;
     private int currentPosition;
@@ -28,7 +28,7 @@ public class Puzzle {
     private boolean isEnded;
 
     private Puzzle(UUID puzzleId, Rating rating, ChessBoard chessBoard,
-                   AlgebraicNotation[] algebraicNotations, UserAccount player, int startPositionIndex) {
+                   AlgebraicNotation[] algebraicNotations, User player, int startPositionIndex) {
         this.puzzleId = puzzleId;
         this.rating = rating;
         this.chessBoard = chessBoard;
@@ -43,44 +43,32 @@ public class Puzzle {
      Only for saving, not for play.
      */
     public static Puzzle of(String pgn, int startPositionOfPuzzle) {
-        if (pgn == null) {
-            throw new IllegalArgumentException("PGN is null. Puzzle requires PGN.");
-        }
-        if (pgn.isBlank()) {
-            throw new IllegalArgumentException("PGN can`t be blank.");
-        }
-        if (startPositionOfPuzzle < 0) {
-            throw new IllegalArgumentException("Position index can`t be lower than 0.");
-        }
+        if (pgn == null) throw new IllegalArgumentException("PGN is null. Puzzle requires PGN.");
+        if (pgn.isBlank()) throw new IllegalArgumentException("PGN can`t be blank.");
+        if (startPositionOfPuzzle < 0) throw new IllegalArgumentException("Position index can`t be lower than 0.");
 
         ChessBoard chessBoard = ChessBoard.fromPGN(pgn);
         AlgebraicNotation[] algebraicNotations = chessBoard.arrayOfAlgebraicNotations();
 
-        if ((algebraicNotations.length - 1) >= startPositionOfPuzzle) {
+        if ((algebraicNotations.length - 1) >= startPositionOfPuzzle)
             throw new IllegalArgumentException("Start position of puzzle can`t be greater or equal than the size of halfmoves.");
-        }
 
         return new Puzzle(UUID.randomUUID(), Rating.defaultRating(), chessBoard, algebraicNotations, null, startPositionOfPuzzle);
     }
 
-    public static Puzzle fromRepository(UUID id, UserAccount userAccount, String pgn, int startPositionOfPuzzle, Rating rating) {
+    public static Puzzle fromRepository(UUID id, User user, String pgn, int startPositionOfPuzzle, Rating rating) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(pgn);
-        Objects.requireNonNull(userAccount);
+        Objects.requireNonNull(user);
         Objects.requireNonNull(rating);
-        if (pgn.isBlank()) {
-            throw new IllegalArgumentException("PGN can`t be blank.");
-        }
-        if (startPositionOfPuzzle < 0) {
-            throw new IllegalArgumentException("Position index can`t be lower than 0.");
-        }
+        if (pgn.isBlank()) throw new IllegalArgumentException("PGN can`t be blank.");
+        if (startPositionOfPuzzle < 0) throw new IllegalArgumentException("Position index can`t be lower than 0.");
 
         ChessBoard chessBoard = ChessBoard.fromPGN(pgn);
         AlgebraicNotation[] algebraicNotations = chessBoard.arrayOfAlgebraicNotations();
 
-        if ((algebraicNotations.length - 1) >= startPositionOfPuzzle) {
+        if ((algebraicNotations.length - 1) >= startPositionOfPuzzle)
             throw new IllegalArgumentException("Start position of puzzle can`t be greater or equal than the size of halfmoves.");
-        }
 
         int requiredMoveReturns = (algebraicNotations.length - 1) - startPositionOfPuzzle;
         while (requiredMoveReturns != 0) {
@@ -88,7 +76,7 @@ public class Puzzle {
             requiredMoveReturns--;
         }
 
-        return new Puzzle(id, rating, chessBoard, algebraicNotations, userAccount, startPositionOfPuzzle);
+        return new Puzzle(id, rating, chessBoard, algebraicNotations, user, startPositionOfPuzzle);
     }
 
     public UUID ID() {
@@ -103,7 +91,7 @@ public class Puzzle {
         return rating;
     }
 
-    public UserAccount player() {
+    public User player() {
         return player;
     }
 
@@ -198,7 +186,7 @@ public class Puzzle {
         this.isSolved = !this.isHadMistake;
 
         final double result = this.isSolved ? -1 : 1;
-        this.rating = Glicko2RatingCalculator.calculate(this.rating, player.getRating(), result);
+        this.rating = Glicko2RatingCalculator.calculate(this.rating, player.rating(), result);
         this.player.changeRating(this);
     }
 
@@ -223,7 +211,7 @@ public class Puzzle {
                 Objects.equals(rating, puzzle.rating) &&
                 chessBoard.equals(puzzle.chessBoard) &&
                 Arrays.equals(algebraicNotations, puzzle.algebraicNotations) &&
-                player.getId().equals(puzzle.player.getId()) &&
+                player.id().equals(puzzle.player.id()) &&
                 Objects.equals(startPositionFEN, puzzle.startPositionFEN);
     }
 

@@ -4,7 +4,7 @@ import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.Email;
 
 import java.util.UUID;
@@ -15,13 +15,13 @@ public interface OutboundUserRepository {
 
     boolean isUsernameExists(String verifiableUsername);
 
-    boolean havePartnership(UserAccount user, UserAccount partner);
+    boolean havePartnership(User user, User partner);
 
-    Result<UserAccount, Throwable> findById(UUID userId);
+    Result<User, Throwable> findById(UUID userId);
 
-    Result<UserAccount, Throwable> findByUsername(String username);
+    Result<User, Throwable> findByUsername(String username);
 
-    Result<UserAccount, Throwable> findByEmail(Email email);
+    Result<User, Throwable> findByEmail(Email email);
 
     Result<EmailConfirmationToken, Throwable> findToken(UUID token);
 

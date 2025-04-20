@@ -11,7 +11,7 @@ import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -38,20 +38,20 @@ public class GameFunctionalityService {
     }
 
     public boolean validateOpponentEligibility(
-            final UserAccount player,
+            final User player,
             final GameParameters gameParameters,
-            final UserAccount opponent,
+            final User opponent,
             final GameParameters opponentGameParameters,
             final boolean isPartnershipGame) {
 
-        final boolean sameUser = player.getId().equals(opponent.getId());
+        final boolean sameUser = player.id().equals(opponent.id());
         if (sameUser) return false;
 
         final boolean sameTimeControlling = gameParameters.time().equals(opponentGameParameters.time());
         if (!sameTimeControlling) return false;
 
         if (!isPartnershipGame) {
-            final boolean validRatingDiff = Math.abs(player.getRating().rating() - opponent.getRating().rating()) <= 1500;
+            final boolean validRatingDiff = Math.abs(player.rating().rating() - opponent.rating().rating()) <= 1500;
             if (!validRatingDiff) return false;
         }
 
@@ -80,13 +80,13 @@ public class GameFunctionalityService {
             return Pair.of(MessageAddressee.ONLY_ADDRESSER,
                     Message.builder(MessageType.ERROR)
                     .message("Invalid chess movement: %s".formatted(e.getMessage()))
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .build()
             );
         }
 
         return Pair.of(MessageAddressee.FOR_ALL, Message.builder(MessageType.FEN_PGN)
-                .gameID(chessGame.getChessGameId().toString())
+                .gameID(chessGame.chessGameID().toString())
                 .FEN(chessGame.fen())
                 .PGN(chessGame.pgn())
                 .timeLeft(remainingTimeAsString(chessGame))
@@ -127,7 +127,7 @@ public class GameFunctionalityService {
             chessGame.addChatMessage(username, chatMsg);
 
             final Message msg = Message.builder(MessageType.MESSAGE)
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .message(chatMsg.message())
                     .build();
 
@@ -135,7 +135,7 @@ public class GameFunctionalityService {
         } catch (IllegalArgumentException | NullPointerException e) {
             Message errorMessage = Message.builder(MessageType.ERROR)
                     .message("Invalid message.")
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .build();
 
             return Pair.of(MessageAddressee.ONLY_ADDRESSER, errorMessage);
@@ -151,7 +151,7 @@ public class GameFunctionalityService {
         } catch (IllegalArgumentException | IllegalStateException e) {
             Message message = Message.builder(MessageType.ERROR)
                     .message("Can`t return a move.")
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .build();
 
             return Pair.of(MessageAddressee.ONLY_ADDRESSER, message);
@@ -160,7 +160,7 @@ public class GameFunctionalityService {
         return switch (undoMoveResult) {
             case SUCCESSFUL_UNDO -> {
                 final Message message = Message.builder(MessageType.FEN_PGN)
-                        .gameID(chessGame.getChessGameId().toString())
+                        .gameID(chessGame.chessGameID().toString())
                         .FEN(chessGame.fen())
                         .PGN(chessGame.pgn())
                         .timeLeft(remainingTimeAsString(chessGame))
@@ -172,7 +172,7 @@ public class GameFunctionalityService {
             case FAILED_UNDO -> {
                 Message message = Message.builder(MessageType.ERROR)
                         .message("Can`t return a move.")
-                        .gameID(chessGame.getChessGameId().toString())
+                        .gameID(chessGame.chessGameID().toString())
                         .build();
 
                 yield Pair.of(MessageAddressee.ONLY_ADDRESSER, message);
@@ -180,7 +180,7 @@ public class GameFunctionalityService {
             case UNDO_REQUESTED -> {
                 Message message = Message.builder(MessageType.RETURN_MOVE)
                         .message("Player {%s} requested for move returning.".formatted(username))
-                        .gameID(chessGame.getChessGameId().toString())
+                        .gameID(chessGame.chessGameID().toString())
                         .build();
 
                 yield Pair.of(MessageAddressee.FOR_ALL, message);
@@ -195,7 +195,7 @@ public class GameFunctionalityService {
             chessGame.resignation(username);
 
             final Message message = Message.builder(MessageType.GAME_ENDED)
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .message("Game is ended by result {%s}".formatted(chessGame.gameResult().orElseThrow().toString()))
                     .build();
 
@@ -203,7 +203,7 @@ public class GameFunctionalityService {
         } catch (IllegalArgumentException e) {
             Message message = Message.builder(MessageType.ERROR)
                     .message("Not a player.")
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .build();
 
             return Pair.of(MessageAddressee.ONLY_ADDRESSER, message);
@@ -218,14 +218,14 @@ public class GameFunctionalityService {
         } catch (IllegalArgumentException | IllegalStateException e) {
             Message message = Message.builder(MessageType.ERROR)
                     .message("Can`t end game by ThreeFold")
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .build();
 
             return Pair.of(MessageAddressee.ONLY_ADDRESSER, message);
         }
 
         final Message message = Message.builder(MessageType.GAME_ENDED)
-                .gameID(chessGame.getChessGameId().toString())
+                .gameID(chessGame.chessGameID().toString())
                 .message("Game is ended by ThreeFold rule, game result is: {%s}".formatted(chessGame.gameResult().orElseThrow().toString()))
                 .build();
 
@@ -240,7 +240,7 @@ public class GameFunctionalityService {
         } catch (IllegalArgumentException | IllegalStateException e) {
             Message message = Message.builder(MessageType.ERROR)
                     .message("Not a player. Illegal access.")
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .build();
 
             return Pair.of(MessageAddressee.ONLY_ADDRESSER, message);
@@ -248,7 +248,7 @@ public class GameFunctionalityService {
 
         if (!chessGame.isAgreementAvailable()) {
             final Message message = Message.builder(MessageType.AGREEMENT)
-                    .gameID(chessGame.getChessGameId().toString())
+                    .gameID(chessGame.chessGameID().toString())
                     .message("Player {%s} requested for agreement.".formatted(username))
                     .build();
 
@@ -256,7 +256,7 @@ public class GameFunctionalityService {
         }
 
         final Message message = Message.builder(MessageType.GAME_ENDED)
-                .gameID(chessGame.getChessGameId().toString())
+                .gameID(chessGame.chessGameID().toString())
                 .message("Game is ended by agreement, game result is {%s}".formatted(chessGame.gameResult().orElseThrow().toString()))
                 .build();
 
@@ -266,30 +266,30 @@ public class GameFunctionalityService {
     public void executeGameOverOperations(final ChessGame chessGame) {
         if (chessGame.gameResult().isEmpty()) throw new IllegalStateException("You can`t save not finished game.");
         if (outboundChessRepository.isChessHistoryPresent(chessGame.historyID())) {
-            Log.infof("History of game %s is already present", chessGame.getChessGameId());
+            Log.infof("History of game %s is already present", chessGame.chessGameID());
             return;
         }
 
-        Log.infof("Saving finished game %s and changing ratings", chessGame.getChessGameId());
+        Log.infof("Saving finished game %s and changing ratings", chessGame.chessGameID());
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
 
         if (chessGame.isCasualGame()) return;
-        switch (chessGame.getTime()) {
+        switch (chessGame.time()) {
             case CLASSIC, DEFAULT -> {
-                inboundUserRepository.updateOfRating(chessGame.getWhitePlayer());
-                inboundUserRepository.updateOfRating(chessGame.getBlackPlayer());
+                inboundUserRepository.updateOfRating(chessGame.whitePlayer());
+                inboundUserRepository.updateOfRating(chessGame.blackPlayer());
             }
             case BULLET -> {
-                inboundUserRepository.updateOfBulletRating(chessGame.getWhitePlayer());
-                inboundUserRepository.updateOfBulletRating(chessGame.getBlackPlayer());
+                inboundUserRepository.updateOfBulletRating(chessGame.whitePlayer());
+                inboundUserRepository.updateOfBulletRating(chessGame.blackPlayer());
             }
             case BLITZ -> {
-                inboundUserRepository.updateOfBlitzRating(chessGame.getWhitePlayer());
-                inboundUserRepository.updateOfBlitzRating(chessGame.getBlackPlayer());
+                inboundUserRepository.updateOfBlitzRating(chessGame.whitePlayer());
+                inboundUserRepository.updateOfBlitzRating(chessGame.blackPlayer());
             }
             case RAPID -> {
-                inboundUserRepository.updateOfRapidRating(chessGame.getWhitePlayer());
-                inboundUserRepository.updateOfRapidRating(chessGame.getBlackPlayer());
+                inboundUserRepository.updateOfRapidRating(chessGame.whitePlayer());
+                inboundUserRepository.updateOfRapidRating(chessGame.blackPlayer());
             }
         }
     }

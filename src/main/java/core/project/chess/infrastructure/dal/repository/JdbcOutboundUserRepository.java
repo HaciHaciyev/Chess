@@ -4,7 +4,7 @@ import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
@@ -144,13 +144,13 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public boolean havePartnership(UserAccount user, UserAccount partner) {
+    public boolean havePartnership(User user, User partner) {
         return jdbc.readObjectOf(IS_PARTNERSHIP_EXISTS,
                         Integer.class,
-                        user.getId().toString(),
-                        partner.getId().toString(),
-                        partner.getId().toString(),
-                        user.getId().toString())
+                        user.id().toString(),
+                        partner.id().toString(),
+                        partner.id().toString(),
+                        user.id().toString())
                 .mapSuccess(count -> count != null && count > 0)
                 .orElseGet(() -> {
                     Log.error("Error checking partnership existence.");
@@ -159,17 +159,17 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public Result<UserAccount, Throwable> findById(UUID userId) {
+    public Result<User, Throwable> findById(UUID userId) {
         return jdbc.read(FIND_BY_ID, this::userAccountMapper, userId.toString());
     }
 
     @Override
-    public Result<UserAccount, Throwable> findByUsername(String username) {
+    public Result<User, Throwable> findByUsername(String username) {
         return jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username);
     }
 
     @Override
-    public Result<UserAccount, Throwable> findByEmail(Email email) {
+    public Result<User, Throwable> findByEmail(Email email) {
         return jdbc.read(FIND_BY_EMAIL, this::userAccountMapper, email.email());
     }
 
@@ -214,7 +214,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
         );
     }
 
-    private UserAccount userAccountMapper(final ResultSet rs) throws SQLException {
+    private User userAccountMapper(final ResultSet rs) throws SQLException {
         var events = new AccountEvents(
                 rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("last_updated_date", Timestamp.class).toLocalDateTime()
@@ -250,7 +250,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                 rs.getDouble("puzzles_rating_volatility")
         );
 
-        return UserAccount.fromRepository(
+        return User.fromRepository(
                 UUID.fromString(rs.getString("id")),
                 new PersonalData(
                         rs.getString("firstname"),

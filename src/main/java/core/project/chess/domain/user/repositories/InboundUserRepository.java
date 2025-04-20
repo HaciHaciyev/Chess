@@ -1,21 +1,21 @@
 package core.project.chess.domain.user.repositories;
 
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 
 public interface InboundUserRepository {
 
-    void save(UserAccount userAccount);
+    void save(User user);
 
-    void updateOfRating(UserAccount userAccount);
+    void updateOfRating(User user);
 
-    void updateOfBulletRating(UserAccount userAccount);
+    void updateOfBulletRating(User user);
 
-    void updateOfBlitzRating(UserAccount userAccount);
+    void updateOfBlitzRating(User user);
 
-    void updateOfRapidRating(UserAccount userAccount);
+    void updateOfRapidRating(User user);
 
-    void updateOfPuzzleRating(UserAccount userAccount);
+    void updateOfPuzzleRating(User user);
 
     void saveUserToken(EmailConfirmationToken token);
 
@@ -23,7 +23,7 @@ public interface InboundUserRepository {
 
     void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException;
 
-    void saveRefreshToken(UserAccount userAccount, String refreshToken);
+    void saveRefreshToken(User user, String refreshToken);
 
     void removeRefreshToken(String refreshToken);
 }

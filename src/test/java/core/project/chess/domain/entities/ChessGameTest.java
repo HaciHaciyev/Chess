@@ -6,7 +6,7 @@ import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.ChessMove;
-import core.project.chess.domain.user.entities.UserAccount;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.PersonalData;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Assertions;
@@ -233,8 +233,8 @@ public class ChessGameTest {
     public static void executeGameFromPGN(String pgn, int pgnNum, boolean enableLogging, boolean enableAssertions, boolean enablePGN) {
         ChessGame game = chessGameSupplier().get();
 
-        String white = game.getWhitePlayer().getUsername();
-        String black = game.getBlackPlayer().getUsername();
+        String white = game.whitePlayer().username();
+        String black = game.blackPlayer().username();
 
         ToStringUtils navigator = game.toStringUtils();
 
@@ -391,8 +391,8 @@ public class ChessGameTest {
     void fenTest() {
         final ChessGame chessGame = chessGameSupplier().get();
 
-        final String firstPlayerUsername = chessGame.getWhitePlayer().getUsername();
-        final String secondPlayerUsername = chessGame.getBlackPlayer().getUsername();
+        final String firstPlayerUsername = chessGame.whitePlayer().username();
+        final String secondPlayerUsername = chessGame.blackPlayer().username();
 
         System.out.println(chessGame.fen());
 
@@ -409,7 +409,7 @@ public class ChessGameTest {
     public static Supplier<ChessGame> chessGameSupplier() {
         final ChessBoard chessBoard = ChessBoard.pureChess();
 
-        return () -> ChessGame.of(
+        return () -> ChessGame.standard(
                 UUID.randomUUID(),
                 userAccountSupplier("firstPlayer").get(),
                 userAccountSupplier("secondPlayer").get(),
@@ -420,7 +420,7 @@ public class ChessGameTest {
     public static Supplier<ChessGame> chessGameSupplier(String FEN) {
         final ChessBoard chessBoard = ChessBoard.pureChessFromPosition(FEN);
 
-        return () -> ChessGame.of(
+        return () -> ChessGame.standard(
                 UUID.randomUUID(),
                 userAccountSupplier("firstPlayer").get(),
                 userAccountSupplier("secondPlayer").get(),
@@ -428,8 +428,8 @@ public class ChessGameTest {
                 ChessGame.Time.DEFAULT, false);
     }
 
-    static Supplier<UserAccount> userAccountSupplier(String username) {
-        return () -> UserAccount.of(new PersonalData(
+    static Supplier<User> userAccountSupplier(String username) {
+        return () -> User.of(new PersonalData(
                 "generateFirstname",
                 "generateSurname",
                 username,
