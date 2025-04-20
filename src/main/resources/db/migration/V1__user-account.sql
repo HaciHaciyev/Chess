@@ -5,7 +5,6 @@ CREATE TABLE UserAccount (
     username VARCHAR(32) NOT NULL,
     email VARCHAR(255) NOT NULL,
     password VARCHAR(128) NOT NULL,
-    user_role VARCHAR NOT NULL,
     is_enable boolean NOT NULL,
     rating REAL NOT NULL,
     rating_deviation REAL NOT NULL,

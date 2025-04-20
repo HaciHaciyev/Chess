@@ -28,7 +28,6 @@ public class JwtUtility {
 
         return Jwt.issuer("Chessland")
                 .upn(user.username())
-                .groups(user.userRole().getUserRole())
                 .expiresIn(expiration)
                 .sign();
     }
@@ -38,7 +37,6 @@ public class JwtUtility {
 
         return Jwt.issuer("Chessland")
                 .upn(user.username())
-                .groups(user.userRole().getUserRole())
                 .expiresIn(year)
                 .sign();
     }

@@ -24,7 +24,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                     "username",
                     "email",
                     "password",
-                    "user_role",
                     "rating",
                     "rating_deviation",
                     "rating_volatility",
@@ -161,7 +160,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             user.username(),
             user.email(),
             user.password(),
-            user.userRole().toString(),
             user.rating().rating(),
             user.rating().ratingDeviation(),
             user.rating().volatility(),
@@ -275,7 +273,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             token.isConfirmed(),
             token.tokenID().toString(),
             token.user().isEnabled(),
-            token.user().userRole().toString(),
             token.user().id().toString()
         )
 

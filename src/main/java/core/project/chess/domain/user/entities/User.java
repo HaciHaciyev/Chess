@@ -6,7 +6,10 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
-import core.project.chess.domain.user.value_objects.*;
+import core.project.chess.domain.user.value_objects.PersonalData;
+import core.project.chess.domain.user.value_objects.ProfilePicture;
+import core.project.chess.domain.user.value_objects.Rating;
+import core.project.chess.domain.user.value_objects.Ratings;
 import jakarta.annotation.Nullable;
 
 import java.util.*;
@@ -18,7 +21,6 @@ import static core.project.chess.domain.chess.enumerations.GameResult.WHITE_WIN;
 public class User {
     private final UUID id;
     private final PersonalData personalData;
-    private UserRole userRole;
     private boolean isEnable;
     private Ratings ratings;
     private final AccountEvents accountEvents;
@@ -29,8 +31,8 @@ public class User {
 
     private User(UUID id,
                  PersonalData personalData,
-                 UserRole userRole,
-                 boolean isEnable, Ratings ratings,
+                 boolean isEnable,
+                 Ratings ratings,
                  AccountEvents accountEvents,
                  @Nullable Set<User> partners,
                  @Nullable Set<ChessGame> games,
@@ -38,7 +40,6 @@ public class User {
                  @Nullable ProfilePicture profilePicture) {
         this.id = id;
         this.personalData = personalData;
-        this.userRole = userRole;
         this.isEnable = isEnable;
         this.ratings = ratings;
         this.accountEvents = accountEvents;
@@ -50,28 +51,40 @@ public class User {
 
     public static User of(PersonalData personalData) {
         if (personalData == null) throw new IllegalArgumentException("UserProfile cannot be null");
-
         return new User(
-                UUID.randomUUID(), personalData, UserRole.NONE, false, Ratings.defaultRatings(),
-                AccountEvents.defaultEvents(), new HashSet<>(), new HashSet<>(), new HashSet<>(), null
+                UUID.randomUUID(),
+                personalData,
+                false,
+                Ratings.defaultRatings(),
+                AccountEvents.defaultEvents(),
+                new HashSet<>(),
+                new HashSet<>(),
+                new HashSet<>(),
+                null
         );
     }
 
     /**
-     * this method is used to call only from repository
+     * This method should be called only from the repository layer.
      */
-    public static User fromRepository(UUID id,
-                                      PersonalData personalData,
-                                      UserRole userRole,
-                                      boolean enabled,
-                                      Ratings ratings,
-                                      AccountEvents events) {
-        if (id == null || personalData == null || userRole == null || ratings == null || events == null)
+    public static User fromRepository(
+            UUID id,
+            PersonalData personalData,
+            boolean isEnabled,
+            Ratings ratings,
+            AccountEvents events) {
+        if (id == null || personalData == null || ratings == null || events == null)
             throw new IllegalArgumentException("Values cannot be null");
-
         return new User(
-                id, personalData, userRole, enabled, ratings, events,
-                new HashSet<>(), new HashSet<>(), new HashSet<>(), null
+                id,
+                personalData,
+                isEnabled,
+                ratings,
+                events,
+                new HashSet<>(),
+                new HashSet<>(),
+                new HashSet<>(),
+                null
         );
     }
 
@@ -97,10 +110,6 @@ public class User {
 
     public String password() {
         return personalData.password();
-    }
-
-    public UserRole userRole() {
-        return userRole;
     }
 
     public boolean isEnable() {
@@ -168,10 +177,8 @@ public class User {
     }
 
     public void enable() {
+        if (isEnable) throw new IllegalStateException("You can`t activate already activated account");
         this.isEnable = true;
-        if (userRole.equals(UserRole.NONE)) {
-            userRole = UserRole.ROLE_USER;
-        }
     }
 
     public void changeRating(final ChessGame chessGame) {
@@ -262,14 +269,13 @@ public class User {
         return isEnable == that.isEnable &&
                 Objects.equals(id, that.id) &&
                 Objects.equals(personalData, that.personalData) &&
-                userRole == that.userRole &&
                 Objects.equals(ratings, that.ratings) &&
                 Objects.equals(accountEvents, that.accountEvents);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, personalData, userRole, isEnable, ratings, accountEvents);
+        return Objects.hash(id, personalData, isEnable, ratings, accountEvents);
     }
 
     @Override
@@ -287,7 +293,6 @@ public class User {
                     Surname: %s,
                     Username : %s,
                     Email : %s,
-                    User role : %s,
                     Is enable : %s,
                     Rating : %f,
                     Bullet rating: %f,
@@ -303,7 +308,6 @@ public class User {
                 personalData.surname(),
                 personalData.username(),
                 personalData.email(),
-                userRole,
                 enables,
                 ratings.rating().rating(),
                 ratings.bulletRating().rating(),

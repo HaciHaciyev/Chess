@@ -12,8 +12,7 @@ public class EmailConfirmationToken {
     private final Token token;
     private final TokenEvents tokenEvents;
     private boolean isConfirmed;
-    private final /**@OneToOne*/
-            User user;
+    private final User user;
 
     private EmailConfirmationToken(
             UUID tokenId,

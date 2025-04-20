@@ -95,7 +95,6 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .column("u.username").as("username")
             .column("u.email").as("email")
             .column("u.password").as("password")
-            .column("u.user_role").as("user_role")
             .column("u.rating").as("rating")
             .column("u.rating_deviation").as("rating_deviation")
             .column("u.rating_volatility").as("rating_volatility")
@@ -259,7 +258,6 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
                         rs.getString("email"),
                         rs.getString("password")
                 ),
-                UserRole.valueOf(rs.getString("user_role")),
                 rs.getBoolean("is_enable"),
                 new Ratings(rating,
                         bulletRating,
