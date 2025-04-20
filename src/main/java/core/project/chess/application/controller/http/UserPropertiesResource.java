@@ -29,9 +29,8 @@ public class UserPropertiesResource {
     @Path("/user-properties")
     public Response userProperties() {
         String username = jwt.getName();
-        if (!Username.isValid(username)) {
+        if (!Username.isValid(username))
             throw responseException(Response.Status.BAD_REQUEST, "Invalid username");
-        }
 
         UserProperties userProperties = outboundUserRepository.userProperties(username)
                 .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "Can`t find the user properties for " + username));

@@ -485,10 +485,11 @@ public class ChessGame {
                     Is game over : %s, reason : %s
                 }
                 """,
-                this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer.getUsername(), this.blackPlayer.getUsername(),
-                this.whiteRating.rating(), this.blackRating.rating(), this.sessionEvents.creationDate().toString(),
-                this.sessionEvents.lastUpdateDate().toString(), this.time.toString(), this.isCasualGame,
-                isGameOver.status(), isGameOver.status() ? isGameOver.orElseThrow().toString() : "game is not over."
+                this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer.getUsername(),
+                this.blackPlayer.getUsername(), this.whiteRating.rating(), this.blackRating.rating(),
+                this.sessionEvents.creationDate().toString(), this.sessionEvents.lastUpdateDate().toString(),
+                this.time.toString(), this.isCasualGame, isGameOver.status(),
+                isGameOver.status() ? isGameOver.orElseThrow().toString() : "game is not over."
         );
     }
 

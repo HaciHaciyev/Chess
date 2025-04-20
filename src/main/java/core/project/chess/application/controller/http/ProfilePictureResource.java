@@ -36,9 +36,8 @@ public class ProfilePictureResource {
     @Path("/put-profile-picture")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response putProfilePicture(InputStream inputStream) {
-        if (Objects.isNull(inputStream)) {
+        if (Objects.isNull(inputStream))
             throw responseException(Response.Status.BAD_REQUEST, "Picture can`t be null.");
-        }
 
         String username = getUsername();
 
@@ -58,7 +57,10 @@ public class ProfilePictureResource {
         String username = getUsername();
 
         ProfilePicture profilePicture = profileService.getProfilePicture(username);
-        return Response.ok(Map.of("profilePicture", profilePicture.profilePicture(), "imageType", profilePicture.imageType())).build();
+        return Response.ok(Map.of(
+                "profilePicture", profilePicture.profilePicture(),
+                "imageType", profilePicture.imageType()))
+                .build();
     }
 
     @DELETE
@@ -72,10 +74,7 @@ public class ProfilePictureResource {
 
     private String getUsername() {
         String username = jwt.getName();
-        if (!Username.isValid(username)) {
-            throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
-        }
-
+        if (!Username.isValid(username)) throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
         return username;
     }
 }

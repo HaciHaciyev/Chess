@@ -17,6 +17,7 @@ import java.util.*;
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations.*;
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
+import static core.project.chess.domain.chess.value_objects.AlgebraicNotation.pieceToType;
 import static java.util.Objects.nonNull;
 
 /**
@@ -1205,8 +1206,8 @@ public class ChessBoard {
         changeOfEnPassaunt(from, to, startField);
 
         /** Recording the move made in algebraic notation and Zobrist hashing.*/
-        final var inCaseOfPromotionPT = inCaseOfPromotion == null ? null : AlgebraicNotation.pieceToType(inCaseOfPromotion);
-        algebraicNotations.add(AlgebraicNotation.of(AlgebraicNotation.pieceToType(startField), operations, from, to, inCaseOfPromotionPT));
+        final var inCaseOfPromotionPT = inCaseOfPromotion == null ? null : pieceToType(inCaseOfPromotion);
+        algebraicNotations.add(AlgebraicNotation.of(pieceToType(startField), operations, from, to, inCaseOfPromotionPT));
         updateZobristHash(startField, from, to, inCaseOfPromotion, capturedAt, isCastlingChanged);
 
         /** Retrieve message about game result.*/
