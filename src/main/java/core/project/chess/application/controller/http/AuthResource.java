@@ -24,9 +24,8 @@ public class AuthResource {
     @POST
     @Path("/login")
     public Response login(LoginForm loginForm) {
-        if (Objects.isNull(loginForm)) {
+        if (Objects.isNull(loginForm))
             throw responseException(Response.Status.BAD_REQUEST, "Login form is null.");
-        }
 
         return Response.ok(userAuthService.login(loginForm)).build();
     }
@@ -34,9 +33,8 @@ public class AuthResource {
     @POST
     @Path("/registration")
     public Response registration(RegistrationForm registrationForm) {
-        if (Objects.isNull(registrationForm)) {
+        if (Objects.isNull(registrationForm))
             throw responseException(Response.Status.BAD_REQUEST, "Registration form is null.");
-        }
 
         userAuthService.registration(registrationForm);
         return Response.ok("Registration successful. Verify your email.").build();
@@ -45,9 +43,8 @@ public class AuthResource {
     @PATCH
     @Path("/token/verification")
     public Response tokenVerification(@QueryParam("token") String token) {
-        if (Objects.isNull(token)) {
+        if (Objects.isNull(token))
             throw responseException(Response.Status.BAD_REQUEST, "Token is null.");
-        }
 
         userAuthService.tokenVerification(token);
         return Response.ok("Now, account is enabled.").build();
@@ -56,9 +53,8 @@ public class AuthResource {
     @PATCH
     @Path("/refresh-token")
     public Response refresh(@HeaderParam("Refresh-Token") String refreshToken) {
-        if (Objects.isNull(refreshToken) || refreshToken.isBlank()) {
+        if (Objects.isNull(refreshToken) || refreshToken.isBlank())
             throw responseException(Response.Status.BAD_REQUEST, "Refresh token is null.");
-        }
 
         return Response.ok(userAuthService.refreshToken(refreshToken)).build();
     }

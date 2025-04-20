@@ -219,15 +219,18 @@ public class ChessGame {
         return username.username().equals(whitePlayer.getUsername()) || username.username().equals(blackPlayer.getUsername());
     }
 
-    public GameResultMessage makeMovement(final String username, final Coordinate from,final Coordinate to, @Nullable Piece inCaseOfPromotion)
-            throws IllegalArgumentException {
+    public GameResultMessage doMove(
+            final String username,
+            final Coordinate from,
+            final Coordinate to,
+            final @Nullable Piece inCaseOfPromotion) throws IllegalArgumentException {
+
         Objects.requireNonNull(username);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        if (!chessBoard.isPureChess() && isGameOver.status()) {
+        if (!chessBoard.isPureChess() && isGameOver.status())
             throw new IllegalStateException("Game is over by %s".formatted(isGameOver.orElseThrow()));
-        }
 
         Color color = validateUsername(username);
         validateMovesTurn(color);
@@ -242,13 +245,9 @@ public class ChessGame {
             whiteTimer.stop();
             blackTimer.stop();
 
-            if (message.equals(Checkmate)) {
-                gameOver(Operations.CHECKMATE);
-            }
-
-            if (message.equals(Stalemate) || message.equals(RuleOf50Moves) || message.equals(InsufficientMatingMaterial)) {
+            if (message.equals(Checkmate)) gameOver(Operations.CHECKMATE);
+            if (message.equals(Stalemate) || message.equals(RuleOf50Moves) || message.equals(InsufficientMatingMaterial))
                 gameOver(Operations.STALEMATE);
-            }
 
             return message;
         }
@@ -257,26 +256,19 @@ public class ChessGame {
         return message;
     }
 
-    public UndoMoveResult returnMovement(final String username) {
+    public UndoMoveResult undo(final String username) {
         Objects.requireNonNull(username);
         Color color = validateUsername(username);
 
-        if (!chessBoard.isPureChess() && isGameOver.status()) {
+        if (!chessBoard.isPureChess() && isGameOver.status())
             throw new IllegalArgumentException("Game is over.");
-        }
 
         if (attemptToUndoMovement(color)) {
             this.returnOfMovement = new AgreementPair(null, null);
-
-            if (!chessBoard.undoMove()) {
-                return UndoMoveResult.FAILED_UNDO;
-            }
+            if (!chessBoard.undoMove()) return UndoMoveResult.FAILED_UNDO;
 
             switchPlayersTurn();
-            if (chessBoard.isThreeFoldActive()) {
-                this.isThreeFoldActive = true;
-            }
-
+            if (chessBoard.isThreeFoldActive()) this.isThreeFoldActive = true;
             return UndoMoveResult.SUCCESSFUL_UNDO;
         }
 
@@ -285,28 +277,20 @@ public class ChessGame {
     }
 
     private boolean attemptToUndoMovement(Color color) {
-        if (color.equals(WHITE)) {
-            return nonNull(returnOfMovement.blackPlayerUsername());
-        } else {
-            return nonNull(returnOfMovement.whitePlayerUsername());
-        }
+        if (color.equals(WHITE)) return nonNull(returnOfMovement.blackPlayerUsername());
+        else return nonNull(returnOfMovement.whitePlayerUsername());
     }
 
     private void setReturnOfMovementAgreement(Color color, String username) {
-        if (color.equals(WHITE)) {
-            this.returnOfMovement = new AgreementPair(username, null);
-        } else {
-            this.returnOfMovement = new AgreementPair(null, username);
-        }
+        if (color.equals(WHITE)) this.returnOfMovement = new AgreementPair(username, null);
+        else this.returnOfMovement = new AgreementPair(null, username);
     }
 
     public void resignation(final String username) {
         Objects.requireNonNull(username);
         Color color = validateUsername(username);
 
-        if (isGameOver.status()) {
-            throw new IllegalArgumentException("Game is over.");
-        }
+        if (isGameOver.status()) throw new IllegalArgumentException("Game is over.");
 
         if (color.equals(WHITE)) {
             this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN);
@@ -322,14 +306,8 @@ public class ChessGame {
         Objects.requireNonNull(username);
         validateUsername(username);
 
-        if (isGameOver.status()) {
-            throw new IllegalArgumentException("Game is over.");
-        }
-
-        if (!isThreeFoldActive) {
-            return;
-        }
-
+        if (isGameOver.status()) throw new IllegalArgumentException("Game is over.");
+        if (!isThreeFoldActive) return;
         gameOver(Operations.STALEMATE);
     }
 
@@ -337,9 +315,7 @@ public class ChessGame {
         Objects.requireNonNull(username);
         Color color = validateUsername(username);
 
-        if (isGameOver.status()) {
-            throw new IllegalArgumentException("Game is over.");
-        }
+        if (isGameOver.status()) throw new IllegalArgumentException("Game is over.");
 
         if (attemptToFinalizeAgreement(color)) {
             this.agreementPair = new AgreementPair(whitePlayer.getUsername(), blackPlayer.getUsername());
@@ -351,72 +327,52 @@ public class ChessGame {
     }
 
     public void awayFromTheBoard(Username username) {
-        if (!isPlayer(username)) {
-            return;
-        }
-        if (nonNull(afkTimer)) {
-            return;
-        }
+        if (!isPlayer(username)) return;
+        if (nonNull(afkTimer)) return;
 
         Color color = username.username().equals(whitePlayer.getUsername()) ? WHITE : BLACK;
 
-        if (color.equals(WHITE)) {
+        if (color == WHITE) {
             this.afkTimer = new ChessCountdownTimer(this, "AFK White timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
                 this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN);
                 calculatePlayersRating();
             });
-        } else {
-            this.afkTimer = new ChessCountdownTimer(this, "AFK Black timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
-                this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
-                calculatePlayersRating();
-            });
+            return;
         }
+
+        this.afkTimer = new ChessCountdownTimer(this, "AFK Black timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
+            this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
+            calculatePlayersRating();
+        });
     }
 
     public void returnedToTheBoard(Username username) {
-        if (!isPlayer(username)) {
-            throw new IllegalArgumentException("Not a player: " + username);
-        }
-        if (isNull(afkTimer)) {
-            return;
-        }
+        if (!isPlayer(username)) throw new IllegalArgumentException("Not a player: " + username);
+        if (isNull(afkTimer)) return;
 
         afkTimer.stop();
         this.afkTimer = null;
     }
 
     private boolean attemptToFinalizeAgreement(Color color) {
-        if (color.equals(WHITE)) {
-            return nonNull(agreementPair.blackPlayerUsername());
-        } else {
-            return nonNull(agreementPair.whitePlayerUsername());
-        }
+        if (color.equals(WHITE)) return nonNull(agreementPair.blackPlayerUsername());
+        else return nonNull(agreementPair.whitePlayerUsername());
     }
 
     private void setAgreement(Color color, String username) {
-        if (color.equals(WHITE)) {
-            this.agreementPair = new AgreementPair(username, null);
-        } else {
-            this.agreementPair = new AgreementPair(null, username);
-        }
+        if (color.equals(WHITE)) this.agreementPair = new AgreementPair(username, null);
+        else this.agreementPair = new AgreementPair(null, username);
     }
 
     private void gameOver(final Operations operation) {
-        if (isGameOver.status()) {
-            throw new IllegalArgumentException("Game is already over.");
-        }
+        if (isGameOver.status()) throw new IllegalArgumentException("Game is already over.");
 
         if (operation.equals(Operations.STALEMATE)) {
             drawEnding();
             return;
         }
 
-        if (operation.equals(Operations.CHECKMATE)) {
-            winnerEnding();
-            return;
-        }
-
-        throw new IllegalStateException("Invalid method usage, check documentation.");
+        if (operation.equals(Operations.CHECKMATE)) winnerEnding();
     }
 
     private void drawEnding() {
@@ -426,21 +382,15 @@ public class ChessGame {
 
     private void winnerEnding() {
         GameResult gameResult;
-        if (playersTurn.equals(WHITE)) {
-            gameResult = GameResult.WHITE_WIN;
-        } else {
-            gameResult = GameResult.BLACK_WIN;
-        }
+        if (playersTurn.equals(WHITE)) gameResult = GameResult.WHITE_WIN;
+        else gameResult = GameResult.BLACK_WIN;
 
         this.isGameOver = StatusPair.ofTrue(gameResult);
         calculatePlayersRating();
     }
 
     private void calculatePlayersRating() {
-        if (this.isCasualGame) {
-            return;
-        }
-
+        if (this.isCasualGame) return;
         whitePlayer.changeRating(this);
         blackPlayer.changeRating(this);
     }
@@ -457,16 +407,13 @@ public class ChessGame {
         final boolean isWhitePlayer = username.equals(whitePlayer.getUsername());
         final boolean isBlackPlayer = username.equals(blackPlayer.getUsername());
 
-        if (!isWhitePlayer && !isBlackPlayer) {
-            throw new IllegalArgumentException("Not a player: " + username);
-        }
+        if (!isWhitePlayer && !isBlackPlayer) throw new IllegalArgumentException("Not a player: " + username);
         if (nonNull(afkTimer)) {
             final boolean illegalAccess = (isWhitePlayer && afkTimer.getName().equals("AFK White timer")) ||
                     (isBlackPlayer && afkTimer.getName().equals("AFK Black timer"));
 
-            if (illegalAccess) {
+            if (illegalAccess)
                 throw new IllegalStateException("A player cannot make a move without being at the board: " + username);
-            }
         }
 
         return isWhitePlayer ? WHITE : BLACK;
@@ -474,14 +421,10 @@ public class ChessGame {
 
     private void validateMovesTurn(Color color) {
         final boolean whiteTriesToMoveButNotHisTurn = color.equals(WHITE) && !WHITE.equals(playersTurn);
-        if (whiteTriesToMoveButNotHisTurn) {
-            throw new IllegalArgumentException("It`s black move turn.");
-        }
+        if (whiteTriesToMoveButNotHisTurn) throw new IllegalArgumentException("It`s black move turn.");
 
         final boolean blackTriesToMoveButNotHistTurn = color.equals(BLACK) && !BLACK.equals(playersTurn);
-        if (blackTriesToMoveButNotHistTurn) {
-            throw new IllegalArgumentException("It`s white move turn.");
-        }
+        if (blackTriesToMoveButNotHistTurn) throw new IllegalArgumentException("It`s white move turn.");
     }
 
     private void resetAgreements() {

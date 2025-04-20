@@ -87,19 +87,16 @@ public class Glicko2RatingCalculator {
         return Rating.fromRepository(resultOfRating, resultOfRatingDeviation, resultOfVolatility);
     }
 
-    /** .*/
     private static double updateRating(final double μ, final double φ1, final double μj, final double φj, final double sj) {
         return μ + pow(φ1, 2) * adjustmentFunction(φj) * (sj - expectedScoreFunction(μ, μj, φj));
     }
 
-    /** .*/
     private static double resultRatingDeviationInGlicko2Scale(final double φ01, final double v) {
         return 1 / sqrt(
                 (1 / pow(φ01, 2)) + (1 / v)
         );
     }
 
-    /** .*/
     private static double updateRatingDeviation(final double φ, final double σ1) {
         // φ*
         return sqrt(
@@ -107,7 +104,6 @@ public class Glicko2RatingCalculator {
         );
     }
 
-    /** .*/
     private static double computeNewVolatility(final double a, final double v, final double delta, final double φ) {
         double A = a;
 
@@ -150,7 +146,6 @@ public class Glicko2RatingCalculator {
         return pow(E, A / 2);
     }
 
-    /** .*/
     private static double f(final double x, final double a, final double v, final double delta, final double φ) {
         final double firstUpperLineOfFormula = pow(E, x) * (pow(delta, 2) - pow(φ, 2) - v - pow(E, x));
         final double firstLowerLineOfFormula = 2 * pow(
@@ -163,13 +158,11 @@ public class Glicko2RatingCalculator {
         return firstHalfOfTheFormula - secondHalfOfTheFormula;
     }
 
-    /** .*/
     private static double delta(double v, final double μ, final double μj, final double φj, final double sj) {
         final double delta = adjustmentFunction(φj) * (sj - expectedScoreFunction(μ, μj, φj));
         return v * delta;
     }
 
-    /** .*/
     private static double ratingDispersion(final double μ, final double μj, final double φj) {
         final double expectedScore = expectedScoreFunction(μ, μj, φj);
 
@@ -178,12 +171,10 @@ public class Glicko2RatingCalculator {
         );
     }
 
-    /** .*/
     private static double adjustmentFunction(double φ) {
         return 1 / sqrt(1 + (3 * pow(φ, 2)) / pow(PI, 2));
     }
 
-    /** .*/
     private static double expectedScoreFunction(final double μ, final double μj, final double φj) {
         return 1 / (1 + exp(-adjustmentFunction(φj) * (μ - μj)));
     }

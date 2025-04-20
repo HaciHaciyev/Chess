@@ -295,7 +295,7 @@ class ParallelPerft {
 
             // Perform the move
             board.doMove(move);
-            game.makeMovement(activePlayer, from, to, promotionPiece);
+            game.doMove(activePlayer, from, to, promotionPiece);
 
             String newFen = game.getChessBoard().toString();
 
@@ -394,7 +394,7 @@ class ParallelPerft {
 
                     try {
                         boardCopy.doMove(move);
-                        gameCopy.makeMovement(activePlayer, from, to, inCaseOfPromotion);
+                        gameCopy.doMove(activePlayer, from, to, inCaseOfPromotion);
 
                         long newNodes = doPerft(gameCopy, boardCopy, currentDepth - 1);
                         nodes += newNodes;

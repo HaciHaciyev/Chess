@@ -69,7 +69,7 @@ public class GameFunctionalityService {
 
         try {
             Log.infof("%s moving from %s to %s", username, move.from(), move.to());
-            chessGame.makeMovement(
+            chessGame.doMove(
                     username,
                     move.from(),
                     move.to(),
@@ -147,7 +147,7 @@ public class GameFunctionalityService {
         final UndoMoveResult undoMoveResult;
 
         try {
-            undoMoveResult = chessGame.returnMovement(username);
+            undoMoveResult = chessGame.undo(username);
         } catch (IllegalArgumentException | IllegalStateException e) {
             Message message = Message.builder(MessageType.ERROR)
                     .message("Can`t return a move.")

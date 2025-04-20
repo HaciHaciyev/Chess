@@ -188,7 +188,6 @@ public class ChessBoard {
      */
     private ChessBoard(final UUID chessBoardId, @Nullable final FromFEN maybeFEN,
                        final boolean isPureChess, @Nullable final List<AlgebraicNotation> algebraicNotations) {
-        Objects.requireNonNull(chessBoardId);
 
         this.chessBoardId = chessBoardId;
         this.isPureChess = isPureChess;
@@ -1132,9 +1131,6 @@ public class ChessBoard {
      */
     public final GameResultMessage doMove(final Coordinate from, final Coordinate to, final @Nullable Piece inCaseOfPromotion) {
         /** Preparation of necessary data and validation.*/
-        Objects.requireNonNull(from);
-        Objects.requireNonNull(to);
-
         if (!validateFiguresTurnAndPieceExistence(from, to)) {
             throw new IllegalArgumentException(String
                     .format("At the moment, the player for %s must move, not the opponent", figuresTurn));

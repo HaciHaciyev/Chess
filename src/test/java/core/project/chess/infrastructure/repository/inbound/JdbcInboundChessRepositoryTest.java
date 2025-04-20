@@ -38,8 +38,8 @@ class JdbcInboundChessRepositoryTest {
                 final String firstUsername = chessGame.getWhitePlayer().getUsername();
                 final String secondUsername = chessGame.getBlackPlayer().getUsername();
 
-                chessGame.makeMovement(firstUsername, Coordinate.e2, Coordinate.e4, null);
-                chessGame.makeMovement(secondUsername, Coordinate.e7, Coordinate.e5, null);
+                chessGame.doMove(firstUsername, Coordinate.e2, Coordinate.e4, null);
+                chessGame.doMove(secondUsername, Coordinate.e7, Coordinate.e5, null);
 
                 chessGame.resignation(firstUsername);
 
@@ -56,10 +56,10 @@ class JdbcInboundChessRepositoryTest {
             final String firstUsername = chessGame.getWhitePlayer().getUsername();
             final String secondUsername = chessGame.getBlackPlayer().getUsername();
 
-            chessGame.makeMovement(firstUsername, Coordinate.e2, Coordinate.e4, null);
-            chessGame.makeMovement(secondUsername, Coordinate.e7, Coordinate.e5, null);
+            chessGame.doMove(firstUsername, Coordinate.e2, Coordinate.e4, null);
+            chessGame.doMove(secondUsername, Coordinate.e7, Coordinate.e5, null);
 
-            chessGame.makeMovement(firstUsername, Coordinate.g1, Coordinate.f3, null);
+            chessGame.doMove(firstUsername, Coordinate.g1, Coordinate.f3, null);
 
             chessGame.agreement(firstUsername);
             chessGame.agreement(secondUsername);

@@ -300,21 +300,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void addPartnership(UserAccount firstUser, UserAccount secondUser) {
-        final boolean doNotMatch = !firstUser.getPartners().contains(secondUser) || !secondUser.getPartners().contains(firstUser);
-        if (doNotMatch) {
-            throw new IllegalArgumentException("Illegal function usage.");
-        }
-
-        jdbc.write(INSERT_NEW_PARTNERSHIP,
-                firstUser.getId().toString(),
-                secondUser.getId().toString()
-        )
-
-        .ifFailure(Throwable::printStackTrace);
-    }
-
-    @Override
     public void saveRefreshToken(UserAccount userAccount, String refreshToken) {
         jdbc.write(INSERT_OR_UPDATE_REFRESH_TOKEN, userAccount.getId().toString(), refreshToken, refreshToken)
                 .ifFailure(Throwable::printStackTrace);

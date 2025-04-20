@@ -49,9 +49,7 @@ public class UserAccount {
     }
 
     public static UserAccount of(PersonalData personalData) {
-        if (personalData == null) {
-            throw new IllegalArgumentException("UserProfile cannot be null");
-        }
+        if (personalData == null) throw new IllegalArgumentException("UserProfile cannot be null");
 
         return new UserAccount(
                 UUID.randomUUID(), personalData, UserRole.NONE, false, Ratings.defaultRatings(),
@@ -68,9 +66,8 @@ public class UserAccount {
                                              boolean enabled,
                                              Ratings ratings,
                                              AccountEvents events) {
-        if (id == null || personalData == null || userRole == null || ratings == null || events == null) {
+        if (id == null || personalData == null || userRole == null || ratings == null || events == null)
             throw new IllegalArgumentException("Values cannot be null");
-        }
 
         return new UserAccount(
                 id, personalData, userRole, enabled, ratings, events, new HashSet<>(), new HashSet<>(), new HashSet<>(), null

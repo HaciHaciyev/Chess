@@ -260,7 +260,7 @@ public class ChessGameTest {
                 Log.infof("White: %s", move.white());
             }
             try {
-                var whiteMessage = game.makeMovement(white, move.white().from(), move.white().to(), move.white().promotion());
+                var whiteMessage = game.doMove(white, move.white().from(), move.white().to(), move.white().promotion());
 
                 if (enableLogging) {
                     Log.infof("Movement result for white: %s", whiteMessage);
@@ -278,7 +278,7 @@ public class ChessGameTest {
                     Log.info("Black: " + move.black());
                 }
 
-                var blackMessage = game.makeMovement(black, move.black().from(), move.black().to(), move.black().promotion());
+                var blackMessage = game.doMove(black, move.black().from(), move.black().to(), move.black().promotion());
 
                 if (enableLogging) {
                     System.out.println(navigator.prettyToString());
@@ -397,11 +397,11 @@ public class ChessGameTest {
         System.out.println(chessGame.getChessBoard().toString());
 
         // 1
-        chessGame.makeMovement(firstPlayerUsername, e2, e4, null);
+        chessGame.doMove(firstPlayerUsername, e2, e4, null);
 
         System.out.println(chessGame.getChessBoard().toString());
 
-        chessGame.makeMovement(secondPlayerUsername, e7, e5, null);
+        chessGame.doMove(secondPlayerUsername, e7, e5, null);
 
         System.out.println(chessGame.getChessBoard().toString());
     }

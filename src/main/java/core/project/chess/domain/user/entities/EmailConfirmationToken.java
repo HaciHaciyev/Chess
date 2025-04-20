@@ -14,7 +14,13 @@ public class EmailConfirmationToken {
     private boolean isConfirmed;
     private final /**@OneToOne*/ UserAccount userAccount;
 
-    private EmailConfirmationToken(UUID tokenId, Token token, TokenEvents tokenEvents, boolean isConfirmed, UserAccount userAccount) {
+    private EmailConfirmationToken(
+            UUID tokenId,
+            Token token,
+            TokenEvents tokenEvents,
+            boolean isConfirmed,
+            UserAccount userAccount) {
+
         Objects.requireNonNull(tokenId);
         Objects.requireNonNull(token);
         Objects.requireNonNull(tokenEvents);
@@ -64,10 +70,7 @@ public class EmailConfirmationToken {
     }
 
     public void confirm() {
-        if (isConfirmed) {
-            throw new IllegalStateException("This token has already been confirmed");
-        }
-
+        if (isConfirmed) throw new IllegalStateException("This token has already been confirmed");
         isConfirmed = true;
     }
 }

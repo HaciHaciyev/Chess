@@ -42,7 +42,7 @@ public final class ProfilePicture {
     }
 
     public static ProfilePicture defaultProfilePicture() {
-        return new ProfilePicture(DEFAULT_PROFILE_PICTURE_PATH, PictureUtility.DEFAULT_IMAGE, ".png");
+        return new ProfilePicture(DEFAULT_PROFILE_PICTURE_PATH, PictureUtility.defaultImage(), ".png");
     }
 
     public static String profilePicturePath(String id) {
