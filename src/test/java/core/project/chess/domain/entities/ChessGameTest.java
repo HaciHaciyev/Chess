@@ -411,7 +411,6 @@ public class ChessGameTest {
 
         return () -> ChessGame.of(
                 UUID.randomUUID(),
-                chessBoard,
                 userAccountSupplier("firstPlayer").get(),
                 userAccountSupplier("secondPlayer").get(),
                 SessionEvents.defaultEvents(),
@@ -423,7 +422,6 @@ public class ChessGameTest {
 
         return () -> ChessGame.of(
                 UUID.randomUUID(),
-                chessBoard,
                 userAccountSupplier("firstPlayer").get(),
                 userAccountSupplier("secondPlayer").get(),
                 SessionEvents.defaultEvents(),

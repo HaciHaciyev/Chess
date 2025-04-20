@@ -3,7 +3,6 @@ package core.project.chess.domain;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
-import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
@@ -194,11 +193,9 @@ class ParallelPerft {
     }
 
     static Supplier<ChessGame> chessGameSupplier(String fen) {
-        final ChessBoard chessBoard = ChessBoard.pureChessFromPosition(fen);
-
-        return () -> ChessGame.of(
+        return () -> ChessGame.pureChessByFEN(
                 UUID.randomUUID(),
-                chessBoard,
+                fen,
                 userAccountSupplier("firstPlayer", "firstplayer@domai.com").get(),
                 userAccountSupplier("secondPlayer", "secondplayer@domai.com").get(),
                 SessionEvents.defaultEvents(),
@@ -207,11 +204,8 @@ class ParallelPerft {
     }
 
     static Supplier<ChessGame> chessGameSupplier() {
-        final ChessBoard chessBoard = ChessBoard.pureChess();
-
-        return () -> ChessGame.of(
+        return () -> ChessGame.pureChess(
                 UUID.randomUUID(),
-                chessBoard,
                 userAccountSupplier("firstPlayer", "firstplayer@domai.com").get(),
                 userAccountSupplier("secondPlayer", "secondplayer@domai.com").get(),
                 SessionEvents.defaultEvents(),

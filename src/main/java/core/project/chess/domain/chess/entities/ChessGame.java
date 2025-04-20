@@ -103,7 +103,6 @@ public class ChessGame {
 
     public static ChessGame of(
             UUID chessGameId,
-            ChessBoard chessBoard,
             UserAccount whitePlayer,
             UserAccount blackPlayer,
             SessionEvents sessionEvents,
@@ -112,6 +111,84 @@ public class ChessGame {
     ) {
         Rating whiteRating = getRating(whitePlayer, time);
         Rating blackRating = getRating(blackPlayer, time);
+
+        return chessGameInit(chessGameId, ChessBoard.starndardChessBoard(), whitePlayer, blackPlayer,
+                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+    }
+
+    public static ChessGame byPGN(
+            UUID chessGameId,
+            String pgn,
+            UserAccount whitePlayer,
+            UserAccount blackPlayer,
+            SessionEvents sessionEvents,
+            Time time,
+            Boolean isCasualGame) {
+
+        Rating whiteRating = getRating(whitePlayer, time);
+        Rating blackRating = getRating(blackPlayer, time);
+
+        return chessGameInit(chessGameId, ChessBoard.fromPGN(pgn), whitePlayer, blackPlayer,
+                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+    }
+
+    public static ChessGame byFEN(
+            UUID chessGameId,
+            String fen,
+            UserAccount whitePlayer,
+            UserAccount blackPlayer,
+            SessionEvents sessionEvents,
+            Time time,
+            Boolean isCasualGame) {
+
+        Rating whiteRating = getRating(whitePlayer, time);
+        Rating blackRating = getRating(blackPlayer, time);
+
+        return chessGameInit(chessGameId, ChessBoard.fromPosition(fen), whitePlayer, blackPlayer,
+                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+    }
+
+    public static ChessGame pureChess(
+            UUID chessGameId,
+            UserAccount whitePlayer,
+            UserAccount blackPlayer,
+            SessionEvents sessionEvents,
+            Time time,
+            boolean isCasualGame) {
+
+        Rating whiteRating = getRating(whitePlayer, time);
+        Rating blackRating = getRating(blackPlayer, time);
+
+        return chessGameInit(chessGameId, ChessBoard.pureChess(), whitePlayer, blackPlayer,
+                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+    }
+
+    public static ChessGame pureChessByFEN(
+            UUID chessGameId,
+            String fen,
+            UserAccount whitePlayer,
+            UserAccount blackPlayer,
+            SessionEvents sessionEvents,
+            Time time,
+            boolean isCasualGame) {
+
+        Rating whiteRating = getRating(whitePlayer, time);
+        Rating blackRating = getRating(blackPlayer, time);
+
+        return chessGameInit(chessGameId, ChessBoard.pureChessFromPosition(fen), whitePlayer, blackPlayer,
+                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+    }
+
+    private static ChessGame chessGameInit(
+            UUID chessGameId,
+            ChessBoard chessBoard,
+            UserAccount whitePlayer,
+            UserAccount blackPlayer,
+            Rating whiteRating,
+            Rating blackRating,
+            SessionEvents sessionEvents,
+            Time time,
+            boolean isCasualGame) {
 
         return new ChessGame(
                 chessGameId,

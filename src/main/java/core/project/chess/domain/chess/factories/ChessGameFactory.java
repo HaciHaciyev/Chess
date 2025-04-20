@@ -1,7 +1,5 @@
 package core.project.chess.domain.chess.factories;
 
-import com.esotericsoftware.minlog.Log;
-import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.events.SessionEvents;
@@ -11,7 +9,6 @@ import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.UserAccount;
 import jakarta.enterprise.context.ApplicationScoped;
 
-import java.util.Objects;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -24,83 +21,133 @@ public class ChessGameFactory {
             final GameParameters secondGameParameters,
             final boolean isPartnershipGame) {
 
-        ChessBoard chessBoard;
-        boolean isCasualGame;
-        try {
-            Pair<ChessBoard, Boolean> chessBoardInstance = createChessBoardInstance(gameParameters, secondGameParameters, isPartnershipGame);
-            chessBoard = chessBoardInstance.getFirst();
-            isCasualGame = chessBoardInstance.getSecond();
-        } catch (Exception e) {
-            Log.error("Can`t create chess game.", e.getMessage());
-            chessBoard = ChessBoard.starndardChessBoard();
-            isCasualGame = gameParameters.isCasualGame();
-        }
+        final ChessGame.Time time = gameParameters.time();
+        final boolean isCasualGame = isCasualGame(gameParameters, isPartnershipGame);
+        final boolean firstPlayerIsWhite = gameParameters.color() != null && gameParameters.color() == Color.WHITE;
+        final boolean secondPlayerIsBlack = secondGameParameters.color() != null && secondGameParameters.color() == Color.BLACK;
 
-        final ChessGame.Time timeControlling = gameParameters.time();
-        final boolean firstPlayerIsWhite = Objects.nonNull(gameParameters.color()) && gameParameters.color().equals(Color.WHITE);
-        final boolean secondPlayerIsBlack = Objects.nonNull(secondGameParameters.color()) && secondGameParameters.color().equals(Color.BLACK);
+        if (!isPartnershipGame)
+            return standardChessGame(time, firstPlayer, secondPlayer, firstPlayerIsWhite, secondPlayerIsBlack, false);
 
-        if (firstPlayerIsWhite && secondPlayerIsBlack) {
+        StatusPair<Pair<String, String>> chessNotations = chessNotations(gameParameters, secondGameParameters);
+        if (!chessNotations.status())
+            return standardChessGame(time, firstPlayer, secondPlayer,
+                    firstPlayerIsWhite, secondPlayerIsBlack, gameParameters.isCasualGame());
+
+        final boolean isPGNBasedGame = chessNotations.orElseThrow()
+                .getFirst()
+                .equals("PGN");
+
+        if (isPGNBasedGame)
+            return chessGameByPGN(time, firstPlayer, secondPlayer, firstPlayerIsWhite, secondPlayerIsBlack,
+                    gameParameters.isCasualGame(), chessNotations.orElseThrow().getSecond());
+
+        return chessGameByFEN(time, firstPlayer, secondPlayer, firstPlayerIsWhite, secondPlayerIsBlack,
+                gameParameters.isCasualGame(), chessNotations.orElseThrow().getSecond());
+    }
+
+    private ChessGame standardChessGame(
+            ChessGame.Time time,
+            UserAccount firstPlayer,
+            UserAccount secondPlayer,
+            boolean firstPlayerIsWhite,
+            boolean secondPlayerIsBlack,
+            boolean isCasualGame) {
+
+        if (firstPlayerIsWhite && secondPlayerIsBlack)
             return ChessGame.of(
                     UUID.randomUUID(),
-                    chessBoard,
                     firstPlayer,
                     secondPlayer,
                     SessionEvents.defaultEvents(),
-                    timeControlling,
+                    time,
                     isCasualGame
             );
-        }
 
         return ChessGame.of(
                 UUID.randomUUID(),
-                chessBoard,
                 secondPlayer,
                 firstPlayer,
                 SessionEvents.defaultEvents(),
-                timeControlling,
+                time,
                 isCasualGame
         );
     }
 
-    private static Pair<ChessBoard, Boolean> createChessBoardInstance(
-            GameParameters gameParameters,
-            GameParameters secondGameParameters,
-            boolean isPartnershipGame) {
+    private ChessGame chessGameByPGN(
+            ChessGame.Time time,
+            UserAccount firstPlayer,
+            UserAccount secondPlayer,
+            boolean firstPlayerIsWhite,
+            boolean secondPlayerIsBlack,
+            Boolean isCasualGame,
+            String PGN) {
 
-        if (!isPartnershipGame) {
-            return Pair.of(ChessBoard.starndardChessBoard(), false);
-        }
+        if (firstPlayerIsWhite && secondPlayerIsBlack)
+            return ChessGame.byPGN(
+                    UUID.randomUUID(),
+                    PGN,
+                    firstPlayer,
+                    secondPlayer,
+                    SessionEvents.defaultEvents(),
+                    time,
+                    isCasualGame
+            );
 
-        StatusPair<Pair<String, String>> chessNotations = chessNotations(gameParameters, secondGameParameters);
-        if (!chessNotations.status()) {
-            return Pair.of(ChessBoard.starndardChessBoard(), gameParameters.isCasualGame());
-        }
+        return ChessGame.byPGN(
+                UUID.randomUUID(),
+                PGN,
+                secondPlayer,
+                firstPlayer,
+                SessionEvents.defaultEvents(),
+                time,
+                isCasualGame
+        );
+    }
 
-        final boolean isPGNBasedGame = chessNotations.orElseThrow().getFirst().equals("PGN");
-        if (isPGNBasedGame) {
-            return Pair.of(ChessBoard.fromPGN(chessNotations.orElseThrow().getSecond()), gameParameters.isCasualGame());
-        }
+    private ChessGame chessGameByFEN(
+            ChessGame.Time time,
+            UserAccount firstPlayer,
+            UserAccount secondPlayer,
+            boolean firstPlayerIsWhite,
+            boolean secondPlayerIsBlack,
+            Boolean isCasualGame,
+            String FEN) {
 
-        return Pair.of(ChessBoard.fromPosition(chessNotations.orElseThrow().getSecond()), gameParameters.isCasualGame());
+        if (firstPlayerIsWhite && secondPlayerIsBlack)
+            return ChessGame.byFEN(
+                    UUID.randomUUID(),
+                    FEN,
+                    firstPlayer,
+                    secondPlayer,
+                    SessionEvents.defaultEvents(),
+                    time,
+                    isCasualGame
+            );
+
+        return ChessGame.byFEN(
+                UUID.randomUUID(),
+                FEN,
+                secondPlayer,
+                firstPlayer,
+                SessionEvents.defaultEvents(),
+                time,
+                isCasualGame
+        );
+    }
+
+    private boolean isCasualGame(GameParameters gameParameters, boolean isPartnershipGame) {
+        if (!isPartnershipGame) return false;
+        return gameParameters.isCasualGame();
     }
 
     private static StatusPair<Pair<String, String>> chessNotations(
             GameParameters gameParameters,
             GameParameters secondGameParameters) {
-
-        if (gameParameters.PGN() != null) {
-            return StatusPair.ofTrue(Pair.of("PGN", gameParameters.PGN()));
-        }
-        if (secondGameParameters.PGN() != null) {
-            return StatusPair.ofTrue(Pair.of("PGN", secondGameParameters.PGN()));
-        }
-        if (gameParameters.FEN() != null) {
-            return StatusPair.ofTrue(Pair.of("FEN", gameParameters.FEN()));
-        }
-        if (secondGameParameters.FEN() != null) {
-            return StatusPair.ofTrue(Pair.of("FEN", secondGameParameters.FEN()));
-        }
+        if (gameParameters.PGN() != null) return StatusPair.ofTrue(Pair.of("PGN", gameParameters.PGN()));
+        if (secondGameParameters.PGN() != null) return StatusPair.ofTrue(Pair.of("PGN", secondGameParameters.PGN()));
+        if (gameParameters.FEN() != null) return StatusPair.ofTrue(Pair.of("FEN", gameParameters.FEN()));
+        if (secondGameParameters.FEN() != null) return StatusPair.ofTrue(Pair.of("FEN", secondGameParameters.FEN()));
         return StatusPair.ofFalse();
     }
 }
