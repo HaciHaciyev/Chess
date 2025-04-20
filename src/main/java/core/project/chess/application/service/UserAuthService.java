@@ -13,25 +13,19 @@ import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
 import io.quarkus.logging.Log;
-import io.smallrye.jwt.auth.principal.JWTParser;
-import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 import static core.project.chess.application.util.JSONUtilities.responseException;
 
 @ApplicationScoped
 public class UserAuthService {
-
-    private final JWTParser jwtParser;
 
     private final JwtUtility jwtUtility;
 
@@ -49,10 +43,11 @@ public class UserAuthService {
 
     public static final String EMAIL_VERIFICATION_URL = "http://localhost:8080/chessland/account/token/verification?token=%s";
 
-    UserAuthService(JWTParser jwtParser, JwtUtility jwtUtility, PasswordEncoder passwordEncoder,
-                    InboundUserRepository inboundUserRepository, OutboundUserRepository outboundUserRepository,
+    UserAuthService(JwtUtility jwtUtility,
+                    PasswordEncoder passwordEncoder,
+                    InboundUserRepository inboundUserRepository,
+                    OutboundUserRepository outboundUserRepository,
                     EmailInteractionService emailInteractionService) {
-        this.jwtParser = jwtParser;
         this.jwtUtility = jwtUtility;
         this.passwordEncoder = passwordEncoder;
         this.inboundUserRepository = inboundUserRepository;
@@ -164,7 +159,7 @@ public class UserAuthService {
         final Pair<String, String> foundedPairResult = outboundUserRepository.findRefreshToken(refreshToken)
                 .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "This refresh token is not found."));
 
-        long tokenExpirationDate = parseJWT(foundedPairResult.getSecond())
+        long tokenExpirationDate = jwtUtility.parseJWT(foundedPairResult.getSecond())
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Something went wrong, try again later."))
                 .getExpirationTime();
 
@@ -183,15 +178,5 @@ public class UserAuthService {
                 });
 
         return jwtUtility.generateToken(userAccount);
-    }
-
-    private Optional<JsonWebToken> parseJWT(String token) {
-        try {
-            return Optional.of(jwtParser.parse(token));
-        } catch (ParseException e) {
-            Log.error("Can`t parse jwt.", e);
-        }
-
-        return Optional.empty();
     }
 }

@@ -1,6 +1,7 @@
 package core.project.chess.infrastructure.security;
 
 import core.project.chess.domain.user.entities.UserAccount;
+import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.jwt.build.Jwt;
@@ -51,5 +52,15 @@ public class JwtUtility {
         } catch (ParseException e) {
             return Optional.empty();
         }
+    }
+
+    public Optional<JsonWebToken> parseJWT(String token) {
+        try {
+            return Optional.of(jwtParser.parse(token));
+        } catch (ParseException e) {
+            Log.error("Can`t parse jwt.", e);
+        }
+
+        return Optional.empty();
     }
 }
