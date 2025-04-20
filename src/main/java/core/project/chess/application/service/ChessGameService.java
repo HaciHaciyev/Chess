@@ -80,6 +80,9 @@ public class ChessGameService {
             }
 
             sessionStorage.addSession(session, result.value());
+            
+            sendMessage(session, "connection successful");
+            
             partnershipGameCacheService
                     .getAll(username.username())
                     .forEach((key, value) -> {
