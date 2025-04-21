@@ -19,31 +19,31 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @ApplicationScoped
 public class SessionStorage {
 
-    /*
-    * Used to store users and assosiated sessions
-    * single user can have only one assosiated session
+    /**
+    * Used to store users and associated sessions
+    * single user can have only one associated session
     * view:
     * username -> (Session, UserAccount)
     */
     private static final ConcurrentHashMap<String, Pair<Session, User>> sessions = new ConcurrentHashMap<>();
     
-    /*
-    * Used to store users and assosiated puzzles
-    * single user can have multiple puzzles assosiated
+    /**
+    * Used to store users and associated puzzles
+    * single user can have multiple puzzles associated
     * view:
     * (username, puzzle_id) -> Puzzle
     */
     private static final ConcurrentHashMap<Pair<String, UUID>, Puzzle> puzzles = new ConcurrentHashMap<>();
     
-    /*
-    * Used to store games and assosiated sessions 
-    * single game can be assosiated with many sessions
+    /**
+    * Used to store games and associated sessions
+    * single game can be associated with many sessions
     * view:
     * game id -> (game, list of sessions)
     */
     private static final ConcurrentHashMap<UUID, Pair<ChessGame, CopyOnWriteArraySet<Session>>> gameSessions = new ConcurrentHashMap<>();
     
-    /*
+    /**
     * Used to store users who are waiting for opponents to be found
     * single user can be waiting on multiple games
     */
