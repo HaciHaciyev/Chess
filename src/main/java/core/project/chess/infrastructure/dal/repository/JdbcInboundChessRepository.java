@@ -32,8 +32,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             .into("GamePlayers")
             .columns("chess_game_id", "player_for_white_id", "player_for_black_id")
             .values(3)
-            .build()
-    );
+            .build());
 
     static final String SAVE_CHESS_GAME_HISTORY = insert()
             .into("ChessGameHistory")
@@ -48,18 +47,17 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
     static final String SAVE_PUZZLE = insert()
             .into("Puzzle")
-            .columns("id",
-                    "rating",
-                    "rating_deviation",
-                    "rating_volatility",
-                    "startPositionFEN",
-                    "pgn",
-                    "startPositionIndex"
-            )
+            .column("id")
+            .column("rating")
+            .column("rating_deviation")
+            .column("rating_volatility")
+            .column("startPositionFEN")
+            .column("pgn")
+            .column("startPositionIndex")
             .values(7)
             .build();
 
-    static final String SAVE_PUZZLE_SOLVING = String.format("%s; %s;",
+    static final String SAVE_PUZZLE_SOLVING = batchOf(
             update("Puzzle")
             .set("rating = ?, rating_deviation = ?, rating_volatility = ?")
             .where("id = ?")
@@ -68,8 +66,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             .into("UserPuzzles")
             .columns("puzzle_id", "user_id", "is_solved")
             .values(3)
-            .build()
-    );
+            .build());
 
     JdbcInboundChessRepository(JDBC jdbc) {
         this.jdbc = jdbc;
@@ -135,9 +132,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
     @Override
     public void updatePuzzleOnSolving(final Puzzle puzzle) {
-        if (!puzzle.isEnded()) {
-            throw new IllegalArgumentException("Puzzle is not ended.");
-        }
+        if (!puzzle.isEnded()) throw new IllegalArgumentException("Puzzle is not ended.");
 
         jdbc.write(SAVE_PUZZLE_SOLVING,
                 puzzle.rating().rating(),

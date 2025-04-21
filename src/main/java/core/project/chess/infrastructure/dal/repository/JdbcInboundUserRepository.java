@@ -18,31 +18,30 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     static final String INSERT_USER_ACCOUNT = insert()
             .into("UserAccount")
-            .columns("id",
-                    "firstname",
-                    "surname",
-                    "username",
-                    "email",
-                    "password",
-                    "rating",
-                    "rating_deviation",
-                    "rating_volatility",
-                    "bullet_rating",
-                    "bullet_rating_deviation",
-                    "bullet_rating_volatility",
-                    "blitz_rating",
-                    "blitz_rating_deviation",
-                    "blitz_rating_volatility",
-                    "rapid_rating",
-                    "rapid_rating_deviation",
-                    "rapid_rating_volatility",
-                    "puzzles_rating",
-                    "puzzles_rating_deviation",
-                    "puzzles_rating_volatility",
-                    "is_enable",
-                    "creation_date",
-                    "last_updated_date"
-            )
+            .column("id")
+            .column("firstname")
+            .column("surname")
+            .column("username")
+            .column("email")
+            .column("password")
+            .column("rating")
+            .column("rating_deviation")
+            .column("rating_volatility")
+            .column("bullet_rating")
+            .column("bullet_rating_deviation")
+            .column("bullet_rating_volatility")
+            .column("blitz_rating")
+            .column("blitz_rating_deviation")
+            .column("blitz_rating_volatility")
+            .column("rapid_rating")
+            .column("rapid_rating_deviation")
+            .column("rapid_rating_volatility")
+            .column("puzzles_rating")
+            .column("puzzles_rating_deviation")
+            .column("puzzles_rating_volatility")
+            .column("is_enable")
+            .column("creation_date")
+            .column("last_updated_date")
             .values(25)
             .build();
 
@@ -54,13 +53,12 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     static final String INSERT_USER_TOKEN = insert()
             .into("UserToken")
-            .columns("id",
-                    "user_id",
-                    "token",
-                    "is_confirmed",
-                    "creation_date",
-                    "expiration_date"
-            )
+            .column("id")
+            .column("user_id")
+            .column("token")
+            .column("is_confirmed")
+            .column("creation_date")
+            .column("expiration_date")
             .values(6)
             .build();
 
@@ -77,8 +75,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 rating = ?,
                 rating_deviation = ?,
                 rating_volatility = ?
-                """
-            )
+                """)
             .where("id = ?")
             .build();
 
@@ -114,12 +111,11 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                 puzzles_rating = ?,
                 puzzles_rating_deviation = ?,
                 puzzles_rating_volatility = ?
-                """
-            )
+                """)
             .where("id = ?")
             .build();
 
-    static final String UPDATE_USER_TOKEN_AND_ACCOUNT = String.format("%s; %s;",
+    static final String UPDATE_USER_TOKEN_AND_ACCOUNT = batchOf(
             update("UserToken")
             .set("is_confirmed = ?")
             .where("id = ?")
@@ -127,10 +123,9 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             update("UserAccount")
             .set("is_enable = ?, user_role = ?")
             .where("id = ?")
-            .build()
-    );
+            .build());
 
-    static final String DELETE_USER_TOKEN_AND_ACCOUNT = String.format("%s; %s;",
+    static final String DELETE_USER_TOKEN_AND_ACCOUNT = batchOf(
             delete()
             .from("UserToken")
             .where("id = ?")
@@ -138,8 +133,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             delete()
             .from("UserAccount")
             .where("id = ?")
-            .build()
-    );
+            .build());
 
     static private final String DELETE_REFRESH_TOKEN = delete()
             .from("RefreshToken")
