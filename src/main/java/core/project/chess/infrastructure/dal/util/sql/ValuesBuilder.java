@@ -4,7 +4,7 @@ public class ValuesBuilder {
     private final StringBuilder query;
 
     ValuesBuilder(StringBuilder query) {
-        this.query = query;
+        this.query = query.append(") ");
     }
 
     public SelectBuilder select() {

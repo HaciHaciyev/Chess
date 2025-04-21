@@ -16,7 +16,7 @@ public class InsertBuilder {
     }
 
     public ValuesBuilder into(String table, String... columns) {
-        query.append("INSERT INTO ").append(table).append(" (").append(String.join(", ", columns)).append(") ");
+        query.append("INSERT INTO ").append(table).append(" (").append(String.join(", ", columns));
         return new ValuesBuilder(query);
     }
 

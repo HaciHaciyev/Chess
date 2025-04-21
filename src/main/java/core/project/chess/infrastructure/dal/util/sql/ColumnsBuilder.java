@@ -4,11 +4,16 @@ public class ColumnsBuilder {
     private final StringBuilder query;
 
     ColumnsBuilder(StringBuilder query) {
-        this.query = query;
+        this.query = query.append("(");
     }
 
     public ValuesBuilder columns(String... columns) {
-        query.append("(").append(String.join(", ", columns)).append(") ");
+        query.append(String.join(", ", columns));
         return new ValuesBuilder(query);
+    }
+
+    public ColumnsBuilder column(String column) {
+        query.append(column).append(", ");
+        return new ColumnsBuilder(query);
     }
 }

@@ -1,14 +1,12 @@
 package core.project.chess.infrastructure.dal.util.sql;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.insert;
 import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.withAndInsert;
 import static core.project.chess.infrastructure.dal.util.sql.SelectBuilderTest.log;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Disabled("Passed test. Needed to be included in case of code changes related to SQLBuilder")
 class InsertBuilderTest {
 
     @Test
