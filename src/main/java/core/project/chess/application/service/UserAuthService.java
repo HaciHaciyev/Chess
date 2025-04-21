@@ -98,29 +98,33 @@ public class UserAuthService {
     }
 
     public void verification(String token) {
-        Log.infof("Verifying %s", token);
-        var foundToken = outboundUserRepository
-                .findToken(UUID.fromString(token))
-                .orElseThrow(() -> {
-                    Log.error("Verification failure, token does not exist");
-                    return responseException(Response.Status.NOT_FOUND, "This token does not exist.");
-                });
+        try {
+            Log.infof("Verifying %s", token);
+            var foundToken = outboundUserRepository
+                    .findToken(UUID.fromString(token))
+                    .orElseThrow(() -> {
+                        Log.error("Verification failure, token does not exist");
+                        return responseException(Response.Status.NOT_FOUND, "This token does not exist.");
+                    });
 
-        if (foundToken.isExpired()) {
-            Log.error("Verification failure, token expired");
-            try {
-                Log.infof("Deleting user %s", foundToken.user().username());
-                inboundUserRepository.deleteByToken(foundToken);
-            } catch (IllegalAccessException e) {
-                Log.error("Can't delete enabled account", e);
+            if (foundToken.isExpired()) {
+                Log.error("Verification failure, token expired");
+                try {
+                    Log.infof("Deleting user %s", foundToken.user().username());
+                    inboundUserRepository.deleteByToken(foundToken);
+                } catch (IllegalAccessException e) {
+                    Log.error("Can't delete enabled account", e);
+                }
+
+                throw responseException(Response.Status.BAD_REQUEST, "Token was expired. You need to register again.");
             }
 
-            throw responseException(Response.Status.BAD_REQUEST, "Token was expired. You need to register again.");
+            foundToken.confirm();
+            foundToken.user().enable();
+            inboundUserRepository.enable(foundToken);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
         }
-
-        foundToken.confirm();
-        foundToken.user().enable();
-        inboundUserRepository.enable(foundToken);
     }
 
     public Map<String, String> login(LoginForm loginForm) {
