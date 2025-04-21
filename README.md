@@ -20,7 +20,7 @@ The server side consists of two applications:
 - **Authentication & Security:** SmallRye JWT, Argon2
 - **Caching & Distributed Processing:** Redis, Redisson
 - **Real-Time Communication:** WebSockets
-- **Email Services:** Quarkus Mailer, Mailpit
+- **Email Services:** Quarkus Mailer
 - **File Parsing:** Apache Tika
 - **Logging:** JBoss LogManager
 - **Testing:** JUnit 5, Rest-Assured, AssertJ, Awaitility, Testcontainers, DataFaker
@@ -292,6 +292,228 @@ Body:
 **Responses:**
 - `200 OK` - Successfully saved a chess puzzle.
 - `400 BAD REQUEST` - Invalid puzzle.
+---
+
+## Articles
+
+---
+
+### `POST /articles/post`
+**Description:** Create a new article.  
+**Body**:
+```json
+{
+   "header": "string",
+   "summary": "string",
+   "body": "string",
+   "status": "DRAFT | PUBLISHED | ARCHIVED"
+}
+```
+**Auth:** JWT required  
+**Response:** `200 OK` – Returns the saved article
+
+---
+
+### `PATCH /articles/change-article-status`
+**Description:** Change status of an article (e.g., DRAFT → PUBLISHED)  
+**Query Params:**
+- `articleID` – Article ID
+- `status` – New status (`DRAFT | PUBLISHED | ARCHIVED`)  
+  **Auth:** JWT required  
+  **Response:** `202 Accepted` – Status updated
+
+---
+
+### `PUT /articles/update-article`
+**Description:** Update text/content of an article  
+**Query Params:**
+- `articleID` – ID of the article to update  
+  **Body:** `ArticleText` – New article content  
+  **Auth:** JWT required  
+  **Response:** `202 Accepted` – Article updated
+
+---
+
+### `GET /articles/viewArticle`
+**Description:** View full details of a specific article  
+**Query Params:**
+- `id` – Article ID  
+  **Auth:** JWT required  
+  **Response:** `200 OK` – Full article details
+
+---
+
+### `GET /articles/page`
+**Description:** Query a list of articles with filters and pagination  
+**Body/Form*:
+
+```json
+{
+   "searchQuery": "string",
+   "authorName": "string | null",
+   "tag": "string | null",
+   "sortBy": "VIEWS_ASC | VIEWS_DESC | LIKES_ASC | LIKES_DESC | LAST_MODIFICATION_ASC | LAST_MODIFICATION_DESC",
+   "pageNumber": "number",
+   "pageSize": "number"
+}
+```
+**Auth:** Not required  
+**Response:** `200 OK` – Paginated article list
+
+---
+
+### `GET /articles/home-page`
+**Description:** Public homepage articles  
+**Query Params:**
+- `pageNumber`
+- `pageSize`  
+  **Auth:** JWT required  
+  **Response:** `200 OK` – Homepage article list
+
+---
+
+### `GET /articles/archive`
+**Description:** View archived articles  
+**Query Params:**
+- `pageNumber`
+- `pageSize`  
+  **Auth:** JWT required  
+  **Response:** `200 OK` – Archived article list
+
+---
+
+### `GET /articles/draft`
+**Description:** View your draft articles  
+**Query Params:**
+- `pageNumber`
+- `pageSize`  
+  **Auth:** JWT required  
+  **Response:** `200 OK` – Drafts list
+
+---
+
+## Article likes
+
+---
+
+## Article Likes API
+
+### `POST /articles/likes/like-article`
+**Description:** Like an article  
+**Query Params:**
+- `articleID` – ID of the article to like  
+  **Auth:** JWT required  
+  **Response:** `204 No Content` – Like registered
+
+---
+
+### `DELETE /articles/likes/remove-like`
+**Description:** Remove your like from an article  
+**Query Params:**
+- `articleID` – ID of the article to remove the like from  
+  **Auth:** JWT required  
+  **Response:** `202 Accepted` – Like removed
+
+---
+
+Вот как можно оформить раздел для `ViewsResource` в твоём `README.md`:
+
+---
+
+## Article Views API
+
+### `DELETE /articles/views/delete`
+**Description:** Remove your view from an article (used for privacy or retraction)  
+**Query Params:**
+- `articleID` – ID of the article  
+  **Auth:** JWT required  
+  **Response:** `204 No Content` – View removed
+
+---
+
+---
+
+## Comments API
+
+### `POST /articles/comments/create`
+**Description:** Create a new comment for an article  
+**Body:**
+```json
+{
+   "articleID": "string",
+   "parentCommentID": "string | null",
+   "text": "string"
+}
+```
+**Auth:** JWT required  
+**Response:** `202 Accepted` – Comment created
+
+---
+
+### `PATCH /articles/comments/edit`
+**Description:** Edit an existing comment  
+**Query Params:**
+- `commentID` – ID of the comment to edit  
+  **Body:** Plain `text/plain` with the new comment text  
+  **Auth:** JWT required  
+  **Response:** `202 Accepted` – Returns updated comment
+
+---
+
+### `DELETE /articles/comments/delete`
+**Description:** Delete a comment  
+**Query Params:**
+- `commentID` – ID of the comment to delete  
+  **Auth:** JWT required  
+  **Response:** `202 Accepted` – Comment deleted
+
+---
+
+### `GET /articles/comments/page`
+**Description:** Get paginated comments for an article  
+**Query Params:**
+- `articleID` – Target article ID
+- `pageNumber` – Page number
+- `pageSize` – Number of comments per page  
+  **Auth:** Not required  
+  **Response:** `200 OK` – Paginated comment list
+
+---
+
+### `GET /articles/comments/page/child-comments`
+**Description:** Get paginated child comments (replies) for a parent comment  
+**Query Params:**
+- `articleID` – Target article ID
+- `parentCommentID` – ID of the parent comment
+- `pageNumber`
+- `pageSize`  
+  **Auth:** Not required  
+  **Response:** `200 OK` – Paginated child comments
+
+---
+
+---
+
+## Comment Likes API
+
+---
+
+### `POST /comments/likes/like-comment`
+**Description:** Like a comment  
+**Query Params:**
+- `commentID` – ID of the comment to like  
+  **Auth:** JWT required  
+  **Response:** `204 No Content` – Like registered
+
+---
+
+### `DELETE /comments/likes/remove-like`
+**Description:** Remove your like from a comment  
+**Query Params:**
+- `commentID` – ID of the comment to remove the like from  
+  **Auth:** JWT required  
+  **Response:** `202 Accepted` – Like removed
+
 ---
 
 ## Root Endpoint
