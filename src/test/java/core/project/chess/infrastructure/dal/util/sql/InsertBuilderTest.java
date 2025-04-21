@@ -11,6 +11,21 @@ class InsertBuilderTest {
 
     @Test
     void test() {
+
+        assertEquals("INSERT INTO ChessGame (id, player_for_white_rating, player_for_black_rating, time_controlling_type, creation_date, last_updated_date, is_game_over, game_result_status ) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
+                insert()
+                .into("ChessGame")
+                .column("id")
+                .column("player_for_white_rating")
+                .column("player_for_black_rating")
+                .column("time_controlling_type")
+                .column("creation_date")
+                .column("last_updated_date")
+                .column("is_game_over")
+                .column("game_result_status")
+                .values(8)
+                .build());
+
         assertEquals("INSERT INTO employees (id, name, salary) VALUES (?, ?, ?) ",
                 insert()
                         .into("employees", "id", "name", "salary")

@@ -19,15 +19,14 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     static final String SAVE_STARTED_CHESS_GAME = String.format("%s; %s;",
             insert()
             .into("ChessGame")
-            .columns("id",
-                    "player_for_white_rating",
-                    "player_for_black_rating",
-                    "time_controlling_type",
-                    "creation_date",
-                    "last_updated_date",
-                    "is_game_over",
-                    "game_result_status"
-            )
+            .column("id")
+            .column("player_for_white_rating")
+            .column("player_for_black_rating")
+            .column("time_controlling_type")
+            .column("creation_date")
+            .column("last_updated_date")
+            .column("is_game_over")
+            .column("game_result_status")
             .values(8)
             .build(),
             insert()
