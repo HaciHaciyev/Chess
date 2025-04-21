@@ -7,8 +7,7 @@ import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.insert;
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.update;
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.*;
 
 @Transactional
 @ApplicationScoped
@@ -16,7 +15,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
     private final JDBC jdbc;
 
-    static final String SAVE_STARTED_CHESS_GAME = String.format("%s; %s;",
+    static final String SAVE_STARTED_CHESS_GAME = batchOf(
             insert()
             .into("ChessGame")
             .column("id")

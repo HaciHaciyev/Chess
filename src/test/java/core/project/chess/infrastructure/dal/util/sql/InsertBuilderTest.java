@@ -2,8 +2,7 @@ package core.project.chess.infrastructure.dal.util.sql;
 
 import org.junit.jupiter.api.Test;
 
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.insert;
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.withAndInsert;
+import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.*;
 import static core.project.chess.infrastructure.dal.util.sql.SelectBuilderTest.log;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -11,6 +10,27 @@ class InsertBuilderTest {
 
     @Test
     void test() {
+
+        assertEquals("INSERT INTO ChessGame (id, player_for_white_rating, player_for_black_rating, time_controlling_type, creation_date, last_updated_date, is_game_over, game_result_status ) VALUES (?, ?, ?, ?, ?, ?, ?, ?); INSERT INTO GamePlayers (chess_game_id, player_for_white_id, player_for_black_id) VALUES (?, ?, ?);",
+                batchOf(
+                insert()
+                        .into("ChessGame")
+                        .column("id")
+                        .column("player_for_white_rating")
+                        .column("player_for_black_rating")
+                        .column("time_controlling_type")
+                        .column("creation_date")
+                        .column("last_updated_date")
+                        .column("is_game_over")
+                        .column("game_result_status")
+                        .values(8)
+                        .build(),
+                insert()
+                        .into("GamePlayers")
+                        .columns("chess_game_id", "player_for_white_id", "player_for_black_id")
+                        .values(3)
+                        .build()));
+
 
         assertEquals("INSERT INTO ChessGame (id, player_for_white_rating, player_for_black_rating, time_controlling_type, creation_date, last_updated_date, is_game_over, game_result_status ) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
                 insert()
