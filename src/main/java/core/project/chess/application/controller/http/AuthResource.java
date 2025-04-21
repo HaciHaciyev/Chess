@@ -22,15 +22,6 @@ public class AuthResource {
     }
 
     @POST
-    @Path("/login")
-    public Response login(LoginForm loginForm) {
-        if (Objects.isNull(loginForm))
-            throw responseException(Response.Status.BAD_REQUEST, "Login form is null.");
-
-        return Response.ok(userAuthService.login(loginForm)).build();
-    }
-
-    @POST
     @Path("/registration")
     public Response registration(RegistrationForm registrationForm) {
         if (Objects.isNull(registrationForm))
@@ -42,12 +33,21 @@ public class AuthResource {
 
     @PATCH
     @Path("/token/verification")
-    public Response tokenVerification(@QueryParam("token") String token) {
+    public Response verification(@QueryParam("token") String token) {
         if (Objects.isNull(token))
             throw responseException(Response.Status.BAD_REQUEST, "Token is null.");
 
-        userAuthService.tokenVerification(token);
+        userAuthService.verification(token);
         return Response.ok("Now, account is enabled.").build();
+    }
+
+    @POST
+    @Path("/login")
+    public Response login(LoginForm loginForm) {
+        if (Objects.isNull(loginForm))
+            throw responseException(Response.Status.BAD_REQUEST, "Login form is null.");
+
+        return Response.ok(userAuthService.login(loginForm)).build();
     }
 
     @PATCH

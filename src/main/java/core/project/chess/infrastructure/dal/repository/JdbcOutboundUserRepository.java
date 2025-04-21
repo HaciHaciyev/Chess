@@ -2,7 +2,6 @@ package core.project.chess.infrastructure.dal.repository;
 
 import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.commons.containers.Result;
-import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.events.AccountEvents;
@@ -178,13 +177,17 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public Result<Pair<String, String>, Throwable> findRefreshToken(String refreshToken) {
-        return jdbc.read(FIND_REFRESH_TOKEN, rs -> Pair.of(rs.getString("user_id"), rs.getString("token")), refreshToken);
+    public Result<RefreshToken, Throwable> findRefreshToken(String refreshToken) {
+        return jdbc.read(FIND_REFRESH_TOKEN, this::refreshTokenMapper, refreshToken);
     }
 
     @Override
     public Result<UserProperties, Throwable> userProperties(String username) {
         return jdbc.read(FIND_USER_PROPERTIES, this::userPropertiesMapper, username);
+    }
+
+    private RefreshToken refreshTokenMapper(final ResultSet rs) throws SQLException {
+        return new RefreshToken(UUID.fromString(rs.getString("user_id")), rs.getString("token"));
     }
 
     private UserProperties userPropertiesMapper(final ResultSet rs) throws SQLException {

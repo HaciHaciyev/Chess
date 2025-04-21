@@ -2,13 +2,13 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
-import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Password;
 import core.project.chess.domain.user.value_objects.PersonalData;
+import core.project.chess.domain.user.value_objects.RefreshToken;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.security.JwtUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
@@ -55,39 +55,6 @@ public class UserAuthService {
         this.emailInteractionService = emailInteractionService;
     }
 
-    public Map<String, String> login(LoginForm loginForm) {
-        try {
-            Password.validate(loginForm.password());
-            Username.validate(loginForm.username());
-
-            final User user = outboundUserRepository
-                    .findByUsername(loginForm.username())
-                    .orElseThrow(() -> {
-                        Log.errorf("Login failure, user %s not found", loginForm.username());
-                        return responseException(Response.Status.NOT_FOUND, String.format(NOT_FOUND, loginForm.username()));
-                    });
-
-            if (!user.isEnabled()) {
-                Log.errorf("Login failure, account %s is not enabled", loginForm.username());
-                throw responseException(Response.Status.BAD_REQUEST, NOT_ENABLED);
-            }
-
-            final boolean isPasswordsMatch = passwordEncoder.verify(loginForm.password(), user.password());
-            if (!isPasswordsMatch) {
-                Log.errorf("Login failure, wrong password for user %s", loginForm.username());
-                throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
-            }
-
-            final String refreshToken = jwtUtility.refreshToken(user);
-            inboundUserRepository.saveRefreshToken(user, refreshToken);
-
-            final String token = jwtUtility.generateToken(user);
-            return Map.of("token", token, "refreshToken", refreshToken);
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
-        }
-    }
-
     public void registration(RegistrationForm registrationForm) {
         try {
             Password.validate(registrationForm.password());
@@ -130,7 +97,7 @@ public class UserAuthService {
         }
     }
 
-    public void tokenVerification(String token) {
+    public void verification(String token) {
         Log.infof("Verifying %s", token);
         var foundToken = outboundUserRepository
                 .findToken(UUID.fromString(token))
@@ -156,11 +123,44 @@ public class UserAuthService {
         inboundUserRepository.enable(foundToken);
     }
 
+    public Map<String, String> login(LoginForm loginForm) {
+        try {
+            Password.validate(loginForm.password());
+            Username.validate(loginForm.username());
+
+            final User user = outboundUserRepository
+                    .findByUsername(loginForm.username())
+                    .orElseThrow(() -> {
+                        Log.errorf("Login failure, user %s not found", loginForm.username());
+                        return responseException(Response.Status.NOT_FOUND, String.format(NOT_FOUND, loginForm.username()));
+                    });
+
+            if (!user.isEnabled()) {
+                Log.errorf("Login failure, account %s is not enabled", loginForm.username());
+                throw responseException(Response.Status.BAD_REQUEST, NOT_ENABLED);
+            }
+
+            final boolean isPasswordsMatch = passwordEncoder.verify(loginForm.password(), user.password());
+            if (!isPasswordsMatch) {
+                Log.errorf("Login failure, wrong password for user %s", loginForm.username());
+                throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
+            }
+
+            final String refreshToken = jwtUtility.refreshToken(user);
+            inboundUserRepository.saveRefreshToken(user, refreshToken);
+
+            final String token = jwtUtility.generateToken(user);
+            return Map.of("token", token, "refreshToken", refreshToken);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
+        }
+    }
+
     public String refreshToken(String refreshToken) {
-        final Pair<String, String> foundedPairResult = outboundUserRepository.findRefreshToken(refreshToken)
+        final RefreshToken foundedPairResult = outboundUserRepository.findRefreshToken(refreshToken)
                 .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "This refresh token is not found."));
 
-        long tokenExpirationDate = jwtUtility.parseJWT(foundedPairResult.getSecond())
+        long tokenExpirationDate = jwtUtility.parseJWT(foundedPairResult.refreshToken())
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Something went wrong, try again later."))
                 .getExpirationTime();
 
@@ -172,7 +172,7 @@ public class UserAuthService {
         }
 
         final User user = outboundUserRepository
-                .findById(UUID.fromString(foundedPairResult.getFirst()))
+                .findById(foundedPairResult.userID())
                 .orElseThrow(() -> {
                     Log.error("User is not found");
                     return responseException(Response.Status.NOT_FOUND, "User not found.");
