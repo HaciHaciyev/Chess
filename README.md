@@ -85,6 +85,18 @@ POST /account/registration
 
 ---
 
+### Resend of Email Verification token
+**Endpoint:**
+```
+GET /account/resend/verification/token?email={email}
+```
+**Responses:**
+- `200 OK` – Successfully resend token to user email.
+- `400 BAD REQUEST` – If the email is null or invalid.
+- `404 NOT FOUND` - User not found.
+- `409 CONFLICT` - User is already verified.
+---
+
 ### Email Verification
 **Endpoint:**
 ```

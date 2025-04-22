@@ -31,7 +31,7 @@ public class AuthResource {
         return Response.ok("Registration successful. Verify your email.").build();
     }
 
-    @POST
+    @GET
     @Path("/resend/verification/token")
     public Response resend(@QueryParam("email") String email) {
         if (Objects.isNull(email))
