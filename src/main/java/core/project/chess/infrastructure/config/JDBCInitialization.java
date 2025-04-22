@@ -10,11 +10,11 @@ import javax.sql.DataSource;
 
 @Startup
 @ApplicationScoped
-public class JDBCLightInit {
+public class JDBCInitialization {
 
     private final DataSource dataSource;
 
-    public JDBCLightInit(Instance<DataSource> dataSource) {
+    public JDBCInitialization(Instance<DataSource> dataSource) {
         this.dataSource = dataSource.get();
     }
 

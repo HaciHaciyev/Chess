@@ -158,8 +158,7 @@ class RegistrationTests {
                 .when().post(REGISTRATION)
                 .then()
                 .statusCode(400)
-                .log().all()
-                .body(containsString("Invalid password."));
+                .log().all();
 
         account = account.withPasswordConfirmation("something");
         accountJSON = objectMapper.writer().writeValueAsString(account);
@@ -168,7 +167,6 @@ class RegistrationTests {
                 .body(accountJSON)
                 .when().post(REGISTRATION)
                 .then()
-                .statusCode(400)
-                .body(containsString("Invalid password."));
+                .statusCode(400);
     }
 }

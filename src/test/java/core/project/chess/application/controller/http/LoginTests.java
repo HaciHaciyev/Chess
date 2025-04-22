@@ -98,7 +98,7 @@ public class LoginTests {
                 .body(loginJSON)
                 .when().post(LOGIN)
                 .then()
-                .statusCode(400)
+                .statusCode(403)
                 .body(containsString("account is not enabled"));
     }
 

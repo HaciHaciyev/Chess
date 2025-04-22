@@ -65,7 +65,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .build()
             .toSQlQuery(),
             update("UserAccount")
-            .set("is_enable = ?, user_role = ?")
+            .set("is_enable = ?")
             .where("id = ?")
             .build()
             .toSQlQuery());
