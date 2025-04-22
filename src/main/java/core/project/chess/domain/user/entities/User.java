@@ -112,10 +112,6 @@ public class User {
         return personalData.password();
     }
 
-    public boolean isEnable() {
-        return isEnable;
-    }
-
     public AccountEvents accountEvents() {
         return accountEvents;
     }
@@ -138,7 +134,7 @@ public class User {
         return Optional.ofNullable(profilePicture);
     }
 
-    public boolean isEnabled() {
+    public boolean isEnable() {
         return isEnable;
     }
 

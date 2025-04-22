@@ -6,11 +6,8 @@ import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
-import core.project.chess.domain.user.value_objects.Password;
-import core.project.chess.domain.user.value_objects.PersonalData;
-import core.project.chess.domain.user.value_objects.RefreshToken;
-import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.security.JwtUtility;
+import core.project.chess.domain.user.value_objects.*;
+import core.project.chess.infrastructure.security.JWTUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -27,7 +24,7 @@ import static core.project.chess.application.util.JSONUtilities.responseExceptio
 @ApplicationScoped
 public class UserAuthService {
 
-    private final JwtUtility jwtUtility;
+    private final JWTUtility JWTUtility;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -43,12 +40,12 @@ public class UserAuthService {
 
     public static final String EMAIL_VERIFICATION_URL = "http://localhost:8080/chessland/account/token/verification?token=%s";
 
-    UserAuthService(JwtUtility jwtUtility,
+    UserAuthService(JWTUtility JWTUtility,
                     PasswordEncoder passwordEncoder,
                     InboundUserRepository inboundUserRepository,
                     OutboundUserRepository outboundUserRepository,
                     EmailInteractionService emailInteractionService) {
-        this.jwtUtility = jwtUtility;
+        this.JWTUtility = JWTUtility;
         this.passwordEncoder = passwordEncoder;
         this.inboundUserRepository = inboundUserRepository;
         this.outboundUserRepository = outboundUserRepository;
@@ -87,19 +84,36 @@ public class UserAuthService {
             inboundUserRepository.save(user);
 
             EmailConfirmationToken token = EmailConfirmationToken.createToken(user);
-            inboundUserRepository.saveUserToken(token);
+            inboundUserRepository.saveVerificationToken(token);
 
             String link = EMAIL_VERIFICATION_URL.formatted(token.token().token());
-
             emailInteractionService.sendToEmail(personalData.email(), link);
         } catch (IllegalArgumentException | NullPointerException e) {
             throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
         }
     }
 
+    public void resendVerificationToken(String receivedEmail) {
+        try {
+            Email email = new Email(receivedEmail);
+
+            User user = outboundUserRepository.findByEmail(email)
+                    .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "User by this email is do not found."));
+
+            if (user.isEnable()) throw responseException(Response.Status.CONFLICT, "User is already verified.");
+
+            inboundUserRepository.removeVerificationToken(user);
+            EmailConfirmationToken token = EmailConfirmationToken.createToken(user);
+            inboundUserRepository.saveVerificationToken(token);
+            String link = EMAIL_VERIFICATION_URL.formatted(token.token().token());
+            emailInteractionService.sendToEmail(email.email(), link);
+        } catch (IllegalArgumentException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
+        }
+    }
+
     public void verification(String token) {
         try {
-            Log.infof("Verifying %s", token);
             var foundToken = outboundUserRepository
                     .findToken(UUID.fromString(token))
                     .orElseThrow(() -> {
@@ -107,21 +121,15 @@ public class UserAuthService {
                         return responseException(Response.Status.NOT_FOUND, "This token does not exist.");
                     });
 
-            if (foundToken.isExpired()) {
-                Log.error("Verification failure, token expired");
-                try {
-                    Log.infof("Deleting user %s", foundToken.user().username());
-                    inboundUserRepository.deleteByToken(foundToken);
-                } catch (IllegalAccessException e) {
-                    Log.error("Can't delete enabled account", e);
-                }
+            if (foundToken.isExpired())
+                throw responseException(Response.Status.FORBIDDEN, "Token was expired.");
 
-                throw responseException(Response.Status.BAD_REQUEST, "Token was expired. You need to register again.");
-            }
+            if (foundToken.user().isEnable())
+                throw responseException(Response.Status.FORBIDDEN, "User already verified.");
 
             foundToken.confirm();
             foundToken.user().enable();
-            inboundUserRepository.enable(foundToken);
+            inboundUserRepository.updateUserVerification(foundToken);
         } catch (IllegalArgumentException | NullPointerException e) {
             throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
         }
@@ -139,9 +147,9 @@ public class UserAuthService {
                         return responseException(Response.Status.NOT_FOUND, String.format(NOT_FOUND, loginForm.username()));
                     });
 
-            if (!user.isEnabled()) {
+            if (!user.isEnable()) {
                 Log.errorf("Login failure, account %s is not enabled", loginForm.username());
-                throw responseException(Response.Status.BAD_REQUEST, NOT_ENABLED);
+                throw responseException(Response.Status.FORBIDDEN, NOT_ENABLED);
             }
 
             final boolean isPasswordsMatch = passwordEncoder.verify(loginForm.password(), user.password());
@@ -150,38 +158,46 @@ public class UserAuthService {
                 throw responseException(Response.Status.BAD_REQUEST, "Invalid password.");
             }
 
-            final String refreshToken = jwtUtility.refreshToken(user);
+            final String refreshToken = JWTUtility.refreshToken(user);
             inboundUserRepository.saveRefreshToken(user, refreshToken);
 
-            final String token = jwtUtility.generateToken(user);
+            final String token = JWTUtility.generateToken(user);
             return Map.of("token", token, "refreshToken", refreshToken);
         } catch (IllegalArgumentException | NullPointerException e) {
             throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
+        } catch (IllegalStateException e) {
+            throw responseException(Response.Status.FORBIDDEN, e.getMessage());
         }
     }
 
     public String refreshToken(String refreshToken) {
-        final RefreshToken foundedPairResult = outboundUserRepository.findRefreshToken(refreshToken)
-                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "This refresh token is not found."));
+        try {
+            final RefreshToken foundedPairResult = outboundUserRepository.findRefreshToken(refreshToken)
+                    .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "This refresh token is not found."));
 
-        long tokenExpirationDate = jwtUtility.parseJWT(foundedPairResult.refreshToken())
-                .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Something went wrong, try again later."))
-                .getExpirationTime();
+            long tokenExpirationDate = JWTUtility.parseJWT(foundedPairResult.refreshToken())
+                    .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "Something went wrong, try again later."))
+                    .getExpirationTime();
 
-        final var tokenExpiration = LocalDateTime.ofEpochSecond(tokenExpirationDate, 0, ZoneOffset.UTC);
+            final var tokenExpiration = LocalDateTime.ofEpochSecond(tokenExpirationDate, 0, ZoneOffset.UTC);
 
-        if (LocalDateTime.now(ZoneOffset.UTC).isAfter(tokenExpiration)) {
-            inboundUserRepository.removeRefreshToken(refreshToken);
-            throw responseException(Response.Status.BAD_REQUEST, "Refresh token is expired, you need to login.");
+            if (LocalDateTime.now(ZoneOffset.UTC).isAfter(tokenExpiration)) {
+                inboundUserRepository.removeRefreshToken(refreshToken);
+                throw responseException(Response.Status.BAD_REQUEST, "Refresh token is expired, you need to login.");
+            }
+
+            final User user = outboundUserRepository
+                    .findById(foundedPairResult.userID())
+                    .orElseThrow(() -> {
+                        Log.error("User is not found");
+                        return responseException(Response.Status.NOT_FOUND, "User not found.");
+                    });
+
+            return JWTUtility.generateToken(user);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
+        } catch (IllegalStateException e) {
+            throw responseException(Response.Status.FORBIDDEN, e.getMessage());
         }
-
-        final User user = outboundUserRepository
-                .findById(foundedPairResult.userID())
-                .orElseThrow(() -> {
-                    Log.error("User is not found");
-                    return responseException(Response.Status.NOT_FOUND, "User not found.");
-                });
-
-        return jwtUtility.generateToken(user);
     }
 }

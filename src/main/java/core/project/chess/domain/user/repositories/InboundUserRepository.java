@@ -17,11 +17,11 @@ public interface InboundUserRepository {
 
     void updateOfPuzzleRating(User user);
 
-    void saveUserToken(EmailConfirmationToken token);
+    void saveVerificationToken(EmailConfirmationToken token);
 
-    void enable(EmailConfirmationToken token);
+    void removeVerificationToken(User user);
 
-    void deleteByToken(EmailConfirmationToken token) throws IllegalAccessException;
+    void updateUserVerification(EmailConfirmationToken token);
 
     void saveRefreshToken(User user, String refreshToken);
 

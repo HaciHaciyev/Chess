@@ -15,17 +15,19 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Singleton
-public class JwtUtility {
+public class JWTUtility {
 
     private final JWTParser jwtParser;
 
-    public JwtUtility(JWTParser jwtParser) {
+    public JWTUtility(JWTParser jwtParser) {
         this.jwtParser = jwtParser;
     }
 
     public String generateToken(User user) {
-        Duration expiration = Duration.ofDays(1).plusSeconds(1);
+        if (!user.isEnable())
+            throw new IllegalStateException("It is forbidden to generate a token for an unverified user.");
 
+        Duration expiration = Duration.ofDays(1).plusSeconds(1);
         return Jwt.issuer("Chessland")
                 .upn(user.username())
                 .expiresIn(expiration)
@@ -33,8 +35,10 @@ public class JwtUtility {
     }
 
     public String refreshToken(User user) {
-        Duration year = Duration.ofDays(365);
+        if (!user.isEnable())
+            throw new IllegalStateException("It is forbidden to generate a token for an unverified user.");
 
+        Duration year = Duration.ofDays(365);
         return Jwt.issuer("Chessland")
                 .upn(user.username())
                 .expiresIn(year)

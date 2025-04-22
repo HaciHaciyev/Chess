@@ -1,26 +1,8 @@
 package core.project.chess.application.controller.ws;
 
-import core.project.chess.application.dto.chess.Message;
-import core.project.chess.application.dto.chess.MessageType;
-import core.project.chess.infrastructure.security.JwtUtility;
-import io.quarkus.logging.Log;
-import jakarta.inject.Inject;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.websocket.ContainerProvider;
-import jakarta.websocket.Session;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import testUtils.AuthUtils;
-import testUtils.WSClient;
-
-import java.net.URI;
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 @QuarkusTest
 @WithTestResource(MessagingTestResource.class)

@@ -22,7 +22,7 @@ import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.clients.PuzzlerClient;
 import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
-import core.project.chess.infrastructure.security.JwtUtility;
+import core.project.chess.infrastructure.security.JWTUtility;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
@@ -39,7 +39,7 @@ import static core.project.chess.application.util.WSUtilities.sendMessage;
 @ApplicationScoped
 public class ChessGameService {
 
-    private final JwtUtility jwtUtility;
+    private final JWTUtility JWTUtility;
 
     private final PuzzleService puzzleService;
 
@@ -57,11 +57,11 @@ public class ChessGameService {
 
     private final GameInvitationsRepository partnershipGameCacheService;
 
-    ChessGameService(JwtUtility jwtUtility, PuzzleService puzzleService, PuzzlerClient puzzlerClient, SessionStorage sessionStorage,
+    ChessGameService(JWTUtility JWTUtility, PuzzleService puzzleService, PuzzlerClient puzzlerClient, SessionStorage sessionStorage,
                      ChessGameFactory chessGameFactory, InboundChessRepository inboundChessRepository,
                      OutboundUserRepository outboundUserRepository, GameFunctionalityService gameFunctionalityService,
                      GameInvitationsRepository partnershipGameCacheService) {
-        this.jwtUtility = jwtUtility;
+        this.JWTUtility = JWTUtility;
         this.puzzleService = puzzleService;
         this.puzzlerClient = puzzlerClient;
         this.sessionStorage = sessionStorage;
@@ -124,7 +124,7 @@ public class ChessGameService {
     }
 
     public Optional<JsonWebToken> validateToken(Session session) {
-        return jwtUtility.extractJWT(session)
+        return JWTUtility.extractJWT(session)
                 .or(() -> {
                     closeSession(session, Message.error("You are not authorized. Token is required."));
                     sessionStorage.removeSession(session);

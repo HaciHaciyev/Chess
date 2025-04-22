@@ -31,6 +31,16 @@ public class AuthResource {
         return Response.ok("Registration successful. Verify your email.").build();
     }
 
+    @POST
+    @Path("/resend/verification/token")
+    public Response resend(@QueryParam("email") String email) {
+        if (Objects.isNull(email))
+            throw responseException(Response.Status.BAD_REQUEST, "Email us null");
+
+        userAuthService.resendVerificationToken(email);
+        return Response.ok().build();
+    }
+
     @PATCH
     @Path("/token/verification")
     public Response verification(@QueryParam("token") String token) {

@@ -46,14 +46,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .build()
             .sql();
 
-    static final String INSERT_NEW_PARTNERSHIP = insert()
-            .into("UserPartnership")
-            .columns("user_id", "partner_id")
-            .values()
-            .build()
-            .sql();
-
-    static final String INSERT_USER_TOKEN = insert()
+    static final String INSERT_VERIFICATION_TOKEN = insert()
             .into("UserToken")
             .column("id")
             .column("user_id")
@@ -62,6 +55,24 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .column("creation_date")
             .column("expiration_date")
             .values()
+            .build()
+            .sql();
+
+    static final String UPDATE_USER_TOKEN_AND_ACCOUNT_VERIFICATION = batchOf(
+            update("UserToken")
+            .set("is_confirmed = ?")
+            .where("id = ?")
+            .build()
+            .toSQlQuery(),
+            update("UserAccount")
+            .set("is_enable = ?, user_role = ?")
+            .where("id = ?")
+            .build()
+            .toSQlQuery());
+
+    static final String REMOVE_VERIFICATION_TOKEN = delete()
+            .from("UserToken")
+            .where("user_id = ?")
             .build()
             .sql();
 
@@ -124,30 +135,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .build()
             .sql();
 
-    static final String UPDATE_USER_TOKEN_AND_ACCOUNT = batchOf(
-            update("UserToken")
-            .set("is_confirmed = ?")
-            .where("id = ?")
-            .build()
-            .toSQlQuery(),
-            update("UserAccount")
-            .set("is_enable = ?, user_role = ?")
-            .where("id = ?")
-            .build()
-            .toSQlQuery());
-
-    static final String DELETE_USER_TOKEN_AND_ACCOUNT = batchOf(
-            delete()
-            .from("UserToken")
-            .where("id = ?")
-            .build()
-            .toSQlQuery(),
-            delete()
-            .from("UserAccount")
-            .where("id = ?")
-            .build()
-            .toSQlQuery());
-
     static private final String DELETE_REFRESH_TOKEN = delete()
             .from("RefreshToken")
             .where("token = ?")
@@ -160,7 +147,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void save(final User user) {
-
         jdbc.write(INSERT_USER_ACCOUNT,
                         user.id().toString(),
                         user.firstname(),
@@ -183,7 +169,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                         user.puzzlesRating().rating(),
                         user.puzzlesRating().ratingDeviation(),
                         user.puzzlesRating().volatility(),
-                        user.isEnabled(),
+                        user.isEnable(),
                         user.accountEvents().creationDate(),
                         user.accountEvents().lastUpdateDate())
                 .ifFailure(Throwable::printStackTrace);
@@ -191,7 +177,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfRating(final User user) {
-
         jdbc.write(UPDATE_USER_RATING,
                         user.rating().rating(),
                         user.rating().ratingDeviation(),
@@ -202,7 +187,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfBulletRating(User user) {
-
         jdbc.write(UPDATE_USER_BULLET_RATING,
                         user.bulletRating().rating(),
                         user.bulletRating().ratingDeviation(),
@@ -213,7 +197,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfBlitzRating(User user) {
-
         jdbc.write(UPDATE_USER_BLITZ_RATING,
                         user.blitzRating().rating(),
                         user.blitzRating().ratingDeviation(),
@@ -224,7 +207,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfRapidRating(User user) {
-
         jdbc.write(UPDATE_USER_RAPID_RATING,
                         user.rapidRating().rating(),
                         user.rapidRating().ratingDeviation(),
@@ -245,9 +227,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void saveUserToken(final EmailConfirmationToken token) {
-
-        jdbc.write(INSERT_USER_TOKEN,
+    public void saveVerificationToken(final EmailConfirmationToken token) {
+        jdbc.write(INSERT_VERIFICATION_TOKEN,
                         token.tokenID().toString(),
                         token.user().id().toString(),
                         token.token().token().toString(),
@@ -258,27 +239,20 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
-    public void enable(final EmailConfirmationToken token) {
-        if (!token.isConfirmed() || !token.user().isEnabled())
-            throw new IllegalArgumentException("Token needs to be confirmed & UserAccount needs to be enabled");
-
-        jdbc.write(UPDATE_USER_TOKEN_AND_ACCOUNT,
-                        token.isConfirmed(),
-                        token.tokenID().toString(),
-                        token.user().isEnabled(),
-                        token.user().id().toString())
+    public void removeVerificationToken(User user) {
+        jdbc.write(REMOVE_VERIFICATION_TOKEN, user.id().toString())
                 .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
-    public void deleteByToken(final EmailConfirmationToken token) throws IllegalAccessException {
-        final boolean isEnable = token.user().isEnabled();
+    public void updateUserVerification(final EmailConfirmationToken token) {
+        if (!token.isConfirmed() || !token.user().isEnable())
+            throw new IllegalArgumentException("Token needs to be confirmed & UserAccount needs to be enabled");
 
-        if (isEnable || token.isConfirmed())
-            throw new IllegalAccessException("It is prohibited to delete an accessible account");
-
-        jdbc.write(DELETE_USER_TOKEN_AND_ACCOUNT,
+        jdbc.write(UPDATE_USER_TOKEN_AND_ACCOUNT_VERIFICATION,
+                        token.isConfirmed(),
                         token.tokenID().toString(),
+                        token.user().isEnable(),
                         token.user().id().toString())
                 .ifFailure(Throwable::printStackTrace);
     }
