@@ -126,8 +126,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .build()
             .sql();
 
-    JdbcOutboundUserRepository(JDBC jdbc) {
-        this.jdbc = jdbc;
+    JdbcOutboundUserRepository() {
+        this.jdbc = JDBC.instance();
     }
 
     @Override
