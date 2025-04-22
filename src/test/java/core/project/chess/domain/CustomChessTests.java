@@ -237,7 +237,7 @@ class CustomChessTests {
         // 10. STALEMATE
         chessGame.doMove(firstPlayerUsername, c8, e6, null);
 
-        assertEquals(GameResult.DRAW, chessGame.gameResult().orElseThrow());
+        assertEquals(GameResult.DRAW, chessGame.gameResult());
     }
 
     @Test

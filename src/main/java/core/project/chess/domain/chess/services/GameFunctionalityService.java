@@ -3,6 +3,7 @@ package core.project.chess.domain.chess.services;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.enumerations.MessageAddressee;
 import core.project.chess.domain.chess.enumerations.UndoMoveResult;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
@@ -196,7 +197,7 @@ public class GameFunctionalityService {
 
             final Message message = Message.builder(MessageType.GAME_ENDED)
                     .gameID(chessGame.chessGameID().toString())
-                    .message("Game is ended by result {%s}".formatted(chessGame.gameResult().orElseThrow().toString()))
+                    .message("Game is ended by result {%s}".formatted(chessGame.gameResult().toString()))
                     .build();
 
             return Pair.of(MessageAddressee.FOR_ALL, message);
@@ -226,7 +227,7 @@ public class GameFunctionalityService {
 
         final Message message = Message.builder(MessageType.GAME_ENDED)
                 .gameID(chessGame.chessGameID().toString())
-                .message("Game is ended by ThreeFold rule, game result is: {%s}".formatted(chessGame.gameResult().orElseThrow().toString()))
+                .message("Game is ended by ThreeFold rule, game result is: {%s}".formatted(chessGame.gameResult().toString()))
                 .build();
 
         return Pair.of(MessageAddressee.FOR_ALL, message);
@@ -257,14 +258,14 @@ public class GameFunctionalityService {
 
         final Message message = Message.builder(MessageType.GAME_ENDED)
                 .gameID(chessGame.chessGameID().toString())
-                .message("Game is ended by agreement, game result is {%s}".formatted(chessGame.gameResult().orElseThrow().toString()))
+                .message("Game is ended by agreement, game result is {%s}".formatted(chessGame.gameResult().toString()))
                 .build();
 
         return Pair.of(MessageAddressee.FOR_ALL, message);
     }
 
     public void executeGameOverOperations(final ChessGame chessGame) {
-        if (chessGame.gameResult().isEmpty()) throw new IllegalStateException("You can`t save not finished game.");
+        if (chessGame.gameResult() == GameResult.NONE) throw new IllegalStateException("You can`t save not finished game.");
         if (outboundChessRepository.isChessHistoryPresent(chessGame.historyID())) {
             Log.infof("History of game %s is already present", chessGame.chessGameID());
             return;

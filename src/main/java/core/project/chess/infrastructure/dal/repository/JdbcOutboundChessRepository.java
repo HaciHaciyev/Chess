@@ -1,5 +1,7 @@
 package core.project.chess.infrastructure.dal.repository;
 
+import com.hadzhy.jdbclight.jdbc.JDBC;
+import com.hadzhy.jdbclight.sql.Order;
 import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.application.dto.chess.Puzzle;
 import core.project.chess.domain.chess.entities.ChessGame;
@@ -8,8 +10,6 @@ import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
-import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
-import core.project.chess.infrastructure.dal.util.sql.Order;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.select;
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.withAndSelect;
+import static com.hadzhy.jdbclight.sql.SQLBuilder.select;
+import static com.hadzhy.jdbclight.sql.SQLBuilder.withAndSelect;
 
 @Transactional
 @ApplicationScoped
@@ -34,7 +34,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .count("id")
             .from("ChessGameHistory")
             .where("id = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String GET_PUZZLE = select()
             .column("id")
@@ -45,7 +46,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .column("startPositionIndex")
             .from("Puzzle")
             .where("id = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String RANDOM_PUZZLE = select()
             .column("id")
@@ -57,8 +59,9 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .from("Puzzle")
             .where("rating BETWEEN ?")
             .and("?")
-            .and("id NOT IN (%s)".formatted(select().column("id").from("UserPuzzles")))
-            .limitAndOffset(1, 0);
+            .and("id NOT IN (SELECT id from UserPuzzles)")
+            .limitAndOffset(1, 0)
+            .sql();
 
     static final String LIST_OF_PUZZLES = select()
             .column("id")
@@ -70,7 +73,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .from("Puzzle")
             .where("rating BETWEEN ?")
             .and("?")
-            .limitAndOffset();
+            .limitAndOffset()
+            .sql();
 
     static final String GET_CHESS_GAME = select()
             .column("cgh.id").as("chessHistoryId")
@@ -89,7 +93,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .join("UserAccount wa", "gp.player_for_white_id = wa.id")
             .join("UserAccount ba", "gp.player_for_black_id = ba.id")
             .where("cgh.id = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String LIST_OF_GAMES = withAndSelect(
             "filtered_games", select()
@@ -111,13 +116,14 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
                     .where("wa.username = ?")
                     .or("ba.username = ?")
                     .orderBy("cg.creation_date", Order.DESC)
-                    .build())
+                    .build().toSQlQuery())
             .all()
             .from("filtered_games")
-            .limitAndOffset();
+            .limitAndOffset()
+            .sql();
 
-    JdbcOutboundChessRepository(JDBC jdbc) {
-        this.jdbc = jdbc;
+    JdbcOutboundChessRepository() {
+        this.jdbc = JDBC.instance();
     }
 
     @Override
@@ -132,31 +138,41 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     @Override
     public Result<ChessGameHistory, Throwable> findById(final UUID chessGameId) {
-        return jdbc.read(GET_CHESS_GAME, this::chessGameMapper, Objects.requireNonNull(chessGameId.toString()));
+        var chessGame = jdbc.read(GET_CHESS_GAME, this::chessGameMapper, Objects.requireNonNull(chessGameId.toString()));
+        return new Result<>(chessGame.value(), chessGame.throwable(), chessGame.success());
     }
 
     @Override
     public Result<List<ChessGameHistory>, Throwable> listOfGames(final String username, final int limit, final int offSet) {
-        return jdbc.readListOf(LIST_OF_GAMES, this::chessGameMapper, Objects.requireNonNull(username), username, limit, offSet);
+        var gamesList = jdbc.readListOf(LIST_OF_GAMES,
+                this::chessGameMapper,
+                Objects.requireNonNull(username),
+                username,
+                limit,
+                offSet);
+
+        return new Result<>(gamesList.value(), gamesList.throwable(), gamesList.success());
     }
 
     @Override
-    public Result<Puzzle, Throwable> puzzle(double rating) {
-        return jdbc.read(RANDOM_PUZZLE, this::puzzleMapper, rating - 150, rating + 150);
+    public Result<Puzzle, Throwable> puzzle(double minRating, double maxRating) {
+        var puzzleResult = jdbc.read(RANDOM_PUZZLE, this::puzzleMapper, minRating, maxRating);
+        return new Result<>(puzzleResult.value(), puzzleResult.throwable(), puzzleResult.success());
     }
 
     @Override
     public Result<Puzzle, Throwable> puzzle(UUID puzzleId) {
-        return jdbc.read(GET_PUZZLE, this::puzzleMapper, puzzleId.toString());
+        var puzzleResult = jdbc.read(GET_PUZZLE, this::puzzleMapper, puzzleId.toString());
+        return new Result<>(puzzleResult.value(), puzzleResult.throwable(), puzzleResult.success());
     }
 
     @Override
-    public Result<List<Puzzle>, Throwable> listOfPuzzles(double rating, int limit, int offSet) {
-        return jdbc.readListOf(LIST_OF_PUZZLES, this::puzzleMapper, rating - 150, rating + 150, limit, offSet);
+    public Result<List<Puzzle>, Throwable> listOfPuzzles(double minRating, double maxRating, int limit, int offSet) {
+        var puzzlesList = jdbc.readListOf(LIST_OF_PUZZLES, this::puzzleMapper, minRating, maxRating, limit, offSet);
+        return new Result<>(puzzlesList.value(), puzzlesList.throwable(), puzzlesList.success());
     }
 
     ChessGameHistory chessGameMapper(final ResultSet rs) throws SQLException {
-
         return new ChessGameHistory(
                 UUID.fromString(rs.getString("chessHistoryId")),
                 rs.getString("pgn"),
@@ -172,7 +188,10 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
     }
 
     Puzzle puzzleMapper(ResultSet rs) throws SQLException {
-        Rating rating = Rating.fromRepository(rs.getDouble("rating"), rs.getDouble("rating_deviation"), rs.getDouble("rating_volatility"));
+        Rating rating = Rating.fromRepository(rs.getDouble("rating"),
+                rs.getDouble("rating_deviation"),
+                rs.getDouble("rating_volatility"));
+
         return new Puzzle(
                 UUID.fromString(rs.getString("id")),
                 rs.getString("pgn"),

@@ -96,6 +96,11 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-flyway</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.HaciHaciyev</groupId>
+            <artifactId>jdbc-light</artifactId>
+            <version>v1.0.0</version>
+        </dependency>
 
         <dependency>
             <groupId>io.quarkus</groupId>

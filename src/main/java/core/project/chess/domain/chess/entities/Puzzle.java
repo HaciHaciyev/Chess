@@ -27,6 +27,8 @@ public class Puzzle {
     private boolean isSolved;
     private boolean isEnded;
 
+    public static final double USER_RATING_WINDOW = 150.00;
+
     private Puzzle(UUID puzzleId, Rating rating, ChessBoard chessBoard,
                    AlgebraicNotation[] algebraicNotations, User player, int startPositionIndex) {
         this.puzzleId = puzzleId;

@@ -183,22 +183,14 @@ public class User {
 
     public void changeRating(final ChessGame chessGame) {
         Objects.requireNonNull(chessGame);
-        if (chessGame.gameResult().isEmpty()) {
-            throw new IllegalArgumentException("Game result is empty.");
-        }
+        if (!chessGame.isGameOver()) throw new IllegalArgumentException("Game result is empty.");
 
         final Color color;
-        if (chessGame.whitePlayer().id().equals(this.id)) {
-            color = WHITE;
-        }
-        else if (chessGame.blackPlayer().id().equals(this.id)) {
-            color = Color.BLACK;
-        }
-        else {
-            throw new IllegalArgumentException("This user did not participate in this game.");
-        }
+        if (chessGame.whitePlayer().id().equals(this.id)) color = WHITE;
+        else if (chessGame.blackPlayer().id().equals(this.id)) color = Color.BLACK;
+        else throw new IllegalArgumentException("This user did not participate in this game.");
 
-        final double result = getResult(chessGame.gameResult().get(), color);
+        final double result = getResult(chessGame.gameResult(), color);
         final User opponent =  color.equals(WHITE) ? chessGame.blackPlayer() : chessGame.whitePlayer();
 
         switch (chessGame.time()) {

@@ -15,9 +15,9 @@ public interface OutboundChessRepository {
 
     Result<List<ChessGameHistory>, Throwable> listOfGames(String username, int limit, int offSet);
 
-    Result<Puzzle, Throwable> puzzle(double rating);
+    Result<Puzzle, Throwable> puzzle(double minRating, double maxRating);
 
     Result<Puzzle, Throwable> puzzle(UUID puzzleId);
 
-    Result<List<Puzzle>, Throwable> listOfPuzzles(double rating, int limit, int offSet);
+    Result<List<Puzzle>, Throwable> listOfPuzzles(double minRating, double maxRating, int limit, int offSet);
 }

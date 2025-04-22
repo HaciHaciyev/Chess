@@ -8,7 +8,6 @@ import core.project.chess.domain.chess.util.ChessCountdownTimer;
 import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
-import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
@@ -42,7 +41,7 @@ public class ChessGame {
     private AgreementPair agreementPair;
     private AgreementPair returnOfMovement;
     private ChessCountdownTimer afkTimer;
-    private StatusPair<GameResult> isGameOver;
+    private GameResult isGameOver;
 
     public static final int TIME_FOR_AFK = 45;
 
@@ -54,7 +53,7 @@ public class ChessGame {
                       Rating blackRating,
                       SessionEvents sessionEvents,
                       Time time,
-                      StatusPair<GameResult> statusPair,
+                      GameResult gameResult,
                       boolean isCasualGame) {
 
         Objects.requireNonNull(chessGameId);
@@ -65,11 +64,10 @@ public class ChessGame {
         Objects.requireNonNull(blackRating);
         Objects.requireNonNull(sessionEvents);
         Objects.requireNonNull(time);
-        Objects.requireNonNull(statusPair);
+        Objects.requireNonNull(gameResult);
 
-        if (blackPlayer.id().equals(whitePlayer.id())) {
+        if (blackPlayer.id().equals(whitePlayer.id()))
             throw new IllegalArgumentException("Game can`t be initialized with same player for both sides.");
-        }
 
         this.chessGameId = chessGameId;
         this.agreementPair = new AgreementPair(null, null);
@@ -83,17 +81,17 @@ public class ChessGame {
         this.blackRating = blackRating;
         this.sessionEvents = sessionEvents;
         this.time = time;
-        this.isGameOver = statusPair;
+        this.isGameOver = gameResult;
         this.chatMessages = new ArrayList<>();
         this.isCasualGame = isCasualGame;
 
         this.whiteTimer = new ChessCountdownTimer(this, "White timer", Duration.ofMinutes(time.getMinutes()), () -> {
-            this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN);
+            this.isGameOver = GameResult.BLACK_WIN;
             calculatePlayersRating();
         });
 
         this.blackTimer = new ChessCountdownTimer(this, "Black timer", Duration.ofMinutes(time.getMinutes()), () -> {
-            this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
+            this.isGameOver = GameResult.WHITE_WIN;
             calculatePlayersRating();
         });
 
@@ -199,7 +197,7 @@ public class ChessGame {
                 blackRating,
                 sessionEvents,
                 time,
-                StatusPair.ofFalse(),
+                GameResult.NONE,
                 isCasualGame
         );
     }
@@ -290,11 +288,12 @@ public class ChessGame {
         chatMessages.add(message);
     }
 
-    public Optional<GameResult> gameResult() {
-        if (!this.isGameOver.status()) return Optional.empty();
-        if (isGameOver.orElseThrow().equals(GameResult.DRAW)) return Optional.of(GameResult.DRAW);
-        if (isGameOver.orElseThrow().equals(GameResult.WHITE_WIN)) return Optional.of(GameResult.WHITE_WIN);
-        return Optional.of(GameResult.BLACK_WIN);
+    public GameResult gameResult() {
+        return isGameOver;
+    }
+
+    public boolean isGameOver() {
+        return isGameOver != GameResult.NONE;
     }
 
     private void switchPlayersTurn() {
@@ -327,8 +326,8 @@ public class ChessGame {
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
-        if (!chessBoard.isPureChess() && isGameOver.status())
-            throw new IllegalStateException("Game is over by %s".formatted(isGameOver.orElseThrow()));
+        if (!chessBoard.isPureChess() && isGameOver != GameResult.NONE)
+            throw new IllegalStateException("Game is over by %s".formatted(isGameOver));
 
         Color color = validateUsername(username);
         validateMovesTurn(color);
@@ -358,7 +357,7 @@ public class ChessGame {
         Objects.requireNonNull(username);
         Color color = validateUsername(username);
 
-        if (!chessBoard.isPureChess() && isGameOver.status())
+        if (!chessBoard.isPureChess() && isGameOver != GameResult.NONE)
             throw new IllegalArgumentException("Game is over.");
 
         if (attemptToUndoMovement(color)) {
@@ -388,15 +387,15 @@ public class ChessGame {
         Objects.requireNonNull(username);
         Color color = validateUsername(username);
 
-        if (isGameOver.status()) throw new IllegalArgumentException("Game is over.");
+        if (isGameOver != GameResult.NONE) throw new IllegalArgumentException("Game is over.");
 
         if (color.equals(WHITE)) {
-            this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN);
+            this.isGameOver = GameResult.BLACK_WIN;
             calculatePlayersRating();
             return;
         }
 
-        this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
+        this.isGameOver = GameResult.WHITE_WIN;
         calculatePlayersRating();
     }
 
@@ -404,7 +403,7 @@ public class ChessGame {
         Objects.requireNonNull(username);
         validateUsername(username);
 
-        if (isGameOver.status()) throw new IllegalArgumentException("Game is over.");
+        if (isGameOver != GameResult.NONE) throw new IllegalArgumentException("Game is over.");
         if (!isThreeFoldActive) return;
         gameOver(Operations.STALEMATE);
     }
@@ -413,7 +412,7 @@ public class ChessGame {
         Objects.requireNonNull(username);
         Color color = validateUsername(username);
 
-        if (isGameOver.status()) throw new IllegalArgumentException("Game is over.");
+        if (isGameOver != GameResult.NONE) throw new IllegalArgumentException("Game is over.");
 
         if (attemptToFinalizeAgreement(color)) {
             this.agreementPair = new AgreementPair(whitePlayer.username(), blackPlayer.username());
@@ -432,14 +431,14 @@ public class ChessGame {
 
         if (color == WHITE) {
             this.afkTimer = new ChessCountdownTimer(this, "AFK White timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
-                this.isGameOver = StatusPair.ofTrue(GameResult.BLACK_WIN);
+                this.isGameOver = GameResult.BLACK_WIN;
                 calculatePlayersRating();
             });
             return;
         }
 
         this.afkTimer = new ChessCountdownTimer(this, "AFK Black timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
-            this.isGameOver = StatusPair.ofTrue(GameResult.WHITE_WIN);
+            this.isGameOver = GameResult.WHITE_WIN;
             calculatePlayersRating();
         });
     }
@@ -463,7 +462,7 @@ public class ChessGame {
     }
 
     private void gameOver(final Operations operation) {
-        if (isGameOver.status()) throw new IllegalArgumentException("Game is already over.");
+        if (isGameOver != GameResult.NONE) throw new IllegalArgumentException("Game is already over.");
 
         if (operation.equals(Operations.STALEMATE)) {
             drawEnding();
@@ -474,7 +473,7 @@ public class ChessGame {
     }
 
     private void drawEnding() {
-        this.isGameOver = StatusPair.ofTrue(GameResult.DRAW);
+        this.isGameOver = GameResult.DRAW;
         calculatePlayersRating();
     }
 
@@ -483,7 +482,7 @@ public class ChessGame {
         if (playersTurn.equals(WHITE)) gameResult = GameResult.WHITE_WIN;
         else gameResult = GameResult.BLACK_WIN;
 
-        this.isGameOver = StatusPair.ofTrue(gameResult);
+        this.isGameOver = gameResult;
         calculatePlayersRating();
     }
 
@@ -586,8 +585,7 @@ public class ChessGame {
                 this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer.username(),
                 this.blackPlayer.username(), this.whiteRating.rating(), this.blackRating.rating(),
                 this.sessionEvents.creationDate().toString(), this.sessionEvents.lastUpdateDate().toString(),
-                this.time.toString(), this.isCasualGame, isGameOver.status(),
-                isGameOver.status() ? isGameOver.orElseThrow().toString() : "game is not over."
+                this.time.toString(), this.isCasualGame, isGameOver != GameResult.NONE, isGameOver
         );
     }
 

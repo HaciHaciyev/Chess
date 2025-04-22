@@ -33,7 +33,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_delete_unconfirmed_user
-AFTER INSERT ON UserToken
+AFTER INSERT OR UPDATE ON UserToken
 FOR EACH STATEMENT
 EXECUTE FUNCTION delete_unconfirmed_user();
 

@@ -5,6 +5,7 @@ import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.application.dto.chess.PuzzleInbound;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
+import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.enumerations.MessageAddressee;
 import core.project.chess.domain.chess.factories.ChessGameFactory;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
@@ -542,7 +543,7 @@ public class ChessGameService {
             if (chessGame.isEmpty()) {
                 continue;
             }
-            if (chessGame.orElseThrow().gameResult().isEmpty()) {
+            if (!chessGame.orElseThrow().isGameOver()) {
                 if (chessGame.get().isPlayer(username)) {
                     handleAFK(username, chessGame.get(), gameUuid);
                 }
@@ -551,7 +552,7 @@ public class ChessGameService {
 
             final Set<Session> sessionHashSet = sessionStorage.getGameSessions(gameUuid);
             final String messageInCaseOfGameEnding = "Game ended. Because of %s"
-                    .formatted(chessGame.orElseThrow().gameResult().orElseThrow().toString());
+                    .formatted(chessGame.orElseThrow().gameResult().toString());
             closeSession(session, Message.info(messageInCaseOfGameEnding));
 
             sessionHashSet.remove(session);
@@ -593,7 +594,8 @@ public class ChessGameService {
 					e.printStackTrace();
 				}
 
-                game.gameResult().ifPresent(gameResult -> {
+                GameResult gameResult = game.gameResult();
+                if (gameResult != GameResult.NONE) {
                     String message = "Game is over by result {%s}".formatted(gameResult);
                     Log.info(message);
                     Log.debugf("Removing game {%s}", game.chessGameID());
@@ -611,7 +613,7 @@ public class ChessGameService {
                         puzzleService.save(puzzleInbound.PGN(), puzzleInbound.startPositionOfPuzzle());
                     });
                     isRunning.set(false);
-                });
+                }
             }
             Log.info("Spectator shutting down");
         }

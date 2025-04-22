@@ -319,7 +319,7 @@ public class ChessGameTest {
 
     private static void processResult(ChessGame game, String result, int moveNum, int gameNum, String pgn) {
         if (result.equals("\"1/2-1/2\"")) {
-            Assertions.assertTrue(game.gameResult().isPresent(), """
+            Assertions.assertTrue(game.isGameOver(), """
                         
                         --> NO GAME RESULT <--
                         Move: %s | Game: %s
@@ -329,7 +329,7 @@ public class ChessGameTest {
                         %s
                         """.formatted(moveNum, gameNum, pgn));
 
-            assertEquals(GameResult.DRAW, game.gameResult().orElseThrow(), """
+            assertEquals(GameResult.DRAW, game.gameResult(), """
                         
                         --> EXPECTED DRAW <--
                         Move: %s | Game: %s
@@ -341,7 +341,7 @@ public class ChessGameTest {
         }
 
         if (result.equals("\"1-0\"")) {
-            Assertions.assertTrue(game.gameResult().isPresent(), """
+            Assertions.assertTrue(game.isGameOver(), """
                         
                         --> NO GAME RESULT <--
                         Move: %s | Game: %s
@@ -352,7 +352,7 @@ public class ChessGameTest {
                         """.formatted(moveNum, gameNum, pgn));
 
 
-            assertEquals(GameResult.WHITE_WIN, game.gameResult().orElseThrow(), """
+            assertEquals(GameResult.WHITE_WIN, game.gameResult(), """
                         
                         --> EXPECTED WHITE_WIN <--
                         Move: %s | Game: %s
@@ -364,7 +364,7 @@ public class ChessGameTest {
         }
 
         if (result.equals("\"0-1\"")) {
-            Assertions.assertTrue(game.gameResult().isPresent(), """
+            Assertions.assertTrue(game.isGameOver(), """
                         
                         --> NO GAME RESULT <--
                         Move: %s | Game: %s
@@ -374,7 +374,7 @@ public class ChessGameTest {
                         %s
                         """.formatted(moveNum, gameNum, pgn));
 
-            assertEquals(GameResult.BLACK_WIN, game.gameResult().orElseThrow(), """
+            assertEquals(GameResult.BLACK_WIN, game.gameResult(), """
                         
                         --> EXPECTED BLACK_WIN <--
                         Move: %s | Game: %s

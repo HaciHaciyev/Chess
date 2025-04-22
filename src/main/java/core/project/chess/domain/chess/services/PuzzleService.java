@@ -35,7 +35,9 @@ public class PuzzleService {
     }
 
     public Message chessPuzzle(User user) {
-        var puzzleProperties = outboundChessRepository.puzzle(user.rating().rating()).orElseThrow();
+        double minRating = user.puzzlesRating().rating() - Puzzle.USER_RATING_WINDOW;
+        double maxRating = user.puzzlesRating().rating() + Puzzle.USER_RATING_WINDOW;
+        var puzzleProperties = outboundChessRepository.puzzle(minRating, maxRating).orElseThrow();
         Puzzle puzzle = Puzzle.fromRepository(
                 puzzleProperties.puzzleId(),
                 user, puzzleProperties.PGN(),

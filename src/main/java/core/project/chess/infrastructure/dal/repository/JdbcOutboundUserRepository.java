@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.dal.repository;
 
+import com.hadzhy.jdbclight.jdbc.JDBC;
 import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
@@ -8,7 +9,6 @@ import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
-import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -18,7 +18,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-import static core.project.chess.infrastructure.dal.util.sql.SQLBuilder.select;
+import static com.hadzhy.jdbclight.sql.SQLBuilder.select;
 
 @Transactional
 @ApplicationScoped
@@ -30,37 +30,43 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .all()
             .from("UserAccount")
             .where("id = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String FIND_BY_USERNAME = select()
             .all()
             .from("UserAccount")
             .where("username = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String FIND_BY_EMAIL = select()
             .all()
             .from("UserAccount")
             .where("email = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String FIND_REFRESH_TOKEN = select()
             .all()
             .from("RefreshToken")
             .where("token = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String FIND_EMAIL = select()
             .count("*")
             .from("UserAccount")
             .where("email = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String FIND_USERNAME = select()
             .count("*")
             .from("UserAccount")
             .where("username = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String FIND_USER_PROPERTIES = select()
             .column("firstname")
@@ -74,14 +80,16 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .column("puzzles_rating")
             .from("UserAccount")
             .where("username = ?")
-            .build();
+            .build()
+            .sql();
 
     static final String IS_PARTNERSHIP_EXISTS = select()
             .count("*")
             .from("UserPartnership")
             .where("(user_id = ? AND partner_id = ?)")
             .or("(user_id = ? AND partner_id = ?)")
-            .build();
+            .build()
+            .sql();
 
     static final String FIND_TOKEN = select()
             .column("t.id").as("token_id")
@@ -115,7 +123,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .from("UserToken t")
             .innerJoin("UserAccount u", "t.user_id = u.id")
             .where("t.token = ?")
-            .build();
+            .build()
+            .sql();
 
     JdbcOutboundUserRepository(JDBC jdbc) {
         this.jdbc = jdbc;
@@ -158,32 +167,38 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public Result<User, Throwable> findById(UUID userId) {
-        return jdbc.read(FIND_BY_ID, this::userAccountMapper, userId.toString());
+        var user = jdbc.read(FIND_BY_ID, this::userAccountMapper, userId.toString());
+        return new Result<>(user.value(), user.throwable(), user.success());
     }
 
     @Override
     public Result<User, Throwable> findByUsername(String username) {
-        return jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username);
+        var user = jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username);
+        return new Result<>(user.value(), user.throwable(), user.success());
     }
 
     @Override
     public Result<User, Throwable> findByEmail(Email email) {
-        return jdbc.read(FIND_BY_EMAIL, this::userAccountMapper, email.email());
+        var user = jdbc.read(FIND_BY_EMAIL, this::userAccountMapper, email.email());
+        return new Result<>(user.value(), user.throwable(), user.success());
     }
 
     @Override
     public Result<EmailConfirmationToken, Throwable> findToken(UUID token) {
-        return jdbc.read(FIND_TOKEN, this::userTokenMapper, token.toString());
+        var result = jdbc.read(FIND_TOKEN, this::userTokenMapper, token.toString());
+        return new Result<>(result.value(), result.throwable(), result.success());
     }
 
     @Override
     public Result<RefreshToken, Throwable> findRefreshToken(String refreshToken) {
-        return jdbc.read(FIND_REFRESH_TOKEN, this::refreshTokenMapper, refreshToken);
+        var result = jdbc.read(FIND_REFRESH_TOKEN, this::refreshTokenMapper, refreshToken);
+        return new Result<>(result.value(), result.throwable(), result.success());
     }
 
     @Override
     public Result<UserProperties, Throwable> userProperties(String username) {
-        return jdbc.read(FIND_USER_PROPERTIES, this::userPropertiesMapper, username);
+        var result = jdbc.read(FIND_USER_PROPERTIES, this::userPropertiesMapper, username);
+        return new Result<>(result.value(), result.throwable(), result.success());
     }
 
     private RefreshToken refreshTokenMapper(final ResultSet rs) throws SQLException {

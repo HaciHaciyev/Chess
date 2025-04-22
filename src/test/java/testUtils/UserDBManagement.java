@@ -1,7 +1,7 @@
 package testUtils;
 
+import com.hadzhy.jdbclight.jdbc.JDBC;
 import core.project.chess.domain.commons.containers.Result;
-import core.project.chess.infrastructure.dal.util.jdbc.JDBC;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -19,8 +19,8 @@ public class UserDBManagement {
             WHERE user_id=(SELECT id FROM UserAccount where username=?)
             """;
 
-    public UserDBManagement(JDBC jdbc) {
-        this.jdbc = jdbc;
+    public UserDBManagement() {
+        this.jdbc = JDBC.instance();
     }
 
     public void removeUsers() {
@@ -28,7 +28,8 @@ public class UserDBManagement {
     }
 
     public String getToken(String username) {
-        Result<String, Throwable> tokenResult = jdbc.read(GET_TOKEN_BY_USERNAME, rs -> rs.getString("token"), username);
+        var token = jdbc.read(GET_TOKEN_BY_USERNAME, rs -> rs.getString("token"), username);
+        Result<String, Throwable> tokenResult = new Result<>(token.value(), token.throwable(), token.success());
         return tokenResult.orElseThrow();
     }
 }

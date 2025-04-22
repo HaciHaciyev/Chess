@@ -2,6 +2,7 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.Puzzle;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
+import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -39,17 +40,17 @@ public class PuzzlesQueryService {
     }
 
     public List<Puzzle> page(String username, int pageNumber, int pageSize) {
-        if (!Username.isValid(username)) {
-            throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
-        }
+        if (!Username.isValid(username)) throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
 
-        double rating = outboundUserRepository.userProperties(username)
-                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "User not found."))
-                .rating();
+        User user = outboundUserRepository.findByUsername(username)
+                .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "User not found"));
+
+        double minRating = user.puzzlesRating().rating() - core.project.chess.domain.chess.entities.Puzzle.USER_RATING_WINDOW;
+        double maxRating = user.puzzlesRating().rating() + core.project.chess.domain.chess.entities.Puzzle.USER_RATING_WINDOW;
 
         int limit = buildLimit(pageSize);
         int offSet = buildOffSet(limit, pageNumber);
-        return outboundChessRepository.listOfPuzzles(rating, limit, offSet)
+        return outboundChessRepository.listOfPuzzles(minRating, maxRating, limit, offSet)
                 .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "Can`t found puzzles."));
     }
 }
