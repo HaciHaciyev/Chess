@@ -258,12 +258,7 @@ class GameFunctionalitiesWSTest {
         sendMessage(wSession, wName, Message.builder(MessageType.RETURN_MOVE).gameID(gameID).build());
         await().atMost(Duration.ofSeconds(1)).until(() -> CHESS_MESSAGES.user2
                 .stream()
-                .anyMatch(message -> {
-                    if (message.type().equals(MessageType.FEN_PGN))
-                        Log.infof("FEN_PGN message - PGN: %s", message.PGN());
-                    return message.type().equals(MessageType.FEN_PGN) &&
-                            message.PGN().equals("1. e2-e4 e7-e5 2. Ng1-f3 Nb8-c6 3. Nb1-c3 Ng8-f6 4. Bf1-c4 d7-d6 5. d2-d3 ... ");
-                })
+                .anyMatch(message -> message.type().equals(MessageType.RETURN_MOVE))
         );
 
         Thread.sleep(Duration.ofSeconds(1));

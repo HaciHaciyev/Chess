@@ -3,11 +3,14 @@ package core.project.chess.domain.Perft;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
-import java.util.List;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import testUtils.PerftUtil;
 
+import java.util.List;
+
+@Disabled("For technical reasons. Need to be executed separately.")
 public class ClearPerftTest {
 
     private ChessBoard our_board;

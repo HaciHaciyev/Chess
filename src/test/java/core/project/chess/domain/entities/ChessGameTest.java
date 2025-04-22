@@ -418,10 +418,9 @@ public class ChessGameTest {
     }
 
     public static Supplier<ChessGame> chessGameSupplier(String FEN) {
-        final ChessBoard chessBoard = ChessBoard.pureChessFromPosition(FEN);
-
-        return () -> ChessGame.standard(
+        return () -> ChessGame.pureChessByFEN(
                 UUID.randomUUID(),
+                FEN,
                 userAccountSupplier("firstPlayer").get(),
                 userAccountSupplier("secondPlayer").get(),
                 SessionEvents.defaultEvents(),
