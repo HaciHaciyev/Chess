@@ -4,7 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import testUtils.AuthUtils;
 import testUtils.LoginForm;
 import testUtils.RegistrationForm;
@@ -37,15 +40,6 @@ public class LoginTests {
     @DisplayName("Login existing user")
     void login_Existing_User() throws JsonProcessingException {
         authUtils.fullLoginProcess();
-    }
-
-    @Test
-    @DisplayName("Login 150 users")
-    @Disabled("For single run")
-    void login_150_Users() throws JsonProcessingException {
-        for (int i = 0; i < 150; i++) {
-            authUtils.fullDistinctLoginProcess();
-        }
     }
 
     @Test

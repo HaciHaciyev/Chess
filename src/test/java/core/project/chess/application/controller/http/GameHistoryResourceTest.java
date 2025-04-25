@@ -26,7 +26,6 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import testUtils.AuthUtils;
 import testUtils.SimplePGNReader;
@@ -45,7 +44,6 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.notNullValue;
 import static testUtils.WSClient.sendMessage;
 
-@Disabled("Technical reasons")
 @QuarkusTest
 @WithTestResource(MessagingTestResource.class)
 class GameHistoryResourceTest {
