@@ -69,7 +69,6 @@ public class GameFunctionalityService {
         final String username = usernameSession.getFirst();
 
         try {
-            Log.infof("%s moving from %s to %s", username, move.from(), move.to());
             chessGame.doMove(
                     username,
                     move.from(),

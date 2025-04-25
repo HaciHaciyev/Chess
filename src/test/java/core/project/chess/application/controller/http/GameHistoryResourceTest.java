@@ -110,7 +110,7 @@ class GameHistoryResourceTest {
                 .body()
                 .asString();
 
-        List<ChessGameHistory> historyList = objectMapper.readValue(result, new TypeReference<List<ChessGameHistory>>() {});
+        List<ChessGameHistory> historyList = objectMapper.readValue(result, new TypeReference<>() {});
         Log.infof("Game history resource, page - 1, size: %s, content: %s", historyList.size(), historyList);
 
         String result2 = given().contentType("application/json")
@@ -127,7 +127,7 @@ class GameHistoryResourceTest {
                 .body()
                 .asString();
 
-        List<ChessGameHistory> historyList2 = objectMapper.readValue(result2, new TypeReference<List<ChessGameHistory>>() {});
+        List<ChessGameHistory> historyList2 = objectMapper.readValue(result2, new TypeReference<>() {});
         Log.infof("Game history resource, page - 2, size: %s, content: %s", historyList2.size(), historyList2);
 
         String lastGame = given()
@@ -311,22 +311,26 @@ class GameHistoryResourceTest {
                                     String firstPlayer, Session firstPlayerSession, Session secondPlayerSession) throws InterruptedException {
 
         firstPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User1 %s Received Message in Messaging Service: %s.", firstPlayer, message.toString());
+            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
+                Log.infof("User1 %s Received Message in Messaging Service: %s.", firstPlayer, message.toString());
             USER_MESSAGES.user1().offer(message);
         });
 
         secondPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User2 %s Received Message in Messaging Service: %s.", secondPlayer, message.toString());
+            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
+                Log.infof("User2 %s Received Message in Messaging Service: %s.", secondPlayer, message.toString());
             USER_MESSAGES.user2().offer(message);
         });
 
         firstPlayerSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User %s Received Message in Chess: %s.", firstPlayer, message.toString());
+            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
+                Log.infof("User %s Received Message in Chess: %s.", firstPlayer, message.toString());
             USER_MESSAGES.user1().offer(message);
         });
 
         secondPlayerSession.addMessageHandler(Message.class, message -> {
-            Log.infof("User %s Received Message in Chess: %s.", secondPlayer, message.toString());
+            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
+                Log.infof("User %s Received Message in Chess: %s.", secondPlayer, message.toString());
             USER_MESSAGES.user2().offer(message);
         });
 

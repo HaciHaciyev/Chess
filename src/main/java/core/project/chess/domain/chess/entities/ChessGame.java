@@ -478,11 +478,7 @@ public class ChessGame {
     }
 
     private void winnerEnding() {
-        GameResult gameResult;
-        if (playersTurn.equals(WHITE)) gameResult = GameResult.WHITE_WIN;
-        else gameResult = GameResult.BLACK_WIN;
-
-        this.isGameOver = gameResult;
+        this.isGameOver = playersTurn.equals(WHITE) ? GameResult.WHITE_WIN : GameResult.BLACK_WIN;
         calculatePlayersRating();
     }
 

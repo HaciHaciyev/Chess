@@ -97,7 +97,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
     @Override
     public void completelyUpdateFinishedGame(final ChessGame chessGame) {
-        if (chessGame.isGameOver()) throw new IllegalArgumentException("Game is not over.");
+        if (!chessGame.isGameOver()) throw new IllegalArgumentException("Game is not over.");
 
         jdbc.write(UPDATE_FINISHED_CHESS_GAME,
                         chessGame.isGameOver(),

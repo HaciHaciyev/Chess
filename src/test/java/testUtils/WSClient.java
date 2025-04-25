@@ -1,6 +1,7 @@
 package testUtils;
 
 import core.project.chess.application.dto.chess.Message;
+import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.infrastructure.ws.MessageDecoder;
 import core.project.chess.infrastructure.ws.MessageEncoder;
 import io.quarkus.logging.Log;
@@ -41,7 +42,8 @@ public class WSClient {
     }
 
     public static void sendMessage(Session session, String username, Message message) {
-        Log.infof("%s sending to %s -> %s", username, session.getRequestURI().toString(), message);
+        if (message.type() != MessageType.MOVE)
+            Log.infof("%s sending to %s -> %s", username, session.getRequestURI().toString(), message);
         session.getAsyncRemote().sendObject(message);
 
         try {
