@@ -107,7 +107,7 @@ public class UserAuthService {
             inboundUserRepository.saveVerificationToken(token);
             String link = EMAIL_VERIFICATION_URL.formatted(token.token().token());
             emailInteractionService.sendToEmail(email.email(), link);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | NullPointerException e) {
             throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
         }
     }

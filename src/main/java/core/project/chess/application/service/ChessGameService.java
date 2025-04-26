@@ -464,22 +464,28 @@ public class ChessGameService {
         User secondPlayer = secondPlayerData.getSecond();
         GameParameters secondGameParameters = secondPlayerData.getThird();
 
-        ChessGame chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
+        Result<ChessGame, Throwable> chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
                 firstGameParameters,
                 secondPlayer,
                 secondGameParameters,
                 isPartnershipGame
         );
+        if (!chessGame.success()) {
+            Message error = Message.error("Can`t create a chess game instance. Invalid game parameters provided.");
+            sendMessage(firstSession, error);
+            sendMessage(secondSession, error);
+            return;
+        }
 
-        registerGameAndNotifyPlayers(chessGame, firstSession, secondSession);
+        registerGameAndNotifyPlayers(chessGame.value(), firstSession, secondSession);
 
         if (isPartnershipGame) {
             cancelRequests(firstPlayer, secondPlayer);
         }
 
-        inboundChessRepository.completelySaveStartedChessGame(chessGame);
+        inboundChessRepository.completelySaveStartedChessGame(chessGame.value());
 
-        ChessGameSpectator spectator = new ChessGameSpectator(chessGame);
+        ChessGameSpectator spectator = new ChessGameSpectator(chessGame.value());
         spectator.start();
     }
 

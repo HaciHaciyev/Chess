@@ -4,6 +4,7 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.value_objects.GameParameters;
+import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.User;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class ChessGameFactory {
 
-    public ChessGame createChessGameInstance(
+    public Result<ChessGame, Throwable> createChessGameInstance(
             final User firstPlayer,
             final GameParameters gameParameters,
             final User secondPlayer,
@@ -27,23 +28,27 @@ public class ChessGameFactory {
         final boolean secondPlayerIsBlack = secondGameParameters.color() != null && secondGameParameters.color() == Color.BLACK;
 
         if (!isPartnershipGame)
-            return standardChessGame(time, firstPlayer, secondPlayer, firstPlayerIsWhite, secondPlayerIsBlack, false);
+            return Result.ofThrowable(
+                    () -> standardChessGame(time, firstPlayer, secondPlayer, firstPlayerIsWhite, secondPlayerIsBlack, false));
 
         StatusPair<Pair<String, String>> chessNotations = chessNotations(gameParameters, secondGameParameters);
         if (!chessNotations.status())
-            return standardChessGame(time, firstPlayer, secondPlayer,
-                    firstPlayerIsWhite, secondPlayerIsBlack, gameParameters.isCasualGame());
+            return Result.ofThrowable(() ->
+                    standardChessGame(time, firstPlayer, secondPlayer,
+                            firstPlayerIsWhite, secondPlayerIsBlack, gameParameters.isCasualGame()));
 
         final boolean isPGNBasedGame = chessNotations.orElseThrow()
                 .getFirst()
                 .equals("PGN");
 
         if (isPGNBasedGame)
-            return chessGameByPGN(time, firstPlayer, secondPlayer, firstPlayerIsWhite, secondPlayerIsBlack,
-                    gameParameters.isCasualGame(), chessNotations.orElseThrow().getSecond());
+            return Result.ofThrowable(() ->
+                    chessGameByPGN(time, firstPlayer, secondPlayer, firstPlayerIsWhite, secondPlayerIsBlack,
+                            gameParameters.isCasualGame(), chessNotations.orElseThrow().getSecond()));
 
-        return chessGameByFEN(time, firstPlayer, secondPlayer, firstPlayerIsWhite, secondPlayerIsBlack,
-                gameParameters.isCasualGame(), chessNotations.orElseThrow().getSecond());
+        return Result.ofThrowable(() ->
+                chessGameByFEN(time, firstPlayer, secondPlayer, firstPlayerIsWhite,
+                        secondPlayerIsBlack, gameParameters.isCasualGame(), chessNotations.orElseThrow().getSecond()));
     }
 
     private ChessGame standardChessGame(
