@@ -32,7 +32,10 @@ public class PuzzlerClient {
                 .putHeader("Content-Type", MediaType.APPLICATION_JSON)
                 .putHeader("X-API-KEY", apiKey)
                 .sendJson(jsonBody)
-                .onFailure(error -> Log.infof("Error sending PGN for puzzler: %s".formatted(error.getMessage())))
+                .onFailure(error -> {
+                    Log.infof("Error sending PGN for puzzler: %s".formatted(error.getMessage()));
+                    error.printStackTrace();
+                })
                 .map(response -> response.bodyAsJson(PuzzleInbound.class))
                 .result();
     }

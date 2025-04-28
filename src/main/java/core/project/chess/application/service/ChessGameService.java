@@ -81,6 +81,9 @@ public class ChessGameService {
             }
 
             sessionStorage.addSession(session, result.value());
+
+            sendMessage(session, Message.info("Successful connection to chessland").asJSON());
+
             partnershipGameCacheService
                     .getAll(username.username())
                     .forEach((key, value) -> {
@@ -340,7 +343,7 @@ public class ChessGameService {
         final String addressee = addresseeAccount.username();
 
         final boolean isHavePartnership = outboundUserRepository.havePartnership(addresseeAccount, addresserAccount);
-        Log.info("Is partnership for chess game exists: %s.".formatted(isHavePartnership));
+        Log.info("Is partnership between %s - %s for chess game exists: %s.".formatted(addresseeUsername, addresserUsername, isHavePartnership));
         if (!isHavePartnership) {
             Log.error("Partnership not exists.");
             sendMessage(session, Message.error("You can`t invite someone who`s have not partnership with you."));
