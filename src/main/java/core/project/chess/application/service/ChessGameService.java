@@ -15,7 +15,7 @@ import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.commons.tuples.Triple;
+import core.project.chess.domain.commons.value_objects.GameRequest;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;
@@ -272,46 +272,46 @@ public class ChessGameService {
 
         final var potentialOpponent = locateOpponentForGame(firstPlayer, gameParameters);
         if (!potentialOpponent.status()) {
-            sessionStorage.addWaitingUser(session, firstPlayer, gameParameters);
+            sessionStorage.addWaitingUser(new GameRequest(session, firstPlayer, gameParameters));
 
             Message message = Message.userInfo("Trying to find an opponent for you %s.".formatted(username.username()));
             sendMessage(session, message);
             return;
         }
 
-        final Triple<Session, User, GameParameters> opponentData = potentialOpponent.orElseThrow();
-        final User secondPlayer = opponentData.getSecond();
-
-        sessionStorage.removeWaitingUser(opponentData);
+        final GameRequest opponentData = potentialOpponent.orElseThrow();
+        final User secondPlayer = opponentData.user();
 
         startStandardChessGame(
-                Triple.of(session, firstPlayer, gameParameters), opponentData, false
+                new GameRequest(session, firstPlayer, gameParameters), opponentData, false
         );
     }
 
     private void cancelGameSearch(Username username) {
-        sessionStorage.removeLastGameSearchRequestOf(username.username());
+        sessionStorage.removeLastGameSearchRequestOf(username);
     }
 
-    private StatusPair<Triple<Session, User, GameParameters>> locateOpponentForGame(
+    private StatusPair<GameRequest> locateOpponentForGame(
             final User firstPlayer,
             final GameParameters gameParameters) {
 
         for (var entry : sessionStorage.waitingUsers()) {
-            final Deque<Triple<Session, User, GameParameters>> queue = entry.getValue();
-            for (var opponentTriple : queue) {
-                final User potentialOpponent = opponentTriple.getSecond();
-                final GameParameters gameParametersOfPotentialOpponent = opponentTriple.getThird();
+            for (GameRequest waitingUser : entry.getValue()) {
+                synchronized (waitingUser) {
+                    final User potentialOpponent = waitingUser.user();
+                    final GameParameters gameParametersOfPotentialOpponent = waitingUser.gameParameters();
 
-                final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer,
-                        gameParameters,
-                        potentialOpponent,
-                        gameParametersOfPotentialOpponent,
-                        false
-                );
+                    final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer,
+                            gameParameters,
+                            potentialOpponent,
+                            gameParametersOfPotentialOpponent,
+                            false
+                    );
 
-                if (isOpponent) {
-                    return StatusPair.ofTrue(opponentTriple);
+                    if (isOpponent) {
+                        sessionStorage.removeWaitingUser(waitingUser);
+                        return StatusPair.ofTrue(waitingUser);
+                    }
                 }
             }
         }
@@ -428,8 +428,8 @@ public class ChessGameService {
 
         Log.info("Starting a partnership game.");
         startStandardChessGame(
-                Triple.of(session, addresserAccount, addresserGameParameters),
-                Triple.of(addresseeSession.orElseThrow().getFirst(), addresseeAccount, addresseeGameParameters),
+                new GameRequest(session, addresserAccount, addresserGameParameters),
+                new GameRequest(addresseeSession.orElseThrow().getFirst(), addresseeAccount, addresseeGameParameters),
                 true
         );
     }
@@ -456,16 +456,16 @@ public class ChessGameService {
         partnershipGameCacheService.delete(secondPlayer.username(), firstPlayer.username());
     }
 
-    private void startStandardChessGame(Triple<Session, User, GameParameters> firstPlayerData,
-                                        Triple<Session, User, GameParameters> secondPlayerData,
+    private void startStandardChessGame(GameRequest firstPlayerData,
+                                        GameRequest secondPlayerData,
                                         final boolean isPartnershipGame) {
-        Session firstSession = firstPlayerData.getFirst();
-        User firstPlayer = firstPlayerData.getSecond();
-        GameParameters firstGameParameters = firstPlayerData.getThird();
+        Session firstSession = firstPlayerData.session();
+        User firstPlayer = firstPlayerData.user();
+        GameParameters firstGameParameters = firstPlayerData.gameParameters();
 
-        Session secondSession = secondPlayerData.getFirst();
-        User secondPlayer = secondPlayerData.getSecond();
-        GameParameters secondGameParameters = secondPlayerData.getThird();
+        Session secondSession = secondPlayerData.session();
+        User secondPlayer = secondPlayerData.user();
+        GameParameters secondGameParameters = secondPlayerData.gameParameters();
 
         Result<ChessGame, Throwable> chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
                 firstGameParameters,

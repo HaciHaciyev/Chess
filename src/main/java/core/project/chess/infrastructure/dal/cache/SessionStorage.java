@@ -2,10 +2,10 @@ package core.project.chess.infrastructure.dal.cache;
 
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
-import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.commons.tuples.Triple;
+import core.project.chess.domain.commons.value_objects.GameRequest;
 import core.project.chess.domain.user.entities.User;
+import core.project.chess.domain.user.value_objects.Username;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 
@@ -47,33 +47,40 @@ public class SessionStorage {
     * Used to store users who are waiting for opponents to be found
     * single user can be waiting on multiple games
     */
-    private static final ConcurrentHashMap<String, ConcurrentLinkedDeque<Triple<Session, User, GameParameters>>> waitingForTheGame = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Username, ConcurrentLinkedDeque<GameRequest>> waitingForTheGame = new ConcurrentHashMap<>();
     
     private static final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public void addWaitingUser(Session session, User account, GameParameters gameParameters) {
+    public void addWaitingUser(GameRequest gameRequest) {
+        Username username = new Username(gameRequest.user().username());
         waitingForTheGame
-                .computeIfAbsent(account.username(), k -> new ConcurrentLinkedDeque<>())
-                .offerLast(Triple.of(session, account, gameParameters));
+                .computeIfAbsent(username, k -> new ConcurrentLinkedDeque<>())
+                .offerLast(gameRequest);
     }
 
-    public void removeLastGameSearchRequestOf(String username) {
-        waitingForTheGame.computeIfPresent(username, (key, queue) -> {
+    public void removeLastGameSearchRequestOf(Username username) {
+        var computedQueue = waitingForTheGame.computeIfPresent(username, (key, queue) -> {
             queue.pollLast();
-            return queue.isEmpty() ? null : queue;
+            return queue;
         });
+
+        if (computedQueue.isEmpty()) waitingForTheGame.remove(username);
     }
 
-    public void removeWaitingUser(Triple<Session, User, GameParameters> userState) {
-        User user = userState.getSecond();
-        waitingForTheGame.computeIfPresent(user.username(), (key, queue) -> {
-            queue.remove(userState);
-            return queue.isEmpty() ? null : queue;
-        });
+    public void removeWaitingUser(GameRequest waitingUser) {
+        synchronized (waitingUser) {
+            Username username = new Username(waitingUser.user().username());
+            var computedQueue = waitingForTheGame.computeIfPresent(username, (key, queue) -> {
+                queue.remove(waitingUser);
+                return queue.isEmpty() ? null : queue;
+            });
+
+            if (computedQueue.isEmpty()) waitingForTheGame.remove(username);
+        }
     }
 
-    public Set<Map.Entry<String, ConcurrentLinkedDeque<Triple<Session, User, GameParameters>>>> waitingUsers() {
-        return waitingForTheGame.entrySet();
+    public Set<Map.Entry<Username, ConcurrentLinkedDeque<GameRequest>>> waitingUsers() {
+        return Collections.unmodifiableSet(waitingForTheGame.entrySet());
     }
 
     public Optional<Pair<Session, User>> getSessionByUsername(String username) {
