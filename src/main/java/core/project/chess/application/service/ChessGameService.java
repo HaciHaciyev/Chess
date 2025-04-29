@@ -568,7 +568,7 @@ public class ChessGameService {
             }
         }
 
-        sessionStorage.removeSession(session);
+        sessionStorage.removeSession(username);
     }
 
     private void handleAFK(Username username, ChessGame chessGame, UUID gameUuid) {

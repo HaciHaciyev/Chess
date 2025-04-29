@@ -96,9 +96,15 @@ public class SessionStorage {
     }
 
     public void removeSession(Session session) {
+        synchronized (session) {
+            sessions.entrySet().removeIf(entry -> entry.getValue().getFirst().equals(session));
+        }
+    }
+
+    public void removeSession(Username username) {
         lock.writeLock().lock();
         try {
-            sessions.entrySet().removeIf(entry -> entry.getValue().getFirst().equals(session));
+            sessions.remove(username);
         } finally {
             lock.writeLock().unlock();
         }
