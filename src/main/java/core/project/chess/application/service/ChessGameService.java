@@ -177,7 +177,7 @@ public class ChessGameService {
     }
 
     private void handlePuzzleAction(Session session, Username username, Message message) {
-        User user = sessionStorage.getSessionByUsername(username.username()).orElseThrow().getSecond();
+        User user = sessionStorage.getSessionByUsername(username).orElseThrow().getSecond();
 
         if (message.type().equals(MessageType.PUZZLE)) {
             sendMessage(session, puzzleService.chessPuzzle(user));
@@ -336,7 +336,7 @@ public class ChessGameService {
 
         final User addresserAccount = outboundUserRepository.findByUsername(addresserUsername.username()).orElseThrow();
 
-        final Optional<Pair<Session, User>> optionalSession = sessionStorage.getSessionByUsername(addresseeUsername.username());
+        final Optional<Pair<Session, User>> optionalSession = sessionStorage.getSessionByUsername(addresseeUsername);
         final User addresseeAccount = optionalSession.map(Pair::getSecond)
                 .orElseGet(() -> outboundUserRepository.findByUsername(addresseeUsername.username()).orElseThrow());
 
@@ -358,7 +358,7 @@ public class ChessGameService {
 
         partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
 
-        final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername.username());
+        final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername);
 
         final boolean isRespondRequest = message.respond() != null && message.respond().equals(Message.Respond.YES);
         if (isRespondRequest) {
@@ -370,7 +370,7 @@ public class ChessGameService {
         if (isDeclineRequest) {
             cancelRequests(addresserAccount, addresseeAccount);
             if (isAddresseeActive) {
-                sessionStorage.getSessionByUsername(addresseeUsername.username())
+                sessionStorage.getSessionByUsername(addresseeUsername)
                         .map(Pair::getFirst)
                         .ifPresent(addresseeSession -> sendMessage(addresseeSession, Message.userInfo(
                                 "User %s has declined the partnership game.".formatted(addresseeUsername.username())
@@ -416,7 +416,8 @@ public class ChessGameService {
 
         cancelRequests(addresserAccount, addresseeAccount);
 
-        Optional<Pair<Session, User>> addresseeSession = sessionStorage.getSessionByUsername(addresseeAccount.username());
+        Username addresseeUserName = new Username(addresseeAccount.username());
+        Optional<Pair<Session, User>> addresseeSession = sessionStorage.getSessionByUsername(addresseeUserName);
         if (addresseeSession.isEmpty()) {
             cancelRequests(addresserAccount, addresseeAccount);
             sendMessage(session, Message.error("""
@@ -448,7 +449,7 @@ public class ChessGameService {
                 .color(color)
                 .build();
 
-        sendMessage(sessionStorage.getSessionByUsername(addresseeUsername.username()).orElseThrow().getFirst(), message);
+        sendMessage(sessionStorage.getSessionByUsername(addresseeUsername).orElseThrow().getFirst(), message);
     }
 
     private void cancelRequests(User firstPlayer, User secondPlayer) {

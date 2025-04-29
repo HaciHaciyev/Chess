@@ -25,7 +25,7 @@ public class SessionStorage {
     * view:
     * username -> (Session, UserAccount)
     */
-    private static final ConcurrentHashMap<String, Pair<Session, User>> sessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Username, Pair<Session, User>> sessions = new ConcurrentHashMap<>();
     
     /**
     * Used to store users and associated puzzles
@@ -83,15 +83,15 @@ public class SessionStorage {
         return Collections.unmodifiableSet(waitingForTheGame.entrySet());
     }
 
-    public Optional<Pair<Session, User>> getSessionByUsername(String username) {
+    public Optional<Pair<Session, User>> getSessionByUsername(Username username) {
         return Optional.ofNullable(sessions.get(username));
     }
 
     public void addSession(Session session, User account) {
-        sessions.put(account.username(), Pair.of(session, account));
+        sessions.put(new Username(account.username()), Pair.of(session, account));
     }
 
-    public boolean containsSession(String addresseeUsername) {
+    public boolean containsSession(Username addresseeUsername) {
         return sessions.containsKey(addresseeUsername);
     }
 
