@@ -3,6 +3,7 @@ package core.project.chess.domain.Perft;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
+import core.project.chess.domain.chess.value_objects.Move;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -11,15 +12,15 @@ import testUtils.PerftUtil;
 import java.util.List;
 
 @Disabled("For technical reasons. Need to be executed separately.")
-public class ClearPerftTest {
+public class PerformanceTest {
 
-    private ChessBoard our_board;
+    private ChessBoard board;
 
     @Test
     void perftStandartPosition() {
         System.out.println("Perft standart position");
         int depth = 6;
-        our_board = ChessBoard.pureChess();
+        board = ChessBoard.pureChess();
 
         long nodes = perft(depth);
         System.out.println("Nodes: " + nodes);
@@ -39,10 +40,9 @@ public class ClearPerftTest {
     @Test
     void perftGoodPosition() {
         int depth = 5;
-        String fen =
-            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+        String fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
         System.out.println("Perft good position: " + fen);
-        our_board = ChessBoard.pureChessFromPosition(fen);
+        board = ChessBoard.pureChessFromPosition(fen);
 
         long nodes = perft(depth);
         System.out.println("Nodes: " + nodes);
@@ -53,7 +53,7 @@ public class ClearPerftTest {
         int depth = 6;
         String fen = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
         System.out.println("Perft promotion position: " + fen);
-        our_board = ChessBoard.pureChessFromPosition(fen);
+        board = ChessBoard.pureChessFromPosition(fen);
 
         long nodes = perft(depth);
         System.out.println("Nodes: " + nodes);
@@ -69,13 +69,11 @@ public class ClearPerftTest {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println(
-                "Perft custom position #%s: %s".formatted(task_idx, fen)
-            );
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
 
             for (int j = 0; j < task.values().length - 2; j++) {
                 int depth = j + 1;
-                our_board = ChessBoard.pureChessFromPosition(fen);
+                board = ChessBoard.pureChessFromPosition(fen);
 
                 long nodes = perft(depth);
                 total_nodes += nodes;
@@ -100,13 +98,11 @@ public class ClearPerftTest {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println(
-                "Perft custom position #%s: %s".formatted(task_idx, fen)
-            );
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
 
             for (int j = 0; j < task.values().length - 1; j++) {
                 int depth = j + 1;
-                our_board = ChessBoard.pureChessFromPosition(fen);
+                board = ChessBoard.pureChessFromPosition(fen);
 
                 long nodes = perft(depth);
                 total_nodes += nodes;
@@ -131,13 +127,11 @@ public class ClearPerftTest {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println(
-                "Perft custom position #%s: %s".formatted(task_idx, fen)
-            );
+            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
 
             for (int j = 0; j < task.values().length; j++) {
                 int depth = j + 1;
-                our_board = ChessBoard.pureChessFromPosition(fen);
+                board = ChessBoard.pureChessFromPosition(fen);
 
                 long nodes = perft(depth);
                 total_nodes += nodes;
@@ -154,20 +148,16 @@ public class ClearPerftTest {
 
     long perft(int depth) {
         long nodes = 0L;
+        if (depth == 0) return 1L;
 
-        if (depth == 0) {
-            return 1L;
-        }
-
-        List<core.project.chess.domain.chess.value_objects.Move> legal_moves =
-            null;
+        List<Move> legal_moves = null;
 
         try {
-            legal_moves = our_board.generateAllValidMoves();
+            legal_moves = board.generateAllValidMoves();
         } catch (Exception e) {
             System.out.printf(
                 "Could not generate moves for position: %s | current depth: %s%n",
-                our_board.toString(),
+                board.toString(),
                 depth
             );
             throw e;
@@ -179,12 +169,12 @@ public class ClearPerftTest {
             Piece inCaseOfPromotion = move.promotion();
 
             try {
-                our_board.doMove(from, to, inCaseOfPromotion);
+                board.doMove(from, to, inCaseOfPromotion);
             } catch (Exception e) {
                 System.out.printf(
                     "Error making move: %s | position: %s | depth: %s%n",
                     move,
-                    our_board.toString(),
+                    board.toString(),
                     depth
                 );
                 throw e;
@@ -193,7 +183,7 @@ public class ClearPerftTest {
             long newNodes = perft(depth - 1);
             nodes += newNodes;
 
-            our_board.undoMove();
+            board.undoMove();
         }
 
         return nodes;

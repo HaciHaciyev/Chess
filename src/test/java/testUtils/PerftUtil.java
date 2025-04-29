@@ -1,13 +1,15 @@
 package testUtils;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import com.github.bhlangonijr.chesslib.move.Move;
 import core.project.chess.domain.Perft.PerftTask;
 import io.quarkus.logging.Log;
-import java.io.*;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PerftUtil {
 
@@ -310,9 +312,9 @@ public class PerftUtil {
                         "\u001B[33m" +
                         pieceName +
                         " moved from " +
-                        beforePositions.get(0) +
+                        beforePositions.getFirst() +
                         " to " +
-                        afterPositions.get(0) +
+                        afterPositions.getFirst() +
                         "\u001B[0m"
                     );
                 } else {
@@ -571,50 +573,6 @@ public class PerftUtil {
         return board;
     }
 
-    public static void print_mismatch(
-        List<core.project.chess.domain.chess.value_objects.Move> our_moves,
-        List<Move> their_moves
-    ) {
-        our_moves.sort(PerftUtil::compareOurMoves);
-        their_moves.sort(PerftUtil::compareTheirMoves);
-
-        var our_moves_str = our_moves
-            .stream()
-            .map(Object::toString)
-            .collect(Collectors.toList());
-        var their_moves_str = their_moves
-            .stream()
-            .map(Object::toString)
-            .collect(Collectors.toList());
-
-        List<String> outliers = new ArrayList<>();
-        boolean ourMovesLarger = our_moves.size() > their_moves.size();
-
-        // Determine which list has unique moves (outliers)
-        if (ourMovesLarger) {
-            our_moves_str.removeAll(their_moves_str);
-            outliers.addAll(our_moves_str);
-        } else {
-            their_moves_str.removeAll(our_moves_str);
-            outliers.addAll(their_moves_str);
-        }
-
-        int numColumns = 5;
-
-        System.out.println();
-        System.out.println(
-            "OUR GENERATION: %s moves".formatted(our_moves.size())
-        );
-        printMovesInColumns(our_moves, outliers, numColumns);
-
-        System.out.println();
-        System.out.println(
-            "THEIR GENERATION: %s moves".formatted(their_moves.size())
-        );
-        printMovesInColumns(their_moves, outliers, numColumns);
-        System.out.println();
-    }
-
     private static void printMovesInColumns(
         List<?> moves,
         List<String> outliers,
@@ -646,7 +604,7 @@ public class PerftUtil {
                     line.append(String.format("%-15s", ""));
                 }
             }
-            System.out.println(line.toString());
+            System.out.println(line);
         }
     }
 
@@ -669,34 +627,5 @@ public class PerftUtil {
 
         // Compare to row
         return Integer.compare(one.to().row(), two.to().row());
-    }
-
-    private static int compareTheirMoves(Move one, Move two) {
-        // Compare from file
-        int result = Integer.compare(
-            one.getFrom().getFile().ordinal(),
-            two.getFrom().getFile().ordinal()
-        );
-        if (result != 0) return result;
-
-        // Compare from rank
-        result = Integer.compare(
-            one.getFrom().getRank().ordinal(),
-            two.getFrom().getRank().ordinal()
-        );
-        if (result != 0) return result;
-
-        // Compare to file
-        result = Integer.compare(
-            one.getTo().getFile().ordinal(),
-            two.getTo().getFile().ordinal()
-        );
-        if (result != 0) return result;
-
-        // Compare to rank
-        return Integer.compare(
-            one.getTo().getRank().ordinal(),
-            two.getTo().getRank().ordinal()
-        );
     }
 }
