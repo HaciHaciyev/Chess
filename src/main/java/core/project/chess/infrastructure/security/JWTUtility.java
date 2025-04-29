@@ -45,6 +45,12 @@ public class JWTUtility {
                 .sign();
     }
 
+    /**
+     * Extracts a JWT token from the WebSocket session request parameters.
+     * <p>
+     * WARNING: This method does NOT validate whether the token is expired.
+     * Callers must explicitly check the 'exp' claim to ensure the token is still valid.
+     */
     public Optional<JsonWebToken> extractJWT(Session session) {
         List<String> token = session.getRequestParameterMap().get("token");
         if (Objects.isNull(token)) return Optional.empty();
@@ -56,13 +62,18 @@ public class JWTUtility {
         }
     }
 
+    /**
+     * Parses a JWT string into a JsonWebToken.
+     * <p>
+     * WARNING: This method does NOT validate whether the token is expired.
+     * Callers must explicitly check the 'exp' claim to ensure the token is still valid.
+     */
     public Optional<JsonWebToken> parseJWT(String token) {
         try {
             return Optional.of(jwtParser.parse(token));
         } catch (ParseException e) {
             Log.error("Can`t parse jwt.", e);
+            return Optional.empty();
         }
-
-        return Optional.empty();
     }
 }

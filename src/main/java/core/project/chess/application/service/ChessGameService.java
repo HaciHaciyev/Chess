@@ -29,6 +29,7 @@ import jakarta.websocket.Session;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,7 +40,7 @@ import static core.project.chess.application.util.WSUtilities.sendMessage;
 @ApplicationScoped
 public class ChessGameService {
 
-    private final JWTUtility JWTUtility;
+    private final JWTUtility jwtUtility;
 
     private final PuzzleService puzzleService;
 
@@ -57,11 +58,11 @@ public class ChessGameService {
 
     private final GameInvitationsRepository partnershipGameCacheService;
 
-    ChessGameService(JWTUtility JWTUtility, PuzzleService puzzleService, PuzzlerClient puzzlerClient, SessionStorage sessionStorage,
+    ChessGameService(JWTUtility jwtUtility, PuzzleService puzzleService, PuzzlerClient puzzlerClient, SessionStorage sessionStorage,
                      ChessGameFactory chessGameFactory, InboundChessRepository inboundChessRepository,
                      OutboundUserRepository outboundUserRepository, GameFunctionalityService gameFunctionalityService,
                      GameInvitationsRepository partnershipGameCacheService) {
-        this.JWTUtility = JWTUtility;
+        this.jwtUtility = jwtUtility;
         this.puzzleService = puzzleService;
         this.puzzlerClient = puzzlerClient;
         this.sessionStorage = sessionStorage;
@@ -70,6 +71,25 @@ public class ChessGameService {
         this.outboundUserRepository = outboundUserRepository;
         this.gameFunctionalityService = gameFunctionalityService;
         this.partnershipGameCacheService = partnershipGameCacheService;
+    }
+
+    public Optional<JsonWebToken> validateToken(Session session) {
+        Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
+
+        if (jwt.isEmpty()) {
+            closeSession(session, Message.error("You are not authorized. Token is required."));
+            return Optional.empty();
+        }
+
+        JsonWebToken token = jwt.get();
+        Instant expiration = Instant.ofEpochSecond(token.getExpirationTime());
+        if (expiration.isBefore(Instant.now())) {
+            sessionStorage.removeSession(session);
+            closeSession(session, Message.error("You are not authorized. Token has expired."));
+            return Optional.empty();
+        }
+
+        return jwt;
     }
 
     public void onOpen(Session session, Username username) {
@@ -121,15 +141,6 @@ public class ChessGameService {
         CompletableFuture.runAsync(
                 () -> handleMessage(session, username.username(), message, chessGame.orElseThrow())
         );
-    }
-
-    public Optional<JsonWebToken> validateToken(Session session) {
-        return JWTUtility.extractJWT(session)
-                .or(() -> {
-                    closeSession(session, Message.error("You are not authorized. Token is required."));
-                    sessionStorage.removeSession(session);
-                    return Optional.empty();
-                });
     }
 
     private static Optional<String> extractAndValidateGameID(Session session, Message message) {
