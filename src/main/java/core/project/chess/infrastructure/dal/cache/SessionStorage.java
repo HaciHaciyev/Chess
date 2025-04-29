@@ -57,14 +57,17 @@ public class SessionStorage {
                 .offerLast(Triple.of(session, account, gameParameters));
     }
 
-    public Optional<Triple<Session, User, GameParameters>> getWaitingUser(String username) {
-        var queue = waitingForTheGame.get(username);
-        return (queue == null) ? Optional.empty() : Optional.of(queue.peekLast());
-    }
-
-    public void removeWaitingUser(String username) {
+    public void removeLastGameSearchRequestOf(String username) {
         waitingForTheGame.computeIfPresent(username, (key, queue) -> {
             queue.pollLast();
+            return queue.isEmpty() ? null : queue;
+        });
+    }
+
+    public void removeWaitingUser(Triple<Session, User, GameParameters> userState) {
+        User user = userState.getSecond();
+        waitingForTheGame.computeIfPresent(user.username(), (key, queue) -> {
+            queue.remove(userState);
             return queue.isEmpty() ? null : queue;
         });
     }

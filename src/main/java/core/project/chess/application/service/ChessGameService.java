@@ -282,7 +282,7 @@ public class ChessGameService {
         final Triple<Session, User, GameParameters> opponentData = potentialOpponent.orElseThrow();
         final User secondPlayer = opponentData.getSecond();
 
-        sessionStorage.removeWaitingUser(secondPlayer.username());
+        sessionStorage.removeWaitingUser(opponentData);
 
         startStandardChessGame(
                 Triple.of(session, firstPlayer, gameParameters), opponentData, false
@@ -290,7 +290,7 @@ public class ChessGameService {
     }
 
     private void cancelGameSearch(Username username) {
-        sessionStorage.removeWaitingUser(username.username());
+        sessionStorage.removeLastGameSearchRequestOf(username.username());
     }
 
     private StatusPair<Triple<Session, User, GameParameters>> locateOpponentForGame(
