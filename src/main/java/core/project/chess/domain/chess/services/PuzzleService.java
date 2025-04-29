@@ -9,6 +9,7 @@ import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.user.entities.User;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -55,7 +56,7 @@ public class PuzzleService {
     }
 
     public Message puzzleMove(User user, UUID puzzleID, Coordinate from, Coordinate to, @Nullable String promotion) {
-        Optional<Puzzle> puzzleOptional = sessionStorage.getPuzzle(user.username(), puzzleID);
+        Optional<Puzzle> puzzleOptional = sessionStorage.getPuzzle(new Username(user.username()), puzzleID);
         if (puzzleOptional.isEmpty()) {
             return Message.error("This puzzle session do not exists.");
         }

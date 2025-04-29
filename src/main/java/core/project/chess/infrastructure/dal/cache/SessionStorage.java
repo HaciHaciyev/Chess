@@ -33,7 +33,7 @@ public class SessionStorage {
     * view:
     * (username, puzzle_id) -> Puzzle
     */
-    private static final ConcurrentHashMap<Pair<String, UUID>, Puzzle> puzzles = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Pair<Username, UUID>, Puzzle> puzzles = new ConcurrentHashMap<>();
     
     /**
     * Used to store games and associated sessions
@@ -64,7 +64,7 @@ public class SessionStorage {
             return queue;
         });
 
-        if (computedQueue.isEmpty()) waitingForTheGame.remove(username);
+        if (computedQueue != null && computedQueue.isEmpty()) waitingForTheGame.remove(username);
     }
 
     public void removeWaitingUser(GameRequest waitingUser) {
@@ -75,7 +75,7 @@ public class SessionStorage {
                 return queue.isEmpty() ? null : queue;
             });
 
-            if (computedQueue.isEmpty()) waitingForTheGame.remove(username);
+            if (computedQueue != null && computedQueue.isEmpty()) waitingForTheGame.remove(username);
         }
     }
 
@@ -135,10 +135,10 @@ public class SessionStorage {
     }
 
     public void addPuzzle(Puzzle puzzle) {
-        puzzles.put(Pair.of(puzzle.player().username(), puzzle.ID()), puzzle);
+        puzzles.put(Pair.of(new Username(puzzle.player().username()), puzzle.ID()), puzzle);
     }
 
-    public Optional<Puzzle> getPuzzle(String username, UUID puzzleID) {
+    public Optional<Puzzle> getPuzzle(Username username, UUID puzzleID) {
         return Optional.ofNullable(puzzles.get(Pair.of(username, puzzleID)));
     }
 }
