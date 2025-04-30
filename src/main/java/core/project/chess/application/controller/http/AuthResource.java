@@ -2,7 +2,7 @@ package core.project.chess.application.controller.http;
 
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
-import core.project.chess.application.service.UserAuthService;
+import core.project.chess.application.service.AuthService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
@@ -15,10 +15,10 @@ import static core.project.chess.application.util.JSONUtilities.responseExceptio
 @Path("/account")
 public class AuthResource {
 
-    private final UserAuthService userAuthService;
+    private final AuthService authService;
 
-    AuthResource(UserAuthService userAuthService) {
-        this.userAuthService = userAuthService;
+    AuthResource(AuthService authService) {
+        this.authService = authService;
     }
 
     @POST
@@ -27,7 +27,7 @@ public class AuthResource {
         if (Objects.isNull(registrationForm))
             throw responseException(Response.Status.BAD_REQUEST, "Registration form is null.");
 
-        userAuthService.registration(registrationForm);
+        authService.registration(registrationForm);
         return Response.ok("Registration successful. Verify your email.").build();
     }
 
@@ -37,7 +37,7 @@ public class AuthResource {
         if (Objects.isNull(email))
             throw responseException(Response.Status.BAD_REQUEST, "Email us null");
 
-        userAuthService.resendVerificationToken(email);
+        authService.resendVerificationToken(email);
         return Response.ok().build();
     }
 
@@ -47,7 +47,7 @@ public class AuthResource {
         if (Objects.isNull(token))
             throw responseException(Response.Status.BAD_REQUEST, "Token is null.");
 
-        userAuthService.verification(token);
+        authService.verification(token);
         return Response.ok("Now, account is enabled.").build();
     }
 
@@ -57,7 +57,7 @@ public class AuthResource {
         if (Objects.isNull(loginForm))
             throw responseException(Response.Status.BAD_REQUEST, "Login form is null.");
 
-        return Response.ok(userAuthService.login(loginForm)).build();
+        return Response.ok(authService.login(loginForm)).build();
     }
 
     @PATCH
@@ -66,6 +66,6 @@ public class AuthResource {
         if (Objects.isNull(refreshToken) || refreshToken.isBlank())
             throw responseException(Response.Status.BAD_REQUEST, "Refresh token is null.");
 
-        return Response.ok(userAuthService.refreshToken(refreshToken)).build();
+        return Response.ok(authService.refreshToken(refreshToken)).build();
     }
 }
