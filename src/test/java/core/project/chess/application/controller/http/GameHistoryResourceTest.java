@@ -171,6 +171,13 @@ class GameHistoryResourceTest {
                      .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, opponentToken))) {
             
             addMessageHandlers(playerMessaging, opponentUsername, opponentMessaging, username, playerChess, opponentChess);
+
+            assertThat(USER_MESSAGES.user1().take()).matches(m -> m.type() == MessageType.INFO && m.message().contains("chessland") || m.message().contains("messaging"));
+            assertThat(USER_MESSAGES.user1().take()).matches(m -> m.type() == MessageType.INFO && m.message().contains("chessland") || m.message().contains("messaging"));
+
+            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.INFO && m.message().contains("chessland") || m.message().contains("messaging"));
+            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.INFO && m.message().contains("chessland") || m.message().contains("messaging"));
+
             addPartnership(opponentUsername, playerMessaging, username, opponentMessaging);
             loadGames(username, playerChess, opponentUsername, opponentChess);
         } catch (DeploymentException | IOException | InterruptedException e) {
@@ -220,6 +227,7 @@ class GameHistoryResourceTest {
         }
 
         String inCaseOfPromotionForBlack = blackMoves.promotion() == null ? null : AlgebraicNotation.pieceToType(blackMoves.promotion()).getPieceType().toLowerCase();
+
         sendMessage(opponentChess, opponentUsername, Message.builder(MessageType.MOVE)
                 .gameID(gameID)
                 .from(blackMoves.from())
@@ -273,6 +281,7 @@ class GameHistoryResourceTest {
 
                     return false;
                 }));
+
         sendMessage(opponentChess, opponentUsername, Message.builder(MessageType.GAME_INIT).partner(username).respond(Message.Respond.YES).build());
 
         await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
@@ -331,8 +340,6 @@ class GameHistoryResourceTest {
                 Log.infof("User %s Received Message in Chess: %s.", secondPlayer, message.toString());
             USER_MESSAGES.user2().offer(message);
         });
-
-        Thread.sleep(Duration.ofSeconds(1).toMillis());
     }
 
     private void addPartnership(String blackUsername, Session wMessagingSession, 
@@ -344,8 +351,6 @@ class GameHistoryResourceTest {
 
         sendMessage(wMessagingSession, whiteUsername, wPartnershipRequest);
 
-        Thread.sleep(Duration.ofSeconds(3));
-
         assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_REQUEST && m.message().contains("invite you"));
 
         Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
@@ -355,9 +360,7 @@ class GameHistoryResourceTest {
 
         sendMessage(bMessagingSession, blackUsername, bPartnershipRequest);
 
-        Thread.sleep(Duration.ofSeconds(3));
-
-        assertThat(USER_MESSAGES.user1()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
-        assertThat(USER_MESSAGES.user2()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
+        assertThat(USER_MESSAGES.user1().take()).matches(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
+        assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
     }
 }
