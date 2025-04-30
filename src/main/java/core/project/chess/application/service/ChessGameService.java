@@ -84,6 +84,7 @@ public class ChessGameService {
         JsonWebToken token = jwt.get();
         Instant expiration = Instant.ofEpochSecond(token.getExpirationTime());
         if (expiration.isBefore(Instant.now())) {
+            //FIXME
             sessionStorage.removeSession(session);
             closeSession(session, Message.error("You are not authorized. Token has expired."));
             return Optional.empty();
@@ -213,8 +214,8 @@ public class ChessGameService {
 
     private void initializeGameSession(Session session, Username username, Message message) {
         CompletableFuture.runAsync(() -> {
-            final boolean connectToExistedGame = Objects.nonNull(message.gameID());
-            if (connectToExistedGame) {
+            final boolean connectToExistingGame = Objects.nonNull(message.gameID());
+            if (connectToExistingGame) {
                 joinExistingGameSession(session, username, message.gameID());
                 return;
             }
@@ -303,32 +304,29 @@ public class ChessGameService {
     }
 
     private StatusPair<GameRequest> locateOpponentForGame(
-            final User firstPlayer,
-            final GameParameters gameParameters) {
+        final User firstPlayer,
+        final GameParameters gameParameters) {
 
-        for (var entry : sessionStorage.waitingUsers()) {
-            for (GameRequest waitingUser : entry.getValue()) {
-                synchronized (waitingUser) {
+            for (var entry : sessionStorage.waitingUsers()) {
+                for (GameRequest waitingUser : entry.getValue()) {
                     final User potentialOpponent = waitingUser.user();
                     final GameParameters gameParametersOfPotentialOpponent = waitingUser.gameParameters();
 
                     final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer,
-                            gameParameters,
-                            potentialOpponent,
-                            gameParametersOfPotentialOpponent,
-                            false
+                        gameParameters,
+                        potentialOpponent,
+                        gameParametersOfPotentialOpponent,
+                        false
                     );
 
-                    if (isOpponent) {
-                        sessionStorage.removeWaitingUser(waitingUser);
+                    if (isOpponent && sessionStorage.removeWaitingUser(waitingUser)) {
                         return StatusPair.ofTrue(waitingUser);
                     }
                 }
             }
-        }
 
-        return StatusPair.ofFalse();
-    }
+            return StatusPair.ofFalse();
+        }
 
     private void handlePartnershipGameRequest(Session session, Username addresserUsername,
                                               GameParameters gameParameters, Message message) {
@@ -579,6 +577,7 @@ public class ChessGameService {
             }
         }
 
+        //FIXME
         sessionStorage.removeSession(username);
     }
 
