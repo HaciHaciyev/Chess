@@ -74,6 +74,10 @@ public class ChessGameService {
                 closeSession(session, Message.error("This account is do not founded."));
                 return;
             }
+            if (sessionStorage.containsSession(username)) {
+                closeSession(session, Message.error("You already have active session."));
+                return;
+            }
 
             sessionStorage.addSession(session, result.value());
 

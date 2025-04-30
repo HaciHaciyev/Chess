@@ -93,8 +93,8 @@ public class SessionStorage {
         sessions.put(new Username(account.username()), Pair.of(session, account));
     }
 
-    public boolean containsSession(Username addresseeUsername) {
-        return sessions.containsKey(addresseeUsername);
+    public boolean containsSession(Username username) {
+        return sessions.containsKey(username);
     }
 
     public void removeSession(Session session) {
