@@ -54,39 +54,31 @@ public class SessionStorage {
     public void addWaitingUser(GameRequest gameRequest) {
         Username username = new Username(gameRequest.user().username());
         
-        // add deque to user if he's absent, and put game request
         waitingForTheGame
                 .computeIfAbsent(username, k -> new ConcurrentLinkedDeque<>())
                 .offerLast(gameRequest);
     }
     
-    //FIXME
     public void removeLastGameSearchRequestOf(Username username) {
         var computedQueue = waitingForTheGame.computeIfPresent(username, (key, queue) -> {
             queue.pollLast();
             return queue;
         });
 
-        // remove user from waiting queue if he has 0 game search requests
-        if (computedQueue.isEmpty()) waitingForTheGame.remove(username);
+        if (computedQueue == null || computedQueue.isEmpty()) waitingForTheGame.remove(username);
     }
 
     public boolean removeWaitingUser(GameRequest waitingUser) {
         Username username = new Username(waitingUser.user().username());
-        
         var queue = waitingForTheGame.get(username);
-        if (queue == null) {
-            return false;
-        }
+        if (queue == null) return false;
         
-        boolean removed = queue.remove(waitingUser);
-        
+        final boolean removed = queue.remove(waitingUser);
         if (removed) {
             if (queue.isEmpty()) waitingForTheGame.remove(username);
             return true;
-        } else {
-            return false;
         }
+        else return false;
     }
 
     public Set<Map.Entry<Username, ConcurrentLinkedDeque<GameRequest>>> waitingUsers() {

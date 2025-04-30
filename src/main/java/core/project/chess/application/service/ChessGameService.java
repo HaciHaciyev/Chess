@@ -278,29 +278,26 @@ public class ChessGameService {
     }
 
     private StatusPair<GameRequest> locateOpponentForGame(
-        final User firstPlayer,
-        final GameParameters gameParameters) {
+            final User firstPlayer,
+            final GameParameters gameParameters) {
+        for (var entry : sessionStorage.waitingUsers()) {
+            for (GameRequest waitingUser : entry.getValue()) {
+                final User potentialOpponent = waitingUser.user();
+                final GameParameters gameParametersOfPotentialOpponent = waitingUser.gameParameters();
 
-            for (var entry : sessionStorage.waitingUsers()) {
-                for (GameRequest waitingUser : entry.getValue()) {
-                    final User potentialOpponent = waitingUser.user();
-                    final GameParameters gameParametersOfPotentialOpponent = waitingUser.gameParameters();
+                final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer,
+                    gameParameters,
+                    potentialOpponent,
+                    gameParametersOfPotentialOpponent,
+                    false
+                );
 
-                    final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer,
-                        gameParameters,
-                        potentialOpponent,
-                        gameParametersOfPotentialOpponent,
-                        false
-                    );
-
-                    if (isOpponent && sessionStorage.removeWaitingUser(waitingUser)) {
-                        return StatusPair.ofTrue(waitingUser);
-                    }
-                }
+                if (isOpponent && sessionStorage.removeWaitingUser(waitingUser)) return StatusPair.ofTrue(waitingUser);
             }
-
-            return StatusPair.ofFalse();
         }
+
+        return StatusPair.ofFalse();
+    }
 
     private void handlePartnershipGameRequest(Session session, Username addresserUsername,
                                               GameParameters gameParameters, Message message) {
