@@ -1,6 +1,5 @@
 package core.project.chess.application.service;
 
-import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
@@ -8,32 +7,24 @@ import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
-import core.project.chess.infrastructure.dal.cache.SessionStorage;
 import core.project.chess.infrastructure.security.JWTUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.websocket.Session;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 import static core.project.chess.application.util.JSONUtilities.responseException;
-import static core.project.chess.application.util.WSUtilities.closeSession;
 
 @ApplicationScoped
 public class AuthService {
 
     private final JWTUtility jwtUtility;
-
-    private final SessionStorage sessionStorage;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -50,13 +41,11 @@ public class AuthService {
     public static final String EMAIL_VERIFICATION_URL = "http://localhost:8080/chessland/account/token/verification?token=%s";
 
     AuthService(JWTUtility jwtUtility,
-                SessionStorage sessionStorage,
                 PasswordEncoder passwordEncoder,
                 InboundUserRepository inboundUserRepository,
                 OutboundUserRepository outboundUserRepository,
                 EmailInteractionService emailInteractionService) {
         this.jwtUtility = jwtUtility;
-        this.sessionStorage = sessionStorage;
         this.passwordEncoder = passwordEncoder;
         this.inboundUserRepository = inboundUserRepository;
         this.outboundUserRepository = outboundUserRepository;
@@ -210,24 +199,5 @@ public class AuthService {
         } catch (IllegalStateException e) {
             throw responseException(Response.Status.FORBIDDEN, e.getMessage());
         }
-    }
-
-    public Optional<JsonWebToken> validateToken(Session session) {
-        Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
-
-        if (jwt.isEmpty()) {
-            closeSession(session, Message.error("You are not authorized. Token is required."));
-            return Optional.empty();
-        }
-
-        JsonWebToken token = jwt.get();
-        Instant expiration = Instant.ofEpochSecond(token.getExpirationTime());
-        if (expiration.isBefore(Instant.now())) {
-            sessionStorage.removeSession(session);
-            closeSession(session, Message.error("You are not authorized. Token has expired."));
-            return Optional.empty();
-        }
-
-        return jwt;
     }
 }

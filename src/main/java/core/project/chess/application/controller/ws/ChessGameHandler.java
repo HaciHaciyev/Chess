@@ -1,8 +1,8 @@
 package core.project.chess.application.controller.ws;
 
 import core.project.chess.application.dto.chess.Message;
-import core.project.chess.application.service.AuthService;
 import core.project.chess.application.service.ChessGameService;
+import core.project.chess.application.service.WSAuthService;
 import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.ws.MessageDecoder;
 import core.project.chess.infrastructure.ws.MessageEncoder;
@@ -15,11 +15,11 @@ import jakarta.websocket.server.ServerEndpoint;
 @ServerEndpoint(value = "/chessland/chess-game", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
 public class ChessGameHandler {
 
-    private final AuthService authService;
+    private final WSAuthService authService;
 
     private final ChessGameService chessGameService;
 
-    ChessGameHandler(AuthService authService, ChessGameService chessGameService) {
+    ChessGameHandler(WSAuthService authService, ChessGameService chessGameService) {
         this.authService = authService;
         this.chessGameService = chessGameService;
     }
@@ -41,5 +41,4 @@ public class ChessGameHandler {
         authService.validateToken(session)
                 .ifPresent(token -> chessGameService.onClose(session, new Username(token.getName())));
     }
-
 }
