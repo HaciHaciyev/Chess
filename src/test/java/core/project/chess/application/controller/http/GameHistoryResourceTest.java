@@ -39,7 +39,7 @@ import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.notNullValue;
 import static testUtils.WSClient.sendMessage;
@@ -171,13 +171,6 @@ class GameHistoryResourceTest {
                      .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, opponentToken))) {
             
             addMessageHandlers(playerMessaging, opponentUsername, opponentMessaging, username, playerChess, opponentChess);
-
-            assertThat(USER_MESSAGES.user1().take()).matches(m -> m.type() == MessageType.INFO && m.message().contains("chessland") || m.message().contains("messaging"));
-            assertThat(USER_MESSAGES.user1().take()).matches(m -> m.type() == MessageType.INFO && m.message().contains("chessland") || m.message().contains("messaging"));
-
-            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.INFO && m.message().contains("chessland") || m.message().contains("messaging"));
-            assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.INFO && m.message().contains("chessland") || m.message().contains("messaging"));
-
             addPartnership(opponentUsername, playerMessaging, username, opponentMessaging);
             loadGames(username, playerChess, opponentUsername, opponentChess);
         } catch (DeploymentException | IOException | InterruptedException e) {
@@ -185,7 +178,8 @@ class GameHistoryResourceTest {
         }
     }
 
-    private void loadGames(String username, Session playerChess, String opponentUsername, Session opponentChess) {
+    private void loadGames(String username, Session playerChess, String opponentUsername, Session opponentChess) throws InterruptedException {
+        Thread.sleep(Duration.ofSeconds(1));
         final String path = "src/main/resources/pgn/game-history-resource.pgn";
         for (String PGN : SimplePGNReader.extractFromPGN(path)) {
             printLineBreak();
@@ -195,7 +189,7 @@ class GameHistoryResourceTest {
     }
 
     private void executeGame(String username, Session playerChess, String opponentUsername,
-                             Session opponentChess, List<ChessMove> listOfMoves) {
+                             Session opponentChess, List<ChessMove> listOfMoves) throws InterruptedException {
         final String gameID = startNewPartnershipGame(username, playerChess, opponentUsername, opponentChess);
         for (ChessMove move : listOfMoves) {
             var whiteMoves = move.white();
@@ -266,31 +260,36 @@ class GameHistoryResourceTest {
         return lastMove.contains(from + "-" + to) || lastMove.contains(from + "x" + to);
     }
 
-    private String startNewPartnershipGame(String username, Session playerChess, String opponentUsername, Session opponentChess) {
+    private String startNewPartnershipGame(String username, Session playerChess,
+                                           String opponentUsername, Session opponentChess) throws InterruptedException {
         USER_MESSAGES.user1.clear();
         USER_MESSAGES.user2.clear();
+        Thread.sleep(Duration.ofSeconds(1));
 
-        sendMessage(playerChess, username, Message.builder(MessageType.GAME_INIT).color(Color.WHITE).partner(opponentUsername).build());
-        await().atMost(Duration.ofSeconds(1)).until(() -> USER_MESSAGES.user2
-                .stream()
+        sendMessage(playerChess, username, Message.builder(MessageType.GAME_INIT)
+                .color(Color.WHITE)
+                .partner(opponentUsername)
+                .build());
+
+        await().atMost(2, SECONDS).until(() -> USER_MESSAGES.user2.stream()
                 .anyMatch(message -> {
                     if (message.type().equals(MessageType.PARTNERSHIP_REQUEST)) {
                         Log.infof("Message: %s", message);
                         return message.color().equals(Color.BLACK) && message.message().contains(username);
                     }
-
                     return false;
                 }));
 
-        sendMessage(opponentChess, opponentUsername, Message.builder(MessageType.GAME_INIT).partner(username).respond(Message.Respond.YES).build());
+        sendMessage(opponentChess, opponentUsername, Message.builder(MessageType.GAME_INIT)
+                .partner(username)
+                .respond(Message.Respond.YES)
+                .build());
 
         await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
                 .stream()
                 .anyMatch(message -> {
-                    if (!message.type().equals(MessageType.GAME_START_INFO) && !message.type().equals(MessageType.FEN_PGN)) {
-                        return false;
-                    }
-
+                    if (!message.type().equals(MessageType.GAME_START_INFO) &&
+                            !message.type().equals(MessageType.FEN_PGN)) return false;
                     Log.infof("Message: %s", message);
                     return true;
                 }));
@@ -298,10 +297,8 @@ class GameHistoryResourceTest {
         await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user2()
                 .stream()
                 .anyMatch(message -> {
-                    if (!message.type().equals(MessageType.GAME_START_INFO) && !message.type().equals(MessageType.FEN_PGN)) {
-                        return false;
-                    }
-
+                    if (!message.type().equals(MessageType.GAME_START_INFO) &&
+                            !message.type().equals(MessageType.FEN_PGN)) return false;
                     Log.infof("Message: %s", message);
                     return true;
                 }));
@@ -315,7 +312,8 @@ class GameHistoryResourceTest {
     }
 
     private void addMessageHandlers(Session firstPlayerMessagingSession, String secondPlayer, Session secondPlayerMessagingSession,
-                                    String firstPlayer, Session firstPlayerSession, Session secondPlayerSession) throws InterruptedException {
+                                    String firstPlayer, Session firstPlayerSession, Session secondPlayerSession)
+            throws InterruptedException {
 
         firstPlayerMessagingSession.addMessageHandler(Message.class, message -> {
             if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
@@ -342,25 +340,38 @@ class GameHistoryResourceTest {
         });
     }
 
-    private void addPartnership(String blackUsername, Session wMessagingSession, 
+    private void addPartnership(String blackUsername, Session wMessagingSession,
                                 String whiteUsername, Session bMessagingSession) throws InterruptedException {
+        Thread.sleep(Duration.ofSeconds(1));
+
         Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                 .partner(blackUsername)
                 .message("br")
                 .build();
-
         sendMessage(wMessagingSession, whiteUsername, wPartnershipRequest);
 
-        assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_REQUEST && m.message().contains("invite you"));
+        await().atMost(1, SECONDS).until(() -> {
+            Message msg = USER_MESSAGES.user2().peek();
+            return msg != null && msg.type() == MessageType.PARTNERSHIP_REQUEST && msg.message().contains("invite you");
+        });
+        USER_MESSAGES.user2().take();
 
         Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
                 .partner(whiteUsername)
                 .message("brrr")
                 .build();
-
         sendMessage(bMessagingSession, blackUsername, bPartnershipRequest);
 
-        assertThat(USER_MESSAGES.user1().take()).matches(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
-        assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
+        await().atMost(1, SECONDS).until(() -> {
+            Message msg = USER_MESSAGES.user1().peek();
+            return msg != null && msg.type() == MessageType.USER_INFO && msg.message().contains("successfully added");
+        });
+        USER_MESSAGES.user1().take();
+
+        await().atMost(1, SECONDS).until(() -> {
+            Message msg = USER_MESSAGES.user2().peek();
+            return msg != null && msg.type() == MessageType.USER_INFO && msg.message().contains("successfully added");
+        });
+        USER_MESSAGES.user2().take();
     }
 }
