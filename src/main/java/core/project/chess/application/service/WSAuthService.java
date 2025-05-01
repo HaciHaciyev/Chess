@@ -16,7 +16,7 @@ public class WSAuthService {
 
     private final JWTUtility jwtUtility;
 
-    public WSAuthService(JWTUtility jwtUtility) {
+    WSAuthService(JWTUtility jwtUtility) {
         this.jwtUtility = jwtUtility;
     }
 
