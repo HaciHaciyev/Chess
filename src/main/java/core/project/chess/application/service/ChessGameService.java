@@ -2,7 +2,6 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
-import core.project.chess.application.dto.chess.PuzzleInbound;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.GameResult;
@@ -55,10 +54,9 @@ public class ChessGameService {
 
     private final GameInvitationsRepository partnershipGameCacheService;
 
-    private final ExecutorService executorService = Executors
-            .newFixedThreadPool(Runtime
-                    .getRuntime()
-                    .availableProcessors());
+    private final ExecutorService executorService = Executors.newFixedThreadPool(
+            Runtime.getRuntime().availableProcessors()
+    );
 
     ChessGameService(PuzzleService puzzleService, PuzzlerClient puzzlerClient, SessionStorage sessionStorage,
                      ChessGameFactory chessGameFactory, InboundChessRepository inboundChessRepository,
@@ -603,8 +601,9 @@ public class ChessGameService {
 
                     CompletableFuture.runAsync(() -> {
                         gameFunctionalityService.executeGameOverOperations(game);
-                        PuzzleInbound puzzleInbound = puzzlerClient.sendPGN(game.pgn());
-                        puzzleService.save(puzzleInbound.PGN(), puzzleInbound.startPositionOfPuzzle());
+                        // temporarily disabled due to technical reasons
+                        /*PuzzleInbound puzzleInbound = puzzlerClient.sendPGN(game.pgn());
+                        puzzleService.save(puzzleInbound.PGN(), puzzleInbound.startPositionOfPuzzle());*/
                     });
                     isRunning.set(false);
                 }
