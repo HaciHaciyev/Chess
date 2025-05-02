@@ -114,6 +114,10 @@ public class ChessGameService {
         handleMessage(session, username.username(), message, chessGame.orElseThrow());
     }
 
+    public Optional<Pair<Session, User>> user(Username username) {
+        return sessionStorage.getSessionByUsername(username);
+    }
+
     private static Optional<String> extractAndValidateGameID(Session session, Message message) {
         final String gameID = message.gameID();
 
