@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.security;
 
+import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.entities.User;
 import io.quarkus.logging.Log;
 import io.smallrye.jwt.auth.principal.JWTParser;
@@ -51,14 +52,15 @@ public class JWTUtility {
      * WARNING: This method does NOT validate whether the token is expired.
      * Callers must explicitly check the 'exp' claim to ensure the token is still valid.
      */
-    public Optional<JsonWebToken> extractJWT(Session session) {
+    public Result<JsonWebToken, IllegalStateException> extractJWT(Session session) {
         List<String> token = session.getRequestParameterMap().get("token");
-        if (Objects.isNull(token)) return Optional.empty();
-        if (token.isEmpty()) return Optional.empty();
+        if (Objects.isNull(token)) return Result.failure(new IllegalStateException("Token is missing."));
+        if (token.isEmpty()) return Result.failure(new IllegalStateException("Token is missing."));
         try {
-            return Optional.of(jwtParser.parse(token.getFirst()));
+            JsonWebToken jwt = jwtParser.parse(token.getFirst());
+            return Result.success(jwt);
         } catch (ParseException e) {
-            return Optional.empty();
+            return Result.failure(new IllegalStateException("Token is missing or invalid."));
         }
     }
 

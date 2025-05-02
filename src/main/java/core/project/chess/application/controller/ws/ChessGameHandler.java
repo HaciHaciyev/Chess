@@ -12,6 +12,8 @@ import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.ServerEndpoint;
 
+import static core.project.chess.application.util.WSUtilities.closeSession;
+
 @ServerEndpoint(value = "/chessland/chess-game", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
 public class ChessGameHandler {
 
@@ -27,18 +29,24 @@ public class ChessGameHandler {
     @OnOpen
     public void onOpen(final Session session) {
         authService.validateToken(session)
-                .ifPresent(token -> chessGameService.onOpen(session, new Username(token.getName())));
+                .handle(token -> chessGameService.onOpen(session, new Username(token.getName())),
+                        throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage()))
+                );
     }
 
     @OnMessage
     public void onMessage(final Session session, final Message message) {
         authService.validateToken(session)
-                .ifPresent(token -> chessGameService.onMessage(session, new Username(token.getName()), message));
+                .handle(token -> chessGameService.onMessage(session, new Username(token.getName()), message),
+                        throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage()))
+                );
     }
 
     @OnClose
     public void onClose(final Session session) {
         authService.validateToken(session)
-                .ifPresent(token -> chessGameService.onClose(session, new Username(token.getName())));
+                .handle(token -> chessGameService.onClose(session, new Username(token.getName())),
+                        throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage()))
+                );
     }
 }

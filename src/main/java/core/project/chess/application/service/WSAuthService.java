@@ -1,15 +1,12 @@
 package core.project.chess.application.service;
 
-import core.project.chess.application.dto.chess.Message;
+import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.infrastructure.security.JWTUtility;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.Instant;
-import java.util.Optional;
-
-import static core.project.chess.application.util.WSUtilities.closeSession;
 
 @ApplicationScoped
 public class WSAuthService {
@@ -20,21 +17,13 @@ public class WSAuthService {
         this.jwtUtility = jwtUtility;
     }
 
-    public Optional<JsonWebToken> validateToken(Session session) {
-        Optional<JsonWebToken> jwt = jwtUtility.extractJWT(session);
+    public Result<JsonWebToken, IllegalStateException> validateToken(Session session) {
+        Result<JsonWebToken, IllegalStateException> parseResult = jwtUtility.extractJWT(session);
+        if (!parseResult.success()) return parseResult;
 
-        if (jwt.isEmpty()) {
-            closeSession(session, Message.error("You are not authorized. Token is required."));
-            return Optional.empty();
-        }
-
-        JsonWebToken token = jwt.get();
+        JsonWebToken token = parseResult.value();
         Instant expiration = Instant.ofEpochSecond(token.getExpirationTime());
-        if (expiration.isBefore(Instant.now())) {
-            closeSession(session, Message.error("You are not authorized. Token has expired. Session closing."));
-            return Optional.empty();
-        }
-
-        return jwt;
+        if (expiration.isBefore(Instant.now())) return Result.failure(new IllegalStateException("Token is expired."));
+        return parseResult;
     }
 }
