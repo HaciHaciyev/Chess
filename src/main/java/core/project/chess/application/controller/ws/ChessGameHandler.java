@@ -28,25 +28,28 @@ public class ChessGameHandler {
 
     @OnOpen
     public void onOpen(final Session session) {
-        authService.validateToken(session)
-                .handle(token -> chessGameService.onOpen(session, new Username(token.getName())),
-                        throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage()))
-                );
+        Thread.startVirtualThread(() ->
+                authService.validateToken(session)
+                        .handle(token -> chessGameService.onOpen(session, new Username(token.getName())),
+                                throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage())))
+        );
     }
 
     @OnMessage
     public void onMessage(final Session session, final Message message) {
-        authService.validateToken(session)
-                .handle(token -> chessGameService.onMessage(session, new Username(token.getName()), message),
-                        throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage()))
-                );
+        Thread.startVirtualThread(() ->
+                authService.validateToken(session)
+                        .handle(token -> chessGameService.onMessage(session, new Username(token.getName()), message),
+                                throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage())))
+        );
     }
 
     @OnClose
     public void onClose(final Session session) {
-        authService.validateToken(session)
-                .handle(token -> chessGameService.onClose(session, new Username(token.getName())),
-                        throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage()))
-                );
+        Thread.startVirtualThread(() ->
+                authService.validateToken(session)
+                        .handle(token -> chessGameService.onClose(session, new Username(token.getName())),
+                                throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage())))
+        );
     }
 }
