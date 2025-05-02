@@ -69,7 +69,7 @@
         <dependency>
             <groupId>de.mkammerer</groupId>
             <artifactId>argon2-jvm</artifactId>
-            <version>2.11</version>
+            <version>2.12</version>
         </dependency>
 
         <dependency>
