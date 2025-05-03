@@ -3,16 +3,13 @@ package core.project.chess.application.controller.http;
 import core.project.chess.application.service.ProfileService;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
 import core.project.chess.domain.user.value_objects.Username;
-import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Objects;
@@ -40,14 +37,7 @@ public class ProfilePictureResource {
             throw responseException(Response.Status.BAD_REQUEST, "Picture can`t be null.");
 
         String username = getUsername();
-
-        try {
-            profileService.putProfilePicture(IOUtils.toByteArray(inputStream), username);
-            inputStream.close();
-        } catch (IOException e) {
-            Log.errorf("Can`t read input stream for profile inputStream as bytes: %s", e.getMessage());
-            throw responseException(Response.Status.BAD_REQUEST, "Invalid file: corrupted or too big.");
-        }
+        profileService.putProfilePicture(inputStream, username);
         return Response.accepted("Successfully saved the profile picture for " + username).build();
     }
 
@@ -56,7 +46,7 @@ public class ProfilePictureResource {
     public Response getProfilePicture() {
         String username = getUsername();
 
-        ProfilePicture profilePicture = profileService.getProfilePicture(username);
+        ProfilePicture profilePicture = profileService.profilePicture(username);
         return Response.ok(Map.of(
                 "profilePicture", profilePicture.profilePicture(),
                 "imageType", profilePicture.imageType()))
