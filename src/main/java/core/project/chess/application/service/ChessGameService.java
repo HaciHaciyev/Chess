@@ -3,6 +3,7 @@ package core.project.chess.application.service;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.enumerations.MessageAddressee;
@@ -166,7 +167,12 @@ public class ChessGameService {
         User user = sessionStorage.getSessionByUsername(username).orElseThrow().getSecond();
 
         if (message.type().equals(MessageType.PUZZLE)) {
-            sendMessage(session, puzzleService.chessPuzzle(user));
+            Puzzle puzzle = puzzleService.chessPuzzle(user);
+            sendMessage(session, Message.builder(MessageType.PUZZLE)
+                    .gameID(puzzle.ID().toString())
+                    .FEN(puzzle.chessBoard().toString())
+                    .PGN(puzzle.chessBoard().pgn())
+                    .build());
             return;
         }
 
@@ -181,8 +187,13 @@ public class ChessGameService {
             return;
         }
 
-        Message response = puzzleService.puzzleMove(user, idResult.orElseThrow(),
-                message.from(), message.to(), message.inCaseOfPromotion());
+        Optional<Puzzle> puzzle = sessionStorage.getPuzzle(new Username(user.username()), idResult.value());
+        if (puzzle.isEmpty()) {
+            sendMessage(session, Message.error("This puzzle session do not exists."));
+            return;
+        }
+
+        Message response = puzzleService.puzzleMove(puzzle.get(), message.from(), message.to(), message.inCaseOfPromotion());
         sendMessage(session, response);
     }
 
