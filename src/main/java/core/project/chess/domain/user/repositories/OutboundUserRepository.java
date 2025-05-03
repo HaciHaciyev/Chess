@@ -6,20 +6,21 @@ import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.Email;
 import core.project.chess.domain.user.value_objects.RefreshToken;
+import core.project.chess.domain.user.value_objects.Username;
 
 import java.util.UUID;
 
 public interface OutboundUserRepository {
 
-    boolean isEmailExists(String verifiableEmail);
+    boolean isEmailExists(Email verifiableEmail);
 
-    boolean isUsernameExists(String verifiableUsername);
+    boolean isUsernameExists(Username verifiableUsername);
 
     boolean havePartnership(User user, User partner);
 
     Result<User, Throwable> findById(UUID userId);
 
-    Result<User, Throwable> findByUsername(String username);
+    Result<User, Throwable> findByUsername(Username username);
 
     Result<User, Throwable> findByEmail(Email email);
 
@@ -27,5 +28,5 @@ public interface OutboundUserRepository {
 
     Result<RefreshToken, Throwable> findRefreshToken(String refreshToken);
 
-    Result<UserProperties, Throwable> userProperties(String username);
+    Result<UserProperties, Throwable> userProperties(Username username);
 }

@@ -131,8 +131,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public boolean isEmailExists(String verifiableEmail) {
-        return jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail)
+    public boolean isEmailExists(Email verifiableEmail) {
+        return jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
                 .mapSuccess(count -> count != null && count > 0)
                 .orElseGet(() -> {
                     Log.error("Error checking email existence.");
@@ -141,8 +141,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public boolean isUsernameExists(String verifiableUsername) {
-        return jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername)
+    public boolean isUsernameExists(Username verifiableUsername) {
+        return jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
                 .mapSuccess(count -> count != null && count > 0)
                 .orElseGet(() -> {
                     Log.error("Error checking username existence.");
@@ -172,8 +172,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public Result<User, Throwable> findByUsername(String username) {
-        var user = jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username);
+    public Result<User, Throwable> findByUsername(Username username) {
+        var user = jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username.username());
         return new Result<>(user.value(), user.throwable(), user.success());
     }
 
@@ -196,8 +196,8 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public Result<UserProperties, Throwable> userProperties(String username) {
-        var result = jdbc.read(FIND_USER_PROPERTIES, this::userPropertiesMapper, username);
+    public Result<UserProperties, Throwable> userProperties(Username username) {
+        var result = jdbc.read(FIND_USER_PROPERTIES, this::userPropertiesMapper, username.username());
         return new Result<>(result.value(), result.throwable(), result.success());
     }
 

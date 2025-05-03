@@ -69,12 +69,12 @@ public class AuthService {
                     passwordEncoder.encode(registrationForm.password())
             );
 
-            if (outboundUserRepository.isUsernameExists(registrationForm.username())) {
+            if (outboundUserRepository.isUsernameExists(new Username(registrationForm.username()))) {
                 Log.errorf("Registration failure, user %s already exists", registrationForm.username());
                 throw responseException(Response.Status.BAD_REQUEST, "Username already exists.");
             }
 
-            if (outboundUserRepository.isEmailExists(registrationForm.email())) {
+            if (outboundUserRepository.isEmailExists(new Email(registrationForm.email()))) {
                 Log.errorf("Registration failure, email %s of user %s already exists",
                         registrationForm.email(), registrationForm.username());
                 throw responseException(Response.Status.BAD_REQUEST, "Email already exists.");
@@ -141,7 +141,7 @@ public class AuthService {
             Username.validate(loginForm.username());
 
             final User user = outboundUserRepository
-                    .findByUsername(loginForm.username())
+                    .findByUsername(new Username(loginForm.username()))
                     .orElseThrow(() -> {
                         Log.errorf("Login failure, user %s not found", loginForm.username());
                         return responseException(Response.Status.NOT_FOUND, String.format(NOT_FOUND, loginForm.username()));

@@ -67,7 +67,7 @@ public class ChessGameService {
     }
 
     public void onOpen(Session session, Username username) {
-        Result<User, Throwable> result = outboundUserRepository.findByUsername(username.username());
+        Result<User, Throwable> result = outboundUserRepository.findByUsername(username);
         if (!result.success()) {
             closeSession(session, Message.error("This account is do not founded."));
             return;
@@ -79,7 +79,7 @@ public class ChessGameService {
 
         sessionStorage.addSession(session, result.value());
         partnershipGameCacheService
-                .getAll(username.username())
+                .getAll(username)
                 .forEach((key, value) -> {
                     Message message = Message.invitation(key, value);
                     sendMessage(session, message);
@@ -249,7 +249,7 @@ public class ChessGameService {
     }
 
     private void startNewGame(Session session, Username username, GameParameters gameParameters) {
-        final User firstPlayer = outboundUserRepository.findByUsername(username.username()).orElseThrow();
+        final User firstPlayer = outboundUserRepository.findByUsername(username).orElseThrow();
 
         sendMessage(session, Message.userInfo("Finding opponent..."));
 
@@ -307,16 +307,16 @@ public class ChessGameService {
         }
 
         Username addresseeUsername = partnerUsername.orElseThrow();
-        if (!outboundUserRepository.isUsernameExists(addresseeUsername.username())) {
+        if (!outboundUserRepository.isUsernameExists(addresseeUsername)) {
             sendMessage(session, Message.error("User %s do not exists.".formatted(addresseeUsername)));
             return;
         }
 
-        final User addresserAccount = outboundUserRepository.findByUsername(addresserUsername.username()).orElseThrow();
+        final User addresserAccount = outboundUserRepository.findByUsername(addresserUsername).orElseThrow();
 
         final Optional<Pair<Session, User>> optionalSession = sessionStorage.getSessionByUsername(addresseeUsername);
         final User addresseeAccount = optionalSession.map(Pair::getSecond)
-                .orElseGet(() -> outboundUserRepository.findByUsername(addresseeUsername.username()).orElseThrow());
+                .orElseGet(() -> outboundUserRepository.findByUsername(addresseeUsername).orElseThrow());
 
         final String addressee = addresseeAccount.username();
 
@@ -327,13 +327,13 @@ public class ChessGameService {
             return;
         }
 
-        final boolean isRepeatedGameInvitation = partnershipGameCacheService.get(addressee, addresserUsername.username()).status();
+        final boolean isRepeatedGameInvitation = partnershipGameCacheService.get(new Username(addressee), addresserUsername).status();
         if (isRepeatedGameInvitation) {
             sendMessage(session, Message.error("You can't invite a user until they respond or the request expires."));
             return;
         }
 
-        partnershipGameCacheService.put(addressee, addresserUsername.username(), gameParameters);
+        partnershipGameCacheService.put(new Username(addressee), addresserUsername, gameParameters);
 
         final boolean isAddresseeActive = sessionStorage.containsSession(addresseeUsername);
 
@@ -372,7 +372,7 @@ public class ChessGameService {
         String addresserUsername = addresserAccount.username();
         String addresseeUsername = addresseeAccount.username();
 
-        Map<String, GameParameters> partnershipGameRequests = partnershipGameCacheService.getAll(addresserUsername);
+        Map<String, GameParameters> partnershipGameRequests = partnershipGameCacheService.getAll(new Username(addresserUsername));
         if (!partnershipGameRequests.containsKey(addresseeUsername)) {
             sendMessage(session, Message.error("You can`t respond to partnership request if it don`t exist."));
             return;
@@ -427,8 +427,8 @@ public class ChessGameService {
     }
 
     private void cancelRequests(User firstPlayer, User secondPlayer) {
-        partnershipGameCacheService.delete(firstPlayer.username(), secondPlayer.username());
-        partnershipGameCacheService.delete(secondPlayer.username(), firstPlayer.username());
+        partnershipGameCacheService.delete(new Username(firstPlayer.username()), new Username(secondPlayer.username()));
+        partnershipGameCacheService.delete(new Username(secondPlayer.username()), new Username(firstPlayer.username()));
     }
 
     private void startStandardChessGame(GameRequest firstPlayerData,

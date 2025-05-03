@@ -33,14 +33,17 @@ public class GameHistoryService {
     }
 
     public List<ChessGameHistory> listOfGames(String username, int pageNumber, int pageSize) {
-        if (!Username.isValid(username)) {
-            throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
+        Username usernameObj;
+        try {
+            usernameObj = new Username(username);
+        } catch (IllegalArgumentException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
         }
 
         int limit = buildLimit(pageSize);
         int offSet = buildOffSet(limit, pageNumber);
         return outboundChessRepository
-                .listOfGames(username, limit, offSet)
+                .listOfGames(usernameObj, limit, offSet)
                 .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "User does not exist.\uD83D\uDC7B"));
     }
 

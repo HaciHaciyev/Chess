@@ -4,6 +4,7 @@ import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
+import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.files.ImageFileRepository;
 import core.project.chess.infrastructure.files.StreamUtils;
 import io.quarkus.logging.Log;
@@ -32,8 +33,15 @@ public class ProfileService {
     }
 
     public void putProfilePicture(InputStream inputStream, String username) {
+        Username usernameObj;
+        try {
+            usernameObj = new Username(username);
+        } catch (IllegalArgumentException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
+        }
+
         final User user = outboundUserRepository
-                .findByUsername(username)
+                .findByUsername(usernameObj)
                 .orElseThrow(() -> {
                     Log.error("User not found");
                     return responseException(Response.Status.BAD_REQUEST, "User not found.");
@@ -60,7 +68,14 @@ public class ProfileService {
     }
 
     public ProfilePicture profilePicture(String username) {
-        final User user = outboundUserRepository.findByUsername(username)
+        Username usernameObj;
+        try {
+            usernameObj = new Username(username);
+        } catch (IllegalArgumentException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
+        }
+
+        final User user = outboundUserRepository.findByUsername(usernameObj)
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "User not found."));
 
         return imageFileRepository
@@ -69,7 +84,14 @@ public class ProfileService {
     }
 
     public void deleteProfilePicture(String username) {
-        final User user = outboundUserRepository.findByUsername(username)
+        Username usernameObj;
+        try {
+            usernameObj = new Username(username);
+        } catch (IllegalArgumentException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
+        }
+
+        final User user = outboundUserRepository.findByUsername(usernameObj)
                 .orElseThrow(() -> responseException(Response.Status.BAD_REQUEST, "User not found."));
 
         user.deleteProfilePicture();

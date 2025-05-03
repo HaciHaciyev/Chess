@@ -40,9 +40,14 @@ public class PuzzlesQueryService {
     }
 
     public List<Puzzle> page(String username, int pageNumber, int pageSize) {
-        if (!Username.isValid(username)) throw responseException(Response.Status.BAD_REQUEST, "Invalid username.");
+        Username usernameObj;
+        try {
+            usernameObj = new Username(username);
+        } catch (IllegalArgumentException e) {
+            throw responseException(Response.Status.BAD_REQUEST, e.getMessage());
+        }
 
-        User user = outboundUserRepository.findByUsername(username)
+        User user = outboundUserRepository.findByUsername(usernameObj)
                 .orElseThrow(() -> responseException(Response.Status.NOT_FOUND, "User not found"));
 
         double minRating = user.puzzlesRating().rating() - core.project.chess.domain.chess.entities.Puzzle.USER_RATING_WINDOW;

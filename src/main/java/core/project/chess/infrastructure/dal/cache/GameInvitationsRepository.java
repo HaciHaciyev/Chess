@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import core.project.chess.application.util.JSONUtilities;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.containers.StatusPair;
+import core.project.chess.domain.user.value_objects.Username;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.hash.HashCommands;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -24,12 +25,14 @@ public class GameInvitationsRepository {
         this.hashCommands = redisDataSource.get().hash(new TypeReference<>(){});
     }
 
-    public void put(String addressee, String addresser, GameParameters data) {
-        hashCommands.hset(String.format(KEY_FORMAT, addressee), addresser, JSONUtilities.writeValueAsString(data).orElseThrow());
+    public void put(Username addressee, Username addresser, GameParameters data) {
+        hashCommands.hset(String.format(KEY_FORMAT, addressee.username()),
+                addresser.username(),
+                JSONUtilities.writeValueAsString(data).orElseThrow());
     }
 
-    public StatusPair<GameParameters> get(String addressee, String addresser) {
-        String message = hashCommands.hget(String.format(KEY_FORMAT, addressee), addresser);
+    public StatusPair<GameParameters> get(Username addressee, Username addresser) {
+        String message = hashCommands.hget(String.format(KEY_FORMAT, addressee.username()), addresser.username());
         if (Objects.nonNull(message)) {
             return StatusPair.ofTrue(JSONUtilities.gameParameters(message).orElseThrow());
         }
@@ -37,36 +40,16 @@ public class GameInvitationsRepository {
         return StatusPair.ofFalse();
     }
 
-    public Map<String, GameParameters> getAll(String addressee) {
+    public Map<String, GameParameters> getAll(Username addressee) {
         Map<String, GameParameters> result = new HashMap<>();
 
-        Map<String, String> values = hashCommands.hgetall(String.format(KEY_FORMAT, addressee));
+        Map<String, String> values = hashCommands.hgetall(String.format(KEY_FORMAT, addressee.username()));
         values.forEach((key, value) -> result.put(key, JSONUtilities.gameParameters(value).orElseThrow()));
 
         return result;
     }
 
-    public StatusPair<GameParameters> poll(String addressee, String addresser) {
-        String message = hashCommands.hget(String.format(KEY_FORMAT, addressee), addresser);
-        if (Objects.nonNull(message)) {
-            hashCommands.hdel(addressee, addresser);
-            return StatusPair.ofTrue(JSONUtilities.gameParameters(message).orElseThrow());
-        }
-
-        return StatusPair.ofFalse();
-    }
-
-    public Map<String, GameParameters> pollAll(String addressee) {
-        Map<String, GameParameters> result = new HashMap<>();
-
-        Map<String, String> values = hashCommands.hgetall(String.format(KEY_FORMAT, addressee));
-        values.forEach((key, value) -> result.put(key, JSONUtilities.gameParameters(value).orElseThrow()));
-
-        hashCommands.hdel(String.format(KEY_FORMAT, addressee));
-        return result;
-    }
-
-    public void delete(String addressee, String addresser) {
-        hashCommands.hdel(String.format(KEY_FORMAT, addressee), addresser);
+    public void delete(Username addressee, Username addresser) {
+        hashCommands.hdel(String.format(KEY_FORMAT, addressee.username()), addresser.username());
     }
 }
