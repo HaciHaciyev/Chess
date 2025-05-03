@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static core.project.chess.application.util.WSUtilities.closeSession;
+import static core.project.chess.application.util.WSUtilities.sendMessage;
 
 @ServerEndpoint(value = "/chessland/chess-game", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
 public class ChessGameHandler {
@@ -76,7 +77,7 @@ public class ChessGameHandler {
             User user = findUser.get().getSecond();
             final boolean isRateDoNotLimited = rateLimiter.tryAcquire(user);
             if (!isRateDoNotLimited) {
-                closeSession(session, Message.error("You expose of message limits per time unit."));
+                sendMessage(session, Message.error("You expose of message limits per time unit."));
                 return;
             }
 
