@@ -7,6 +7,7 @@ import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.infrastructure.telemetry.TelemetryService;
 import core.project.chess.infrastructure.ws.MessageDecoder;
 import core.project.chess.infrastructure.ws.MessageEncoder;
 import core.project.chess.infrastructure.ws.RateLimiter;
@@ -17,6 +18,7 @@ import jakarta.websocket.Session;
 import jakarta.websocket.server.ServerEndpoint;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static core.project.chess.application.util.WSUtilities.closeSession;
@@ -28,26 +30,36 @@ public class ChessGameHandler {
 
     private final RateLimiter rateLimiter;
 
+    private final TelemetryService telemetry;
+
     private final ChessGameService chessGameService;
 
-    ChessGameHandler(WSAuthService authService, RateLimiter rateLimiter, ChessGameService chessGameService) {
+    ChessGameHandler(WSAuthService authService,
+                     RateLimiter rateLimiter,
+                     TelemetryService telemetry,
+                     ChessGameService chessGameService) {
         this.authService = authService;
         this.rateLimiter = rateLimiter;
+        this.telemetry = telemetry;
         this.chessGameService = chessGameService;
     }
 
     @OnOpen
     public void onOpen(final Session session) {
-        Thread.startVirtualThread(() ->
+        telemetry.startWithSpan("Chess Open", () -> Thread.startVirtualThread(() ->
                 authService.validateToken(session)
                         .handle(token -> chessGameService.onOpen(session, new Username(token.getName())),
                                 throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage())))
-        );
+        ));
     }
 
     @OnMessage
     public void onMessage(final Session session, final Message message) {
-        Thread.startVirtualThread(() -> {
+        Map<String, String> attributes = Map.of(
+                "message.type", message.type().toString()
+        );
+
+        telemetry.startWithSpan("Chess Message", attributes, () -> Thread.startVirtualThread(() -> {
             Result<JsonWebToken, IllegalStateException> parseResult = authService.validateToken(session);
             if (!parseResult.success()) {
                 closeSession(session, Message.error(parseResult.throwable().getLocalizedMessage()));
@@ -69,15 +81,15 @@ public class ChessGameHandler {
             }
 
             chessGameService.onMessage(session, username, message);
-        });
+        }));
     }
 
     @OnClose
     public void onClose(final Session session) {
-        Thread.startVirtualThread(() ->
+        telemetry.startWithSpan("Chess Close", () -> Thread.startVirtualThread(() ->
                 authService.validateToken(session)
                         .handle(token -> chessGameService.onClose(session, new Username(token.getName())),
                                 throwable -> closeSession(session, Message.error(throwable.getLocalizedMessage())))
-        );
+        ));
     }
 }
