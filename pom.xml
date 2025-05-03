@@ -98,11 +98,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-redis-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson-quarkus-30</artifactId>
-            <version>3.32.0</version>
-        </dependency>
 
         <dependency>
             <groupId>io.quarkiverse.mailpit</groupId>

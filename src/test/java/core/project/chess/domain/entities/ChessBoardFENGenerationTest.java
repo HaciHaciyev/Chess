@@ -1,7 +1,7 @@
 package core.project.chess.domain.entities;
 
-import com.esotericsoftware.minlog.Log;
 import core.project.chess.domain.chess.entities.ChessGame;
+import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
