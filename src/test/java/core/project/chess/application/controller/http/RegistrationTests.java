@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -43,6 +45,17 @@ class RegistrationTests {
                 .when().post(REGISTRATION)
                 .then()
                 .body(containsString("successful"));
+    }
+
+    @DisplayName("Registration with null form")
+    @Test
+    void registration_With_Null_Form() {
+        given().contentType("application/json")
+                .when()
+                .post(REGISTRATION)
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                .body(containsString("Registration form is null."));
     }
 
     @DisplayName("Registration of existing user")
