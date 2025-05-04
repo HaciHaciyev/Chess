@@ -1,6 +1,6 @@
 package core.project.chess.application.service;
 
-import io.opentelemetry.api.trace.Span;
+import core.project.chess.infrastructure.telemetry.TelemetryService;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -11,12 +11,15 @@ public class EmailInteractionService {
 
     private final Mailer mailer;
 
-    EmailInteractionService(Instance<Mailer> mailer) {
+    private final TelemetryService telemetry;
+
+    EmailInteractionService(Instance<Mailer> mailer, TelemetryService telemetry) {
         this.mailer = mailer.get();
+        this.telemetry = telemetry;
     }
 
     public void sendToEmail(String email, String link) {
-        Span.current().addEvent("Sending email to user");
+        telemetry.addEvent("Sending email to user");
         String subject = "Email confirmation";
         String body = String.format(
                 """

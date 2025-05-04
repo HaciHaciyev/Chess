@@ -9,10 +9,7 @@ import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.security.JWTUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Scope;
+import core.project.chess.infrastructure.telemetry.TelemetryService;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -31,6 +28,8 @@ public class AuthService {
 
     private final JWTUtility jwtUtility;
 
+    private final TelemetryService telemetry;
+
     private final PasswordEncoder passwordEncoder;
 
     private final InboundUserRepository inboundUserRepository;
@@ -38,7 +37,6 @@ public class AuthService {
     private final OutboundUserRepository outboundUserRepository;
 
     private final EmailInteractionService emailInteractionService;
-    
 
     public static final String NOT_ENABLED = "This account is not enabled.";
 
@@ -47,27 +45,27 @@ public class AuthService {
     public static final String EMAIL_VERIFICATION_URL = "http://localhost:8080/chessland/account/token/verification?token=%s";
 
     AuthService(JWTUtility jwtUtility,
+                TelemetryService telemetry,
                 PasswordEncoder passwordEncoder,
                 InboundUserRepository inboundUserRepository,
                 OutboundUserRepository outboundUserRepository,
                 EmailInteractionService emailInteractionService) {
         this.jwtUtility = jwtUtility;
+        this.telemetry = telemetry;
         this.passwordEncoder = passwordEncoder;
         this.inboundUserRepository = inboundUserRepository;
         this.outboundUserRepository = outboundUserRepository;
         this.emailInteractionService = emailInteractionService;
     }
 
-    @WithSpan("registration")
+    @WithSpan("REGISTRATION SERVICE")
     public void registration(RegistrationForm registrationForm) {
-        var span = Span.current();
-        
         try {
             Password.validate(registrationForm.password());
 
             if (!Objects.equals(registrationForm.password(), registrationForm.passwordConfirmation())) {
                 Log.errorf("Registration failure, passwords do not match for user %s", registrationForm.username());
-                span.addEvent("Registration failure, password mismatch");
+                telemetry.addEvent("Registration failure, password mismatch");
                 throw responseException(Response.Status.BAD_REQUEST, "Passwords do not match");
             }
 
@@ -81,14 +79,14 @@ public class AuthService {
 
             if (outboundUserRepository.isUsernameExists(new Username(registrationForm.username()))) {
                 Log.errorf("Registration failure, user %s already exists", registrationForm.username());
-                span.addEvent("Registration failure, user already exists");
+                telemetry.addEvent("Registration failure, user already exists");
                 throw responseException(Response.Status.BAD_REQUEST, "Username already exists.");
             }
 
             if (outboundUserRepository.isEmailExists(new Email(registrationForm.email()))) {
                 Log.errorf("Registration failure, email %s of user %s already exists",
-                    registrationForm.email(), registrationForm.username());
-                span.addEvent("Registration failure, email already exists");
+                        registrationForm.email(), registrationForm.username());
+                telemetry.addEvent("Registration failure, email already exists");
                 throw responseException(Response.Status.BAD_REQUEST, "Email already exists.");
             }
 

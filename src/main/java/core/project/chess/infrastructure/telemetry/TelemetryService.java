@@ -1,5 +1,6 @@
 package core.project.chess.infrastructure.telemetry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -133,15 +134,15 @@ public class TelemetryService {
         attributes.forEach(span::setAttribute);
     }
 
-    public void setSpanAttribute(String key, String value) {
+    public void setSpanAttribute(AttributeKey<String> key, String value) {
         Span.current().setAttribute(key, value);
     }
 
-    public void setSpanAttribute(String key, long value) {
-        Span.current().setAttribute(key, value);
+    public void setSpanAttribute(AttributeKey<String> key, long value) {
+        Span.current().setAttribute(key.getKey(), value);
     }
 
-    public void setSpanAttribute(String key, boolean value) {
-        Span.current().setAttribute(key, value);
+    public void setSpanAttribute(AttributeKey<String> key, boolean value) {
+        Span.current().setAttribute(key.getKey(), value);
     }
 }

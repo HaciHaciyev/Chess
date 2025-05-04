@@ -9,8 +9,7 @@ import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.annotations.WithSpan;
+import core.project.chess.infrastructure.telemetry.TelemetryService;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -27,6 +26,8 @@ import static com.hadzhy.jdbclight.sql.SQLBuilder.select;
 public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     private final JDBC jdbc;
+
+    private final TelemetryService telemetry;
 
     static final String FIND_BY_ID = select()
             .all()
@@ -128,30 +129,33 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
             .build()
             .sql();
 
-    JdbcOutboundUserRepository() {
+    JdbcOutboundUserRepository(TelemetryService telemetry) {
+        this.telemetry = telemetry;
         this.jdbc = JDBC.instance();
     }
 
     @Override
-    @WithSpan("Email existence check")
     public boolean isEmailExists(Email verifiableEmail) {
-        return jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
-                .mapSuccess(count -> count != null && count > 0)
-                .orElseGet(() -> {
-                    Log.error("Error checking email existence.");
-                    return false;
-                });
+        return telemetry.startWithChildSpan("EMAIL EXISTENCE CHECK JDBC", () ->
+                jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
+                        .mapSuccess(count -> count != null && count > 0)
+                        .orElseGet(() -> {
+                            Log.error("Error checking email existence.");
+                            return false;
+                        })
+        );
     }
 
     @Override
-    @WithSpan("Username existence check")
     public boolean isUsernameExists(Username verifiableUsername) {
-        return jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
-                .mapSuccess(count -> count != null && count > 0)
-                .orElseGet(() -> {
-                    Log.error("Error checking username existence.");
-                    return false;
-                });
+        return telemetry.startWithChildSpan("USERNAME EXISTENCE CHECK JDBC", () ->
+                jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
+                        .mapSuccess(count -> count != null && count > 0)
+                        .orElseGet(() -> {
+                            Log.error("Error checking username existence.");
+                            return false;
+                        })
+        );
     }
 
     @Override

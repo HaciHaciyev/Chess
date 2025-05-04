@@ -3,9 +3,9 @@ package core.project.chess.application.controller.http;
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
 import core.project.chess.application.service.AuthService;
+import core.project.chess.infrastructure.telemetry.TelemetryService;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
@@ -17,41 +17,34 @@ import static core.project.chess.application.util.JSONUtilities.responseExceptio
 @PermitAll
 @Path("/account")
 public class AuthResource {
-    
-    private static final AttributeKey<String> FIRST_NAME = AttributeKey.stringKey("chessland.http.registration.firstname"); 
-    private static final AttributeKey<String> SURNAME = AttributeKey.stringKey("chessland.http.registration.surname"); 
-    private static final AttributeKey<String> USERNAME = AttributeKey.stringKey("chessland.http.registration.username"); 
 
     private final AuthService authService;
 
-    AuthResource(AuthService authService) {
+    private final TelemetryService telemetry;
+
+    private static final AttributeKey<String> USERNAME = AttributeKey.stringKey("chessland.http.registration.username");
+
+    AuthResource(AuthService authService, TelemetryService telemetry) {
         this.authService = authService;
+        this.telemetry = telemetry;
     }
 
     @POST
     @Path("/registration")
+    @WithSpan("REGISTRATION RESOURCE")
     public Response registration(RegistrationForm form) {
-        
-        if (Objects.isNull(form)) {
+        if (Objects.isNull(form))
             throw responseException(Response.Status.BAD_REQUEST, "Registration form is null.");
-        }
-            
-        Attributes attrs = Attributes.of(
-            FIRST_NAME,
-            form.firstname(),
-            SURNAME,
-            form.surname(),
-            USERNAME,
-            form.username()
-        );
-        Span.current().setAllAttributes(attrs);
-            
+
+        telemetry.setSpanAttribute(USERNAME, form.username());
+
         authService.registration(form);
         return Response.ok("Registration successful. Verify your email.").build();
     }
 
     @GET
     @Path("/resend/verification/token")
+    @WithSpan("RESEND OTP RESOURCE")
     public Response resend(@QueryParam("email") String email) {
         if (Objects.isNull(email))
             throw responseException(Response.Status.BAD_REQUEST, "Email us null");
@@ -62,6 +55,7 @@ public class AuthResource {
 
     @PATCH
     @Path("/token/verification")
+    @WithSpan("EMAIL CONFIRMATION RESOURCE")
     public Response verification(@QueryParam("token") String token) {
         if (Objects.isNull(token))
             throw responseException(Response.Status.BAD_REQUEST, "Token is null.");
@@ -72,15 +66,18 @@ public class AuthResource {
 
     @POST
     @Path("/login")
+    @WithSpan("LOGIN RESOURCE")
     public Response login(LoginForm loginForm) {
         if (Objects.isNull(loginForm))
             throw responseException(Response.Status.BAD_REQUEST, "Login form is null.");
 
+        telemetry.setSpanAttribute(USERNAME, loginForm.username());
         return Response.ok(authService.login(loginForm)).build();
     }
 
     @PATCH
     @Path("/refresh-token")
+    @WithSpan("REFRESH TOKEN RESOURCE")
     public Response refresh(@HeaderParam("Refresh-Token") String refreshToken) {
         if (Objects.isNull(refreshToken) || refreshToken.isBlank())
             throw responseException(Response.Status.BAD_REQUEST, "Refresh token is null.");
