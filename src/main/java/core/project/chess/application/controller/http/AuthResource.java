@@ -21,7 +21,6 @@ public class AuthResource {
     private static final AttributeKey<String> FIRST_NAME = AttributeKey.stringKey("chessland.http.registration.firstname"); 
     private static final AttributeKey<String> SURNAME = AttributeKey.stringKey("chessland.http.registration.surname"); 
     private static final AttributeKey<String> USERNAME = AttributeKey.stringKey("chessland.http.registration.username"); 
-    private static final AttributeKey<String> EMAIL = AttributeKey.stringKey("chessland.http.registration.email"); 
 
     private final AuthService authService;
 
@@ -43,9 +42,7 @@ public class AuthResource {
             SURNAME,
             form.surname(),
             USERNAME,
-            form.username(),
-            EMAIL,
-            form.email()
+            form.username()
         );
         Span.current().setAllAttributes(attrs);
             
