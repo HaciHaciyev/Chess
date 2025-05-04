@@ -32,6 +32,7 @@ import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static io.restassured.RestAssured.given;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static testUtils.WSClient.sendMessage;
@@ -128,7 +129,7 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(3));
 
-            addPartnership(blackForm, wMessagingSession, whiteForm, bMessagingSession);
+            addPartnership(blackForm.username(), wMessagingSession, whiteForm.username(), bMessagingSession);
 
             String wName = whiteForm.username();
             String bName = blackForm.username();
@@ -247,7 +248,7 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(1));
 
-            addPartnership(secondPlayerForm, firstPlayerMessagingSession, firstPlayerForm, secondPlayerMessagingSession);
+            addPartnership(secondPlayerForm.username(), firstPlayerMessagingSession, firstPlayerForm.username(), secondPlayerMessagingSession);
 
             Thread.sleep(Duration.ofSeconds(1));
 
@@ -381,7 +382,7 @@ class ChessWSTest {
 
             Thread.sleep(Duration.ofSeconds(1));
 
-            addPartnership(secondPlayerForm, firstPlayerMessagingSession, firstPlayerForm, secondPlayerMessagingSession);
+            addPartnership(secondPlayerForm.username(), firstPlayerMessagingSession, firstPlayerForm.username(), secondPlayerMessagingSession);
 
             Thread.sleep(Duration.ofSeconds(1));
 
@@ -885,6 +886,49 @@ class ChessWSTest {
         Thread.sleep(Duration.ofSeconds(1).toMillis());
     }
 
+    private void addPartnership(String blackUsername, Session wMessagingSession,
+                                String whiteUsername, Session bMessagingSession) throws InterruptedException {
+        Thread.sleep(Duration.ofSeconds(1));
+
+        Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(blackUsername)
+                .message("br")
+                .build();
+        sendMessage(wMessagingSession, whiteUsername, wPartnershipRequest);
+
+        await()
+                .atMost(1, SECONDS)
+                .until(() -> USER_MESSAGES.user2().stream()
+                        .filter(Objects::nonNull)
+                        .anyMatch(msg ->
+                                msg.type() == MessageType.PARTNERSHIP_REQUEST && msg.message().contains("invite you")
+                        )
+                );
+        USER_MESSAGES.user2().clear();
+
+        Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(whiteUsername)
+                .message("brrr")
+                .build();
+        sendMessage(bMessagingSession, blackUsername, bPartnershipRequest);
+
+        await()
+                .atMost(1, SECONDS)
+                .until(() -> USER_MESSAGES.user1().stream()
+                        .filter(Objects::nonNull)
+                        .anyMatch(msg ->
+                                msg.type() == MessageType.USER_INFO && msg.message().contains("successfully added")
+                        )
+                );
+        USER_MESSAGES.user1().clear();
+
+        await().atMost(1, SECONDS).until(() -> {
+            Message msg = USER_MESSAGES.user2().peek();
+            return msg != null && msg.type() == MessageType.USER_INFO && msg.message().contains("successfully added");
+        });
+        USER_MESSAGES.user2().take();
+    }
+
     private void awaitGameStartMessages(String secondPlayer, String firstPlayer) {
         await().atMost(Duration.ofSeconds(5)).until(() ->
                 USER_MESSAGES.user1().stream()
@@ -926,30 +970,5 @@ class ChessWSTest {
                             return true;
                         })
         );
-    }
-
-    private void addPartnership(RegistrationForm blackForm, Session wMessagingSession, RegistrationForm whiteForm, Session bMessagingSession) throws InterruptedException {
-        Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                .partner(blackForm.username())
-                .message("br")
-                .build();
-
-        sendMessage(wMessagingSession, whiteForm.username(), wPartnershipRequest);
-
-        Thread.sleep(Duration.ofSeconds(3));
-
-        assertThat(USER_MESSAGES.user2().take()).matches(m -> m.type() == MessageType.PARTNERSHIP_REQUEST && m.message().contains("invite you"));
-
-        Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                .partner(whiteForm.username())
-                .message("brrr")
-                .build();
-
-        sendMessage(bMessagingSession, blackForm.username(), bPartnershipRequest);
-
-        Thread.sleep(Duration.ofSeconds(3));
-
-        assertThat(USER_MESSAGES.user1()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
-        assertThat(USER_MESSAGES.user2()).anyMatch(m -> m.type() == MessageType.USER_INFO && m.message().contains("successfully added"));
     }
 }

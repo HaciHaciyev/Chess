@@ -169,13 +169,112 @@ class GameHistoryResourceTest {
              Session opponentChess = ContainerProvider
                      .getWebSocketContainer()
                      .connectToServer(WSClient.class, authUtils.serverURIWithToken(serverURI, opponentToken))) {
-            
+
             addMessageHandlers(playerMessaging, opponentUsername, opponentMessaging, username, playerChess, opponentChess);
+            awaitSuccessfulConnection();
             addPartnership(opponentUsername, playerMessaging, username, opponentMessaging);
             loadGames(username, playerChess, opponentUsername, opponentChess);
         } catch (DeploymentException | IOException | InterruptedException e) {
             Log.errorf("Error: %s.", e.getMessage());
         }
+    }
+
+    private void addMessageHandlers(Session firstPlayerMessagingSession, String secondPlayer, Session secondPlayerMessagingSession,
+                                    String firstPlayer, Session firstPlayerSession, Session secondPlayerSession)
+            throws InterruptedException {
+
+        firstPlayerMessagingSession.addMessageHandler(Message.class, message -> {
+            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
+                Log.infof("User1 %s Received Message in Messaging Service: %s.", firstPlayer, message.toString());
+            USER_MESSAGES.user1().offer(message);
+        });
+
+        secondPlayerMessagingSession.addMessageHandler(Message.class, message -> {
+            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
+                Log.infof("User2 %s Received Message in Messaging Service: %s.", secondPlayer, message.toString());
+            USER_MESSAGES.user2().offer(message);
+        });
+
+        firstPlayerSession.addMessageHandler(Message.class, message -> {
+            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
+                Log.infof("User %s Received Message in Chess: %s.", firstPlayer, message.toString());
+            USER_MESSAGES.user1().offer(message);
+        });
+
+        secondPlayerSession.addMessageHandler(Message.class, message -> {
+            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
+                Log.infof("User %s Received Message in Chess: %s.", secondPlayer, message.toString());
+            USER_MESSAGES.user2().offer(message);
+        });
+    }
+
+    private void awaitSuccessfulConnection() {
+        await()
+                .atMost(1, SECONDS)
+                .until(() -> USER_MESSAGES.user1.stream()
+                        .anyMatch(message -> message.message().contains("Successful connection to chessland"))
+                );
+
+        await()
+                .atMost(1, SECONDS)
+                .until(() -> USER_MESSAGES.user2.stream()
+                        .anyMatch(message -> message.message().contains("Successful connection to chessland"))
+                );
+
+        await()
+                .atMost(1, SECONDS)
+                .until(() -> USER_MESSAGES.user1.stream()
+                        .anyMatch(message -> message.message().contains("Successful connection to messaging"))
+                );
+
+        await()
+                .atMost(1, SECONDS)
+                .until(() -> USER_MESSAGES.user2.stream()
+                        .anyMatch(message -> message.message().contains("Successful connection to messaging"))
+                );
+    }
+
+    private void addPartnership(String blackUsername, Session wMessagingSession,
+                                String whiteUsername, Session bMessagingSession) throws InterruptedException {
+        Thread.sleep(Duration.ofSeconds(1));
+
+        Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(blackUsername)
+                .message("br")
+                .build();
+        sendMessage(wMessagingSession, whiteUsername, wPartnershipRequest);
+
+        await()
+                .atMost(1, SECONDS)
+                .until(() -> USER_MESSAGES.user2().stream()
+                        .filter(Objects::nonNull)
+                        .anyMatch(msg ->
+                                msg.type() == MessageType.PARTNERSHIP_REQUEST && msg.message().contains("invite you")
+                        )
+                );
+        USER_MESSAGES.user2().clear();
+
+        Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
+                .partner(whiteUsername)
+                .message("brrr")
+                .build();
+        sendMessage(bMessagingSession, blackUsername, bPartnershipRequest);
+
+        await()
+                .atMost(1, SECONDS)
+                .until(() -> USER_MESSAGES.user1().stream()
+                        .filter(Objects::nonNull)
+                        .anyMatch(msg ->
+                                msg.type() == MessageType.USER_INFO && msg.message().contains("successfully added")
+                        )
+                );
+        USER_MESSAGES.user1().clear();
+
+        await().atMost(1, SECONDS).until(() -> {
+            Message msg = USER_MESSAGES.user2().peek();
+            return msg != null && msg.type() == MessageType.USER_INFO && msg.message().contains("successfully added");
+        });
+        USER_MESSAGES.user2().take();
     }
 
     private void loadGames(String username, Session playerChess, String opponentUsername, Session opponentChess) throws InterruptedException {
@@ -197,6 +296,57 @@ class GameHistoryResourceTest {
 
             proceedFullMove(username, playerChess, opponentUsername, opponentChess, gameID, whiteMoves, blackMoves);
         }
+    }
+
+    private String startNewPartnershipGame(String username, Session playerChess,
+                                           String opponentUsername, Session opponentChess) throws InterruptedException {
+        USER_MESSAGES.user1.clear();
+        USER_MESSAGES.user2.clear();
+        Thread.sleep(Duration.ofSeconds(1));
+
+        sendMessage(playerChess, username, Message.builder(MessageType.GAME_INIT)
+                .color(Color.WHITE)
+                .partner(opponentUsername)
+                .build());
+
+        await().atMost(2, SECONDS).until(() -> USER_MESSAGES.user2.stream()
+                .anyMatch(message -> {
+                    if (message.type().equals(MessageType.PARTNERSHIP_REQUEST)) {
+                        Log.infof("Message: %s", message);
+                        return message.color().equals(Color.BLACK) && message.message().contains(username);
+                    }
+                    return false;
+                }));
+
+        sendMessage(opponentChess, opponentUsername, Message.builder(MessageType.GAME_INIT)
+                .partner(username)
+                .respond(Message.Respond.YES)
+                .build());
+
+        await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
+                .stream()
+                .anyMatch(message -> {
+                    if (!message.type().equals(MessageType.GAME_START_INFO) &&
+                            !message.type().equals(MessageType.FEN_PGN)) return false;
+                    Log.infof("Message: %s", message);
+                    return true;
+                }));
+
+        await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user2()
+                .stream()
+                .anyMatch(message -> {
+                    if (!message.type().equals(MessageType.GAME_START_INFO) &&
+                            !message.type().equals(MessageType.FEN_PGN)) return false;
+                    Log.infof("Message: %s", message);
+                    return true;
+                }));
+
+        return USER_MESSAGES.user1.stream()
+                .filter(message -> message.whitePlayerUsername() != null &&
+                        message.whitePlayerUsername().equals(username))
+                .findFirst()
+                .orElseThrow()
+                .gameID();
     }
 
     private void proceedFullMove(String username, Session playerChess,
@@ -258,120 +408,5 @@ class GameHistoryResourceTest {
         }
 
         return lastMove.contains(from + "-" + to) || lastMove.contains(from + "x" + to);
-    }
-
-    private String startNewPartnershipGame(String username, Session playerChess,
-                                           String opponentUsername, Session opponentChess) throws InterruptedException {
-        USER_MESSAGES.user1.clear();
-        USER_MESSAGES.user2.clear();
-        Thread.sleep(Duration.ofSeconds(1));
-
-        sendMessage(playerChess, username, Message.builder(MessageType.GAME_INIT)
-                .color(Color.WHITE)
-                .partner(opponentUsername)
-                .build());
-
-        await().atMost(2, SECONDS).until(() -> USER_MESSAGES.user2.stream()
-                .anyMatch(message -> {
-                    if (message.type().equals(MessageType.PARTNERSHIP_REQUEST)) {
-                        Log.infof("Message: %s", message);
-                        return message.color().equals(Color.BLACK) && message.message().contains(username);
-                    }
-                    return false;
-                }));
-
-        sendMessage(opponentChess, opponentUsername, Message.builder(MessageType.GAME_INIT)
-                .partner(username)
-                .respond(Message.Respond.YES)
-                .build());
-
-        await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
-                .stream()
-                .anyMatch(message -> {
-                    if (!message.type().equals(MessageType.GAME_START_INFO) &&
-                            !message.type().equals(MessageType.FEN_PGN)) return false;
-                    Log.infof("Message: %s", message);
-                    return true;
-                }));
-
-        await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user2()
-                .stream()
-                .anyMatch(message -> {
-                    if (!message.type().equals(MessageType.GAME_START_INFO) &&
-                            !message.type().equals(MessageType.FEN_PGN)) return false;
-                    Log.infof("Message: %s", message);
-                    return true;
-                }));
-
-        return USER_MESSAGES.user1.stream()
-                .filter(message -> message.whitePlayerUsername() != null &&
-                        message.whitePlayerUsername().equals(username))
-                .findFirst()
-                .orElseThrow()
-                .gameID();
-    }
-
-    private void addMessageHandlers(Session firstPlayerMessagingSession, String secondPlayer, Session secondPlayerMessagingSession,
-                                    String firstPlayer, Session firstPlayerSession, Session secondPlayerSession)
-            throws InterruptedException {
-
-        firstPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
-                Log.infof("User1 %s Received Message in Messaging Service: %s.", firstPlayer, message.toString());
-            USER_MESSAGES.user1().offer(message);
-        });
-
-        secondPlayerMessagingSession.addMessageHandler(Message.class, message -> {
-            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
-                Log.infof("User2 %s Received Message in Messaging Service: %s.", secondPlayer, message.toString());
-            USER_MESSAGES.user2().offer(message);
-        });
-
-        firstPlayerSession.addMessageHandler(Message.class, message -> {
-            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
-                Log.infof("User %s Received Message in Chess: %s.", firstPlayer, message.toString());
-            USER_MESSAGES.user1().offer(message);
-        });
-
-        secondPlayerSession.addMessageHandler(Message.class, message -> {
-            if (message.type() != MessageType.MOVE && message.type() != MessageType.FEN_PGN)
-                Log.infof("User %s Received Message in Chess: %s.", secondPlayer, message.toString());
-            USER_MESSAGES.user2().offer(message);
-        });
-    }
-
-    private void addPartnership(String blackUsername, Session wMessagingSession,
-                                String whiteUsername, Session bMessagingSession) throws InterruptedException {
-        Thread.sleep(Duration.ofSeconds(1));
-
-        Message wPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                .partner(blackUsername)
-                .message("br")
-                .build();
-        sendMessage(wMessagingSession, whiteUsername, wPartnershipRequest);
-
-        await().atMost(1, SECONDS).until(() -> {
-            Message msg = USER_MESSAGES.user2().peek();
-            return msg != null && msg.type() == MessageType.PARTNERSHIP_REQUEST && msg.message().contains("invite you");
-        });
-        USER_MESSAGES.user2().take();
-
-        Message bPartnershipRequest = Message.builder(MessageType.PARTNERSHIP_REQUEST)
-                .partner(whiteUsername)
-                .message("brrr")
-                .build();
-        sendMessage(bMessagingSession, blackUsername, bPartnershipRequest);
-
-        await().atMost(1, SECONDS).until(() -> {
-            Message msg = USER_MESSAGES.user1().peek();
-            return msg != null && msg.type() == MessageType.USER_INFO && msg.message().contains("successfully added");
-        });
-        USER_MESSAGES.user1().take();
-
-        await().atMost(1, SECONDS).until(() -> {
-            Message msg = USER_MESSAGES.user2().peek();
-            return msg != null && msg.type() == MessageType.USER_INFO && msg.message().contains("successfully added");
-        });
-        USER_MESSAGES.user2().take();
     }
 }
