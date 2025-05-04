@@ -2,6 +2,7 @@ package core.project.chess.domain.user.entities;
 
 import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.value_objects.Token;
+import io.opentelemetry.api.trace.Span;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -34,6 +35,7 @@ public class EmailConfirmationToken {
     }
 
     public static EmailConfirmationToken createToken(final User user) {
+        Span.current().addEvent("Creating email confirmation token");
         return new EmailConfirmationToken(
                 UUID.randomUUID(), Token.createToken(), new TokenEvents(LocalDateTime.now()), false, user
         );

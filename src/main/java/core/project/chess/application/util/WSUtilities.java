@@ -29,7 +29,7 @@ public class WSUtilities {
      */
     public static void sendMessage(final Session session, final Message message) {
         try {
-            session.getAsyncRemote().sendObject(message);
+            session.getAsyncRemote().sendObject(message.asJSON());
         } catch (Exception e) {
             Log.info(e.getMessage());
         }

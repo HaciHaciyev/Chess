@@ -9,6 +9,11 @@ import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.security.JWTUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
@@ -33,6 +38,7 @@ public class AuthService {
     private final OutboundUserRepository outboundUserRepository;
 
     private final EmailInteractionService emailInteractionService;
+    
 
     public static final String NOT_ENABLED = "This account is not enabled.";
 
@@ -52,31 +58,37 @@ public class AuthService {
         this.emailInteractionService = emailInteractionService;
     }
 
+    @WithSpan("registration")
     public void registration(RegistrationForm registrationForm) {
+        var span = Span.current();
+        
         try {
             Password.validate(registrationForm.password());
 
             if (!Objects.equals(registrationForm.password(), registrationForm.passwordConfirmation())) {
                 Log.errorf("Registration failure, passwords do not match for user %s", registrationForm.username());
+                span.addEvent("Registration failure, password mismatch");
                 throw responseException(Response.Status.BAD_REQUEST, "Passwords do not match");
             }
 
             PersonalData personalData = new PersonalData(
-                    registrationForm.firstname(),
-                    registrationForm.surname(),
-                    registrationForm.username(),
-                    registrationForm.email(),
-                    passwordEncoder.encode(registrationForm.password())
+                registrationForm.firstname(),
+                registrationForm.surname(),
+                registrationForm.username(),
+                registrationForm.email(),
+                passwordEncoder.encode(registrationForm.password())
             );
 
             if (outboundUserRepository.isUsernameExists(new Username(registrationForm.username()))) {
                 Log.errorf("Registration failure, user %s already exists", registrationForm.username());
+                span.addEvent("Registration failure, user already exists");
                 throw responseException(Response.Status.BAD_REQUEST, "Username already exists.");
             }
 
             if (outboundUserRepository.isEmailExists(new Email(registrationForm.email()))) {
                 Log.errorf("Registration failure, email %s of user %s already exists",
-                        registrationForm.email(), registrationForm.username());
+                    registrationForm.email(), registrationForm.username());
+                span.addEvent("Registration failure, email already exists");
                 throw responseException(Response.Status.BAD_REQUEST, "Email already exists.");
             }
 

@@ -5,6 +5,8 @@ import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.value_objects.Rating;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -146,6 +148,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
+    // @WithSpan("save")
     public void save(final User user) {
         jdbc.write(INSERT_USER_ACCOUNT,
                         user.id().toString(),

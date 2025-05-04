@@ -9,6 +9,8 @@ import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -131,6 +133,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
+    @WithSpan("Email existence check")
     public boolean isEmailExists(Email verifiableEmail) {
         return jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
                 .mapSuccess(count -> count != null && count > 0)
@@ -141,6 +144,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
+    @WithSpan("Username existence check")
     public boolean isUsernameExists(Username verifiableUsername) {
         return jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
                 .mapSuccess(count -> count != null && count > 0)
