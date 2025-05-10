@@ -66,6 +66,9 @@ class PuzzlesTest {
 
         sendMessage(clientSession, playerForm.username(), Message.builder(MessageType.PUZZLE).build());
         await().atMost(Duration.ofMillis(125)).until(() -> CHESS_MESSAGES.stream()
-                .anyMatch(message -> message.type().equals(MessageType.PUZZLE) && message.PGN() != null && message.FEN() != null && message.gameID() != null));
+                .anyMatch(message -> message.type().equals(MessageType.PUZZLE) &&
+                        message.PGN() != null &&
+                        message.FEN() != null &&
+                        message.gameID() != null));
     }
 }

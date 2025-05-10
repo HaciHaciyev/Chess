@@ -4,6 +4,7 @@ import com.hadzhy.jdbclight.jdbc.JDBC;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -114,7 +115,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
     @Override
     public void savePuzzle(Puzzle puzzle) {
-        jdbc.write(SAVE_PUZZLE,
+        jdbc.asynchWrite(SAVE_PUZZLE,
                         puzzle.ID().toString(),
                         puzzle.rating().rating(),
                         puzzle.rating().ratingDeviation(),
@@ -122,7 +123,10 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                         puzzle.startPositionFEN(),
                         puzzle.PGN(),
                         puzzle.startPositionIndex())
-                .ifFailure(Throwable::printStackTrace);
+                .exceptionally(throwable -> {
+                    Log.error("Error saving puzzle.", throwable);
+                    return null;
+                });
     }
 
     @Override

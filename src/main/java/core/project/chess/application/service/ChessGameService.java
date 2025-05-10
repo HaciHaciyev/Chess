@@ -2,6 +2,7 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
+import core.project.chess.application.dto.chess.PuzzleInbound;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
@@ -597,9 +598,8 @@ public class ChessGameService {
 
                     CompletableFuture.runAsync(() -> {
                         gameFunctionalityService.executeGameOverOperations(game);
-                        // temporarily disabled due to technical reasons
-                        /*PuzzleInbound puzzleInbound = puzzlerClient.sendPGN(game.pgn());
-                        puzzleService.save(puzzleInbound.PGN(), puzzleInbound.startPositionOfPuzzle());*/
+                        PuzzleInbound puzzleInbound = puzzlerClient.sendPGN(game.pgn());
+                        puzzleService.save(puzzleInbound.PGN(), puzzleInbound.startPositionOfPuzzle());
                     });
                     isRunning.set(false);
                 }
