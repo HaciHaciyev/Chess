@@ -583,42 +583,40 @@ public class ChessGameService {
 				}
 
                 GameResult gameResult = game.gameResult();
-                if (gameResult != GameResult.NONE) {
-                    String message = "Game is over by result {%s}".formatted(gameResult);
-                    Log.info(message);
-                    Log.debugf("Removing game {%s}", game.chessGameID());
-                    for (Session session : sessionStorage.getGameSessions(game.chessGameID())) {
-                        sendMessage(session, Message.builder(MessageType.GAME_ENDED)
-                                .message(message)
-                                .gameID(game.chessGameID().toString())
-                                .build());
-                    }
-                    sessionStorage.removeGame(game.chessGameID());
+                if (gameResult == GameResult.NONE) continue;
 
-                    CompletableFuture.supplyAsync(() -> {
-                        gameFunctionalityService.executeGameOverOperations(game);
-                        return puzzlerClient.sendPGN(game.pgn());
-                    })
-                            .thenAccept(puzzle -> {
-                                if (Objects.isNull(puzzle)) return;
-                                puzzleService.save(puzzle.PGN(), puzzle.startPositionOfPuzzle());
-                            })
-                            .exceptionally(e -> {
-                                Log.error("Error puzzle receive.", e);
-                                return null;
-                            });
+                String message = "Game is over by result {%s}".formatted(gameResult);
+                Log.info(message);
+                Log.debugf("Removing game {%s}", game.chessGameID());
 
-                    isRunning.set(false);
-                }
+                for (Session session : sessionStorage.getGameSessions(game.chessGameID()))
+                    sendMessage(session, Message.builder(MessageType.GAME_ENDED)
+                            .message(message)
+                            .gameID(game.chessGameID().toString())
+                            .build());
+
+                sessionStorage.removeGame(game.chessGameID());
+
+                CompletableFuture.supplyAsync(() -> {
+                            gameFunctionalityService.executeGameOverOperations(game);
+                            return puzzlerClient.sendPGN(game.pgn());
+                        })
+                        .thenAccept(puzzle -> {
+                            if (Objects.isNull(puzzle)) return;
+                            puzzleService.save(puzzle.PGN(), puzzle.startPositionOfPuzzle());
+                        })
+                        .exceptionally(e -> {
+                            Log.error("Error puzzle receive.", e);
+                            return null;
+                        });
+
+                isRunning.set(false);
             }
             Log.info("Spectator shutting down");
         }
 
         public void start() {
-            if (isRunning.get()) {
-                Log.debug("Spectator is already running");
-            }
-
+            if (isRunning.get()) Log.debug("Spectator is already running");
             Log.info("Starting spectator");
             isRunning.set(true);
             Thread.startVirtualThread(this);
