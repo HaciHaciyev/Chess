@@ -1,5 +1,8 @@
 package core.project.chess.infrastructure.clients;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.dto.chess.PuzzleInbound;
 import io.quarkus.logging.Log;
 import io.vertx.core.Vertx;
@@ -21,8 +24,11 @@ public class PuzzlerClient {
 
     private final WebClient client;
 
-    PuzzlerClient(Instance<Vertx> vertx) {
+    private final ObjectMapper objectMapper;
+
+    PuzzlerClient(Instance<Vertx> vertx, ObjectMapper objectMapper) {
         this.client = WebClient.create(vertx.get());
+        this.objectMapper = objectMapper;
     }
 
     public PuzzleInbound sendPGN(String PGN) {
@@ -36,7 +42,13 @@ public class PuzzlerClient {
                     Log.errorf("Error sending PGN for puzzler: %s".formatted(error.getMessage()));
                     error.printStackTrace();
                 })
-                .map(response -> response.bodyAsJson(PuzzleInbound.class))
+                .map(response -> {
+                    try {
+                        return objectMapper.readValue(response.bodyAsString(), new TypeReference<PuzzleInbound>() {});
+                    } catch (JsonProcessingException e) {
+                        throw new IllegalStateException("Can`t parse a puzzle", e);
+                    }
+                })
                 .result();
     }
 }
