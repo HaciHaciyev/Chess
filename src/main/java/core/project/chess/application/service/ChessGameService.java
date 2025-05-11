@@ -598,17 +598,15 @@ public class ChessGameService {
                 sessionStorage.removeGame(game.chessGameID());
 
                 CompletableFuture.supplyAsync(() -> {
-                            gameFunctionalityService.executeGameOverOperations(game);
-                            return puzzlerClient.sendPGN(game.pgn());
-                        })
-                        .thenAccept(puzzle -> {
-                            if (Objects.isNull(puzzle)) return;
-                            puzzleService.save(puzzle.PGN(), puzzle.startPositionOfPuzzle());
-                        })
-                        .exceptionally(e -> {
-                            Log.error("Error puzzle receive.", e);
-                            return null;
-                        });
+                    gameFunctionalityService.executeGameOverOperations(game);
+                    return puzzlerClient.sendPGN(game.pgn());
+                }).thenAccept(puzzle -> {
+                    if (Objects.isNull(puzzle)) return;
+                    puzzleService.save(puzzle.PGN(), puzzle.startPositionOfPuzzle());
+                }).exceptionally(e -> {
+                    Log.error("Error puzzle receive.", e);
+                    return null;
+                });
 
                 isRunning.set(false);
             }
