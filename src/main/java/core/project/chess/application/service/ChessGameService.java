@@ -2,7 +2,6 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
-import core.project.chess.application.dto.chess.PuzzleInbound;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
@@ -596,11 +595,19 @@ public class ChessGameService {
                     }
                     sessionStorage.removeGame(game.chessGameID());
 
-                    CompletableFuture.runAsync(() -> {
+                    CompletableFuture.supplyAsync(() -> {
                         gameFunctionalityService.executeGameOverOperations(game);
-                        PuzzleInbound puzzleInbound = puzzlerClient.sendPGN(game.pgn());
-                        puzzleService.save(puzzleInbound.PGN(), puzzleInbound.startPositionOfPuzzle());
-                    });
+                        return puzzlerClient.sendPGN(game.pgn());
+                    })
+                            .thenAccept(puzzle -> {
+                                if (Objects.isNull(puzzle)) return;
+                                puzzleService.save(puzzle.PGN(), puzzle.startPositionOfPuzzle());
+                            })
+                            .exceptionally(e -> {
+                                Log.error("Error puzzle receive.", e);
+                                return null;
+                            });
+
                     isRunning.set(false);
                 }
             }
