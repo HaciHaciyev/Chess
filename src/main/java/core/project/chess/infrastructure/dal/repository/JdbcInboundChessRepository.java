@@ -5,6 +5,7 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import io.quarkus.logging.Log;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -114,6 +115,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     }
 
     @Override
+    @WithSpan("Save puzzle | JDBC")
     public void savePuzzle(Puzzle puzzle) {
         jet.asynchWrite(SAVE_PUZZLE,
                         puzzle.ID().toString(),

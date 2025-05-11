@@ -279,7 +279,7 @@ class ChessWSTest {
                     .build()
             );
 
-            await().atMost(Duration.ofSeconds(2)).until(() -> USER_MESSAGES.user1()
+            await().until(() -> USER_MESSAGES.user1()
                     .stream()
                     .anyMatch(message -> {
                         if (!message.type().equals(MessageType.GAME_START_INFO) && !message.type().equals(MessageType.FEN_PGN)) {

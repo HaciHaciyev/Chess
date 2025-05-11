@@ -2,6 +2,7 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
+import core.project.chess.application.dto.chess.PuzzleInbound;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
@@ -22,6 +23,10 @@ import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.clients.PuzzlerClient;
 import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
@@ -67,20 +72,30 @@ public class ChessGameService {
         this.partnershipGameCacheService = partnershipGameCacheService;
     }
 
-    public void onOpen(Session session, Username username) {
+    @WithSpan("Chess Open | SERVICE")
+    public void onOpen(@SpanAttribute Session session, @SpanAttribute Username username) {
         Result<User, Throwable> result = outboundUserRepository.findByUsername(username);
         if (!result.success()) {
-            closeSession(session, Message.error("This account is do not founded."));
+            String errMsg = "Account is not found";
+            Span.current().addEvent(errMsg);
+            Span.current().setStatus(StatusCode.ERROR);
+            closeSession(session, Message.error(errMsg));
             return;
         }
         if (sessionStorage.containsSession(username)) {
-            closeSession(session, Message.error("You already have active session."));
+            String errMsg = "You already have an active session";
+            Span.current().addEvent(errMsg);
+            Span.current().setStatus(StatusCode.ERROR);
+            closeSession(session, Message.error(errMsg));
             return;
         }
 
+        Span.current().addEvent("adding session to session storage");
         sessionStorage.addSession(session, result.value());
         
         sendMessage(session, Message.info("Successful connection to chessland"));
+        
+        Span.current().addEvent("sending invitation messages from partners");
         partnershipGameCacheService
                 .getAll(username)
                 .forEach((key, value) -> {
@@ -89,6 +104,7 @@ public class ChessGameService {
                 });
     }
 
+    @WithSpan
     public void onMessage(Session session, Username username, Message message) {
         final boolean isRelatedToPuzzles = message.type() == MessageType.PUZZLE || message.type() == MessageType.PUZZLE_MOVE;
         if (isRelatedToPuzzles) {

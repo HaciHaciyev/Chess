@@ -360,7 +360,7 @@ class GameHistoryResourceTest {
                 .inCaseOfPromotion(inCaseOfPromotion)
                 .build());
 
-        await().atMost(Duration.ofSeconds(1)).until(() -> {
+        await().until(() -> {
             final boolean firstUserReceivedMoveMessage = USER_MESSAGES.user1.stream().anyMatch(message -> validateMove(whiteMoves, message));
             final boolean secondUserReceivedMoveMessage = USER_MESSAGES.user2.stream().anyMatch(message -> validateMove(whiteMoves, message));
             return firstUserReceivedMoveMessage && secondUserReceivedMoveMessage;

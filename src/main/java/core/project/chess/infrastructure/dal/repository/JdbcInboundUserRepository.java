@@ -7,6 +7,7 @@ import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.infrastructure.telemetry.TelemetryService;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -155,9 +156,10 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     }
 
     @Override
+    @WithSpan("Save user")
     public void save(final User user) {
-        telemetry.startWithChildSpan("SAVE USER JDBC", Map.of(USERNAME.getKey(), user.username()), () ->
-                jet.write(INSERT_USER_ACCOUNT,
+        // telemetry.startWithChildSpan("SAVE USER JDBC", Map.of(USERNAME.getKey(), user.username()), () ->
+                jdbc.write(INSERT_USER_ACCOUNT,
                         user.id().toString(),
                         user.firstname(),
                         user.surname(),
@@ -182,8 +184,8 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                         user.isEnable(),
                         user.accountEvents().creationDate(),
                         user.accountEvents().lastUpdateDate())
-                        .ifFailure(Throwable::printStackTrace)
-        );
+                        .ifFailure(Throwable::printStackTrace);
+        // );
     }
 
     @Override

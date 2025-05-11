@@ -1,6 +1,7 @@
 package core.project.chess.infrastructure.clients;
 
 import core.project.chess.application.dto.chess.PuzzleInbound;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.logging.Log;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -25,6 +26,7 @@ public class PuzzlerClient {
         this.client = WebClient.create(vertx.get());
     }
 
+    @WithSpan("Sending PGN to puzzler")
     public PuzzleInbound sendPGN(String PGN) {
         JsonObject jsonBody = new JsonObject().put("PGN", PGN);
 

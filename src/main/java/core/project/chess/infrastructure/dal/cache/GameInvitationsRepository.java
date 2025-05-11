@@ -5,6 +5,7 @@ import core.project.chess.application.util.JSONUtilities;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.user.value_objects.Username;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.hash.HashCommands;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -40,6 +41,7 @@ public class GameInvitationsRepository {
         return StatusPair.ofFalse();
     }
 
+    @WithSpan
     public Map<String, GameParameters> getAll(Username addressee) {
         Map<String, GameParameters> result = new HashMap<>();
 

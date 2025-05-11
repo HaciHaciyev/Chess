@@ -10,6 +10,8 @@ import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
 import core.project.chess.infrastructure.telemetry.TelemetryService;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -135,27 +137,29 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
+    @WithSpan("Email existence check")
     public boolean isEmailExists(Email verifiableEmail) {
-        return telemetry.startWithChildSpan("EMAIL EXISTENCE CHECK JDBC", () ->
-                jet.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
+        return /*telemetry.startWithChildSpan("EMAIL EXISTENCE CHECK JDBC", () ->*/
+                jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
                         .mapSuccess(count -> count != null && count > 0)
                         .orElseGet(() -> {
                             Log.error("Error checking email existence.");
                             return false;
-                        })
-        );
+                        });
+        // );
     }
 
     @Override
+    @WithSpan("Username existence check")
     public boolean isUsernameExists(Username verifiableUsername) {
-        return telemetry.startWithChildSpan("USERNAME EXISTENCE CHECK JDBC", () ->
-                jet.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
+        return /*telemetry.startWithChildSpan("USERNAME EXISTENCE CHECK JDBC", () ->*/
+                jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
                         .mapSuccess(count -> count != null && count > 0)
                         .orElseGet(() -> {
                             Log.error("Error checking username existence.");
                             return false;
-                        })
-        );
+                        });
+        // );
     }
 
     @Override
@@ -180,8 +184,9 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     @Override
-    public Result<User, Throwable> findByUsername(Username username) {
-        var user = jet.read(FIND_BY_USERNAME, this::userAccountMapper, username.username());
+    @WithSpan("Find by username")
+    public Result<User, Throwable> findByUsername(@SpanAttribute Username username) {
+        var user = jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username.username());
         return new Result<>(user.value(), user.throwable(), user.success());
     }
 
