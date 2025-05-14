@@ -2,16 +2,19 @@ package core.project.chess.domain.chess.services;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
+import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
+import core.project.chess.domain.chess.value_objects.Move;
 import core.project.chess.domain.user.entities.User;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.List;
 import java.util.Objects;
 @ApplicationScoped
 public class PuzzleService {
@@ -54,7 +57,15 @@ public class PuzzleService {
         }
     }
 
-    public void save(String PGN, int startPositionOfPuzzle) {
-        inboundChessRepository.savePuzzle(Puzzle.of(PGN, startPositionOfPuzzle));
+    public void save(List<Move> moves, int startPositionOfPuzzle) {
+        ChessBoard chessBoard = ChessBoard.starndardChessBoard();
+        try {
+            for (Move move : moves) chessBoard.doMove(move.from(), move.to(), move.promotion());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Invalid puzzle provided.");
+        }
+
+        Puzzle puzzle = Puzzle.of(chessBoard.pgn(), startPositionOfPuzzle);
+        inboundChessRepository.savePuzzle(puzzle);
     }
 }

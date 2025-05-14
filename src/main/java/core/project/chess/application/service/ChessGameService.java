@@ -601,11 +601,10 @@ public class ChessGameService {
                     gameFunctionalityService.executeGameOverOperations(game);
                     return puzzlerClient.sendPGN(game.pgn());
                 }).thenAccept(puzzle -> {
-                    if (Objects.isNull(puzzle)) return;
-                    puzzleService.save(puzzle.PGN(), puzzle.startPositionOfPuzzle());
-                }).exceptionally(e -> {
-                    Log.error("Error puzzle receive.", e);
-                    return null;
+                    if (Objects.nonNull(puzzle))
+                        puzzleService.save(puzzle.moves(), puzzle.startPositionOfPuzzle());
+                }).whenComplete((result, throwable) -> {
+                    if (throwable != null) Log.error("Error during puzzle receive or save.", throwable);
                 });
 
                 isRunning.set(false);
