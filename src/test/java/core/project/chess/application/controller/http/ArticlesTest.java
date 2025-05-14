@@ -7,11 +7,9 @@ import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import net.datafaker.Faker;
-
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
 import testUtils.ArticleForm;
 import testUtils.ArticleStatus;
 import testUtils.AuthInfo;
@@ -25,7 +23,6 @@ import static org.hamcrest.Matchers.containsString;
 
 @QuarkusTest
 @WithTestResource(MessagingTestResource.class)
-@Disabled("On the way")
 class ArticlesTest {
 
     @Inject
@@ -37,32 +34,28 @@ class ArticlesTest {
 
     static final ThreadLocalRandom random = ThreadLocalRandom.current();
 
-    static final String messagingURL = ConfigProvider.getConfig().getConfigValue("messaging.api.url").getValue() + "/chessland/articles";
+    static final String messagingURL = ConfigProvider.getConfig()
+            .getConfigValue("messaging.api.url").getValue() + "/chessland/articles";
 
-    @Test
+    @RepeatedTest(3)
     @DisplayName("Test valid article saving")
     void save() throws JsonProcessingException {
-        int i = 0;
-        while (i < 13) {
-            AuthInfo user = authUtils.fullLoginProcess();
-            String articleFormJSON = objectMapper.writeValueAsString(articleForm());
+        AuthInfo user = authUtils.fullLoginProcess();
+        String articleFormJSON = objectMapper.writeValueAsString(articleForm(ArticleStatus.DRAFT));
 
-            given()
-                    .header("Authorization", "Bearer " + user.serverResponse().get("token"))
-                    .body(articleFormJSON)
-                    .contentType("application/json")
-                    .when()
-                    .post(messagingURL + "/post")
-                    .then()
-                    .statusCode(200);
-
-            i++;
-        }
+        given()
+                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
+                .body(articleFormJSON)
+                .contentType("application/json")
+                .when()
+                .post(messagingURL + "/post")
+                .then()
+                .statusCode(200);
     }
 
-    @Test
+    @RepeatedTest(3)
     @DisplayName("Test invalid article saving: Article can`t be created with status - Archived")
-    void invalidArticleSave() throws JsonProcessingException {
+    void invalidArticleSave_StatusArchived() throws JsonProcessingException {
         AuthInfo user = authUtils.fullLoginProcess();
         String articleFormJSON = objectMapper.writeValueAsString(articleForm(ArticleStatus.ARCHIVED));
 
@@ -94,5 +87,39 @@ class ArticlesTest {
         List<String> tags = List.of(faker.lorem().word(), faker.lorem().word(), faker.lorem().word());
 
         return new ArticleForm(header, summary, body, status, tags);
+    }
+
+    static ArticleForm articleForm(List<String> keywords) {
+        String header = insertKeywords(faker.book().title(), keywords);
+        String summary = insertKeywords(faker.lorem().sentence(), keywords);
+        String body = insertKeywords(faker.lorem().paragraph(10), keywords);
+        ArticleStatus status = ArticleStatus.values()[random.nextInt(2)];
+        List<String> tags = List.of(faker.lorem().word(), faker.lorem().word(), faker.lorem().word());
+
+        return new ArticleForm(header, summary, body, status, tags);
+    }
+
+    static ArticleForm articleForm(List<String> customTags, List<String> keywords) {
+        String header = insertKeywords(faker.book().title(), keywords);
+        String summary = insertKeywords(faker.lorem().sentence(), keywords);
+        String body = insertKeywords(faker.lorem().paragraph(10), keywords);
+        ArticleStatus status = ArticleStatus.values()[random.nextInt(2)];
+
+        return new ArticleForm(header, summary, body, status, customTags);
+    }
+
+    static ArticleForm articleForm(ArticleStatus status, List<String> customTags, List<String> keywords) {
+        String header = insertKeywords(faker.book().title(), keywords);
+        String summary = insertKeywords(faker.lorem().sentence(), keywords);
+        String body = insertKeywords(faker.lorem().paragraph(10), keywords);
+
+        return new ArticleForm(header, summary, body, status, customTags);
+    }
+
+    private static String insertKeywords(String text, List<String> keywords) {
+        if (keywords == null || keywords.isEmpty()) return text;
+        var sb = new StringBuilder(text);
+        for (String keyword : keywords) sb.append(" ").append(keyword);
+        return sb.toString();
     }
 }
