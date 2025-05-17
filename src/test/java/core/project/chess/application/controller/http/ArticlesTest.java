@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.chess.application.controller.ws.MessagingTestResource;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 import net.datafaker.Faker;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -15,6 +16,7 @@ import testUtils.ArticleStatus;
 import testUtils.AuthInfo;
 import testUtils.AuthUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -38,7 +40,7 @@ class ArticlesTest {
             .getConfigValue("messaging.api.url").getValue() + "/chessland/articles";
 
     @RepeatedTest(3)
-    @DisplayName("Test valid article saving")
+    @DisplayName("Test valid article creation")
     void save() throws JsonProcessingException {
         AuthInfo user = authUtils.fullLoginProcess();
         String articleFormJSON = objectMapper.writeValueAsString(articleForm(ArticleStatus.DRAFT));
@@ -46,7 +48,7 @@ class ArticlesTest {
         given()
                 .header("Authorization", "Bearer " + user.serverResponse().get("token"))
                 .body(articleFormJSON)
-                .contentType("application/json")
+                .contentType(ContentType.JSON)
                 .when()
                 .post(messagingURL + "/post")
                 .then()
@@ -54,7 +56,7 @@ class ArticlesTest {
     }
 
     @RepeatedTest(3)
-    @DisplayName("Test invalid article saving: Article can`t be created with status - Archived")
+    @DisplayName("Test invalid article creation: Article can`t be created with status - Archived")
     void invalidArticleSave_StatusArchived() throws JsonProcessingException {
         AuthInfo user = authUtils.fullLoginProcess();
         String articleFormJSON = objectMapper.writeValueAsString(articleForm(ArticleStatus.ARCHIVED));
@@ -62,12 +64,114 @@ class ArticlesTest {
         given()
                 .header("Authorization", "Bearer " + user.serverResponse().get("token"))
                 .body(articleFormJSON)
-                .contentType("application/json")
+                .contentType(ContentType.JSON)
                 .when()
                 .post(messagingURL + "/post")
                 .then()
                 .statusCode(400)
                 .body(containsString("Article can`t be created with archived status."));
+    }
+
+    @RepeatedTest(3)
+    @DisplayName("Test invalid article creation: Invalid article header.")
+    void invalidArticleSave_InvalidText() throws JsonProcessingException {
+        AuthInfo user = authUtils.fullLoginProcess();
+
+        String invalidHeaderArticle = objectMapper.writeValueAsString(new ArticleForm(
+                "", // invalid header
+                faker.lorem().sentence(),
+                faker.lorem().paragraph(10),
+                ArticleStatus.DRAFT,
+                List.of("test", "header", "summary", "body")
+        ));
+
+        given()
+                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
+                .body(invalidHeaderArticle)
+                .contentType(ContentType.JSON)
+                .when()
+                .post(messagingURL + "/post")
+                .then()
+                .statusCode(400)
+                .body(containsString("Header cannot be blank."));
+    }
+
+    @RepeatedTest(3)
+    @DisplayName("Test invalid article creation: Invalid article summary.")
+    void invalidArticleSave_InvalidSummary() throws JsonProcessingException {
+        AuthInfo user = authUtils.fullLoginProcess();
+        String invalidSummaryArticle = objectMapper.writeValueAsString(new ArticleForm(
+                faker.book().title(),
+                "",
+                faker.lorem().paragraph(10),
+                ArticleStatus.DRAFT,
+                List.of("test", "header", "summary", "body")
+        ));
+
+        given()
+                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
+                .body(invalidSummaryArticle)
+                .contentType(ContentType.JSON)
+                .when()
+                .post(messagingURL + "/post")
+                .then()
+                .statusCode(400)
+                .body(containsString("Summary must not be blank."));
+    }
+
+    @RepeatedTest(3)
+    @DisplayName("Test invalid article creation: Invalid article body.")
+    void invalidArticleSave_InvalidBody() throws JsonProcessingException {
+        AuthInfo user = authUtils.fullLoginProcess();
+
+        String invalidBodyArticle = objectMapper.writeValueAsString(new ArticleForm(
+                faker.book().title(),
+                faker.lorem().sentence(),
+                "",
+                ArticleStatus.DRAFT,
+                List.of("test", "header", "summary", "body")
+        ));
+
+        given()
+                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
+                .body(invalidBodyArticle)
+                .contentType(ContentType.JSON)
+                .when()
+                .post(messagingURL + "/post")
+                .then()
+                .statusCode(400)
+                .body(containsString("Content is blank."));
+    }
+
+    @RepeatedTest(3)
+    @DisplayName("Test invalid article creation: Invalid article tags.")
+    void invalidArticleSave_InvalidTags() throws JsonProcessingException {
+        AuthInfo user = authUtils.fullLoginProcess();
+
+        String invalidTagsArticleTooFewTags = objectMapper.writeValueAsString(articleForm(List.of("tag"), new ArrayList<>()));
+
+        given()
+                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
+                .body(invalidTagsArticleTooFewTags)
+                .contentType(ContentType.JSON)
+                .when()
+                .post(messagingURL + "/post")
+                .then()
+                .statusCode(400)
+                .body(containsString("You need at least create 3 tags for Article and no more than 8."));
+
+        String invalidTagsArticlesTooManyTags = objectMapper.writeValueAsString(articleForm(List
+                .of("tag", "another", "third", "idk", "java", "maven", "quarkus", "Immanuel Kant", "Megadeath"), new ArrayList<>()));
+
+        given()
+                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
+                .body(invalidTagsArticlesTooManyTags)
+                .contentType(ContentType.JSON)
+                .when()
+                .post(messagingURL + "/post")
+                .then()
+                .statusCode(400)
+                .body(containsString("You need at least create 3 tags for Article and no more than 8."));
     }
 
     static ArticleForm articleForm() {
