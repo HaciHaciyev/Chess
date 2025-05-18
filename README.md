@@ -346,6 +346,32 @@ Body:
 
 ---
 
+### `PATCH /articles/add-article`
+**Description:** Adds a tag to the specified article.
+**Query Parameters:**
+- `articleID` (string, required): The unique identifier of the article.
+- `tag` (string, required): The tag to be added to the article.
+  **Body:** `ArticleText` – New article content  
+  **Auth:** JWT required  
+  **Response:** `
+- `202 Accepted` — Tag successfully added to the article.
+- `400 Bad Request` — Required parameter is missing or invalid.
+- `401 Unauthorized` — The user is not authenticated.
+
+---
+
+## PATCH /articles/remove-tag
+**Description:** Removes a tag from the specified article.
+**Query Parameters:**
+- `articleID` (string, required): The unique identifier of the article.
+- `tag` (string, required): The tag to be removed from the article.
+**Response:**
+- `202 Accepted` — Tag successfully removed from the article.
+- `400 Bad Request` — Required parameter is missing or invalid.
+- `401 Unauthorized` — The user is not authenticated.
+
+---
+
 ### `GET /articles/viewArticle`
 **Description:** View full details of a specific article  
 **Query Params:**
