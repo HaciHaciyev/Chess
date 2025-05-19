@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.dal.repository;
 
-import com.hadzhy.jdbclight.jdbc.JDBC;
+import com.hadzhy.jetquerious.jdbc.JetQuerious;
 import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
@@ -19,13 +19,13 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-import static com.hadzhy.jdbclight.sql.SQLBuilder.select;
+import static com.hadzhy.jetquerious.sql.QueryForge.select;
 
 @Transactional
 @ApplicationScoped
 public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
-    private final JDBC jdbc;
+    private final JetQuerious jet;
 
     private final TelemetryService telemetry;
 
@@ -131,13 +131,13 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     JdbcOutboundUserRepository(TelemetryService telemetry) {
         this.telemetry = telemetry;
-        this.jdbc = JDBC.instance();
+        this.jet = JetQuerious.instance();
     }
 
     @Override
     public boolean isEmailExists(Email verifiableEmail) {
         return telemetry.startWithChildSpan("EMAIL EXISTENCE CHECK JDBC", () ->
-                jdbc.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
+                jet.readObjectOf(FIND_EMAIL, Integer.class, verifiableEmail.email())
                         .mapSuccess(count -> count != null && count > 0)
                         .orElseGet(() -> {
                             Log.error("Error checking email existence.");
@@ -149,7 +149,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     @Override
     public boolean isUsernameExists(Username verifiableUsername) {
         return telemetry.startWithChildSpan("USERNAME EXISTENCE CHECK JDBC", () ->
-                jdbc.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
+                jet.readObjectOf(FIND_USERNAME, Integer.class, verifiableUsername.username())
                         .mapSuccess(count -> count != null && count > 0)
                         .orElseGet(() -> {
                             Log.error("Error checking username existence.");
@@ -160,7 +160,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public boolean havePartnership(User user, User partner) {
-        return jdbc.readObjectOf(IS_PARTNERSHIP_EXISTS,
+        return jet.readObjectOf(IS_PARTNERSHIP_EXISTS,
                         Integer.class,
                         user.id().toString(),
                         partner.id().toString(),
@@ -175,37 +175,37 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
     @Override
     public Result<User, Throwable> findById(UUID userId) {
-        var user = jdbc.read(FIND_BY_ID, this::userAccountMapper, userId.toString());
+        var user = jet.read(FIND_BY_ID, this::userAccountMapper, userId.toString());
         return new Result<>(user.value(), user.throwable(), user.success());
     }
 
     @Override
     public Result<User, Throwable> findByUsername(Username username) {
-        var user = jdbc.read(FIND_BY_USERNAME, this::userAccountMapper, username.username());
+        var user = jet.read(FIND_BY_USERNAME, this::userAccountMapper, username.username());
         return new Result<>(user.value(), user.throwable(), user.success());
     }
 
     @Override
     public Result<User, Throwable> findByEmail(Email email) {
-        var user = jdbc.read(FIND_BY_EMAIL, this::userAccountMapper, email.email());
+        var user = jet.read(FIND_BY_EMAIL, this::userAccountMapper, email.email());
         return new Result<>(user.value(), user.throwable(), user.success());
     }
 
     @Override
     public Result<EmailConfirmationToken, Throwable> findToken(UUID token) {
-        var result = jdbc.read(FIND_TOKEN, this::userTokenMapper, token.toString());
+        var result = jet.read(FIND_TOKEN, this::userTokenMapper, token.toString());
         return new Result<>(result.value(), result.throwable(), result.success());
     }
 
     @Override
     public Result<RefreshToken, Throwable> findRefreshToken(String refreshToken) {
-        var result = jdbc.read(FIND_REFRESH_TOKEN, this::refreshTokenMapper, refreshToken);
+        var result = jet.read(FIND_REFRESH_TOKEN, this::refreshTokenMapper, refreshToken);
         return new Result<>(result.value(), result.throwable(), result.success());
     }
 
     @Override
     public Result<UserProperties, Throwable> userProperties(Username username) {
-        var result = jdbc.read(FIND_USER_PROPERTIES, this::userPropertiesMapper, username.username());
+        var result = jet.read(FIND_USER_PROPERTIES, this::userPropertiesMapper, username.username());
         return new Result<>(result.value(), result.throwable(), result.success());
     }
 

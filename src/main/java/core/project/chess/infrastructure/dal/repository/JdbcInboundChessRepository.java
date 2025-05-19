@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.dal.repository;
 
-import com.hadzhy.jdbclight.jdbc.JDBC;
+import com.hadzhy.jetquerious.jdbc.JetQuerious;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
@@ -8,13 +8,13 @@ import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import static com.hadzhy.jdbclight.sql.SQLBuilder.*;
+import static com.hadzhy.jetquerious.sql.QueryForge.*;
 
 @Transactional
 @ApplicationScoped
 public class JdbcInboundChessRepository implements InboundChessRepository {
 
-    private final JDBC jdbc;
+    private final JetQuerious jet;
 
     static final String SAVE_STARTED_CHESS_GAME = batchOf(
             insert()
@@ -73,7 +73,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
             .build().toSQlQuery());
 
     JdbcInboundChessRepository() {
-        this.jdbc = JDBC.instance();
+        this.jet = JetQuerious.instance();
     }
 
     @Override
@@ -81,7 +81,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
         if (chessGame.isGameOver())
             throw new IllegalArgumentException("You can`t save finished game as new one");
 
-        jdbc.write(SAVE_STARTED_CHESS_GAME,
+        jet.write(SAVE_STARTED_CHESS_GAME,
                         chessGame.chessGameID().toString(),
                         chessGame.whiteRating().rating(),
                         chessGame.blackRating().rating(),
@@ -100,13 +100,13 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     public void completelyUpdateFinishedGame(final ChessGame chessGame) {
         if (!chessGame.isGameOver()) throw new IllegalArgumentException("Game is not over.");
 
-        jdbc.write(UPDATE_FINISHED_CHESS_GAME,
+        jet.write(UPDATE_FINISHED_CHESS_GAME,
                         chessGame.isGameOver(),
                         chessGame.gameResult().toString(),
                         chessGame.chessGameID().toString())
                 .ifFailure(Throwable::printStackTrace);
 
-        jdbc.write(SAVE_CHESS_GAME_HISTORY,
+        jet.write(SAVE_CHESS_GAME_HISTORY,
                         chessGame.historyID().toString(),
                         chessGame.chessGameID().toString(),
                         chessGame.pgn())
@@ -115,7 +115,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
 
     @Override
     public void savePuzzle(Puzzle puzzle) {
-        jdbc.asynchWrite(SAVE_PUZZLE,
+        jet.asynchWrite(SAVE_PUZZLE,
                         puzzle.ID().toString(),
                         puzzle.rating().rating(),
                         puzzle.rating().ratingDeviation(),
@@ -133,7 +133,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     public void updatePuzzleOnSolving(final Puzzle puzzle) {
         if (!puzzle.isEnded()) throw new IllegalArgumentException("Puzzle is not ended.");
 
-        jdbc.write(SAVE_PUZZLE_SOLVING,
+        jet.write(SAVE_PUZZLE_SOLVING,
                         puzzle.rating().rating(),
                         puzzle.rating().ratingDeviation(),
                         puzzle.rating().volatility(),

@@ -1,13 +1,13 @@
 package testUtils;
 
-import com.hadzhy.jdbclight.jdbc.JDBC;
+import com.hadzhy.jetquerious.jdbc.JetQuerious;
 import core.project.chess.domain.commons.containers.Result;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class UserDBManagement {
 
-    private final JDBC jdbc;
+    private final JetQuerious jet;
 
     private static final String DELETE_ALL_USERS_CASCADE = """
             DELETE FROM UserToken;
@@ -20,15 +20,15 @@ public class UserDBManagement {
             """;
 
     public UserDBManagement() {
-        this.jdbc = JDBC.instance();
+        this.jet = JetQuerious.instance();
     }
 
     public void removeUsers() {
-        jdbc.write(DELETE_ALL_USERS_CASCADE);
+        jet.write(DELETE_ALL_USERS_CASCADE);
     }
 
     public String getToken(String username) {
-        var token = jdbc.read(GET_TOKEN_BY_USERNAME, rs -> rs.getString("token"), username);
+        var token = jet.read(GET_TOKEN_BY_USERNAME, rs -> rs.getString("token"), username);
         Result<String, Throwable> tokenResult = new Result<>(token.value(), token.throwable(), token.success());
         return tokenResult.orElseThrow();
     }

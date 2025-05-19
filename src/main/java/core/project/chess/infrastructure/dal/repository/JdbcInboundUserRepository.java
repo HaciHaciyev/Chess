@@ -1,6 +1,6 @@
 package core.project.chess.infrastructure.dal.repository;
 
-import com.hadzhy.jdbclight.jdbc.JDBC;
+import com.hadzhy.jetquerious.jdbc.JetQuerious;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
@@ -12,13 +12,13 @@ import jakarta.transaction.Transactional;
 
 import java.util.Map;
 
-import static com.hadzhy.jdbclight.sql.SQLBuilder.*;
+import static com.hadzhy.jetquerious.sql.QueryForge.*;
 
 @Transactional
 @ApplicationScoped
 public class JdbcInboundUserRepository implements InboundUserRepository {
 
-    private final JDBC jdbc;
+    private final JetQuerious jet;
 
     private final TelemetryService telemetry;
 
@@ -151,13 +151,13 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     JdbcInboundUserRepository(TelemetryService telemetry) {
         this.telemetry = telemetry;
-        this.jdbc = JDBC.instance();
+        this.jet = JetQuerious.instance();
     }
 
     @Override
     public void save(final User user) {
         telemetry.startWithChildSpan("SAVE USER JDBC", Map.of(USERNAME.getKey(), user.username()), () ->
-                jdbc.write(INSERT_USER_ACCOUNT,
+                jet.write(INSERT_USER_ACCOUNT,
                         user.id().toString(),
                         user.firstname(),
                         user.surname(),
@@ -188,7 +188,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfRating(final User user) {
-        jdbc.write(UPDATE_USER_RATING,
+        jet.write(UPDATE_USER_RATING,
                         user.rating().rating(),
                         user.rating().ratingDeviation(),
                         user.rating().volatility(),
@@ -198,7 +198,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfBulletRating(User user) {
-        jdbc.write(UPDATE_USER_BULLET_RATING,
+        jet.write(UPDATE_USER_BULLET_RATING,
                         user.bulletRating().rating(),
                         user.bulletRating().ratingDeviation(),
                         user.bulletRating().volatility(),
@@ -208,7 +208,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfBlitzRating(User user) {
-        jdbc.write(UPDATE_USER_BLITZ_RATING,
+        jet.write(UPDATE_USER_BLITZ_RATING,
                         user.blitzRating().rating(),
                         user.blitzRating().ratingDeviation(),
                         user.blitzRating().volatility(),
@@ -218,7 +218,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void updateOfRapidRating(User user) {
-        jdbc.write(UPDATE_USER_RAPID_RATING,
+        jet.write(UPDATE_USER_RAPID_RATING,
                         user.rapidRating().rating(),
                         user.rapidRating().ratingDeviation(),
                         user.rapidRating().volatility(),
@@ -229,7 +229,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
     @Override
     public void updateOfPuzzleRating(final User user) {
         Rating puzzlesRating = user.puzzlesRating();
-        jdbc.write(UPDATE_USER_PUZZLES_RATING,
+        jet.write(UPDATE_USER_PUZZLES_RATING,
                         puzzlesRating.rating(),
                         puzzlesRating.ratingDeviation(),
                         puzzlesRating.volatility(),
@@ -239,7 +239,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void saveVerificationToken(final EmailConfirmationToken token) {
-        jdbc.write(INSERT_VERIFICATION_TOKEN,
+        jet.write(INSERT_VERIFICATION_TOKEN,
                         token.tokenID().toString(),
                         token.user().id().toString(),
                         token.token().token().toString(),
@@ -251,7 +251,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void removeVerificationToken(User user) {
-        jdbc.write(REMOVE_VERIFICATION_TOKEN, user.id().toString())
+        jet.write(REMOVE_VERIFICATION_TOKEN, user.id().toString())
                 .ifFailure(Throwable::printStackTrace);
     }
 
@@ -260,7 +260,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
         if (!token.isConfirmed() || !token.user().isEnable())
             throw new IllegalArgumentException("Token needs to be confirmed & UserAccount needs to be enabled");
 
-        jdbc.write(UPDATE_USER_TOKEN_AND_ACCOUNT_VERIFICATION,
+        jet.write(UPDATE_USER_TOKEN_AND_ACCOUNT_VERIFICATION,
                         token.isConfirmed(),
                         token.tokenID().toString(),
                         token.user().isEnable(),
@@ -270,12 +270,12 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
 
     @Override
     public void saveRefreshToken(User user, String refreshToken) {
-        jdbc.write(INSERT_OR_UPDATE_REFRESH_TOKEN, user.id().toString(), refreshToken, refreshToken)
+        jet.write(INSERT_OR_UPDATE_REFRESH_TOKEN, user.id().toString(), refreshToken, refreshToken)
                 .ifFailure(Throwable::printStackTrace);
     }
 
     @Override
     public void removeRefreshToken(String refreshToken) {
-        jdbc.write(DELETE_REFRESH_TOKEN, refreshToken).ifFailure(Throwable::printStackTrace);
+        jet.write(DELETE_REFRESH_TOKEN, refreshToken).ifFailure(Throwable::printStackTrace);
     }
 }

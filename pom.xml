@@ -91,8 +91,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.HaciHaciyev</groupId>
-            <artifactId>jdbc-light</artifactId>
-            <version>v1.0.0</version>
+            <artifactId>JetQuerious</artifactId>
+            <version>v2.0.0</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

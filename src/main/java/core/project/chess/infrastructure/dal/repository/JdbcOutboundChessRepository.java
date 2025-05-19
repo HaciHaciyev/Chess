@@ -1,7 +1,7 @@
 package core.project.chess.infrastructure.dal.repository;
 
-import com.hadzhy.jdbclight.jdbc.JDBC;
-import com.hadzhy.jdbclight.sql.Order;
+import com.hadzhy.jetquerious.jdbc.JetQuerious;
+import com.hadzhy.jetquerious.sql.Order;
 import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.application.dto.chess.Puzzle;
 import core.project.chess.domain.chess.entities.ChessGame;
@@ -21,14 +21,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.hadzhy.jdbclight.sql.SQLBuilder.select;
-import static com.hadzhy.jdbclight.sql.SQLBuilder.withAndSelect;
+import static com.hadzhy.jetquerious.sql.QueryForge.select;
+import static com.hadzhy.jetquerious.sql.QueryForge.withAndSelect;
 
 @Transactional
 @ApplicationScoped
 public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
-    private final JDBC jdbc;
+    private final JetQuerious jet;
 
     static final String IS_PRESENT = select()
             .count("id")
@@ -123,12 +123,12 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .sql();
 
     JdbcOutboundChessRepository() {
-        this.jdbc = JDBC.instance();
+        this.jet = JetQuerious.instance();
     }
 
     @Override
     public boolean isChessHistoryPresent(final UUID chessHistoryId) {
-        return jdbc.readObjectOf(IS_PRESENT, Integer.class, chessHistoryId.toString())
+        return jet.readObjectOf(IS_PRESENT, Integer.class, chessHistoryId.toString())
                 .mapSuccess(count -> count != null && count > 0)
                 .orElseGet(() -> {
                     Log.error("Unexpected error in repository. Can`t get chess history data.");
@@ -138,13 +138,13 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     @Override
     public Result<ChessGameHistory, Throwable> findById(final UUID chessGameId) {
-        var chessGame = jdbc.read(GET_CHESS_GAME, this::chessGameMapper, Objects.requireNonNull(chessGameId.toString()));
+        var chessGame = jet.read(GET_CHESS_GAME, this::chessGameMapper, Objects.requireNonNull(chessGameId.toString()));
         return new Result<>(chessGame.value(), chessGame.throwable(), chessGame.success());
     }
 
     @Override
     public Result<List<ChessGameHistory>, Throwable> listOfGames(final Username username, final int limit, final int offSet) {
-        var gamesList = jdbc.readListOf(LIST_OF_GAMES,
+        var gamesList = jet.readListOf(LIST_OF_GAMES,
                 this::chessGameMapper,
                 Objects.requireNonNull(username.username()),
                 username.username(),
@@ -156,19 +156,19 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
 
     @Override
     public Result<Puzzle, Throwable> puzzle(double minRating, double maxRating) {
-        var puzzleResult = jdbc.read(RANDOM_PUZZLE, this::puzzleMapper, minRating, maxRating);
+        var puzzleResult = jet.read(RANDOM_PUZZLE, this::puzzleMapper, minRating, maxRating);
         return new Result<>(puzzleResult.value(), puzzleResult.throwable(), puzzleResult.success());
     }
 
     @Override
     public Result<Puzzle, Throwable> puzzle(UUID puzzleId) {
-        var puzzleResult = jdbc.read(GET_PUZZLE, this::puzzleMapper, puzzleId.toString());
+        var puzzleResult = jet.read(GET_PUZZLE, this::puzzleMapper, puzzleId.toString());
         return new Result<>(puzzleResult.value(), puzzleResult.throwable(), puzzleResult.success());
     }
 
     @Override
     public Result<List<Puzzle>, Throwable> listOfPuzzles(double minRating, double maxRating, int limit, int offSet) {
-        var puzzlesList = jdbc.readListOf(LIST_OF_PUZZLES, this::puzzleMapper, minRating, maxRating, limit, offSet);
+        var puzzlesList = jet.readListOf(LIST_OF_PUZZLES, this::puzzleMapper, minRating, maxRating, limit, offSet);
         return new Result<>(puzzlesList.value(), puzzlesList.throwable(), puzzlesList.success());
     }
 
