@@ -11,10 +11,7 @@ import net.datafaker.Faker;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
-import testUtils.ArticleForm;
-import testUtils.ArticleStatus;
-import testUtils.AuthInfo;
-import testUtils.AuthUtils;
+import testUtils.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
 @WithTestResource(MessagingTestResource.class)
@@ -36,23 +34,14 @@ class ArticlesTest {
 
     static final ThreadLocalRandom random = ThreadLocalRandom.current();
 
-    static final String messagingURL = ConfigProvider.getConfig()
+    static final String articles = ConfigProvider.getConfig()
             .getConfigValue("messaging.api.url").getValue() + "/chessland/articles";
 
     @RepeatedTest(3)
     @DisplayName("Test valid article creation")
     void save() throws JsonProcessingException {
         AuthInfo user = authUtils.fullLoginProcess();
-        String articleFormJSON = objectMapper.writeValueAsString(articleForm(ArticleStatus.DRAFT));
-
-        given()
-                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
-                .body(articleFormJSON)
-                .contentType(ContentType.JSON)
-                .when()
-                .post(messagingURL + "/post")
-                .then()
-                .statusCode(200);
+        saveArticle(user);
     }
 
     @RepeatedTest(3)
@@ -66,7 +55,7 @@ class ArticlesTest {
                 .body(articleFormJSON)
                 .contentType(ContentType.JSON)
                 .when()
-                .post(messagingURL + "/post")
+                .post(articles + "/post")
                 .then()
                 .statusCode(400)
                 .body(containsString("Article can`t be created with archived status."));
@@ -90,7 +79,7 @@ class ArticlesTest {
                 .body(invalidHeaderArticle)
                 .contentType(ContentType.JSON)
                 .when()
-                .post(messagingURL + "/post")
+                .post(articles + "/post")
                 .then()
                 .statusCode(400)
                 .body(containsString("Header cannot be blank."));
@@ -113,7 +102,7 @@ class ArticlesTest {
                 .body(invalidSummaryArticle)
                 .contentType(ContentType.JSON)
                 .when()
-                .post(messagingURL + "/post")
+                .post(articles + "/post")
                 .then()
                 .statusCode(400)
                 .body(containsString("Summary must not be blank."));
@@ -137,7 +126,7 @@ class ArticlesTest {
                 .body(invalidBodyArticle)
                 .contentType(ContentType.JSON)
                 .when()
-                .post(messagingURL + "/post")
+                .post(articles + "/post")
                 .then()
                 .statusCode(400)
                 .body(containsString("Content is blank."));
@@ -155,7 +144,7 @@ class ArticlesTest {
                 .body(invalidTagsArticleTooFewTags)
                 .contentType(ContentType.JSON)
                 .when()
-                .post(messagingURL + "/post")
+                .post(articles + "/post")
                 .then()
                 .statusCode(400)
                 .body(containsString("You need at least create 3 tags for Article and no more than 8."));
@@ -168,10 +157,43 @@ class ArticlesTest {
                 .body(invalidTagsArticlesTooManyTags)
                 .contentType(ContentType.JSON)
                 .when()
-                .post(messagingURL + "/post")
+                .post(articles + "/post")
                 .then()
                 .statusCode(400)
                 .body(containsString("You need at least create 3 tags for Article and no more than 8."));
+    }
+
+    @RepeatedTest(3)
+    @DisplayName("Test valid article status changes")
+    void changeStatus() throws JsonProcessingException {
+        AuthInfo user = authUtils.fullLoginProcess();
+        ArticleDTO savedArticle = saveArticle(user);
+
+        given()
+                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
+                .queryParam("articleID", savedArticle.id().toString())
+                .queryParam("status", "PUBLISHED")
+                .when()
+                .patch(articles + "/change-article-status")
+                .then()
+                .log()
+                .all()
+                .statusCode(202);
+    }
+
+    static ArticleDTO saveArticle(AuthInfo user) {
+        return given()
+                .header("Authorization", "Bearer " + user.serverResponse().get("token"))
+                .body(articleForm(ArticleStatus.DRAFT).asJSON())
+                .contentType(ContentType.JSON)
+                .when()
+                .post(articles + "/post")
+                .then()
+                .statusCode(200)
+                .assertThat()
+                .body(notNullValue())
+                .extract()
+                .body().as(ArticleDTO.class);
     }
 
     static ArticleForm articleForm() {
