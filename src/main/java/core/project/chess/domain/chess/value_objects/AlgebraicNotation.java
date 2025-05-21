@@ -570,8 +570,8 @@ public class AlgebraicNotation {
         final boolean shortCastling = castle == Castle.SHORT_CASTLING;
 
         if (shortCastling) {
-            if (color == Color.WHITE) return Pair.of(Coordinate.e1, Coordinate.h1);
-            else return Pair.of(Coordinate.e8, Coordinate.h8);
+            if (color == Color.WHITE) return Pair.of(Coordinate.e1, Coordinate.g1);
+            else return Pair.of(Coordinate.e8, Coordinate.g8);
         }
 
         if (color == Color.WHITE) return Pair.of(Coordinate.e1, Coordinate.a1);
