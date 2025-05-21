@@ -14,9 +14,6 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 @ApplicationScoped
 public class PuzzlerClient {
 
