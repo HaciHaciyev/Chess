@@ -612,15 +612,11 @@ public class ChessGameService {
                             .build());
 
                 sessionStorage.removeGame(game.chessGameID());
-
-                CompletableFuture.supplyAsync(() -> {
-                    gameFunctionalityService.executeGameOverOperations(game);
-                    return puzzlerClient.sendPGN(game.pgn());
-                }).thenAccept(puzzle -> {
-                    if (Objects.nonNull(puzzle))
-                        puzzleService.save(puzzle.moves(), puzzle.startPositionOfPuzzle());
-                }).whenComplete((result, throwable) -> {
-                    if (throwable != null) Log.error("Error during puzzle receive or save.", throwable);
+                gameFunctionalityService.executeGameOverOperations(game);
+                puzzlerClient.sendPGN(game.pgn(), res -> {
+                    var puzzle = res.body();
+                    Log.info("Got puzzle: " + puzzle);
+                    puzzleService.save(puzzle.moves(), puzzle.startPositionOfPuzzle());
                 });
 
                 isRunning.set(false);
