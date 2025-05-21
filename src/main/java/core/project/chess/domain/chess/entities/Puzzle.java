@@ -52,7 +52,7 @@ public class Puzzle {
         ChessBoard chessBoard = ChessBoard.fromPGN(pgn);
         AlgebraicNotation[] algebraicNotations = chessBoard.arrayOfAlgebraicNotations();
 
-        if ((algebraicNotations.length - 1) >= startPositionOfPuzzle)
+        if (chessBoard.countOfHalfMoves() >= startPositionOfPuzzle)
             throw new IllegalArgumentException("Start position of puzzle can`t be greater or equal than the size of halfmoves.");
 
         return new Puzzle(UUID.randomUUID(), Rating.defaultRating(), chessBoard, algebraicNotations, null, startPositionOfPuzzle);
