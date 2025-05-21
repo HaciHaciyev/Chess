@@ -20,10 +20,10 @@ public record ToStringUtils(ChessBoard board) {
         String blackKingStatus = "NOT           ";
 
         String latestMovement;
-        boolean movesMadePreviously = board.latestMovement().isPresent();
+        boolean movesMadePreviously = board.lastAlgebraicNotation().isPresent();
 
         if (movesMadePreviously) {
-            latestMovement = board.latestMovement().map(pair -> pair.getFirst().name() + " -> " + pair.getSecond().name()).orElseThrow();
+            latestMovement = board.lastAlgebraicNotation().orElseThrow().algebraicNotation();
         } else {
             latestMovement = "...     ";
         }

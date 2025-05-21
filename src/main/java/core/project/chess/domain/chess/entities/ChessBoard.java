@@ -603,25 +603,6 @@ public class ChessBoard {
     }
 
     /**
-     * Retrieves the latest movement on the chess board, represented as a pair of coordinates.
-     * <p>
-     * If the latest movement was a castling move, the method will return the coordinates of the King's position before and after the castling move.
-     *
-     * @return An Optional containing the pair of coordinates representing the latest movement, or an empty Optional if no movement has been made.
-     */
-    public Optional<Pair<Coordinate, Coordinate>> latestMovement() {
-        if (algebraicNotations.isEmpty()) {
-            return Optional.empty();
-        }
-
-        AlgebraicNotation algebraicNotation = algebraicNotations.peekLast();
-
-        AlgebraicNotation.Castle castle = AlgebraicNotation.isCastling(algebraicNotation);
-        if (castle != null) return Optional.of(algebraicNotation.castlingCoordinates(castle, figuresTurn));
-        return Optional.of(algebraicNotation.coordinates());
-    }
-
-    /**
      * Checks if the move from the specified 'from' coordinate to the 'to' coordinate is safe for the king.
      *
      * @param from  The coordinate the piece is moving from.
