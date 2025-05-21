@@ -12,7 +12,6 @@ import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +23,6 @@ import java.util.UUID;
 import static com.hadzhy.jetquerious.sql.QueryForge.select;
 import static com.hadzhy.jetquerious.sql.QueryForge.withAndSelect;
 
-@Transactional
 @ApplicationScoped
 public class JdbcOutboundChessRepository implements OutboundChessRepository {
 

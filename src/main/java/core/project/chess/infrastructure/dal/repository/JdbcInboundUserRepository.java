@@ -7,12 +7,9 @@ import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.value_objects.Rating;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
-
 
 import static com.hadzhy.jetquerious.sql.QueryForge.*;
 
-@Transactional
 @ApplicationScoped
 public class JdbcInboundUserRepository implements InboundUserRepository {
 

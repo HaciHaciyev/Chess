@@ -4,14 +4,12 @@ import com.hadzhy.jetquerious.jdbc.JetQuerious;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
-import io.quarkus.logging.Log;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
 
 import static com.hadzhy.jetquerious.sql.QueryForge.*;
 
-@Transactional
 @ApplicationScoped
 public class JdbcInboundChessRepository implements InboundChessRepository {
 

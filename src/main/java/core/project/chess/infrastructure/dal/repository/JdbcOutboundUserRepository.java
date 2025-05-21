@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,7 +21,6 @@ import java.util.UUID;
 
 import static com.hadzhy.jetquerious.sql.QueryForge.select;
 
-@Transactional
 @ApplicationScoped
 public class JdbcOutboundUserRepository implements OutboundUserRepository {
 
