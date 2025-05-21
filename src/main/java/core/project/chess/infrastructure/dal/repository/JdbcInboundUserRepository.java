@@ -5,13 +5,10 @@ import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.value_objects.Rating;
-import core.project.chess.infrastructure.telemetry.TelemetryService;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
-import java.util.Map;
 
 import static com.hadzhy.jetquerious.sql.QueryForge.*;
 
@@ -20,10 +17,6 @@ import static com.hadzhy.jetquerious.sql.QueryForge.*;
 public class JdbcInboundUserRepository implements InboundUserRepository {
 
     private final JetQuerious jet;
-
-    private final TelemetryService telemetry;
-
-    private static final AttributeKey<String> USERNAME = AttributeKey.stringKey("chessland.jdbc.inbound.username");
 
     static final String INSERT_USER_ACCOUNT = insert()
             .into("UserAccount")
@@ -150,16 +143,14 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .build()
             .sql();
 
-    JdbcInboundUserRepository(TelemetryService telemetry) {
-        this.telemetry = telemetry;
+    JdbcInboundUserRepository() {
         this.jet = JetQuerious.instance();
     }
 
     @Override
     @WithSpan("Save user")
     public void save(final User user) {
-        // telemetry.startWithChildSpan("SAVE USER JDBC", Map.of(USERNAME.getKey(), user.username()), () ->
-                jdbc.write(INSERT_USER_ACCOUNT,
+                jet.write(INSERT_USER_ACCOUNT,
                         user.id().toString(),
                         user.firstname(),
                         user.surname(),
@@ -185,7 +176,6 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
                         user.accountEvents().creationDate(),
                         user.accountEvents().lastUpdateDate())
                         .ifFailure(Throwable::printStackTrace);
-        // );
     }
 
     @Override
