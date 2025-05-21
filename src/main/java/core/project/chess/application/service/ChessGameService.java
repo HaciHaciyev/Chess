@@ -2,7 +2,6 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
-import core.project.chess.application.dto.chess.PuzzleInbound;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
@@ -25,7 +24,6 @@ import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,7 +31,6 @@ import jakarta.websocket.Session;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static core.project.chess.application.util.WSUtilities.closeSession;
@@ -73,7 +70,7 @@ public class ChessGameService {
     }
 
     @WithSpan("Chess Open | SERVICE")
-    public void onOpen(@SpanAttribute Session session, @SpanAttribute Username username) {
+    public void onOpen(Session session, Username username) {
         Result<User, Throwable> result = outboundUserRepository.findByUsername(username);
         if (!result.success()) {
             String errMsg = "Account is not found";
