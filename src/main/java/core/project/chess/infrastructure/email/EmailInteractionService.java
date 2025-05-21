@@ -1,4 +1,4 @@
-package core.project.chess.application.service;
+package core.project.chess.infrastructure.email;
 
 import core.project.chess.infrastructure.telemetry.TelemetryService;
 import io.opentelemetry.instrumentation.annotations.WithSpan;

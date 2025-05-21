@@ -7,6 +7,7 @@ import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
+import core.project.chess.infrastructure.email.EmailInteractionService;
 import core.project.chess.infrastructure.security.JWTUtility;
 import core.project.chess.infrastructure.security.PasswordEncoder;
 import core.project.chess.infrastructure.telemetry.TelemetryService;
