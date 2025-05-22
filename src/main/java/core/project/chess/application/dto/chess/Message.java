@@ -6,6 +6,7 @@ import core.project.chess.domain.chess.entities.ChessGame.Time;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.value_objects.GameParameters;
+import core.project.chess.domain.chess.value_objects.GameStateUpdate;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.value_objects.Username;
 import io.quarkus.logging.Log;
@@ -142,6 +143,16 @@ public record Message(MessageType type,
                 .gameID(gameID)
                 .FEN(FEN)
                 .PGN(PGN)
+                .build();
+    }
+
+    public static Message gameStateUpdate(GameStateUpdate gameStateUpdate) {
+        return builder(MessageType.FEN_PGN)
+                .gameID(gameStateUpdate.gameID().toString())
+                .FEN(gameStateUpdate.fen())
+                .PGN(gameStateUpdate.pgn())
+                .timeLeft(gameStateUpdate.remainingTime())
+                .isThreeFoldActive(gameStateUpdate.threeFoldActive())
                 .build();
     }
 

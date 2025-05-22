@@ -24,6 +24,10 @@ public record Result<V, E extends Throwable>(V value,
         return new Result<>(value, null, true);
     }
 
+    public boolean failure() {
+        return !success;
+    }
+
     /**
      * @return returns new Result encapsulating Exception that is thrown by an status
      */

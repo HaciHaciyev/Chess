@@ -5,14 +5,17 @@ import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.application.requests.GameRequest;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
+import core.project.chess.domain.chess.enumerations.AgreementResult;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.GameResult;
-import core.project.chess.domain.chess.enumerations.MessageAddressee;
+import core.project.chess.domain.chess.enumerations.UndoMoveResult;
 import core.project.chess.domain.chess.factories.ChessGameFactory;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import core.project.chess.domain.chess.services.GameFunctionalityService;
 import core.project.chess.domain.chess.services.PuzzleService;
+import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.chess.value_objects.GameParameters;
+import core.project.chess.domain.chess.value_objects.GameStateUpdate;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
@@ -88,6 +91,7 @@ public class ChessGameService {
         }
 
         Span.current().addEvent("adding session to session storage");
+        session.getUserProperties().put("username", username);
         sessionStorage.addSession(session, result.value());
         
         sendMessage(session, Message.info("Successful connection to chessland"));
@@ -157,25 +161,158 @@ public class ChessGameService {
     }
 
     private void handleMessage(final Session session, final String username, final Message message, final ChessGame chessGame) {
-        final Pair<MessageAddressee, Message> result = switch (message.type()) {
-            case MOVE -> gameFunctionalityService.move(message, Pair.of(username, session), chessGame);
-            case MESSAGE -> gameFunctionalityService.chat(message, Pair.of(username, session), chessGame);
-            case RETURN_MOVE -> gameFunctionalityService.returnOfMovement(Pair.of(username, session), chessGame);
-            case RESIGNATION -> gameFunctionalityService.resignation(Pair.of(username, session), chessGame);
-            case TREE_FOLD -> gameFunctionalityService.threeFold(Pair.of(username, session), chessGame);
-            case AGREEMENT -> gameFunctionalityService.agreement(Pair.of(username, session), chessGame);
-            default -> Pair.of(MessageAddressee.ONLY_ADDRESSER, Message.error("Invalid message type."));
-        };
+        switch (message.type()) {
+            case MOVE -> handleMove(session, username, message, chessGame);
+            case MESSAGE -> handleChat(session, username, message, chessGame);
+            case RETURN_MOVE -> {
+                UndoMoveResult result = gameFunctionalityService.returnOfMovement(username, chessGame);
+                sendUndoMoveResultMessage(session, username, chessGame, result);
+            }
+            case RESIGNATION -> handleResignation(session, username, chessGame);
+            case TREE_FOLD -> handleThreeFold(session, username, chessGame);
+            case AGREEMENT -> {
+                AgreementResult result = gameFunctionalityService.agreement(username, chessGame);
+                sendAgreementResultMessage(session, username, chessGame, result);
+            }
+            default -> sendMessage(session, Message.error("Invalid message type."));
+        }
+    }
 
-        final MessageAddressee messageAddressee = result.getFirst();
-        final Message resultMessage = result.getSecond();
-        if (messageAddressee.equals(MessageAddressee.ONLY_ADDRESSER)) {
-            sendMessage(session, resultMessage);
+    private void handleMove(Session session, String username, Message message, ChessGame chessGame) {
+        Result<GameStateUpdate, Throwable> result = gameFunctionalityService.move(message, username, chessGame);
+
+        if (result.failure()) {
+            sendMessage(session, Message.builder(MessageType.ERROR)
+                    .message("Invalid chess movement: %s.".formatted(result.throwable().getMessage()))
+                    .gameID(chessGame.chessGameID().toString())
+                    .build());
             return;
         }
 
+        GameStateUpdate update = result.value();
+        sessionStorage.getGameSessions(chessGame.chessGameID())
+                .forEach(gameSession -> sendMessage(gameSession, Message.gameStateUpdate(update)));
+    }
+
+    private void handleChat(Session session, String username, Message message, ChessGame chessGame) {
+        Result<ChatMessage, Throwable> result = gameFunctionalityService.chat(message, username, chessGame);
+
+        if (result.failure()) {
+            sendMessage(session, Message.builder(MessageType.ERROR)
+                    .message("Invalid message.")
+                    .gameID(chessGame.chessGameID().toString())
+                    .build());
+            return;
+        }
+
+        ChatMessage chatMessage = result.value();
+        Message resultMessage = Message.builder(MessageType.MESSAGE)
+                .gameID(chessGame.chessGameID().toString())
+                .message(chatMessage.message())
+                .build();
+
+        sessionStorage.getGameSessions(chessGame.chessGameID()).stream()
+                .filter(gameSession -> chessGame.isPlayer((Username) gameSession.getUserProperties().get("username")))
+                .forEach(gameSession -> sendMessage(gameSession, resultMessage));
+    }
+
+    private void handleResignation(Session session, String username, ChessGame chessGame) {
+        Result<GameResult, Throwable> result = gameFunctionalityService.resignation(username, chessGame);
+
+        if (result.failure()) {
+            sendMessage(session, Message.builder(MessageType.ERROR)
+                    .message("Not a player.")
+                    .gameID(chessGame.chessGameID().toString())
+                    .build());
+            return;
+        }
+
+        Message resultMessage = Message.builder(MessageType.GAME_ENDED)
+                .gameID(chessGame.chessGameID().toString())
+                .message("Game is ended by result {%s}.".formatted(chessGame.gameResult().toString()))
+                .build();
+
         sessionStorage.getGameSessions(chessGame.chessGameID())
                 .forEach(gameSession -> sendMessage(gameSession, resultMessage));
+    }
+
+    private void handleThreeFold(Session session, String username, ChessGame chessGame) {
+        boolean gameEnded = gameFunctionalityService.threeFold(username, chessGame);
+
+        if (!gameEnded) {
+            sendMessage(session, Message.builder(MessageType.ERROR)
+                    .message("Can`t end game by ThreeFold.")
+                    .gameID(chessGame.chessGameID().toString())
+                    .build());
+            return;
+        }
+
+        Message resultMessage = Message.builder(MessageType.GAME_ENDED)
+                .gameID(chessGame.chessGameID().toString())
+                .message("Game is ended by ThreeFold rule, game result is: {%s}".formatted(chessGame.gameResult().toString()))
+                .build();
+
+        sessionStorage.getGameSessions(chessGame.chessGameID())
+                .forEach(gameSession -> sendMessage(gameSession, resultMessage));
+    }
+
+    private void sendUndoMoveResultMessage(Session session, String username,
+                                           ChessGame chessGame, UndoMoveResult result) {
+        switch (result) {
+            case SUCCESSFUL_UNDO -> {
+                Message message = Message.builder(MessageType.FEN_PGN)
+                        .gameID(chessGame.chessGameID().toString())
+                        .FEN(chessGame.fen())
+                        .PGN(chessGame.pgn())
+                        .timeLeft(gameFunctionalityService.remainingTimeAsString(chessGame))
+                        .isThreeFoldActive(chessGame.isThreeFoldActive())
+                        .build();
+
+                sessionStorage.getGameSessions(chessGame.chessGameID())
+                        .forEach(gameSession -> sendMessage(gameSession, message));
+            }
+            case UNDO_REQUESTED -> {
+                Message message = Message.builder(MessageType.RETURN_MOVE)
+                        .message("Player {%s} requested for move returning.".formatted(username))
+                        .gameID(chessGame.chessGameID().toString())
+                        .build();
+
+                sessionStorage.getGameSessions(chessGame.chessGameID())
+                        .forEach(gameSession -> sendMessage(gameSession, message));
+            }
+            case FAILED_UNDO -> sendMessage(session, Message.builder(MessageType.ERROR)
+                    .message("Can`t return a move.")
+                    .gameID(chessGame.chessGameID().toString())
+                    .build());
+        }
+    }
+
+    private void sendAgreementResultMessage(Session session, String username,
+                                            ChessGame chessGame, AgreementResult result) {
+        switch (result) {
+            case AGREED -> {
+                Message message = Message.builder(MessageType.GAME_ENDED)
+                        .gameID(chessGame.chessGameID().toString())
+                        .message("Game is ended by agreement, game result is {%s}".formatted(chessGame.gameResult().name()))
+                        .build();
+
+                sessionStorage.getGameSessions(chessGame.chessGameID())
+                        .forEach(gameSession -> sendMessage(gameSession, message));
+            }
+            case REQUESTED -> {
+                Message message = Message.builder(MessageType.AGREEMENT)
+                        .gameID(chessGame.chessGameID().toString())
+                        .message("Player {%s} requested for agreement.".formatted(username))
+                        .build();
+
+                sessionStorage.getGameSessions(chessGame.chessGameID())
+                        .forEach(gameSession -> sendMessage(gameSession, message));
+            }
+            case FAILED -> sendMessage(session, Message.builder(MessageType.ERROR)
+                    .message("Not a player. Illegal access.")
+                    .gameID(chessGame.chessGameID().toString())
+                    .build());
+        }
     }
 
     private void handlePuzzleAction(Session session, Username username, Message message) {

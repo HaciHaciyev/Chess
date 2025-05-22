@@ -309,7 +309,8 @@ public class ChessGame {
     }
 
     public boolean isAgreementAvailable() {
-        return agreementPair.whitePlayerUsername != null && agreementPair.blackPlayerUsername != null;
+        if (isGameOver()) return false;
+        return agreementPair.whitePlayerUsername != null || agreementPair.blackPlayerUsername != null;
     }
 
     public boolean isPlayer(Username username) {
