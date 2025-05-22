@@ -5,8 +5,6 @@ import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
-import core.project.chess.domain.user.events.AccountEvents;
-import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.*;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
@@ -223,7 +221,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     private EmailConfirmationToken userTokenMapper(final ResultSet rs) throws SQLException {
-        var tokenEvents = new TokenEvents(rs.getObject("token_creation_date", Timestamp.class).toLocalDateTime());
+        var tokenEvents = new TokenDates(rs.getObject("token_creation_date", Timestamp.class).toLocalDateTime());
 
         return EmailConfirmationToken.fromRepository(
                 UUID.fromString(rs.getString("token_id")),
@@ -235,7 +233,7 @@ public class JdbcOutboundUserRepository implements OutboundUserRepository {
     }
 
     private User userAccountMapper(final ResultSet rs) throws SQLException {
-        var events = new AccountEvents(
+        var events = new AccountDates(
                 rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("last_updated_date", Timestamp.class).toLocalDateTime()
         );

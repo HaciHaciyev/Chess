@@ -2,12 +2,12 @@ package core.project.chess.domain.chess.entities;
 
 import core.project.chess.domain.chess.entities.ChessBoard.Operations;
 import core.project.chess.domain.chess.enumerations.*;
-import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.util.ChessCountdownTimer;
 import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
+import core.project.chess.domain.chess.value_objects.GameDates;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
@@ -29,7 +29,7 @@ public class ChessGame {
     private final User blackPlayer;
     private final Rating whiteRating;
     private final Rating blackRating;
-    private final SessionEvents sessionEvents;
+    private final GameDates gameDates;
     private final Time time;
     private final List<ChatMessage> chatMessages;
     private final boolean isCasualGame;
@@ -51,7 +51,7 @@ public class ChessGame {
                       User blackPlayer,
                       Rating whiteRating,
                       Rating blackRating,
-                      SessionEvents sessionEvents,
+                      GameDates gameDates,
                       Time time,
                       GameResult gameResult,
                       boolean isCasualGame) {
@@ -62,7 +62,7 @@ public class ChessGame {
         Objects.requireNonNull(blackPlayer);
         Objects.requireNonNull(whiteRating);
         Objects.requireNonNull(blackRating);
-        Objects.requireNonNull(sessionEvents);
+        Objects.requireNonNull(gameDates);
         Objects.requireNonNull(time);
         Objects.requireNonNull(gameResult);
 
@@ -79,7 +79,7 @@ public class ChessGame {
         this.blackPlayer = blackPlayer;
         this.whiteRating = whiteRating;
         this.blackRating = blackRating;
-        this.sessionEvents = sessionEvents;
+        this.gameDates = gameDates;
         this.time = time;
         this.isGameOver = gameResult;
         this.chatMessages = new ArrayList<>();
@@ -103,7 +103,7 @@ public class ChessGame {
             UUID chessGameId,
             User whitePlayer,
             User blackPlayer,
-            SessionEvents sessionEvents,
+            GameDates gameDates,
             Time time,
             boolean isCasualGame
     ) {
@@ -111,7 +111,7 @@ public class ChessGame {
         Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.starndardChessBoard(), whitePlayer, blackPlayer,
-                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+                whiteRating, blackRating, gameDates, time, isCasualGame);
     }
 
     public static ChessGame byPGN(
@@ -119,7 +119,7 @@ public class ChessGame {
             String pgn,
             User whitePlayer,
             User blackPlayer,
-            SessionEvents sessionEvents,
+            GameDates gameDates,
             Time time,
             Boolean isCasualGame) {
 
@@ -127,7 +127,7 @@ public class ChessGame {
         Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.fromPGN(pgn), whitePlayer, blackPlayer,
-                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+                whiteRating, blackRating, gameDates, time, isCasualGame);
     }
 
     public static ChessGame byFEN(
@@ -135,7 +135,7 @@ public class ChessGame {
             String fen,
             User whitePlayer,
             User blackPlayer,
-            SessionEvents sessionEvents,
+            GameDates gameDates,
             Time time,
             Boolean isCasualGame) {
 
@@ -143,14 +143,14 @@ public class ChessGame {
         Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.fromPosition(fen), whitePlayer, blackPlayer,
-                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+                whiteRating, blackRating, gameDates, time, isCasualGame);
     }
 
     public static ChessGame pureChess(
             UUID chessGameId,
             User whitePlayer,
             User blackPlayer,
-            SessionEvents sessionEvents,
+            GameDates gameDates,
             Time time,
             boolean isCasualGame) {
 
@@ -158,7 +158,7 @@ public class ChessGame {
         Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.pureChess(), whitePlayer, blackPlayer,
-                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+                whiteRating, blackRating, gameDates, time, isCasualGame);
     }
 
     public static ChessGame pureChessByFEN(
@@ -166,7 +166,7 @@ public class ChessGame {
             String fen,
             User whitePlayer,
             User blackPlayer,
-            SessionEvents sessionEvents,
+            GameDates gameDates,
             Time time,
             boolean isCasualGame) {
 
@@ -174,7 +174,7 @@ public class ChessGame {
         Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.pureChessFromPosition(fen), whitePlayer, blackPlayer,
-                whiteRating, blackRating, sessionEvents, time, isCasualGame);
+                whiteRating, blackRating, gameDates, time, isCasualGame);
     }
 
     private static ChessGame chessGameInit(
@@ -184,7 +184,7 @@ public class ChessGame {
             User blackPlayer,
             Rating whiteRating,
             Rating blackRating,
-            SessionEvents sessionEvents,
+            GameDates gameDates,
             Time time,
             boolean isCasualGame) {
 
@@ -195,7 +195,7 @@ public class ChessGame {
                 blackPlayer,
                 whiteRating,
                 blackRating,
-                sessionEvents,
+                gameDates,
                 time,
                 GameResult.NONE,
                 isCasualGame
@@ -259,8 +259,8 @@ public class ChessGame {
         return blackRating;
     }
 
-    public SessionEvents sessionEvents() {
-        return sessionEvents;
+    public GameDates sessionEvents() {
+        return gameDates;
     }
 
     public Time time() {
@@ -544,7 +544,7 @@ public class ChessGame {
                 Objects.equals(blackPlayer, chessGame.blackPlayer) &&
                 Objects.equals(whiteRating, chessGame.whiteRating) &&
                 Objects.equals(blackRating, chessGame.blackRating) &&
-                Objects.equals(sessionEvents, chessGame.sessionEvents) &&
+                Objects.equals(gameDates, chessGame.gameDates) &&
                 time == chessGame.time &&
                 Objects.equals(isGameOver, chessGame.isGameOver);
     }
@@ -556,7 +556,7 @@ public class ChessGame {
         result = 31 * result + Objects.hashCode(blackPlayer);
         result = 31 * result + Objects.hashCode(whiteRating);
         result = 31 * result + Objects.hashCode(blackRating);
-        result = 31 * result + Objects.hashCode(sessionEvents);
+        result = 31 * result + Objects.hashCode(gameDates);
         result = 31 * result + Objects.hashCode(time);
         result = 31 * result + Objects.hashCode(isGameOver);
         return result;
@@ -581,7 +581,7 @@ public class ChessGame {
                 """,
                 this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer.username(),
                 this.blackPlayer.username(), this.whiteRating.rating(), this.blackRating.rating(),
-                this.sessionEvents.creationDate().toString(), this.sessionEvents.lastUpdateDate().toString(),
+                this.gameDates.creationDate().toString(), this.gameDates.lastUpdateDate().toString(),
                 this.time.toString(), this.isCasualGame, isGameOver != GameResult.NONE, isGameOver
         );
     }

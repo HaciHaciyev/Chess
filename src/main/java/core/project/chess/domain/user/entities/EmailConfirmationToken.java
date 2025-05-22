@@ -1,7 +1,7 @@
 package core.project.chess.domain.user.entities;
 
-import core.project.chess.domain.user.events.TokenEvents;
 import core.project.chess.domain.user.value_objects.Token;
+import core.project.chess.domain.user.value_objects.TokenDates;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -10,39 +10,39 @@ import java.util.UUID;
 public class EmailConfirmationToken {
     private final UUID tokenId;
     private final Token token;
-    private final TokenEvents tokenEvents;
+    private final TokenDates tokenDates;
     private boolean isConfirmed;
     private final User user;
 
     private EmailConfirmationToken(
             UUID tokenId,
             Token token,
-            TokenEvents tokenEvents,
+            TokenDates tokenDates,
             boolean isConfirmed,
             User user) {
 
         Objects.requireNonNull(tokenId);
         Objects.requireNonNull(token);
-        Objects.requireNonNull(tokenEvents);
+        Objects.requireNonNull(tokenDates);
         Objects.requireNonNull(user);
 
         this.tokenId = tokenId;
         this.token = token;
-        this.tokenEvents = tokenEvents;
+        this.tokenDates = tokenDates;
         this.isConfirmed = isConfirmed;
         this.user = user;
     }
 
     public static EmailConfirmationToken createToken(final User user) {
         return new EmailConfirmationToken(
-                UUID.randomUUID(), Token.createToken(), new TokenEvents(LocalDateTime.now()), false, user
+                UUID.randomUUID(), Token.createToken(), new TokenDates(LocalDateTime.now()), false, user
         );
     }
 
     public static EmailConfirmationToken fromRepository(
-            UUID tokenId, Token token, TokenEvents tokenEvents, Boolean isConfirmed, User user
+            UUID tokenId, Token token, TokenDates tokenDates, Boolean isConfirmed, User user
     ) {
-        return new EmailConfirmationToken(tokenId, token, tokenEvents, isConfirmed, user);
+        return new EmailConfirmationToken(tokenId, token, tokenDates, isConfirmed, user);
     }
 
     public UUID tokenID() {
@@ -53,8 +53,8 @@ public class EmailConfirmationToken {
         return token;
     }
 
-    public TokenEvents tokenEvents() {
-        return tokenEvents;
+    public TokenDates tokenEvents() {
+        return tokenDates;
     }
 
     public boolean isConfirmed() {
@@ -66,7 +66,7 @@ public class EmailConfirmationToken {
     }
 
     public boolean isExpired() {
-        return tokenEvents.isExpired();
+        return tokenDates.isExpired();
     }
 
     public void confirm() {

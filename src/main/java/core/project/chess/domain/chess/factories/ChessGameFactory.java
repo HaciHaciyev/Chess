@@ -2,7 +2,7 @@ package core.project.chess.domain.chess.factories;
 
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
-import core.project.chess.domain.chess.events.SessionEvents;
+import core.project.chess.domain.chess.value_objects.GameDates;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
@@ -64,7 +64,7 @@ public class ChessGameFactory {
                     UUID.randomUUID(),
                     firstPlayer,
                     secondPlayer,
-                    SessionEvents.defaultEvents(),
+                    GameDates.defaultEvents(),
                     time,
                     isCasualGame
             );
@@ -73,7 +73,7 @@ public class ChessGameFactory {
                 UUID.randomUUID(),
                 secondPlayer,
                 firstPlayer,
-                SessionEvents.defaultEvents(),
+                GameDates.defaultEvents(),
                 time,
                 isCasualGame
         );
@@ -94,7 +94,7 @@ public class ChessGameFactory {
                     PGN,
                     firstPlayer,
                     secondPlayer,
-                    SessionEvents.defaultEvents(),
+                    GameDates.defaultEvents(),
                     time,
                     isCasualGame
             );
@@ -104,7 +104,7 @@ public class ChessGameFactory {
                 PGN,
                 secondPlayer,
                 firstPlayer,
-                SessionEvents.defaultEvents(),
+                GameDates.defaultEvents(),
                 time,
                 isCasualGame
         );
@@ -125,7 +125,7 @@ public class ChessGameFactory {
                     FEN,
                     firstPlayer,
                     secondPlayer,
-                    SessionEvents.defaultEvents(),
+                    GameDates.defaultEvents(),
                     time,
                     isCasualGame
             );
@@ -135,7 +135,7 @@ public class ChessGameFactory {
                 FEN,
                 secondPlayer,
                 firstPlayer,
-                SessionEvents.defaultEvents(),
+                GameDates.defaultEvents(),
                 time,
                 isCasualGame
         );

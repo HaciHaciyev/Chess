@@ -1,8 +1,8 @@
-package core.project.chess.domain.user.events;
+package core.project.chess.domain.user.value_objects;
 
 import java.time.LocalDateTime;
 
-public final class TokenEvents {
+public final class TokenDates {
 
     private final LocalDateTime creationDate;
 
@@ -10,7 +10,7 @@ public final class TokenEvents {
 
     public static final int EXPIRATION_TIME = 6;
 
-    public TokenEvents(LocalDateTime creationDate) {
+    public TokenDates(LocalDateTime creationDate) {
         this.creationDate = creationDate;
         this.expirationDate = creationDate.plusMinutes(EXPIRATION_TIME);
     }

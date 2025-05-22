@@ -4,12 +4,8 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.GameResult;
-import core.project.chess.domain.user.events.AccountEvents;
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
-import core.project.chess.domain.user.value_objects.PersonalData;
-import core.project.chess.domain.user.value_objects.ProfilePicture;
-import core.project.chess.domain.user.value_objects.Rating;
-import core.project.chess.domain.user.value_objects.Ratings;
+import core.project.chess.domain.user.value_objects.*;
 import jakarta.annotation.Nullable;
 
 import java.util.*;
@@ -23,7 +19,7 @@ public class User {
     private final PersonalData personalData;
     private boolean isEnable;
     private Ratings ratings;
-    private final AccountEvents accountEvents;
+    private final AccountDates accountDates;
     private final Set<User> partners;
     private final Set<ChessGame> games;
     private final Set<Puzzle> puzzles;
@@ -33,7 +29,7 @@ public class User {
                  PersonalData personalData,
                  boolean isEnable,
                  Ratings ratings,
-                 AccountEvents accountEvents,
+                 AccountDates accountDates,
                  @Nullable Set<User> partners,
                  @Nullable Set<ChessGame> games,
                  @Nullable Set<Puzzle> puzzles,
@@ -42,7 +38,7 @@ public class User {
         this.personalData = personalData;
         this.isEnable = isEnable;
         this.ratings = ratings;
-        this.accountEvents = accountEvents;
+        this.accountDates = accountDates;
         this.partners = partners;
         this.games = games;
         this.puzzles = puzzles;
@@ -56,7 +52,7 @@ public class User {
                 personalData,
                 false,
                 Ratings.defaultRatings(),
-                AccountEvents.defaultEvents(),
+                AccountDates.defaultEvents(),
                 new HashSet<>(),
                 new HashSet<>(),
                 new HashSet<>(),
@@ -72,7 +68,7 @@ public class User {
             PersonalData personalData,
             boolean isEnabled,
             Ratings ratings,
-            AccountEvents events) {
+            AccountDates events) {
         if (id == null || personalData == null || ratings == null || events == null)
             throw new IllegalArgumentException("Values cannot be null");
         return new User(
@@ -112,8 +108,8 @@ public class User {
         return personalData.password();
     }
 
-    public AccountEvents accountEvents() {
-        return accountEvents;
+    public AccountDates accountEvents() {
+        return accountDates;
     }
 
     @Nullable
@@ -258,12 +254,12 @@ public class User {
                 Objects.equals(id, that.id) &&
                 Objects.equals(personalData, that.personalData) &&
                 Objects.equals(ratings, that.ratings) &&
-                Objects.equals(accountEvents, that.accountEvents);
+                Objects.equals(accountDates, that.accountDates);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, personalData, isEnable, ratings, accountEvents);
+        return Objects.hash(id, personalData, isEnable, ratings, accountDates);
     }
 
     @Override
@@ -302,8 +298,8 @@ public class User {
                 ratings.blitzRating().rating(),
                 ratings.rapidRating().rating(),
                 ratings.puzzlesRating().rating(),
-                accountEvents.creationDate().toString(),
-                accountEvents.lastUpdateDate().toString()
+                accountDates.creationDate().toString(),
+                accountDates.lastUpdateDate().toString()
         );
     }
 }

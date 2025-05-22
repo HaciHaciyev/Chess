@@ -3,9 +3,9 @@ package core.project.chess.domain.entities;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.GameResult;
-import core.project.chess.domain.chess.events.SessionEvents;
 import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.ChessMove;
+import core.project.chess.domain.chess.value_objects.GameDates;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.PersonalData;
 import io.quarkus.logging.Log;
@@ -413,7 +413,7 @@ public class ChessGameTest {
                 UUID.randomUUID(),
                 userAccountSupplier("firstPlayer").get(),
                 userAccountSupplier("secondPlayer").get(),
-                SessionEvents.defaultEvents(),
+                GameDates.defaultEvents(),
                 ChessGame.Time.DEFAULT, false);
     }
 
@@ -423,7 +423,7 @@ public class ChessGameTest {
                 FEN,
                 userAccountSupplier("firstPlayer").get(),
                 userAccountSupplier("secondPlayer").get(),
-                SessionEvents.defaultEvents(),
+                GameDates.defaultEvents(),
                 ChessGame.Time.DEFAULT, false);
     }
 
