@@ -2,6 +2,7 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
+import core.project.chess.application.requests.GameRequest;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
@@ -15,7 +16,6 @@ import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.commons.value_objects.GameRequest;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.Username;

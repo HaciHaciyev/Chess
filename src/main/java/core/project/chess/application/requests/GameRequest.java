@@ -1,4 +1,4 @@
-package core.project.chess.domain.commons.value_objects;
+package core.project.chess.application.requests;
 
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.user.entities.User;

@@ -1,9 +1,9 @@
 package core.project.chess.infrastructure.dal.cache;
 
+import core.project.chess.application.requests.GameRequest;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.commons.value_objects.GameRequest;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.value_objects.Username;
 import jakarta.enterprise.context.ApplicationScoped;
