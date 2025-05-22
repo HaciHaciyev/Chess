@@ -116,12 +116,12 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
     @WithSpan("Save puzzle | JDBC")
     public void savePuzzle(Puzzle puzzle) {
         jet.asynchWrite(SAVE_PUZZLE,
-                        puzzle.ID().toString(),
+                        puzzle.id().toString(),
                         puzzle.rating().rating(),
                         puzzle.rating().ratingDeviation(),
                         puzzle.rating().volatility(),
                         puzzle.startPositionFEN(),
-                        puzzle.PGN(),
+                        puzzle.pgn(),
                         puzzle.startPositionIndex())
                 .exceptionally(throwable -> {
                     Log.error("Error saving puzzle.", throwable);
@@ -137,7 +137,7 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                         puzzle.rating().rating(),
                         puzzle.rating().ratingDeviation(),
                         puzzle.rating().volatility(),
-                        puzzle.ID().toString(),
+                        puzzle.id().toString(),
                         puzzle.player().id().toString(),
                         puzzle.isSolved())
                 .ifFailure(Throwable::printStackTrace);

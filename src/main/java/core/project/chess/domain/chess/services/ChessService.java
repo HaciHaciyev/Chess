@@ -1,28 +1,27 @@
 package core.project.chess.domain.chess.services;
 
-import core.project.chess.application.dto.chess.Message;
 import core.project.chess.domain.chess.entities.ChessGame;
+import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.AgreementResult;
+import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.enumerations.UndoMoveResult;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
-import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
-import core.project.chess.domain.chess.value_objects.ChatMessage;
-import core.project.chess.domain.chess.value_objects.GameParameters;
-import core.project.chess.domain.chess.value_objects.GameStateUpdate;
+import core.project.chess.domain.chess.value_objects.*;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import io.quarkus.logging.Log;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.Duration;
 import java.util.Objects;
 
 @ApplicationScoped
-public class GameFunctionalityService {
+public class ChessService {
 
     private final InboundUserRepository inboundUserRepository;
 
@@ -30,9 +29,9 @@ public class GameFunctionalityService {
 
     private final OutboundChessRepository outboundChessRepository;
 
-    GameFunctionalityService(InboundUserRepository inboundUserRepository,
-                             InboundChessRepository inboundChessRepository,
-                             OutboundChessRepository outboundChessRepository) {
+    ChessService(InboundUserRepository inboundUserRepository,
+                 InboundChessRepository inboundChessRepository,
+                 OutboundChessRepository outboundChessRepository) {
         this.inboundUserRepository = inboundUserRepository;
         this.inboundChessRepository = inboundChessRepository;
         this.outboundChessRepository = outboundChessRepository;
@@ -65,15 +64,10 @@ public class GameFunctionalityService {
         return !sameColor;
     }
 
-    public Result<GameStateUpdate, Throwable> move(Message move, String username, ChessGame chessGame) {
+    public Result<GameStateUpdate, Throwable> move(String username, ChessGame chessGame,
+                                                   Coordinate from, Coordinate to, @Nullable String promotion) {
         try {
-            chessGame.doMove(
-                    username,
-                    move.from(),
-                    move.to(),
-                    getInCaseOfPromotion(move)
-            );
-
+            chessGame.doMove(username, from, to, getPromotion(promotion));
             return Result.success(new GameStateUpdate(
                     chessGame.chessGameID(),
                     chessGame.fen(),
@@ -84,10 +78,6 @@ public class GameFunctionalityService {
         } catch (IllegalArgumentException | IllegalStateException e) {
             return Result.failure(e);
         }
-    }
-
-    private static Piece getInCaseOfPromotion(Message move) {
-        return Objects.isNull(move.inCaseOfPromotion()) ? null : AlgebraicNotation.fromSymbol(move.inCaseOfPromotion());
     }
 
     public String remainingTimeAsString(ChessGame cg) {
@@ -114,9 +104,9 @@ public class GameFunctionalityService {
         return wTime + " | " + bTime;
     }
 
-    public Result<ChatMessage, Throwable> chat(Message message, String username, ChessGame chessGame) {
+    public Result<ChatMessage, Throwable> chat(String message, String username, ChessGame chessGame) {
         try {
-            ChatMessage chatMessage = new ChatMessage(message.message());
+            ChatMessage chatMessage = new ChatMessage(message);
             chessGame.addChatMessage(username, chatMessage);
             return Result.success(chatMessage);
         } catch (IllegalArgumentException | NullPointerException e) {
@@ -159,6 +149,27 @@ public class GameFunctionalityService {
 
         if (chessGame.isAgreementAvailable()) return AgreementResult.REQUESTED;
         return AgreementResult.AGREED;
+    }
+
+    public Result<PuzzleStateUpdate, Throwable> puzzleMove(Puzzle puzzle, Coordinate from,
+                                                           Coordinate to, @Nullable String promotion) {
+        try {
+            Piece inCaseOfPromotion = getPromotion(promotion);
+            puzzle.makeMovement(from, to, inCaseOfPromotion);
+            return Result.success(new PuzzleStateUpdate(
+                    puzzle.id(),
+                    puzzle.pgn(),
+                    puzzle.fen(),
+                    puzzle.isEnded(),
+                    puzzle.isSolved()
+            ));
+        } catch (IllegalArgumentException e) {
+            return Result.failure(e);
+        }
+    }
+
+    private static Piece getPromotion(String promotion) {
+        return Objects.isNull(promotion) ? null : AlgebraicNotation.fromSymbol(promotion);
     }
 
     public void executeGameOverOperations(final ChessGame chessGame) {

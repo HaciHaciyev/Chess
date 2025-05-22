@@ -2,7 +2,9 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
+import core.project.chess.application.dto.chess.PuzzleInbound;
 import core.project.chess.application.requests.GameRequest;
+import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.AgreementResult;
@@ -10,12 +12,11 @@ import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.enumerations.UndoMoveResult;
 import core.project.chess.domain.chess.factories.ChessGameFactory;
+import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
-import core.project.chess.domain.chess.services.GameFunctionalityService;
-import core.project.chess.domain.chess.services.PuzzleService;
-import core.project.chess.domain.chess.value_objects.ChatMessage;
-import core.project.chess.domain.chess.value_objects.GameParameters;
-import core.project.chess.domain.chess.value_objects.GameStateUpdate;
+import core.project.chess.domain.chess.repositories.OutboundChessRepository;
+import core.project.chess.domain.chess.services.ChessService;
+import core.project.chess.domain.chess.value_objects.*;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
@@ -42,7 +43,7 @@ import static core.project.chess.application.util.WSUtilities.sendMessage;
 @ApplicationScoped
 public class ChessGameService {
 
-    private final PuzzleService puzzleService;
+    private final ChessService chessService;
 
     private final PuzzlerClient puzzlerClient;
 
@@ -54,21 +55,26 @@ public class ChessGameService {
 
     private final OutboundUserRepository outboundUserRepository;
 
-    private final GameFunctionalityService gameFunctionalityService;
+    private final OutboundChessRepository outboundChessRepository;
 
     private final GameInvitationsRepository partnershipGameCacheService;
 
-    ChessGameService(PuzzleService puzzleService, PuzzlerClient puzzlerClient, SessionStorage sessionStorage,
-                     ChessGameFactory chessGameFactory, InboundChessRepository inboundChessRepository,
-                     OutboundUserRepository outboundUserRepository, GameFunctionalityService gameFunctionalityService,
+    ChessGameService(PuzzlerClient puzzlerClient,
+                     SessionStorage sessionStorage,
+                     ChessGameFactory chessGameFactory,
+                     InboundChessRepository inboundChessRepository,
+                     OutboundUserRepository outboundUserRepository,
+                     ChessService gameFunctionalityService,
+                     OutboundChessRepository outboundChessRepository,
                      GameInvitationsRepository partnershipGameCacheService) {
-        this.puzzleService = puzzleService;
+
         this.puzzlerClient = puzzlerClient;
         this.sessionStorage = sessionStorage;
         this.chessGameFactory = chessGameFactory;
         this.inboundChessRepository = inboundChessRepository;
         this.outboundUserRepository = outboundUserRepository;
-        this.gameFunctionalityService = gameFunctionalityService;
+        this.chessService = gameFunctionalityService;
+        this.outboundChessRepository = outboundChessRepository;
         this.partnershipGameCacheService = partnershipGameCacheService;
     }
 
@@ -165,13 +171,13 @@ public class ChessGameService {
             case MOVE -> handleMove(session, username, message, chessGame);
             case MESSAGE -> handleChat(session, username, message, chessGame);
             case RETURN_MOVE -> {
-                UndoMoveResult result = gameFunctionalityService.returnOfMovement(username, chessGame);
+                UndoMoveResult result = chessService.returnOfMovement(username, chessGame);
                 sendUndoMoveResultMessage(session, username, chessGame, result);
             }
             case RESIGNATION -> handleResignation(session, username, chessGame);
             case TREE_FOLD -> handleThreeFold(session, username, chessGame);
             case AGREEMENT -> {
-                AgreementResult result = gameFunctionalityService.agreement(username, chessGame);
+                AgreementResult result = chessService.agreement(username, chessGame);
                 sendAgreementResultMessage(session, username, chessGame, result);
             }
             default -> sendMessage(session, Message.error("Invalid message type."));
@@ -179,7 +185,8 @@ public class ChessGameService {
     }
 
     private void handleMove(Session session, String username, Message message, ChessGame chessGame) {
-        Result<GameStateUpdate, Throwable> result = gameFunctionalityService.move(message, username, chessGame);
+        Result<GameStateUpdate, Throwable> result = chessService.move(username, chessGame,
+                message.from(), message.to(), message.inCaseOfPromotion());
 
         if (result.failure()) {
             sendMessage(session, Message.builder(MessageType.ERROR)
@@ -195,7 +202,7 @@ public class ChessGameService {
     }
 
     private void handleChat(Session session, String username, Message message, ChessGame chessGame) {
-        Result<ChatMessage, Throwable> result = gameFunctionalityService.chat(message, username, chessGame);
+        Result<ChatMessage, Throwable> result = chessService.chat(message.message(), username, chessGame);
 
         if (result.failure()) {
             sendMessage(session, Message.builder(MessageType.ERROR)
@@ -217,7 +224,7 @@ public class ChessGameService {
     }
 
     private void handleResignation(Session session, String username, ChessGame chessGame) {
-        Result<GameResult, Throwable> result = gameFunctionalityService.resignation(username, chessGame);
+        Result<GameResult, Throwable> result = chessService.resignation(username, chessGame);
 
         if (result.failure()) {
             sendMessage(session, Message.builder(MessageType.ERROR)
@@ -237,7 +244,7 @@ public class ChessGameService {
     }
 
     private void handleThreeFold(Session session, String username, ChessGame chessGame) {
-        boolean gameEnded = gameFunctionalityService.threeFold(username, chessGame);
+        boolean gameEnded = chessService.threeFold(username, chessGame);
 
         if (!gameEnded) {
             sendMessage(session, Message.builder(MessageType.ERROR)
@@ -264,7 +271,7 @@ public class ChessGameService {
                         .gameID(chessGame.chessGameID().toString())
                         .FEN(chessGame.fen())
                         .PGN(chessGame.pgn())
-                        .timeLeft(gameFunctionalityService.remainingTimeAsString(chessGame))
+                        .timeLeft(chessService.remainingTimeAsString(chessGame))
                         .isThreeFoldActive(chessGame.isThreeFoldActive())
                         .build();
 
@@ -319,9 +326,9 @@ public class ChessGameService {
         User user = sessionStorage.getSessionByUsername(username).orElseThrow().getSecond();
 
         if (message.type().equals(MessageType.PUZZLE)) {
-            Puzzle puzzle = puzzleService.chessPuzzle(user);
+            Puzzle puzzle = chessPuzzle(user);
             sendMessage(session, Message.builder(MessageType.PUZZLE)
-                    .gameID(puzzle.ID().toString())
+                    .gameID(puzzle.id().toString())
                     .FEN(puzzle.chessBoard().toString())
                     .PGN(puzzle.chessBoard().pgn())
                     .build());
@@ -345,8 +352,57 @@ public class ChessGameService {
             return;
         }
 
-        Message response = puzzleService.puzzleMove(puzzle.get(), message.from(), message.to(), message.inCaseOfPromotion());
-        sendMessage(session, response);
+        Result<PuzzleStateUpdate, Throwable> response = chessService.puzzleMove(
+                puzzle.get(),
+                message.from(),
+                message.to(),
+                message.inCaseOfPromotion()
+        );
+
+        if (response.failure()) sendMessage(session, Message.error("Invalid puzzle move."));
+
+        PuzzleStateUpdate stateUpdate = response.value();
+
+        sendMessage(session, Message.builder(MessageType.PUZZLE_MOVE)
+                .gameID(stateUpdate.gameID().toString())
+                .FEN(stateUpdate.fen())
+                .PGN(stateUpdate.pgn())
+                .isPuzzleEnded(stateUpdate.isPuzzleEnded())
+                .isPuzzleSolved(stateUpdate.isPuzzleSolved())
+                .build());
+    }
+
+    private Puzzle chessPuzzle(User user) {
+        PuzzleRatingWindow ratingWindow = new PuzzleRatingWindow(user.puzzlesRating().rating());
+        var puzzleProperties = outboundChessRepository.puzzle(user.id(), ratingWindow).orElseThrow();
+
+        return Puzzle.fromRepository(
+                puzzleProperties.puzzleId(),
+                user, puzzleProperties.PGN(),
+                puzzleProperties.startPosition(),
+                puzzleProperties.rating()
+        );
+    }
+
+    private void createPuzzle(List<PuzzleInbound.Move> moves, int startPositionOfPuzzle) {
+        ChessBoard chessBoard = ChessBoard.starndardChessBoard();
+        try {
+            for (PuzzleInbound.Move move : moves) chessBoard.doMove(move.from(), move.to(), getPromotion(move, chessBoard));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Invalid puzzle provided.");
+        }
+
+        Puzzle puzzle = Puzzle.of(chessBoard.pgn(), startPositionOfPuzzle);
+        inboundChessRepository.savePuzzle(puzzle);
+    }
+
+    private static Piece getPromotion(PuzzleInbound.Move move, ChessBoard chessBoard) {
+        return move.promotion() == null ? null : switch (move.promotion()) {
+            case q -> Queen.of(chessBoard.turn());
+            case r -> Rook.of(chessBoard.turn());
+            case b -> Bishop.of(chessBoard.turn());
+            case n -> Knight.of(chessBoard.turn());
+        };
     }
 
     private void initializeGameSession(Session session, Username username, Message message) {
@@ -445,7 +501,7 @@ public class ChessGameService {
                 final User potentialOpponent = waitingUser.user();
                 final GameParameters gameParametersOfPotentialOpponent = waitingUser.gameParameters();
 
-                final boolean isOpponent = gameFunctionalityService.validateOpponentEligibility(firstPlayer,
+                final boolean isOpponent = chessService.validateOpponentEligibility(firstPlayer,
                     gameParameters,
                     potentialOpponent,
                     gameParametersOfPotentialOpponent,
@@ -543,7 +599,7 @@ public class ChessGameService {
 
         GameParameters addresseeGameParameters = partnershipGameRequests.get(addresseeUsername);
 
-        final boolean isOpponentEligible = gameFunctionalityService.validateOpponentEligibility(
+        final boolean isOpponentEligible = chessService.validateOpponentEligibility(
                 addresserAccount, addresserGameParameters, addresseeAccount, addresseeGameParameters, true
         );
         if (!isOpponentEligible) {
@@ -746,11 +802,11 @@ public class ChessGameService {
                             .build());
 
                 sessionStorage.removeGame(game.chessGameID());
-                gameFunctionalityService.executeGameOverOperations(game);
+                chessService.executeGameOverOperations(game);
                 puzzlerClient.sendPGN(game.pgn(), res -> {
                     var puzzle = res.body();
                     Log.info("Got puzzle: " + puzzle);
-                    puzzleService.save(puzzle.moves(), puzzle.startPositionOfPuzzle());
+                    createPuzzle(puzzle.moves(), puzzle.startPositionOfPuzzle());
                 });
 
                 isRunning.set(false);

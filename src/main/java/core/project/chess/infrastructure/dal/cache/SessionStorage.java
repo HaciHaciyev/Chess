@@ -143,7 +143,7 @@ public class SessionStorage {
     }
 
     public void addPuzzle(Puzzle puzzle) {
-        puzzles.put(Pair.of(new Username(puzzle.player().username()), puzzle.ID()), puzzle);
+        puzzles.put(Pair.of(new Username(puzzle.player().username()), puzzle.id()), puzzle);
     }
 
     public Optional<Puzzle> getPuzzle(Username username, UUID puzzleID) {

@@ -7,6 +7,7 @@ import core.project.chess.application.dto.chess.Puzzle;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
+import core.project.chess.domain.chess.value_objects.PuzzleRatingWindow;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
@@ -54,9 +55,17 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
             .column("rating_volatility")
             .column("pgn")
             .column("startPositionIndex")
-            .from("Puzzle")
-            .where("rating BETWEEN ?")
-            .and("?")
+            .from("Puzzle p")
+            .where("p.rating BETWEEN ? AND ?")
+            .and("""
+                 NOT EXISTS (
+                        SELECT 1
+                        FROM UserPuzzles up
+                        WHERE up.puzzle_id = p.id
+                            AND up.user_id = ?
+                            AND up.is_solved = TRUE
+                 )
+                 """)
             .and("id NOT IN (SELECT id from UserPuzzles)")
             .limitAndOffset(1, 0)
             .sql();
@@ -153,8 +162,8 @@ public class JdbcOutboundChessRepository implements OutboundChessRepository {
     }
 
     @Override
-    public Result<Puzzle, Throwable> puzzle(double minRating, double maxRating) {
-        var puzzleResult = jet.read(RANDOM_PUZZLE, this::puzzleMapper, minRating, maxRating);
+    public Result<Puzzle, Throwable> puzzle(UUID userID, PuzzleRatingWindow ratingWindow) {
+        var puzzleResult = jet.read(RANDOM_PUZZLE, this::puzzleMapper, ratingWindow.minRating(), ratingWindow.maxRating(), userID);
         return new Result<>(puzzleResult.value(), puzzleResult.throwable(), puzzleResult.success());
     }
 

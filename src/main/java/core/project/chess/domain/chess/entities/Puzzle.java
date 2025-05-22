@@ -81,7 +81,7 @@ public class Puzzle {
         return new Puzzle(id, rating, chessBoard, algebraicNotations, user, startPositionOfPuzzle);
     }
 
-    public UUID ID() {
+    public UUID id() {
         return puzzleId;
     }
 
@@ -105,7 +105,11 @@ public class Puzzle {
         return this.startPositionIndex;
     }
 
-    public String PGN() {
+    public String fen() {
+        return chessBoard.toString();
+    }
+
+    public String pgn() {
         final StringBuilder stringBuilder = new StringBuilder();
 
         int number = 1;
