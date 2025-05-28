@@ -13,8 +13,7 @@ CREATE FUNCTION delete_confirmed_token() RETURNS TRIGGER AS $$
 BEGIN
     DELETE FROM UserToken
     WHERE is_confirmed = true
-      AND user_id = NEW.user_id
-      AND id <> NEW.id;
+      AND user_id = NEW.user_id;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
