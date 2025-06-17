@@ -1,12 +1,16 @@
 package core.project.chess.domain.chess.pieces;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
-import core.project.chess.domain.chess.enumerations.*;
+import core.project.chess.domain.chess.enumerations.Checkers;
+import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.enumerations.Direction;
+import core.project.chess.domain.chess.enumerations.SimpleDirection;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.domain.chess.value_objects.KingStatus;
 import core.project.chess.domain.chess.value_objects.Move;
 import core.project.chess.domain.commons.annotations.Nullable;
+import core.project.chess.domain.commons.enumerations.Color;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -14,8 +18,8 @@ import java.util.List;
 import java.util.Set;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations;
-import static core.project.chess.domain.chess.enumerations.Color.BLACK;
-import static core.project.chess.domain.chess.enumerations.Color.WHITE;
+import static core.project.chess.domain.commons.enumerations.Color.BLACK;
+import static core.project.chess.domain.commons.enumerations.Color.WHITE;
 
 public final class King implements Piece {
     private final Color color;

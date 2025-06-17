@@ -1,11 +1,11 @@
 package core.project.chess.domain;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Queen;
 import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.Move;
+import core.project.chess.domain.commons.enumerations.Color;
 import io.quarkus.logging.Log;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

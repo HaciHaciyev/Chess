@@ -1,11 +1,11 @@
 package core.project.chess.domain.chess.value_objects;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
 import core.project.chess.domain.commons.annotations.Nullable;
+import core.project.chess.domain.commons.enumerations.Color;
 import core.project.chess.domain.commons.tuples.Pair;
 
 import java.nio.charset.StandardCharsets;

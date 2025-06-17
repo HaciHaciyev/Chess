@@ -3,11 +3,11 @@ package core.project.chess.application.dto.chess;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import core.project.chess.application.util.JSONUtilities;
 import core.project.chess.domain.chess.entities.ChessGame.Time;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.chess.value_objects.GameStateUpdate;
 import core.project.chess.domain.commons.containers.Result;
+import core.project.chess.domain.commons.enumerations.Color;
 import core.project.chess.domain.commons.value_objects.Username;
 import io.quarkus.logging.Log;
 

@@ -1,8 +1,8 @@
 package core.project.chess.domain.chess.util;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.pieces.*;
+import core.project.chess.domain.commons.enumerations.Color;
 
 import java.util.List;
 

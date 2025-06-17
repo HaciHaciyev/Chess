@@ -1,7 +1,6 @@
 package core.project.chess.domain.chess.entities;
 
 import core.project.chess.domain.chess.entities.ChessBoard.Operations;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.chess.enumerations.UndoMoveResult;
@@ -13,6 +12,7 @@ import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.chess.value_objects.GameDates;
 import core.project.chess.domain.commons.annotations.Nullable;
+import core.project.chess.domain.commons.enumerations.Color;
 import core.project.chess.domain.commons.value_objects.GameResult;
 import core.project.chess.domain.commons.value_objects.Rating;
 import core.project.chess.domain.commons.value_objects.RatingType;
@@ -20,9 +20,9 @@ import core.project.chess.domain.commons.value_objects.RatingType;
 import java.time.Duration;
 import java.util.*;
 
-import static core.project.chess.domain.chess.enumerations.Color.BLACK;
-import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 import static core.project.chess.domain.chess.enumerations.GameResultMessage.*;
+import static core.project.chess.domain.commons.enumerations.Color.BLACK;
+import static core.project.chess.domain.commons.enumerations.Color.WHITE;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 

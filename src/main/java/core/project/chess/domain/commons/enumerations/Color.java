@@ -1,4 +1,4 @@
-package core.project.chess.domain.chess.enumerations;
+package core.project.chess.domain.commons.enumerations;
 
 public enum Color {
     WHITE,

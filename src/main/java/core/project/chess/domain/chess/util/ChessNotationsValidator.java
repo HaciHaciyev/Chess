@@ -1,11 +1,11 @@
 package core.project.chess.domain.chess.util;
 
 import core.project.chess.domain.chess.entities.ChessBoard;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.FromFEN;
 import core.project.chess.domain.commons.containers.StatusPair;
+import core.project.chess.domain.commons.enumerations.Color;
 import core.project.chess.domain.commons.tuples.Pair;
 
 import java.util.ArrayList;
@@ -15,10 +15,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static core.project.chess.domain.chess.enumerations.Color.BLACK;
-import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 import static core.project.chess.domain.chess.enumerations.Coordinate.*;
 import static core.project.chess.domain.chess.value_objects.AlgebraicNotation.*;
+import static core.project.chess.domain.commons.enumerations.Color.BLACK;
+import static core.project.chess.domain.commons.enumerations.Color.WHITE;
 
 public class ChessNotationsValidator {
 

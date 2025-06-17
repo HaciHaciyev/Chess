@@ -1,6 +1,5 @@
 package core.project.chess.domain.chess.entities;
 
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.GameResultMessage;
 import core.project.chess.domain.chess.pieces.*;
@@ -9,14 +8,15 @@ import core.project.chess.domain.chess.util.ZobristHashKeys;
 import core.project.chess.domain.chess.value_objects.*;
 import core.project.chess.domain.commons.annotations.Nullable;
 import core.project.chess.domain.commons.containers.StatusPair;
+import core.project.chess.domain.commons.enumerations.Color;
 import core.project.chess.domain.commons.tuples.Pair;
 
 import java.util.*;
 
 import static core.project.chess.domain.chess.entities.ChessBoard.Operations.*;
-import static core.project.chess.domain.chess.enumerations.Color.BLACK;
-import static core.project.chess.domain.chess.enumerations.Color.WHITE;
 import static core.project.chess.domain.chess.value_objects.AlgebraicNotation.pieceToType;
+import static core.project.chess.domain.commons.enumerations.Color.BLACK;
+import static core.project.chess.domain.commons.enumerations.Color.WHITE;
 import static java.util.Objects.nonNull;
 
 /**

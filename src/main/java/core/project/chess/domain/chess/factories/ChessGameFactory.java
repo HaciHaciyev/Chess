@@ -1,13 +1,14 @@
 package core.project.chess.domain.chess.factories;
 
 import core.project.chess.domain.chess.entities.ChessGame;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.value_objects.GameDates;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
+import core.project.chess.domain.commons.enumerations.Color;
 import core.project.chess.domain.commons.tuples.Pair;
-import core.project.chess.domain.user.entities.User;
+import core.project.chess.domain.commons.value_objects.Rating;
+import core.project.chess.domain.commons.value_objects.Ratings;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.UUID;
@@ -16,14 +17,13 @@ import java.util.UUID;
 public class ChessGameFactory {
 
     public Result<ChessGame, Throwable> createChessGameInstance(
-            final User firstPlayer,
+            final Pair<UUID, Ratings> firstPlayer,
             final GameParameters gameParameters,
-            final User secondPlayer,
+            final Pair<UUID, Ratings> secondPlayer,
             final GameParameters secondGameParameters,
             final boolean isPartnershipGame) {
 
         final ChessGame.Time time = gameParameters.time();
-        final boolean isCasualGame = isCasualGame(gameParameters, isPartnershipGame);
         final boolean firstPlayerIsWhite = gameParameters.color() != null && gameParameters.color() == Color.WHITE;
         final boolean secondPlayerIsBlack = secondGameParameters.color() != null && secondGameParameters.color() == Color.BLACK;
 
@@ -53,8 +53,8 @@ public class ChessGameFactory {
 
     private ChessGame standardChessGame(
             ChessGame.Time time,
-            User firstPlayer,
-            User secondPlayer,
+            Pair<UUID, Ratings> firstPlayer,
+            Pair<UUID, Ratings> secondPlayer,
             boolean firstPlayerIsWhite,
             boolean secondPlayerIsBlack,
             boolean isCasualGame) {
@@ -62,10 +62,10 @@ public class ChessGameFactory {
         if (firstPlayerIsWhite && secondPlayerIsBlack)
             return ChessGame.standard(
                     UUID.randomUUID(),
-                    firstPlayer.id(),
-                    secondPlayer.id(),
-                    firstPlayer.rating(),
-                    secondPlayer.rating(),
+                    firstPlayer.getFirst(),
+                    secondPlayer.getFirst(),
+                    defineRequiredRating(firstPlayer.getSecond(), time),
+                    defineRequiredRating(secondPlayer.getSecond(), time),
                     GameDates.defaultEvents(),
                     time,
                     isCasualGame
@@ -73,10 +73,10 @@ public class ChessGameFactory {
 
         return ChessGame.standard(
                 UUID.randomUUID(),
-                secondPlayer.id(),
-                firstPlayer.id(),
-                secondPlayer.rating(),
-                firstPlayer.rating(),
+                secondPlayer.getFirst(),
+                firstPlayer.getFirst(),
+                defineRequiredRating(secondPlayer.getSecond(), time),
+                defineRequiredRating(firstPlayer.getSecond(), time),
                 GameDates.defaultEvents(),
                 time,
                 isCasualGame
@@ -85,8 +85,8 @@ public class ChessGameFactory {
 
     private ChessGame chessGameByPGN(
             ChessGame.Time time,
-            User firstPlayer,
-            User secondPlayer,
+            Pair<UUID, Ratings> firstPlayer,
+            Pair<UUID, Ratings> secondPlayer,
             boolean firstPlayerIsWhite,
             boolean secondPlayerIsBlack,
             Boolean isCasualGame,
@@ -96,10 +96,10 @@ public class ChessGameFactory {
             return ChessGame.byPGN(
                     UUID.randomUUID(),
                     PGN,
-                    firstPlayer.id(),
-                    secondPlayer.id(),
-                    firstPlayer.rating(),
-                    secondPlayer.rating(),
+                    firstPlayer.getFirst(),
+                    secondPlayer.getFirst(),
+                    defineRequiredRating(firstPlayer.getSecond(), time),
+                    defineRequiredRating(secondPlayer.getSecond(), time),
                     GameDates.defaultEvents(),
                     time,
                     isCasualGame
@@ -108,10 +108,10 @@ public class ChessGameFactory {
         return ChessGame.byPGN(
                 UUID.randomUUID(),
                 PGN,
-                secondPlayer.id(),
-                firstPlayer.id(),
-                secondPlayer.rating(),
-                firstPlayer.rating(),
+                secondPlayer.getFirst(),
+                firstPlayer.getFirst(),
+                defineRequiredRating(secondPlayer.getSecond(), time),
+                defineRequiredRating(firstPlayer.getSecond(), time),
                 GameDates.defaultEvents(),
                 time,
                 isCasualGame
@@ -120,8 +120,8 @@ public class ChessGameFactory {
 
     private ChessGame chessGameByFEN(
             ChessGame.Time time,
-            User firstPlayer,
-            User secondPlayer,
+            Pair<UUID, Ratings> firstPlayer,
+            Pair<UUID, Ratings> secondPlayer,
             boolean firstPlayerIsWhite,
             boolean secondPlayerIsBlack,
             Boolean isCasualGame,
@@ -131,10 +131,10 @@ public class ChessGameFactory {
             return ChessGame.byFEN(
                     UUID.randomUUID(),
                     FEN,
-                    firstPlayer.id(),
-                    secondPlayer.id(),
-                    firstPlayer.rating(),
-                    secondPlayer.rating(),
+                    firstPlayer.getFirst(),
+                    secondPlayer.getFirst(),
+                    defineRequiredRating(firstPlayer.getSecond(), time),
+                    defineRequiredRating(secondPlayer.getSecond(), time),
                     GameDates.defaultEvents(),
                     time,
                     isCasualGame
@@ -143,14 +143,23 @@ public class ChessGameFactory {
         return ChessGame.byFEN(
                 UUID.randomUUID(),
                 FEN,
-                secondPlayer.id(),
-                firstPlayer.id(),
-                secondPlayer.rating(),
-                firstPlayer.rating(),
+                secondPlayer.getFirst(),
+                firstPlayer.getFirst(),
+                defineRequiredRating(secondPlayer.getSecond(), time),
+                defineRequiredRating(firstPlayer.getSecond(), time),
                 GameDates.defaultEvents(),
                 time,
                 isCasualGame
         );
+    }
+
+    private Rating defineRequiredRating(Ratings ra, ChessGame.Time time) {
+        return switch (time) {
+            case DEFAULT, CLASSIC -> ra.rating();
+            case RAPID -> ra.rapidRating();
+            case BLITZ -> ra.blitzRating();
+            case BULLET -> ra.bulletRating();
+        };
     }
 
     private boolean isCasualGame(GameParameters gameParameters, boolean isPartnershipGame) {

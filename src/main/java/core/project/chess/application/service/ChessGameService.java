@@ -9,7 +9,6 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.AgreementResult;
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.UndoMoveResult;
 import core.project.chess.domain.chess.factories.ChessGameFactory;
 import core.project.chess.domain.chess.pieces.*;
@@ -19,6 +18,7 @@ import core.project.chess.domain.chess.services.ChessService;
 import core.project.chess.domain.chess.value_objects.*;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
+import core.project.chess.domain.commons.enumerations.Color;
 import core.project.chess.domain.commons.tuples.Pair;
 import core.project.chess.domain.commons.value_objects.GameResult;
 import core.project.chess.domain.commons.value_objects.PuzzleStatus;
@@ -692,9 +692,10 @@ public class ChessGameService {
         User secondPlayer = secondPlayerData.user();
         GameParameters secondGameParameters = secondPlayerData.gameParameters();
 
-        Result<ChessGame, Throwable> chessGame = chessGameFactory.createChessGameInstance(firstPlayer,
+        Result<ChessGame, Throwable> chessGame = chessGameFactory.createChessGameInstance(
+                Pair.of(firstPlayer.id(), firstPlayer.ratings()),
                 firstGameParameters,
-                secondPlayer,
+                Pair.of(secondPlayer.id(), secondPlayer.ratings()),
                 secondGameParameters,
                 isPartnershipGame
         );

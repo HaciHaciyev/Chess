@@ -1,7 +1,7 @@
 package core.project.chess.domain.user.entities;
 
-import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.commons.annotations.Nullable;
+import core.project.chess.domain.commons.enumerations.Color;
 import core.project.chess.domain.commons.util.Glicko2RatingCalculator;
 import core.project.chess.domain.commons.value_objects.*;
 import core.project.chess.domain.user.value_objects.AccountDates;
@@ -10,8 +10,8 @@ import core.project.chess.domain.user.value_objects.ProfilePicture;
 
 import java.util.*;
 
-import static core.project.chess.domain.chess.enumerations.Color.BLACK;
-import static core.project.chess.domain.chess.enumerations.Color.WHITE;
+import static core.project.chess.domain.commons.enumerations.Color.BLACK;
+import static core.project.chess.domain.commons.enumerations.Color.WHITE;
 import static core.project.chess.domain.commons.value_objects.GameResult.WHITE_WIN;
 
 public class User {
