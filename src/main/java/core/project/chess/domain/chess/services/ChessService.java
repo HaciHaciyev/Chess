@@ -4,7 +4,6 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.AgreementResult;
 import core.project.chess.domain.chess.enumerations.Coordinate;
-import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.enumerations.UndoMoveResult;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
@@ -12,46 +11,44 @@ import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.value_objects.*;
 import core.project.chess.domain.commons.annotations.Nullable;
 import core.project.chess.domain.commons.containers.Result;
-import core.project.chess.domain.user.entities.User;
-import core.project.chess.domain.user.repositories.InboundUserRepository;
+import core.project.chess.domain.commons.tuples.Pair;
+import core.project.chess.domain.commons.value_objects.GameResult;
+import core.project.chess.domain.commons.value_objects.Ratings;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.Duration;
 import java.util.Objects;
+import java.util.UUID;
 
 @ApplicationScoped
 public class ChessService {
-
-    private final InboundUserRepository inboundUserRepository;
 
     private final InboundChessRepository inboundChessRepository;
 
     private final OutboundChessRepository outboundChessRepository;
 
-    ChessService(InboundUserRepository inboundUserRepository,
-                 InboundChessRepository inboundChessRepository,
+    ChessService(InboundChessRepository inboundChessRepository,
                  OutboundChessRepository outboundChessRepository) {
-        this.inboundUserRepository = inboundUserRepository;
         this.inboundChessRepository = inboundChessRepository;
         this.outboundChessRepository = outboundChessRepository;
     }
 
     public boolean validateOpponentEligibility(
-            final User player,
+            final Pair<UUID, Ratings> player,
             final GameParameters gameParameters,
-            final User opponent,
+            final Pair<UUID, Ratings> opponent,
             final GameParameters opponentGameParameters,
             final boolean isPartnershipGame) {
 
-        final boolean sameUser = player.id().equals(opponent.id());
+        final boolean sameUser = player.getFirst().equals(opponent.getFirst());
         if (sameUser) return false;
 
         final boolean sameTimeControlling = gameParameters.time().equals(opponentGameParameters.time());
         if (!sameTimeControlling) return false;
 
         if (!isPartnershipGame) {
-            final boolean validRatingDiff = Math.abs(player.rating().rating() - opponent.rating().rating()) <= 1500;
+            final boolean validRatingDiff = isValidRatingDifferance(player.getSecond(), opponent.getSecond(), gameParameters.time());
             if (!validRatingDiff) return false;
         }
 
@@ -64,10 +61,23 @@ public class ChessService {
         return !sameColor;
     }
 
-    public Result<GameStateUpdate, Throwable> move(String username, ChessGame chessGame,
+    private static boolean isValidRatingDifferance(Ratings player, Ratings opponent, ChessGame.Time time) {
+        return switch (time) {
+            case CLASSIC, DEFAULT -> ratingDiff(player.rating().rating(), opponent.rating().rating()) <= 1500;
+            case RAPID -> ratingDiff(player.rapidRating().rating(), opponent.rapidRating().rating()) <= 1500;
+            case BULLET -> ratingDiff(player.bulletRating().rating(), opponent.bulletRating().rating()) <= 1500;
+            case BLITZ -> ratingDiff(player.blitzRating().rating(), opponent.blitzRating().rating()) <= 1500;
+        };
+    }
+
+    private static double ratingDiff(double rating, double rating1) {
+        return Math.abs(rating1 - rating);
+    }
+
+    public Result<GameStateUpdate, Throwable> move(UUID userID, ChessGame chessGame,
                                                    Coordinate from, Coordinate to, @Nullable String promotion) {
         try {
-            chessGame.doMove(username, from, to, getPromotion(promotion));
+            chessGame.doMove(userID, from, to, getPromotion(promotion));
             return Result.success(new GameStateUpdate(
                     chessGame.chessGameID(),
                     chessGame.fen(),
@@ -104,45 +114,45 @@ public class ChessService {
         return wTime + " | " + bTime;
     }
 
-    public Result<ChatMessage, Throwable> chat(String message, String username, ChessGame chessGame) {
+    public Result<ChatMessage, Throwable> chat(String message, UUID userID, ChessGame chessGame) {
         try {
             ChatMessage chatMessage = new ChatMessage(message);
-            chessGame.addChatMessage(username, chatMessage);
+            chessGame.addChatMessage(userID, chatMessage);
             return Result.success(chatMessage);
         } catch (IllegalArgumentException | NullPointerException e) {
             return Result.failure(e);
         }
     }
 
-    public UndoMoveResult returnOfMovement(String username, ChessGame chessGame) {
+    public UndoMoveResult returnOfMovement(UUID userID, ChessGame chessGame) {
         try {
-            return chessGame.undo(username);
+            return chessGame.undo(userID);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return UndoMoveResult.FAILED_UNDO;
         }
     }
 
-    public Result<GameResult, Throwable> resignation(String username, ChessGame chessGame) {
+    public Result<GameResult, Throwable> resignation(UUID userID, ChessGame chessGame) {
         try {
-            chessGame.resignation(username);
+            chessGame.resignation(userID);
             return Result.success(chessGame.gameResult());
         } catch (IllegalArgumentException e) {
             return Result.failure(e);
         }
     }
 
-    public boolean threeFold(String username, ChessGame chessGame) {
+    public boolean threeFold(UUID userID, ChessGame chessGame) {
         try {
-            chessGame.endGameByThreeFold(username);
+            chessGame.endGameByThreeFold(userID);
             return true;
         } catch (IllegalArgumentException | IllegalStateException e) {
             return false;
         }
     }
 
-    public AgreementResult agreement(String username, ChessGame chessGame) {
+    public AgreementResult agreement(UUID userID, ChessGame chessGame) {
         try {
-            chessGame.agreement(username);
+            chessGame.agreement(userID);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return AgreementResult.FAILED;
         }
@@ -179,27 +189,6 @@ public class ChessService {
             return;
         }
 
-        Log.infof("Saving finished game %s and changing ratings", chessGame.chessGameID());
         inboundChessRepository.completelyUpdateFinishedGame(chessGame);
-
-        if (chessGame.isCasualGame()) return;
-        switch (chessGame.time()) {
-            case CLASSIC, DEFAULT -> {
-                inboundUserRepository.updateOfRating(chessGame.whitePlayer());
-                inboundUserRepository.updateOfRating(chessGame.blackPlayer());
-            }
-            case BULLET -> {
-                inboundUserRepository.updateOfBulletRating(chessGame.whitePlayer());
-                inboundUserRepository.updateOfBulletRating(chessGame.blackPlayer());
-            }
-            case BLITZ -> {
-                inboundUserRepository.updateOfBlitzRating(chessGame.whitePlayer());
-                inboundUserRepository.updateOfBlitzRating(chessGame.blackPlayer());
-            }
-            case RAPID -> {
-                inboundUserRepository.updateOfRapidRating(chessGame.whitePlayer());
-                inboundUserRepository.updateOfRapidRating(chessGame.blackPlayer());
-            }
-        }
     }
 }

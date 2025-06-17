@@ -62,8 +62,10 @@ public class ChessGameFactory {
         if (firstPlayerIsWhite && secondPlayerIsBlack)
             return ChessGame.standard(
                     UUID.randomUUID(),
-                    firstPlayer,
-                    secondPlayer,
+                    firstPlayer.id(),
+                    secondPlayer.id(),
+                    firstPlayer.rating(),
+                    secondPlayer.rating(),
                     GameDates.defaultEvents(),
                     time,
                     isCasualGame
@@ -71,8 +73,10 @@ public class ChessGameFactory {
 
         return ChessGame.standard(
                 UUID.randomUUID(),
-                secondPlayer,
-                firstPlayer,
+                secondPlayer.id(),
+                firstPlayer.id(),
+                secondPlayer.rating(),
+                firstPlayer.rating(),
                 GameDates.defaultEvents(),
                 time,
                 isCasualGame
@@ -92,8 +96,10 @@ public class ChessGameFactory {
             return ChessGame.byPGN(
                     UUID.randomUUID(),
                     PGN,
-                    firstPlayer,
-                    secondPlayer,
+                    firstPlayer.id(),
+                    secondPlayer.id(),
+                    firstPlayer.rating(),
+                    secondPlayer.rating(),
                     GameDates.defaultEvents(),
                     time,
                     isCasualGame
@@ -102,8 +108,10 @@ public class ChessGameFactory {
         return ChessGame.byPGN(
                 UUID.randomUUID(),
                 PGN,
-                secondPlayer,
-                firstPlayer,
+                secondPlayer.id(),
+                firstPlayer.id(),
+                secondPlayer.rating(),
+                firstPlayer.rating(),
                 GameDates.defaultEvents(),
                 time,
                 isCasualGame
@@ -123,8 +131,10 @@ public class ChessGameFactory {
             return ChessGame.byFEN(
                     UUID.randomUUID(),
                     FEN,
-                    firstPlayer,
-                    secondPlayer,
+                    firstPlayer.id(),
+                    secondPlayer.id(),
+                    firstPlayer.rating(),
+                    secondPlayer.rating(),
                     GameDates.defaultEvents(),
                     time,
                     isCasualGame
@@ -133,8 +143,10 @@ public class ChessGameFactory {
         return ChessGame.byFEN(
                 UUID.randomUUID(),
                 FEN,
-                secondPlayer,
-                firstPlayer,
+                secondPlayer.id(),
+                firstPlayer.id(),
+                secondPlayer.rating(),
+                firstPlayer.rating(),
                 GameDates.defaultEvents(),
                 time,
                 isCasualGame

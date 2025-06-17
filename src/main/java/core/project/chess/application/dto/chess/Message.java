@@ -8,7 +8,7 @@ import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.chess.value_objects.GameStateUpdate;
 import core.project.chess.domain.commons.containers.Result;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.commons.value_objects.Username;
 import io.quarkus.logging.Log;
 
 import java.util.Objects;

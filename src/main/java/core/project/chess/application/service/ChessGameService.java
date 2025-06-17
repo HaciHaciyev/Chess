@@ -3,13 +3,13 @@ package core.project.chess.application.service;
 import core.project.chess.application.dto.chess.Message;
 import core.project.chess.application.dto.chess.MessageType;
 import core.project.chess.application.dto.chess.PuzzleInbound;
+import core.project.chess.application.publisher.EventPublisher;
 import core.project.chess.application.requests.GameRequest;
 import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.AgreementResult;
 import core.project.chess.domain.chess.enumerations.Color;
-import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.enumerations.UndoMoveResult;
 import core.project.chess.domain.chess.factories.ChessGameFactory;
 import core.project.chess.domain.chess.pieces.*;
@@ -20,9 +20,12 @@ import core.project.chess.domain.chess.value_objects.*;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
+import core.project.chess.domain.commons.value_objects.GameResult;
+import core.project.chess.domain.commons.value_objects.PuzzleStatus;
+import core.project.chess.domain.commons.value_objects.RatingUpdateOnPuzzle;
+import core.project.chess.domain.commons.value_objects.Username;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
-import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.clients.PuzzlerClient;
 import core.project.chess.infrastructure.dal.cache.GameInvitationsRepository;
 import core.project.chess.infrastructure.dal.cache.SessionStorage;
@@ -43,6 +46,8 @@ import static core.project.chess.application.util.WSUtilities.sendMessage;
 @ApplicationScoped
 public class ChessGameService {
 
+    private final EventPublisher eventPublisher;
+
     private final ChessService chessService;
 
     private final PuzzlerClient puzzlerClient;
@@ -59,7 +64,8 @@ public class ChessGameService {
 
     private final GameInvitationsRepository partnershipGameCacheService;
 
-    ChessGameService(PuzzlerClient puzzlerClient,
+    ChessGameService(EventPublisher eventPublisher,
+                     PuzzlerClient puzzlerClient,
                      SessionStorage sessionStorage,
                      ChessGameFactory chessGameFactory,
                      InboundChessRepository inboundChessRepository,
@@ -68,6 +74,7 @@ public class ChessGameService {
                      OutboundChessRepository outboundChessRepository,
                      GameInvitationsRepository partnershipGameCacheService) {
 
+        this.eventPublisher = eventPublisher;
         this.puzzlerClient = puzzlerClient;
         this.sessionStorage = sessionStorage;
         this.chessGameFactory = chessGameFactory;
@@ -98,6 +105,7 @@ public class ChessGameService {
 
         Span.current().addEvent("adding session to session storage");
         session.getUserProperties().put("username", username);
+        session.getUserProperties().put("user-id", result.value().id());
         sessionStorage.addSession(session, result.value());
         
         sendMessage(session, Message.info("Successful connection to chessland"));
@@ -167,24 +175,31 @@ public class ChessGameService {
     }
 
     private void handleMessage(final Session session, final String username, final Message message, final ChessGame chessGame) {
+        Optional<Pair<Session, User>> sessionByUsername = sessionStorage.getSessionByUsername(new Username(username));
+        if (sessionByUsername.isEmpty()) {
+            sendMessage(session, Message.error("Session do not exists in storage."));
+            return;
+        }
+
+        UUID userID = sessionByUsername.get().getSecond().id();
         switch (message.type()) {
-            case MOVE -> handleMove(session, username, message, chessGame);
-            case MESSAGE -> handleChat(session, username, message, chessGame);
+            case MOVE -> handleMove(session, userID, message, chessGame);
+            case MESSAGE -> handleChat(session, userID, message, chessGame);
             case RETURN_MOVE -> {
-                UndoMoveResult result = chessService.returnOfMovement(username, chessGame);
+                UndoMoveResult result = chessService.returnOfMovement(userID, chessGame);
                 sendUndoMoveResultMessage(session, username, chessGame, result);
             }
-            case RESIGNATION -> handleResignation(session, username, chessGame);
-            case TREE_FOLD -> handleThreeFold(session, username, chessGame);
+            case RESIGNATION -> handleResignation(session, userID, chessGame);
+            case TREE_FOLD -> handleThreeFold(session, userID, chessGame);
             case AGREEMENT -> {
-                AgreementResult result = chessService.agreement(username, chessGame);
+                AgreementResult result = chessService.agreement(userID, chessGame);
                 sendAgreementResultMessage(session, username, chessGame, result);
             }
             default -> sendMessage(session, Message.error("Invalid message type."));
         }
     }
 
-    private void handleMove(Session session, String username, Message message, ChessGame chessGame) {
+    private void handleMove(Session session, UUID username, Message message, ChessGame chessGame) {
         Result<GameStateUpdate, Throwable> result = chessService.move(username, chessGame,
                 message.from(), message.to(), message.inCaseOfPromotion());
 
@@ -201,7 +216,7 @@ public class ChessGameService {
                 .forEach(gameSession -> sendMessage(gameSession, Message.gameStateUpdate(update)));
     }
 
-    private void handleChat(Session session, String username, Message message, ChessGame chessGame) {
+    private void handleChat(Session session, UUID username, Message message, ChessGame chessGame) {
         Result<ChatMessage, Throwable> result = chessService.chat(message.message(), username, chessGame);
 
         if (result.failure()) {
@@ -219,12 +234,12 @@ public class ChessGameService {
                 .build();
 
         sessionStorage.getGameSessions(chessGame.chessGameID()).stream()
-                .filter(gameSession -> chessGame.isPlayer((Username) gameSession.getUserProperties().get("username")))
+                .filter(gameSession -> chessGame.isPlayer(extractUserID(gameSession)))
                 .forEach(gameSession -> sendMessage(gameSession, resultMessage));
     }
 
-    private void handleResignation(Session session, String username, ChessGame chessGame) {
-        Result<GameResult, Throwable> result = chessService.resignation(username, chessGame);
+    private void handleResignation(Session session, UUID userID, ChessGame chessGame) {
+        Result<GameResult, Throwable> result = chessService.resignation(userID, chessGame);
 
         if (result.failure()) {
             sendMessage(session, Message.builder(MessageType.ERROR)
@@ -243,7 +258,7 @@ public class ChessGameService {
                 .forEach(gameSession -> sendMessage(gameSession, resultMessage));
     }
 
-    private void handleThreeFold(Session session, String username, ChessGame chessGame) {
+    private void handleThreeFold(Session session, UUID username, ChessGame chessGame) {
         boolean gameEnded = chessService.threeFold(username, chessGame);
 
         if (!gameEnded) {
@@ -327,6 +342,7 @@ public class ChessGameService {
 
         if (message.type().equals(MessageType.PUZZLE)) {
             Puzzle puzzle = chessPuzzle(user);
+            sessionStorage.addPuzzle(puzzle, username);
             sendMessage(session, Message.builder(MessageType.PUZZLE)
                     .gameID(puzzle.id().toString())
                     .FEN(puzzle.chessBoard().toString())
@@ -370,6 +386,19 @@ public class ChessGameService {
                 .isPuzzleEnded(stateUpdate.isPuzzleEnded())
                 .isPuzzleSolved(stateUpdate.isPuzzleSolved())
                 .build());
+
+        updatePuzzleRatingAtTheEnd(puzzle.get(), user);
+    }
+
+    private void updatePuzzleRatingAtTheEnd(Puzzle puzzle, User user) {
+        if (!puzzle.isEnded()) return;
+
+        var ratingUpdateOnPuzzle = new RatingUpdateOnPuzzle(puzzle.id(), user.id(), puzzle.rating(), user.puzzlesRating(),
+                puzzle.isSolved() ? PuzzleStatus.SOLVED : PuzzleStatus.UNSOLVED);
+        puzzle.changeRating(ratingUpdateOnPuzzle);
+
+        inboundChessRepository.updatePuzzleOnSolving(puzzle);
+        eventPublisher.publishAllPuzzle(puzzle.pullDomainEvents());
     }
 
     private Puzzle chessPuzzle(User user) {
@@ -378,7 +407,7 @@ public class ChessGameService {
 
         return Puzzle.fromRepository(
                 puzzleProperties.puzzleId(),
-                user, puzzleProperties.PGN(),
+                user.id(), puzzleProperties.PGN(),
                 puzzleProperties.startPosition(),
                 puzzleProperties.rating()
         );
@@ -451,8 +480,9 @@ public class ChessGameService {
         sessionStorage.addSessionToGame(gameId, session);
 
         final ChessGame game = chessGame.orElseThrow();
-        if (game.isPlayer(username)) {
-            game.returnedToTheBoard(username);
+        UUID userID = extractUserID(session);
+        if (game.isPlayer(userID)) {
+            game.returnedToTheBoard(userID);
             updateSessionGameIds(session, gameID);
 
             Message message = Message.builder(MessageType.INFO)
@@ -482,8 +512,6 @@ public class ChessGameService {
         }
 
         final GameRequest opponentData = potentialOpponent.orElseThrow();
-        final User secondPlayer = opponentData.user();
-
         startStandardChessGame(
                 new GameRequest(session, firstPlayer, gameParameters), opponentData, false
         );
@@ -501,11 +529,12 @@ public class ChessGameService {
                 final User potentialOpponent = waitingUser.user();
                 final GameParameters gameParametersOfPotentialOpponent = waitingUser.gameParameters();
 
-                final boolean isOpponent = chessService.validateOpponentEligibility(firstPlayer,
-                    gameParameters,
-                    potentialOpponent,
-                    gameParametersOfPotentialOpponent,
-                    false
+                final boolean isOpponent = chessService.validateOpponentEligibility(
+                        Pair.of(firstPlayer.id(), firstPlayer.ratings()),
+                        gameParameters,
+                        Pair.of(potentialOpponent.id(), potentialOpponent.ratings()),
+                        gameParametersOfPotentialOpponent,
+                        false
                 );
 
                 if (isOpponent && sessionStorage.removeWaitingUser(waitingUser))
@@ -600,7 +629,9 @@ public class ChessGameService {
         GameParameters addresseeGameParameters = partnershipGameRequests.get(addresseeUsername);
 
         final boolean isOpponentEligible = chessService.validateOpponentEligibility(
-                addresserAccount, addresserGameParameters, addresseeAccount, addresseeGameParameters, true
+                Pair.of(addresserAccount.id(), addresserAccount.ratings()), addresserGameParameters,
+                Pair.of(addresseeAccount.id(), addresseeAccount.ratings()), addresseeGameParameters,
+                true
         );
         if (!isOpponentEligible) {
             sendMessage(session, Message.error("Opponent is do not eligible. Check the game parameters."));
@@ -703,11 +734,13 @@ public class ChessGameService {
         if (!gameIds.contains(gameId)) gameIds.add(gameId);
     }
 
+    private static UUID extractUserID(Session session) {
+        return UUID.fromString((String) session.getUserProperties().get("user-id"));
+    }
+
     private void sendGameStartNotifications(Session session, ChessGame chessGame) {
         final Message overviewMessage = Message.builder(MessageType.GAME_START_INFO)
                 .gameID(chessGame.chessGameID().toString())
-                .whitePlayerUsername(chessGame.whitePlayer().username())
-                .blackPlayerUsername(chessGame.blackPlayer().username())
                 .whitePlayerRating(chessGame.whiteRating().rating())
                 .blackPlayerRating(chessGame.blackRating().rating())
                 .time(chessGame.time())
@@ -726,6 +759,7 @@ public class ChessGameService {
     public void onClose(Session session, Username username) {
         if (!sessionStorage.containsSession(username)) return;
 
+        final UUID userID = extractUserID(session);
         final Object gameIdObj = session.getUserProperties().get("game-id");
         if (Objects.isNull(gameIdObj)) {
             sessionStorage.removeSession(username);
@@ -745,7 +779,7 @@ public class ChessGameService {
             if (chessGame.isEmpty()) continue;
 
             if (!chessGame.get().isGameOver()) {
-                if (chessGame.get().isPlayer(username)) handleAFK(username, chessGame.get(), gameUuid);
+                if (chessGame.get().isPlayer(userID)) handleAFK(userID, chessGame.get(), gameUuid);
                 continue;
             }
 
@@ -760,11 +794,11 @@ public class ChessGameService {
         sessionStorage.removeSession(username);
     }
 
-    private void handleAFK(Username username, ChessGame chessGame, UUID gameUuid) {
+    private void handleAFK(UUID username, ChessGame chessGame, UUID gameUuid) {
         chessGame.awayFromTheBoard(username);
         Message message = Message.builder(MessageType.INFO)
                 .gameID(chessGame.chessGameID().toString())
-                .message("Player %s is AFK.".formatted(username.username()))
+                .message("Player %s is AFK.")
                 .build();
 
         for (Session gameSession : sessionStorage.getGameSessions(gameUuid)) sendMessage(gameSession, message);
@@ -803,6 +837,7 @@ public class ChessGameService {
 
                 sessionStorage.removeGame(game.chessGameID());
                 chessService.executeGameOverOperations(game);
+                eventPublisher.publishAllChessGame(game.pullDomainEvents());
                 puzzlerClient.sendPGN(game.pgn(), res -> {
                     var puzzle = res.body();
                     Log.info("Got puzzle: " + puzzle);

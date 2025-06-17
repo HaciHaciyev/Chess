@@ -1,10 +1,10 @@
 package core.project.chess.application.service;
 
 import core.project.chess.domain.commons.containers.Result;
+import core.project.chess.domain.commons.value_objects.Username;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
-import core.project.chess.domain.user.value_objects.Username;
 import core.project.chess.infrastructure.dal.files.ImageFileRepository;
 import core.project.chess.infrastructure.files.StreamUtils;
 import io.quarkus.logging.Log;

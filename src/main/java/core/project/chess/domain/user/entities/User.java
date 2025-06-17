@@ -1,22 +1,18 @@
 package core.project.chess.domain.user.entities;
 
-import core.project.chess.domain.chess.entities.ChessGame;
-import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
-import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.commons.annotations.Nullable;
-import core.project.chess.domain.commons.value_objects.Rating;
-import core.project.chess.domain.user.util.Glicko2RatingCalculator;
+import core.project.chess.domain.commons.util.Glicko2RatingCalculator;
+import core.project.chess.domain.commons.value_objects.*;
 import core.project.chess.domain.user.value_objects.AccountDates;
 import core.project.chess.domain.user.value_objects.PersonalData;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
-import core.project.chess.domain.user.value_objects.Ratings;
 
 import java.util.*;
 
 import static core.project.chess.domain.chess.enumerations.Color.BLACK;
 import static core.project.chess.domain.chess.enumerations.Color.WHITE;
-import static core.project.chess.domain.chess.enumerations.GameResult.WHITE_WIN;
+import static core.project.chess.domain.commons.value_objects.GameResult.WHITE_WIN;
 
 public class User {
     private final UUID id;
@@ -129,6 +125,10 @@ public class User {
         return isEnable;
     }
 
+    public Ratings ratings() {
+        return ratings;
+    }
+
     public Rating rating() {
         return ratings.rating();
     }
@@ -166,66 +166,56 @@ public class User {
         this.isEnable = true;
     }
 
-    public void changeRating(final ChessGame chessGame) {
-        Objects.requireNonNull(chessGame);
-        if (!chessGame.isGameOver()) throw new IllegalArgumentException("Game result is empty.");
+    public void changeRating(final RatingUpdate ratingUpdate) {
+        Objects.requireNonNull(ratingUpdate);
 
         final Color color;
-        if (chessGame.whitePlayer().id().equals(this.id)) color = WHITE;
-        else if (chessGame.blackPlayer().id().equals(this.id)) color = Color.BLACK;
+        if (ratingUpdate.whitePlayerID().equals(id)) color = WHITE;
+        else if (ratingUpdate.blackPlayerID().equals(this.id)) color = Color.BLACK;
         else throw new IllegalArgumentException("This user did not participate in this game.");
 
-        final double result = getResult(chessGame.gameResult(), color);
-        final User opponent =  color.equals(WHITE) ? chessGame.blackPlayer() : chessGame.whitePlayer();
+        final double result = getResult(ratingUpdate.gameResult(), color);
+        final Rating opponentRating =  color == WHITE ? ratingUpdate.blackPlayerRating() : ratingUpdate.whitePlayerRating();
 
-        switch (chessGame.time()) {
-            case DEFAULT, CLASSIC -> {
-                Rating newRating = Glicko2RatingCalculator.calculate(this.ratings.rating(), opponent.rating(), result);
+        switch (ratingUpdate.ratingType()) {
+            case CLASSIC -> {
+                Rating newRating = Glicko2RatingCalculator.calculate(this.ratings.rating(), opponentRating, result);
                 this.ratings = Ratings.newRating(this.ratings, newRating);
             }
 
             case BULLET -> {
-                Rating newBulletRating = Glicko2RatingCalculator.calculate(this.ratings.bulletRating(), opponent.bulletRating(), result);
+                Rating newBulletRating = Glicko2RatingCalculator.calculate(this.ratings.bulletRating(), opponentRating, result);
                 this.ratings = Ratings.newBulletRating(this.ratings, newBulletRating);
             }
 
             case BLITZ -> {
-                Rating newBlitzRating = Glicko2RatingCalculator.calculate(this.ratings.blitzRating(), opponent.blitzRating(), result);
+                Rating newBlitzRating = Glicko2RatingCalculator.calculate(this.ratings.blitzRating(), opponentRating, result);
                 this.ratings = Ratings.newBlitzRating(this.ratings, newBlitzRating);
             }
 
             case RAPID -> {
-                Rating newRapidRating = Glicko2RatingCalculator.calculate(this.ratings.rapidRating(), opponent.rapidRating(), result);
+                Rating newRapidRating = Glicko2RatingCalculator.calculate(this.ratings.rapidRating(), opponentRating, result);
                 this.ratings = Ratings.newRapidRating(this.ratings, newRapidRating);
             }
         }
     }
 
-    public void changeRating(final Puzzle puzzle) {
-        Objects.requireNonNull(puzzle);
-        if (!puzzle.isEnded()) {
-            throw new IllegalArgumentException("Puzzle is not ended.");
-        }
+    public void changeRating(final RatingUpdateOnPuzzle ratingUpdate) {
+        Objects.requireNonNull(ratingUpdate);
 
-        final boolean doNotMatch = !puzzle.player().id().equals(this.id);
+        final boolean doNotMatch = !ratingUpdate.playerID().equals(this.id);
         if (doNotMatch) {
             throw new IllegalArgumentException("Puzzle does not belong to this user");
         }
 
-        final double result = puzzle.isSolved() ? 1 : -1;
-        Rating newPuzzlesRating = Glicko2RatingCalculator.calculate(this.ratings.puzzlesRating(), puzzle.rating(), result);
+        final double result = ratingUpdate.gameResult() == PuzzleStatus.SOLVED ? 1 : -1;
+        Rating newPuzzlesRating = Glicko2RatingCalculator.calculate(this.ratings.puzzlesRating(), ratingUpdate.puzzleRating(), result);
         this.ratings = Ratings.newPuzzlesRating(this.ratings, newPuzzlesRating);
     }
 
     private double getResult(final GameResult gameResult, final Color color) {
-        if (gameResult.equals(GameResult.DRAW)) {
-            return 0.5;
-        }
-
-        if (gameResult.equals(WHITE_WIN)) {
-            return color.equals(WHITE) ? 1 : 0;
-        }
-
+        if (gameResult.equals(GameResult.DRAW)) return 0.5;
+        if (gameResult.equals(WHITE_WIN)) return color.equals(WHITE) ? 1 : 0;
         return color.equals(BLACK) ? 1 : 0;
     }
 

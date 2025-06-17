@@ -1,36 +1,36 @@
 package core.project.chess.domain.chess.entities;
 
 import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.events.PuzzleGameResult;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.commons.annotations.Nullable;
 import core.project.chess.domain.commons.tuples.Pair;
+import core.project.chess.domain.commons.util.Glicko2RatingCalculator;
+import core.project.chess.domain.commons.value_objects.PuzzleStatus;
 import core.project.chess.domain.commons.value_objects.Rating;
-import core.project.chess.domain.user.entities.User;
-import core.project.chess.domain.user.util.Glicko2RatingCalculator;
+import core.project.chess.domain.commons.value_objects.RatingUpdateOnPuzzle;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class Puzzle {
     private final UUID puzzleId;
     private Rating rating;
     private final ChessBoard chessBoard;
     private final AlgebraicNotation[] algebraicNotations;
-    private final User player;
+    private final UUID player;
     private final String startPositionFEN;
     private final int startPositionIndex;
     private int currentPosition;
     private boolean isHadMistake;
     private boolean isSolved;
     private boolean isEnded;
+    private final Deque<PuzzleGameResult> domainEvents = new ArrayDeque<>();
 
     public static final double USER_RATING_WINDOW = 150.00;
 
     private Puzzle(UUID puzzleId, Rating rating, ChessBoard chessBoard,
-                   AlgebraicNotation[] algebraicNotations, User player, int startPositionIndex) {
+                   AlgebraicNotation[] algebraicNotations, UUID player, int startPositionIndex) {
         this.puzzleId = puzzleId;
         this.rating = rating;
         this.chessBoard = chessBoard;
@@ -57,7 +57,7 @@ public class Puzzle {
         return new Puzzle(UUID.randomUUID(), Rating.defaultRating(), chessBoard, algebraicNotations, null, startPositionOfPuzzle);
     }
 
-    public static Puzzle fromRepository(UUID id, User user, String pgn, int startPositionOfPuzzle, Rating rating) {
+    public static Puzzle fromRepository(UUID id, UUID user, String pgn, int startPositionOfPuzzle, Rating rating) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(pgn);
         Objects.requireNonNull(user);
@@ -92,7 +92,7 @@ public class Puzzle {
         return rating;
     }
 
-    public User player() {
+    public UUID player() {
         return player;
     }
 
@@ -150,6 +150,24 @@ public class Puzzle {
         return copiedArray;
     }
 
+    public List<PuzzleGameResult> pullDomainEvents() {
+        List<PuzzleGameResult> events = new ArrayList<>(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+
+    public void changeRating(final RatingUpdateOnPuzzle ratingUpdate) {
+        Objects.requireNonNull(ratingUpdate);
+
+        final boolean doNotMatch = !ratingUpdate.gameID().equals(puzzleId);
+        if (doNotMatch) {
+            throw new IllegalArgumentException("Do not match id");
+        }
+
+        final double result = ratingUpdate.gameResult() == PuzzleStatus.UNSOLVED ? 1 : -1;
+        this.rating = Glicko2RatingCalculator.calculate(this.rating, ratingUpdate.playerRating(), result);
+    }
+
     public Pair<String, Optional<String>> makeMovement(final Coordinate from,
                                                        final Coordinate to,
                                                        @Nullable final Piece inCaseOfPromotion) {
@@ -190,9 +208,8 @@ public class Puzzle {
         this.isEnded = true;
         this.isSolved = !this.isHadMistake;
 
-        final double result = this.isSolved ? -1 : 1;
-        this.rating = Glicko2RatingCalculator.calculate(this.rating, player.rating(), result);
-        this.player.changeRating(this);
+        PuzzleStatus puzzleStatus = this.isSolved ? PuzzleStatus.SOLVED : PuzzleStatus.UNSOLVED;
+        this.domainEvents.add(new PuzzleGameResult(this.puzzleId, rating, puzzleStatus, player));
     }
 
     private boolean isProperMove(Coordinate from, Coordinate to, Piece inCaseOfPromotion) {
@@ -216,7 +233,7 @@ public class Puzzle {
                 Objects.equals(rating, puzzle.rating) &&
                 chessBoard.equals(puzzle.chessBoard) &&
                 Arrays.equals(algebraicNotations, puzzle.algebraicNotations) &&
-                player.id().equals(puzzle.player.id()) &&
+                player.equals(puzzle.player) &&
                 Objects.equals(startPositionFEN, puzzle.startPositionFEN);
     }
 

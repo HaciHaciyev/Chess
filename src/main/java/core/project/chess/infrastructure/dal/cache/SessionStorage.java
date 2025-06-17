@@ -4,8 +4,8 @@ import core.project.chess.application.requests.GameRequest;
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.commons.tuples.Pair;
+import core.project.chess.domain.commons.value_objects.Username;
 import core.project.chess.domain.user.entities.User;
-import core.project.chess.domain.user.value_objects.Username;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 
@@ -142,11 +142,15 @@ public class SessionStorage {
         return (pair == null) ? Optional.empty() : Optional.of(pair.getFirst());
     }
 
-    public void addPuzzle(Puzzle puzzle) {
-        puzzles.put(Pair.of(new Username(puzzle.player().username()), puzzle.id()), puzzle);
+    public void addPuzzle(Puzzle puzzle, Username username) {
+        puzzles.put(Pair.of(username, puzzle.id()), puzzle);
     }
 
     public Optional<Puzzle> getPuzzle(Username username, UUID puzzleID) {
         return Optional.ofNullable(puzzles.get(Pair.of(username, puzzleID)));
+    }
+
+    public synchronized void removePuzzle(Username username, UUID puzzleID) {
+        puzzles.remove(Pair.of(username, puzzleID));
     }
 }

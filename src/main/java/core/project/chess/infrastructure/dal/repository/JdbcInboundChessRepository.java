@@ -90,8 +90,8 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                         chessGame.isGameOver(),
                         chessGame.gameResult().toString(),
                         chessGame.chessGameID().toString(),
-                        chessGame.whitePlayer().id().toString(),
-                        chessGame.blackPlayer().id().toString())
+                        chessGame.whitePlayer(),
+                        chessGame.blackPlayer())
                 .ifFailure(Throwable::printStackTrace);
     }
 
@@ -137,8 +137,8 @@ public class JdbcInboundChessRepository implements InboundChessRepository {
                         puzzle.rating().rating(),
                         puzzle.rating().ratingDeviation(),
                         puzzle.rating().volatility(),
-                        puzzle.id().toString(),
-                        puzzle.player().id().toString(),
+                        puzzle.id(),
+                        puzzle.player(),
                         puzzle.isSolved())
                 .ifFailure(Throwable::printStackTrace);
     }

@@ -1,8 +1,8 @@
 package core.project.chess.application.controller.http;
 
 import core.project.chess.application.service.ProfileService;
+import core.project.chess.domain.commons.value_objects.Username;
 import core.project.chess.domain.user.value_objects.ProfilePicture;
-import core.project.chess.domain.user.value_objects.Username;
 import io.quarkus.security.Authenticated;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.*;

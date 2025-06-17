@@ -1,4 +1,4 @@
-package core.project.chess.domain.user.util;
+package core.project.chess.domain.commons.util;
 
 import core.project.chess.domain.commons.value_objects.Rating;
 

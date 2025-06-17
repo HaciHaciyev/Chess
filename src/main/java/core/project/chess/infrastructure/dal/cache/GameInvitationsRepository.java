@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import core.project.chess.application.util.JSONUtilities;
 import core.project.chess.domain.chess.value_objects.GameParameters;
 import core.project.chess.domain.commons.containers.StatusPair;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.commons.value_objects.Username;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.hash.HashCommands;

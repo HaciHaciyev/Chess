@@ -1,7 +1,11 @@
 package core.project.chess.domain.chess.entities;
 
 import core.project.chess.domain.chess.entities.ChessBoard.Operations;
-import core.project.chess.domain.chess.enumerations.*;
+import core.project.chess.domain.chess.enumerations.Color;
+import core.project.chess.domain.chess.enumerations.Coordinate;
+import core.project.chess.domain.chess.enumerations.GameResultMessage;
+import core.project.chess.domain.chess.enumerations.UndoMoveResult;
+import core.project.chess.domain.chess.events.ChessGameResult;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.util.ChessCountdownTimer;
 import core.project.chess.domain.chess.util.ToStringUtils;
@@ -9,9 +13,9 @@ import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.chess.value_objects.GameDates;
 import core.project.chess.domain.commons.annotations.Nullable;
+import core.project.chess.domain.commons.value_objects.GameResult;
 import core.project.chess.domain.commons.value_objects.Rating;
-import core.project.chess.domain.user.entities.User;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.commons.value_objects.RatingType;
 
 import java.time.Duration;
 import java.util.*;
@@ -25,8 +29,8 @@ import static java.util.Objects.nonNull;
 public class ChessGame {
     private final UUID chessGameId;
     private final ChessBoard chessBoard;
-    private final User whitePlayer;
-    private final User blackPlayer;
+    private final UUID whitePlayer;
+    private final UUID blackPlayer;
     private final Rating whiteRating;
     private final Rating blackRating;
     private final GameDates gameDates;
@@ -42,13 +46,14 @@ public class ChessGame {
     private AgreementPair returnOfMovement;
     private ChessCountdownTimer afkTimer;
     private GameResult isGameOver;
+    private final Deque<ChessGameResult> domainEvents = new ArrayDeque<>();
 
     public static final int TIME_FOR_AFK = 45;
 
     private ChessGame(UUID chessGameId,
                       ChessBoard chessBoard,
-                      User whitePlayer,
-                      User blackPlayer,
+                      UUID whitePlayer,
+                      UUID blackPlayer,
                       Rating whiteRating,
                       Rating blackRating,
                       GameDates gameDates,
@@ -66,7 +71,7 @@ public class ChessGame {
         Objects.requireNonNull(time);
         Objects.requireNonNull(gameResult);
 
-        if (blackPlayer.id().equals(whitePlayer.id()))
+        if (blackPlayer.equals(whitePlayer))
             throw new IllegalArgumentException("Game can`t be initialized with same player for both sides.");
 
         this.chessGameId = chessGameId;
@@ -87,25 +92,25 @@ public class ChessGame {
 
         this.whiteTimer = new ChessCountdownTimer(this, "White timer", Duration.ofMinutes(time.getMinutes()), () -> {
             this.isGameOver = GameResult.BLACK_WIN;
-            calculatePlayersRating();
+            defineGameResult();
         });
 
         this.blackTimer = new ChessCountdownTimer(this, "Black timer", Duration.ofMinutes(time.getMinutes()), () -> {
             this.isGameOver = GameResult.WHITE_WIN;
-            calculatePlayersRating();
+            defineGameResult();
         });
     }
 
     public static ChessGame standard(
             UUID chessGameId,
-            User whitePlayer,
-            User blackPlayer,
+            UUID whitePlayer,
+            UUID blackPlayer,
+            Rating whiteRating,
+            Rating blackRating,
             GameDates gameDates,
             Time time,
             boolean isCasualGame
     ) {
-        Rating whiteRating = getRating(whitePlayer, time);
-        Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.starndardChessBoard(), whitePlayer, blackPlayer,
                 whiteRating, blackRating, gameDates, time, isCasualGame);
@@ -114,14 +119,13 @@ public class ChessGame {
     public static ChessGame byPGN(
             UUID chessGameId,
             String pgn,
-            User whitePlayer,
-            User blackPlayer,
+            UUID whitePlayer,
+            UUID blackPlayer,
+            Rating whiteRating,
+            Rating blackRating,
             GameDates gameDates,
             Time time,
             Boolean isCasualGame) {
-
-        Rating whiteRating = getRating(whitePlayer, time);
-        Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.fromPGN(pgn), whitePlayer, blackPlayer,
                 whiteRating, blackRating, gameDates, time, isCasualGame);
@@ -130,14 +134,13 @@ public class ChessGame {
     public static ChessGame byFEN(
             UUID chessGameId,
             String fen,
-            User whitePlayer,
-            User blackPlayer,
+            UUID whitePlayer,
+            UUID blackPlayer,
+            Rating whiteRating,
+            Rating blackRating,
             GameDates gameDates,
             Time time,
             Boolean isCasualGame) {
-
-        Rating whiteRating = getRating(whitePlayer, time);
-        Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.fromPosition(fen), whitePlayer, blackPlayer,
                 whiteRating, blackRating, gameDates, time, isCasualGame);
@@ -145,14 +148,13 @@ public class ChessGame {
 
     public static ChessGame pureChess(
             UUID chessGameId,
-            User whitePlayer,
-            User blackPlayer,
+            UUID whitePlayer,
+            UUID blackPlayer,
+            Rating whiteRating,
+            Rating blackRating,
             GameDates gameDates,
             Time time,
             boolean isCasualGame) {
-
-        Rating whiteRating = getRating(whitePlayer, time);
-        Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.pureChess(), whitePlayer, blackPlayer,
                 whiteRating, blackRating, gameDates, time, isCasualGame);
@@ -161,14 +163,13 @@ public class ChessGame {
     public static ChessGame pureChessByFEN(
             UUID chessGameId,
             String fen,
-            User whitePlayer,
-            User blackPlayer,
+            UUID whitePlayer,
+            UUID blackPlayer,
+            Rating whiteRating,
+            Rating blackRating,
             GameDates gameDates,
             Time time,
             boolean isCasualGame) {
-
-        Rating whiteRating = getRating(whitePlayer, time);
-        Rating blackRating = getRating(blackPlayer, time);
 
         return chessGameInit(chessGameId, ChessBoard.pureChessFromPosition(fen), whitePlayer, blackPlayer,
                 whiteRating, blackRating, gameDates, time, isCasualGame);
@@ -177,8 +178,8 @@ public class ChessGame {
     private static ChessGame chessGameInit(
             UUID chessGameId,
             ChessBoard chessBoard,
-            User whitePlayer,
-            User blackPlayer,
+            UUID whitePlayer,
+            UUID blackPlayer,
             Rating whiteRating,
             Rating blackRating,
             GameDates gameDates,
@@ -199,17 +200,16 @@ public class ChessGame {
         );
     }
 
-    private static Rating getRating(User user, Time time) {
-        return switch (time) {
-            case DEFAULT, CLASSIC -> user.rating();
-            case BULLET -> user.bulletRating();
-            case BLITZ -> user.blitzRating();
-            case RAPID -> user.rapidRating();
-        };
-    }
-
     public UUID chessGameID() {
         return chessGameId;
+    }
+
+    public UUID whitePlayer() {
+        return whitePlayer;
+    }
+
+    public UUID blackPlayer() {
+        return blackPlayer;
     }
 
     public String fen() {
@@ -238,14 +238,6 @@ public class ChessGame {
 
     public UUID historyID() {
         return chessBoard.ID();
-    }
-
-    public User whitePlayer() {
-        return whitePlayer;
-    }
-
-    public User blackPlayer() {
-        return blackPlayer;
     }
 
     public Rating whiteRating() {
@@ -280,8 +272,8 @@ public class ChessGame {
         return new ToStringUtils(chessBoard);
     }
 
-    public void addChatMessage(final String username, final ChatMessage message) {
-        validateUsername(username);
+    public void addChatMessage(final UUID userID, final ChatMessage message) {
+        validateUserID(userID);
         chatMessages.add(message);
     }
 
@@ -305,29 +297,35 @@ public class ChessGame {
         }
     }
 
-    public boolean isAgreementAvailable() {
-        if (isGameOver()) return false;
-        return agreementPair.whitePlayerUsername != null || agreementPair.blackPlayerUsername != null;
+    public List<ChessGameResult> pullDomainEvents() {
+        List<ChessGameResult> events = new ArrayList<>(domainEvents);
+        domainEvents.clear();
+        return events;
     }
 
-    public boolean isPlayer(Username username) {
-        return username.username().equals(whitePlayer.username()) || username.username().equals(blackPlayer.username());
+    public boolean isAgreementAvailable() {
+        if (isGameOver()) return false;
+        return agreementPair.whitePlayer() != null || agreementPair.blackPlayer() != null;
+    }
+
+    public boolean isPlayer(UUID userID) {
+        return whitePlayer.equals(userID) || blackPlayer.equals(userID);
     }
 
     public GameResultMessage doMove(
-            final String username,
+            final UUID userID,
             final Coordinate from,
             final Coordinate to,
             final @Nullable Piece inCaseOfPromotion) throws IllegalArgumentException {
 
-        Objects.requireNonNull(username);
+        Objects.requireNonNull(userID);
         Objects.requireNonNull(from);
         Objects.requireNonNull(to);
 
         if (!chessBoard.isPureChess() && isGameOver != GameResult.NONE)
             throw new IllegalStateException("Game is over by %s".formatted(isGameOver));
 
-        Color color = validateUsername(username);
+        Color color = validateUserID(userID);
         validateMovesTurn(color);
 
         final GameResultMessage message = chessBoard.doMove(from, to, inCaseOfPromotion);
@@ -351,9 +349,9 @@ public class ChessGame {
         return message;
     }
 
-    public UndoMoveResult undo(final String username) {
-        Objects.requireNonNull(username);
-        Color color = validateUsername(username);
+    public UndoMoveResult undo(final UUID userID) {
+        Objects.requireNonNull(userID);
+        Color color = validateUserID(userID);
 
         if (!chessBoard.isPureChess() && isGameOver != GameResult.NONE)
             throw new IllegalArgumentException("Game is over.");
@@ -367,82 +365,82 @@ public class ChessGame {
             return UndoMoveResult.SUCCESSFUL_UNDO;
         }
 
-        setReturnOfMovementAgreement(color, username);
+        setReturnOfMovementAgreement(color, userID);
         return UndoMoveResult.UNDO_REQUESTED;
     }
 
     private boolean attemptToUndoMovement(Color color) {
-        if (color.equals(WHITE)) return nonNull(returnOfMovement.blackPlayerUsername());
-        else return nonNull(returnOfMovement.whitePlayerUsername());
+        if (color.equals(WHITE)) return nonNull(returnOfMovement.blackPlayer());
+        else return nonNull(returnOfMovement.whitePlayer());
     }
 
-    private void setReturnOfMovementAgreement(Color color, String username) {
-        if (color.equals(WHITE)) this.returnOfMovement = new AgreementPair(username, null);
-        else this.returnOfMovement = new AgreementPair(null, username);
+    private void setReturnOfMovementAgreement(Color color, UUID userID) {
+        if (color.equals(WHITE)) this.returnOfMovement = new AgreementPair(userID, null);
+        else this.returnOfMovement = new AgreementPair(null, userID);
     }
 
-    public void resignation(final String username) {
-        Objects.requireNonNull(username);
-        Color color = validateUsername(username);
+    public void resignation(final UUID userID) {
+        Objects.requireNonNull(userID);
+        Color color = validateUserID(userID);
 
         if (isGameOver != GameResult.NONE) throw new IllegalArgumentException("Game is over.");
 
         if (color.equals(WHITE)) {
             this.isGameOver = GameResult.BLACK_WIN;
-            calculatePlayersRating();
+            defineGameResult();
             return;
         }
 
         this.isGameOver = GameResult.WHITE_WIN;
-        calculatePlayersRating();
+        defineGameResult();
     }
 
-    public void endGameByThreeFold(final String username) {
-        Objects.requireNonNull(username);
-        validateUsername(username);
+    public void endGameByThreeFold(final UUID userID) {
+        Objects.requireNonNull(userID);
+        validateUserID(userID);
 
         if (isGameOver != GameResult.NONE) throw new IllegalArgumentException("Game is over.");
         if (!isThreeFoldActive) return;
         gameOver(Operations.STALEMATE);
     }
 
-    public void agreement(final String username) {
-        Objects.requireNonNull(username);
-        Color color = validateUsername(username);
+    public void agreement(final UUID userID) {
+        Objects.requireNonNull(userID);
+        Color color = validateUserID(userID);
 
         if (isGameOver != GameResult.NONE) throw new IllegalArgumentException("Game is over.");
 
         if (attemptToFinalizeAgreement(color)) {
-            this.agreementPair = new AgreementPair(whitePlayer.username(), blackPlayer.username());
+            this.agreementPair = new AgreementPair(whitePlayer, blackPlayer);
             gameOver(Operations.STALEMATE);
             return;
         }
 
-        setAgreement(color, username);
+        setAgreement(color, userID);
     }
 
-    public void awayFromTheBoard(Username username) {
-        if (!isPlayer(username)) return;
+    public void awayFromTheBoard(UUID userID) {
+        if (!isPlayer(userID)) return;
         if (nonNull(afkTimer)) return;
 
-        Color color = username.username().equals(whitePlayer.username()) ? WHITE : BLACK;
+        Color color = userID.equals(whitePlayer) ? WHITE : BLACK;
 
         if (color == WHITE) {
             this.afkTimer = new ChessCountdownTimer(this, "AFK White timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
                 this.isGameOver = GameResult.BLACK_WIN;
-                calculatePlayersRating();
+                defineGameResult();
             });
             return;
         }
 
         this.afkTimer = new ChessCountdownTimer(this, "AFK Black timer", Duration.ofSeconds(TIME_FOR_AFK), () -> {
             this.isGameOver = GameResult.WHITE_WIN;
-            calculatePlayersRating();
+            defineGameResult();
         });
     }
 
-    public void returnedToTheBoard(Username username) {
-        if (!isPlayer(username)) throw new IllegalArgumentException("Not a player: " + username);
+    public void returnedToTheBoard(UUID userID) {
+        if (!isPlayer(userID)) throw new IllegalArgumentException("Not a player: " + userID);
         if (isNull(afkTimer)) return;
 
         afkTimer.stop();
@@ -450,13 +448,13 @@ public class ChessGame {
     }
 
     private boolean attemptToFinalizeAgreement(Color color) {
-        if (color.equals(WHITE)) return nonNull(agreementPair.blackPlayerUsername());
-        else return nonNull(agreementPair.whitePlayerUsername());
+        if (color.equals(WHITE)) return nonNull(agreementPair.blackPlayer());
+        else return nonNull(agreementPair.whitePlayer());
     }
 
-    private void setAgreement(Color color, String username) {
-        if (color.equals(WHITE)) this.agreementPair = new AgreementPair(username, null);
-        else this.agreementPair = new AgreementPair(null, username);
+    private void setAgreement(Color color, UUID userID) {
+        if (color.equals(WHITE)) this.agreementPair = new AgreementPair(userID, null);
+        else this.agreementPair = new AgreementPair(null, userID);
     }
 
     private void gameOver(final Operations operation) {
@@ -472,18 +470,25 @@ public class ChessGame {
 
     private void drawEnding() {
         this.isGameOver = GameResult.DRAW;
-        calculatePlayersRating();
+        defineGameResult();
     }
 
     private void winnerEnding() {
         this.isGameOver = playersTurn.equals(WHITE) ? GameResult.WHITE_WIN : GameResult.BLACK_WIN;
-        calculatePlayersRating();
+        defineGameResult();
     }
 
-    private void calculatePlayersRating() {
-        if (this.isCasualGame) return;
-        whitePlayer.changeRating(this);
-        blackPlayer.changeRating(this);
+    private void defineGameResult() {
+        domainEvents.add(new ChessGameResult(chessGameId, isGameOver, whitePlayer, blackPlayer, ratingType()));
+    }
+
+    public RatingType ratingType() {
+        return switch (time) {
+            case DEFAULT, CLASSIC -> RatingType.CLASSIC;
+            case RAPID -> RatingType.RAPID;
+            case BLITZ -> RatingType.BLITZ;
+            case BULLET -> RatingType.BULLET;
+        };
     }
 
     public Duration remainingTimeForWhite() {
@@ -494,17 +499,17 @@ public class ChessGame {
         return blackTimer.remainingTime();
     }
 
-    private Color validateUsername(final String username) {
-        final boolean isWhitePlayer = username.equals(whitePlayer.username());
-        final boolean isBlackPlayer = username.equals(blackPlayer.username());
+    private Color validateUserID(final UUID userID) {
+        final boolean isWhitePlayer = userID.equals(whitePlayer);
+        final boolean isBlackPlayer = userID.equals(blackPlayer);
 
-        if (!isWhitePlayer && !isBlackPlayer) throw new IllegalArgumentException("Not a player: " + username);
+        if (!isWhitePlayer && !isBlackPlayer) throw new IllegalArgumentException("Not a player: " + userID);
         if (nonNull(afkTimer)) {
             final boolean illegalAccess = (isWhitePlayer && afkTimer.name().equals("AFK White timer")) ||
                     (isBlackPlayer && afkTimer.name().equals("AFK Black timer"));
 
             if (illegalAccess)
-                throw new IllegalStateException("A player cannot make a move without being at the board: " + username);
+                throw new IllegalStateException("A player cannot make a move without being at the board: " + userID);
         }
 
         return isWhitePlayer ? WHITE : BLACK;
@@ -576,8 +581,8 @@ public class ChessGame {
                     Is game over : %s, reason : %s
                 }
                 """,
-                this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer.username(),
-                this.blackPlayer.username(), this.whiteRating.rating(), this.blackRating.rating(),
+                this.chessGameId.toString(), this.playersTurn.toString(), this.whitePlayer,
+                this.blackPlayer, this.whiteRating.rating(), this.blackRating.rating(),
                 this.gameDates.creationDate().toString(), this.gameDates.lastUpdateDate().toString(),
                 this.time.toString(), this.isCasualGame, isGameOver != GameResult.NONE, isGameOver
         );
@@ -601,5 +606,5 @@ public class ChessGame {
         }
     }
 
-    private record AgreementPair(String whitePlayerUsername, String blackPlayerUsername) {}
+    private record AgreementPair(UUID whitePlayer, UUID blackPlayer) {}
 }

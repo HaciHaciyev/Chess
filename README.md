@@ -740,8 +740,6 @@ Payload Example:
 {
   "type": "GAME_START_INFO",
   "gameID": "string (UUID)",
-  "whitePlayerUsername": "Player1",
-  "blackPlayerUsername": "Player2",
   "whitePlayerRating": 1500,
   "blackPlayerRating": 1450,
   "time": "\"BULLET\" | \"BLITZ\" | \"RAPID\" | \"CLASSIC\" | \"DEFAULT\""

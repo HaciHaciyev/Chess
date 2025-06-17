@@ -4,6 +4,8 @@ import com.hadzhy.jetquerious.jdbc.JetQuerious;
 import core.project.chess.application.dto.user.UserProperties;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.commons.value_objects.Rating;
+import core.project.chess.domain.commons.value_objects.Ratings;
+import core.project.chess.domain.commons.value_objects.Username;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.OutboundUserRepository;

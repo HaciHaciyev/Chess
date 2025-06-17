@@ -5,12 +5,12 @@ import com.hadzhy.jetquerious.sql.Order;
 import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.application.dto.chess.Puzzle;
 import core.project.chess.domain.chess.entities.ChessGame;
-import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.value_objects.PuzzleRatingWindow;
 import core.project.chess.domain.commons.containers.Result;
+import core.project.chess.domain.commons.value_objects.GameResult;
 import core.project.chess.domain.commons.value_objects.Rating;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.commons.value_objects.Username;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 

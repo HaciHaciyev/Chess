@@ -1,6 +1,4 @@
-package core.project.chess.domain.user.value_objects;
-
-import core.project.chess.domain.commons.value_objects.Rating;
+package core.project.chess.domain.commons.value_objects;
 
 import java.util.Objects;
 

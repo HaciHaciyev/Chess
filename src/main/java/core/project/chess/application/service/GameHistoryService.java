@@ -2,7 +2,7 @@ package core.project.chess.application.service;
 
 import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.commons.value_objects.Username;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 

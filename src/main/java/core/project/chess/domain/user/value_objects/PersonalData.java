@@ -1,5 +1,7 @@
 package core.project.chess.domain.user.value_objects;
 
+import core.project.chess.domain.commons.value_objects.Username;
+
 /** Password must be hashed*/
 public record PersonalData(String firstname, String surname, String username, String email, String password) {
 

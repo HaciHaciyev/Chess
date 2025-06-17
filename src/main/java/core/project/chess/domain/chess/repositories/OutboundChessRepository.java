@@ -4,7 +4,7 @@ import core.project.chess.application.dto.chess.ChessGameHistory;
 import core.project.chess.application.dto.chess.Puzzle;
 import core.project.chess.domain.chess.value_objects.PuzzleRatingWindow;
 import core.project.chess.domain.commons.containers.Result;
-import core.project.chess.domain.user.value_objects.Username;
+import core.project.chess.domain.commons.value_objects.Username;
 
 import java.util.List;
 import java.util.UUID;
