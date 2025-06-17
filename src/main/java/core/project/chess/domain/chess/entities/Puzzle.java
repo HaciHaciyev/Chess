@@ -3,11 +3,11 @@ package core.project.chess.domain.chess.entities;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
+import core.project.chess.domain.commons.annotations.Nullable;
 import core.project.chess.domain.commons.tuples.Pair;
+import core.project.chess.domain.commons.value_objects.Rating;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
-import core.project.chess.domain.user.value_objects.Rating;
-import jakarta.annotation.Nullable;
 
 import java.util.Arrays;
 import java.util.Objects;

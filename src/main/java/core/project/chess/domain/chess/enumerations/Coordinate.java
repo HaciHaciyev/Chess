@@ -1,6 +1,6 @@
 package core.project.chess.domain.chess.enumerations;
 
-import jakarta.annotation.Nullable;
+import core.project.chess.domain.commons.annotations.Nullable;
 
 public enum Coordinate {
     a8(1, 8, new byte[]{'a', '8'}, 56),

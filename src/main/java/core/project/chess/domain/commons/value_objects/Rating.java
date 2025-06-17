@@ -1,4 +1,4 @@
-package core.project.chess.domain.user.value_objects;
+package core.project.chess.domain.commons.value_objects;
 
 public class Rating {
     private final double rating;

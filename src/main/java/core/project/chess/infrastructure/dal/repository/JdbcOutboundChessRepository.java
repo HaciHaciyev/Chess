@@ -9,7 +9,7 @@ import core.project.chess.domain.chess.enumerations.GameResult;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.value_objects.PuzzleRatingWindow;
 import core.project.chess.domain.commons.containers.Result;
-import core.project.chess.domain.user.value_objects.Rating;
+import core.project.chess.domain.commons.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;

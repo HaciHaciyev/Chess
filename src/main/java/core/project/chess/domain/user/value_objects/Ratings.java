@@ -1,5 +1,7 @@
 package core.project.chess.domain.user.value_objects;
 
+import core.project.chess.domain.commons.value_objects.Rating;
+
 import java.util.Objects;
 
 public record Ratings(Rating rating, Rating bulletRating, Rating blitzRating, Rating rapidRating, Rating puzzlesRating) {

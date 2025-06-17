@@ -10,11 +10,11 @@ import core.project.chess.domain.chess.pieces.Piece;
 import core.project.chess.domain.chess.repositories.InboundChessRepository;
 import core.project.chess.domain.chess.repositories.OutboundChessRepository;
 import core.project.chess.domain.chess.value_objects.*;
+import core.project.chess.domain.commons.annotations.Nullable;
 import core.project.chess.domain.commons.containers.Result;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
 import io.quarkus.logging.Log;
-import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.Duration;

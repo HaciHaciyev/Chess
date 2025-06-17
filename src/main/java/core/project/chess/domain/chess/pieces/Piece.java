@@ -4,7 +4,7 @@ import core.project.chess.domain.chess.entities.ChessBoard;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.Coordinate;
 import core.project.chess.domain.chess.enumerations.Direction;
-import jakarta.annotation.Nullable;
+import core.project.chess.domain.commons.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;

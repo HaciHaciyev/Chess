@@ -4,9 +4,13 @@ import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.entities.Puzzle;
 import core.project.chess.domain.chess.enumerations.Color;
 import core.project.chess.domain.chess.enumerations.GameResult;
+import core.project.chess.domain.commons.annotations.Nullable;
+import core.project.chess.domain.commons.value_objects.Rating;
 import core.project.chess.domain.user.util.Glicko2RatingCalculator;
-import core.project.chess.domain.user.value_objects.*;
-import jakarta.annotation.Nullable;
+import core.project.chess.domain.user.value_objects.AccountDates;
+import core.project.chess.domain.user.value_objects.PersonalData;
+import core.project.chess.domain.user.value_objects.ProfilePicture;
+import core.project.chess.domain.user.value_objects.Ratings;
 
 import java.util.*;
 

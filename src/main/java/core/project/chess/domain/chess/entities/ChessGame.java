@@ -8,10 +8,10 @@ import core.project.chess.domain.chess.util.ToStringUtils;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.ChatMessage;
 import core.project.chess.domain.chess.value_objects.GameDates;
+import core.project.chess.domain.commons.annotations.Nullable;
+import core.project.chess.domain.commons.value_objects.Rating;
 import core.project.chess.domain.user.entities.User;
-import core.project.chess.domain.user.value_objects.Rating;
 import core.project.chess.domain.user.value_objects.Username;
-import jakarta.annotation.Nullable;
 
 import java.time.Duration;
 import java.util.*;

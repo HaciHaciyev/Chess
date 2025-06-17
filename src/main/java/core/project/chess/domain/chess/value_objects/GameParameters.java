@@ -2,7 +2,7 @@ package core.project.chess.domain.chess.value_objects;
 
 import core.project.chess.domain.chess.entities.ChessGame;
 import core.project.chess.domain.chess.enumerations.Color;
-import jakarta.annotation.Nullable;
+import core.project.chess.domain.commons.annotations.Nullable;
 
 import java.util.Objects;
 

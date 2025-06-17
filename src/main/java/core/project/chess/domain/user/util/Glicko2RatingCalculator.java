@@ -1,6 +1,6 @@
 package core.project.chess.domain.user.util;
 
-import core.project.chess.domain.user.value_objects.Rating;
+import core.project.chess.domain.commons.value_objects.Rating;
 
 import static java.lang.Math.*;
 

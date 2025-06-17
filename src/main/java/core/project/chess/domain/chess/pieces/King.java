@@ -6,7 +6,7 @@ import core.project.chess.domain.chess.value_objects.AlgebraicNotation;
 import core.project.chess.domain.chess.value_objects.AlgebraicNotation.Castle;
 import core.project.chess.domain.chess.value_objects.KingStatus;
 import core.project.chess.domain.chess.value_objects.Move;
-import jakarta.annotation.Nullable;
+import core.project.chess.domain.commons.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.EnumSet;

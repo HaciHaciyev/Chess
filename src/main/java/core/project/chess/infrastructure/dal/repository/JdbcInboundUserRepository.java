@@ -1,10 +1,10 @@
 package core.project.chess.infrastructure.dal.repository;
 
 import com.hadzhy.jetquerious.jdbc.JetQuerious;
+import core.project.chess.domain.commons.value_objects.Rating;
 import core.project.chess.domain.user.entities.EmailConfirmationToken;
 import core.project.chess.domain.user.entities.User;
 import core.project.chess.domain.user.repositories.InboundUserRepository;
-import core.project.chess.domain.user.value_objects.Rating;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.enterprise.context.ApplicationScoped;
 

@@ -7,9 +7,9 @@ import core.project.chess.domain.chess.pieces.*;
 import core.project.chess.domain.chess.util.ChessNotationsValidator;
 import core.project.chess.domain.chess.util.ZobristHashKeys;
 import core.project.chess.domain.chess.value_objects.*;
+import core.project.chess.domain.commons.annotations.Nullable;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
-import jakarta.annotation.Nullable;
 
 import java.util.*;
 
