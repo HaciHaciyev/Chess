@@ -94,9 +94,6 @@ public class ChessGame {
             this.isGameOver = GameResult.WHITE_WIN;
             calculatePlayersRating();
         });
-
-        whitePlayer.addGame(this);
-        blackPlayer.addGame(this);
     }
 
     public static ChessGame standard(

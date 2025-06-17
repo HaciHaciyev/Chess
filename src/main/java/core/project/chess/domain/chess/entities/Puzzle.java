@@ -38,7 +38,6 @@ public class Puzzle {
         this.startPositionFEN = chessBoard.toString();
         this.player = player;
         this.startPositionIndex = startPositionIndex;
-        this.player.addPuzzle(this);
     }
 
     /**

@@ -24,9 +24,8 @@ public class User {
     private boolean isEnable;
     private Ratings ratings;
     private final AccountDates accountDates;
-    private final Set<User> partners;
-    private final Set<ChessGame> games;
-    private final Set<Puzzle> puzzles;
+    private final Set<UUID> games;
+    private final Set<UUID> puzzles;
     private ProfilePicture profilePicture;
 
     private User(UUID id,
@@ -34,16 +33,14 @@ public class User {
                  boolean isEnable,
                  Ratings ratings,
                  AccountDates accountDates,
-                 @Nullable Set<User> partners,
-                 @Nullable Set<ChessGame> games,
-                 @Nullable Set<Puzzle> puzzles,
+                 @Nullable Set<UUID> games,
+                 @Nullable Set<UUID> puzzles,
                  @Nullable ProfilePicture profilePicture) {
         this.id = id;
         this.personalData = personalData;
         this.isEnable = isEnable;
         this.ratings = ratings;
         this.accountDates = accountDates;
-        this.partners = partners;
         this.games = games;
         this.puzzles = puzzles;
         this.profilePicture = profilePicture;
@@ -57,7 +54,6 @@ public class User {
                 false,
                 Ratings.defaultRatings(),
                 AccountDates.defaultEvents(),
-                new HashSet<>(),
                 new HashSet<>(),
                 new HashSet<>(),
                 null
@@ -81,7 +77,6 @@ public class User {
                 isEnabled,
                 ratings,
                 events,
-                new HashSet<>(),
                 new HashSet<>(),
                 new HashSet<>(),
                 null
@@ -117,17 +112,13 @@ public class User {
     }
 
     @Nullable
-    public Set<ChessGame> games() {
-        return games;
+    public Set<UUID> games() {
+        return new HashSet<>(games);
     }
 
     @Nullable
-    public Set<Puzzle> puzzles() {
-        return puzzles;
-    }
-
-    public Set<User> partners() {
-        return new HashSet<>(partners);
+    public Set<UUID> puzzles() {
+        return new HashSet<>(puzzles);
     }
 
     public Optional<ProfilePicture> profilePicture() {
@@ -158,17 +149,15 @@ public class User {
         return ratings.puzzlesRating();
     }
 
-    public void addGame(final ChessGame game) {
-        Objects.requireNonNull(game);
+    public void addGame(final UUID game) {
+        if (game == null)
+            throw new IllegalArgumentException("game id can`t be null");
         games.add(game);
     }
 
-    public void addPuzzle(final Puzzle puzzle) {
-        final boolean doNotMatch = !puzzle.player().id().equals(this.id);
-        if (doNotMatch) {
-            throw new IllegalArgumentException("Puzzle does not belong to this user");
-        }
-
+    public void addPuzzle(final UUID puzzle) {
+        if (puzzle == null)
+            throw new IllegalArgumentException("puzzle id can`t be null");
         puzzles.add(puzzle);
     }
 
