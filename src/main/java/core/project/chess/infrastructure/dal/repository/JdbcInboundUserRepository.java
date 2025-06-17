@@ -134,7 +134,7 @@ public class JdbcInboundUserRepository implements InboundUserRepository {
             .build()
             .sql();
 
-    static private final String DELETE_REFRESH_TOKEN = delete()
+    static final String DELETE_REFRESH_TOKEN = delete()
             .from("RefreshToken")
             .where("token = ?")
             .build()
