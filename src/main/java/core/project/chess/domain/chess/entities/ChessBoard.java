@@ -9,7 +9,6 @@ import core.project.chess.domain.chess.util.ZobristHashKeys;
 import core.project.chess.domain.chess.value_objects.*;
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.commons.tuples.Pair;
-import io.quarkus.logging.Log;
 import jakarta.annotation.Nullable;
 
 import java.util.*;
@@ -670,7 +669,6 @@ public class ChessBoard {
             try {
                 message = doMove(from, to, inCaseOfPromotion);
             } catch (IllegalArgumentException e) {
-                logErrorMove(from, to);
                 throw new IllegalArgumentException(String.format("Invalid PGN: %s", e.getMessage()));
             }
 
@@ -1131,7 +1129,6 @@ public class ChessBoard {
         /** Validation.*/
         final Set<Operations> operations = startField.isValidMove(this, from, to);
         if (operations == null) {
-            logErrorMove(from, to);
             throw new IllegalArgumentException(String
                     .format("Invalid move. From:%s. To:%s. Failed validation for %s movement.", from, to, startField));
         }
@@ -1256,7 +1253,6 @@ public class ChessBoard {
 
         final Set<Operations> operations = king.isValidMove(this, from, to);
         if (operations == null) {
-            logErrorMove(from, to);
             throw new IllegalArgumentException("Invalid move. Failed validation.");
         }
 
@@ -1523,17 +1519,6 @@ public class ChessBoard {
         addFigure(required, capturedPawn);
         materialAdvantageOfWhite++;
         return true;
-    }
-
-    private void logErrorMove(Coordinate from, Coordinate to) {
-        Log.infof("""
-        Error move validation.
-        From: %s,
-        To: %s,
-        PGN: %s,
-        FEN: %s,
-        EnPassaunt stack: %s
-        """, from, to, pgn(), toString(), enPassantStack.toString());
     }
 
     /**

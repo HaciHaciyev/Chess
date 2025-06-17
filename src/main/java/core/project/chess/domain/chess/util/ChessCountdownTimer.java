@@ -1,7 +1,6 @@
 package core.project.chess.domain.chess.util;
 
 import core.project.chess.domain.chess.entities.ChessGame;
-import io.quarkus.logging.Log;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -74,11 +73,7 @@ public class ChessCountdownTimer implements Runnable {
     }
 
     public void start() {
-        if (isRunning.get() && !isPaused.get()) {
-            Log.warnf("%s for the game %s is already running", name, chessGame.chessGameID());
-            return;
-        }
-
+        if (isRunning.get() && !isPaused.get()) return;
 
         isRunning.set(true);
 

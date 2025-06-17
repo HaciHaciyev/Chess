@@ -2,7 +2,6 @@ package core.project.chess.domain.user.value_objects;
 
 import core.project.chess.domain.commons.containers.StatusPair;
 import core.project.chess.domain.user.entities.User;
-import io.quarkus.logging.Log;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -42,7 +41,6 @@ public final class ProfilePicture {
         StatusPair<String> typeOfImage = validate(path, profilePicture);
 
         if (!typeOfImage.status()) {
-            Log.errorf("Invalid profile picture type: %s", typeOfImage.status());
             throw new IllegalArgumentException(String.format("Invalid profile picture type: %s", typeOfImage.status()));
         }
 
@@ -80,7 +78,6 @@ public final class ProfilePicture {
         Objects.requireNonNull(profilePicture);
 
         if (profilePicture.length > MAX_SIZE) {
-            Log.error("Profile picture is too big.");
             return StatusPair.ofFalse();
         }
 
