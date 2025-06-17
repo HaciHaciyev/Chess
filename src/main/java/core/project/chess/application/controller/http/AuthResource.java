@@ -3,8 +3,8 @@ package core.project.chess.application.controller.http;
 import core.project.chess.application.dto.user.LoginForm;
 import core.project.chess.application.dto.user.RegistrationForm;
 import core.project.chess.application.service.AuthService;
-import core.project.chess.infrastructure.telemetry.TelemetryService;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
@@ -20,13 +20,10 @@ public class AuthResource {
 
     private final AuthService authService;
 
-    private final TelemetryService telemetry;
-
     private static final AttributeKey<String> USERNAME = AttributeKey.stringKey("chessland.http.registration.username");
 
-    AuthResource(AuthService authService, TelemetryService telemetry) {
+    AuthResource(AuthService authService) {
         this.authService = authService;
-        this.telemetry = telemetry;
     }
 
     @POST
@@ -36,7 +33,7 @@ public class AuthResource {
         if (Objects.isNull(form))
             throw responseException(Response.Status.BAD_REQUEST, "Registration form is null.");
 
-        telemetry.setSpanAttribute(USERNAME, form.username());
+        Span.current().setAttribute(USERNAME, form.username());
 
         authService.registration(form);
         return Response.ok("Registration successful. Verify your email.").build();
@@ -71,7 +68,7 @@ public class AuthResource {
         if (Objects.isNull(loginForm))
             throw responseException(Response.Status.BAD_REQUEST, "Login form is null.");
 
-        telemetry.setSpanAttribute(USERNAME, loginForm.username());
+        Span.current().setAttribute(USERNAME, loginForm.username());
         return Response.ok(authService.login(loginForm)).build();
     }
 

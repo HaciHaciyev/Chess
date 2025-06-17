@@ -1,6 +1,5 @@
 package core.project.chess.infrastructure.security;
 
-import core.project.chess.infrastructure.telemetry.TelemetryService;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -13,23 +12,18 @@ public class PasswordEncoder {
 
     private final Argon2 argon2;
 
-    private final TelemetryService telemetry;
-
-    public PasswordEncoder(TelemetryService telemetry) {
-        this.telemetry = telemetry;
+    public PasswordEncoder() {
         this.argon2 = Argon2Factory.create();
     }
 
     @WithSpan("Encoding password")
     public String encode(String password) {
-        // telemetry.addEvent("Encoding password");
         Objects.requireNonNull(password);
         return argon2.hash(1, 65536, 4, password.toCharArray());
     }
 
     @WithSpan("Verifying password")
     public boolean verify(String password, String hashed) {
-        // telemetry.addEvent("Password verification");
         Objects.requireNonNull(password);
         Objects.requireNonNull(hashed);
         return argon2.verify(hashed, password.toCharArray());
