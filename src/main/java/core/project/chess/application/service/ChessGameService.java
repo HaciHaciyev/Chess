@@ -736,7 +736,9 @@ public class ChessGameService {
     }
 
     private static UUID extractUserID(Session session) {
-        return UUID.fromString((String) session.getUserProperties().get("user-id"));
+        Object o = session.getUserProperties().get("user-id");
+        String userID = (String) o;
+        return UUID.fromString(userID);
     }
 
     private void sendGameStartNotifications(Session session, ChessGame chessGame) {
