@@ -98,7 +98,7 @@ public class PerformanceTest {
             PerftTask task = perftTasks.get(task_idx);
 
             String fen = task.fen();
-            System.out.println("Perft custom position #%s: %s".formatted(task_idx, fen));
+            System.out.printf("Perft custom position #%s: %s%n", task_idx, fen);
 
             for (int j = 0; j < task.values().length - 1; j++) {
                 int depth = j + 1;

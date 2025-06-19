@@ -93,7 +93,7 @@ class CustomChessTests {
 
         System.out.println(navigator.prettyToString());
 
-        chessBoard.doMove( b4, c3, null);
+        chessBoard.doMove(b4, c3, null);
         System.out.println(navigator.prettyToString());
 
         chessBoard.undoMove();
