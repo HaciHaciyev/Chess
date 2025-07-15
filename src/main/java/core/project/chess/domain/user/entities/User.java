@@ -152,12 +152,18 @@ public class User {
     public void addGame(final UUID game) {
         if (game == null)
             throw new IllegalArgumentException("game id can`t be null");
+        if (!isEnable)
+            throw new IllegalArgumentException("Can`t add game to account. Account is not verified");
+
         games.add(game);
     }
 
     public void addPuzzle(final UUID puzzle) {
         if (puzzle == null)
             throw new IllegalArgumentException("puzzle id can`t be null");
+        if (!isEnable)
+            throw new IllegalArgumentException("Can`t add puzzle to account. Account is not verified");
+
         puzzles.add(puzzle);
     }
 
@@ -168,6 +174,8 @@ public class User {
 
     public void changeRating(final RatingUpdate ratingUpdate) {
         Objects.requireNonNull(ratingUpdate);
+        if (!isEnable)
+            throw new IllegalArgumentException("Can`t change account rating. Account is not verified");
 
         final Color color;
         if (ratingUpdate.whitePlayerID().equals(id)) color = WHITE;
@@ -202,6 +210,8 @@ public class User {
 
     public void changeRating(final RatingUpdateOnPuzzle ratingUpdate) {
         Objects.requireNonNull(ratingUpdate);
+        if (!isEnable)
+            throw new IllegalArgumentException("Can`t change account rating. Account is not verified");
 
         final boolean doNotMatch = !ratingUpdate.playerID().equals(this.id);
         if (doNotMatch) {
